@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <title>Nomixo</title>
+    <link rel="icon" href="../cache/icons/logotype0.png" type="image/x-icon">
+    <link rel="stylesheet" href="videoPlayer.css">
+  </head>
+  
+  <body>
+        <!-- top div -->
+        <div id="div-topButtonsContainer">
+          <button id="btn-goBack" onclick="goBack()"><img src="../cache/icons/goBack.png" id="img-goBack"</img></button>
+          <button id="btn-fullscreen" onclick="fullscreenClicked()"><img src="../cache/icons/fullscreen.png" id="img-fullscreen"</img></button>
+        </div>
+      
+      <!-- middle div --> 
+        <div id="div-videoContainer">
+          <img id="img-movieMedias-LoadingGif" src="../cache/icons/loadingtype0.gif"></img>
+          <video style="display:none"></video>
+        </div>
+
+        <div id="div-bottomButtonsContainer">
+          <div id="div-topBottomContainer">
+            <p id="p-videoPosition">00:00:00</p>
+            <input value="0" type="range" id="input-videoSlider"></input>
+            <p id="p-videoDuration">00:00:00</p>
+          </div>
+          <div id="div-bottomBottomContainer">
+            <button id="btn-PauseButton" onclick="TogglePauseUnpause()"><img src="../cache/icons/BPause.png" id="img-PauseButton"</img></button>
+            <div id="div-volumeControls">
+              <button id="btn-VolumeButton" ><img src="../cache/icons/BVolumeMid.png" id="img-VolumeButton"</img></button>
+              <input id = "input-volumeSlider" value="50" type="range"></input>
+            </div>
+          </div>
+        </div>
+  </body>
+<script src="videoPlayer.js" defer></script>
+
+</html>

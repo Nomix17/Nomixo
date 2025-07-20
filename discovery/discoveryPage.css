@@ -1,0 +1,28 @@
+#div-MediaSuggestions{
+  display: flex;
+  flex-wrap: wrap;
+}
+#select-Genres,
+#select-type{
+  margin-left:6px; 
+  margin-bottom:7px; 
+  font-size:15px;
+  padding:5px 10px 5px 10px;
+  background-color:  rgba(255,255,255,10%);
+  border:2px solid rgba(255,255,255,0%);
+  border-radius:10px;
+}
+#select-Genres:hover,
+#select-type:hover{
+ background-color:  rgba(255,255,255,30%);
+}
+
+#select-Genres:active,
+#select-type:active{
+ border:2px solid rgba(255,255,255,100%);
+ background-color:  rgba(255,255,255,30%);
+}
+
+option{
+  background-color:#1f2328;
+}

@@ -1,0 +1,10 @@
+#div-middle-right-MoviesRecommandations,
+#div-middle-right-SeriesRecommandations,
+#div-middle-right-OtherRecommandations{
+  position: relative;
+  padding-left: 5px;
+  display: flex;
+  justify-content: flex-start;
+  overflow-x: auto;
+  box-sizing: border-box;
+}

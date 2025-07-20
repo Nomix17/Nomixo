@@ -1,0 +1,274 @@
+@font-face{
+  font-family: Montserrat;
+  src: url("../cache/fonts/Montserrat-VariableFont_wght.ttf");
+}
+h1{
+  padding-left: 5px;
+}
+::-webkit-scrollbar{
+  background: rgba(0,0,0,0%);
+  width:10px;
+  height:10px;
+}
+
+::-webkit-scrollbar-thumb{
+  background-color: rgba(255,255,255,10%);
+  border-radius:20px;
+}
+
+/* .div-hidingScrollBar{ */
+  /* -ms-overflow-style: none; /1* IE and Edge *1/ */
+  /* scrollbar-width: none; /1* Firefox *1/ */
+/* } */
+/* .div-hidingScrollBar::-webkit-scrollbar{ */
+  /* display:none; */
+/* } */
+*{
+  user-select: none;
+  background-color:#01121a;
+  color:white;
+}
+button{
+  cursor:pointer;
+}
+
+body, html {
+  background-color:#01121a;
+  font-family: "Montserrat", sans-serif;
+  font-size:14px;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  max-width:100%;
+}
+
+.div-categories {
+  display: flex;
+  flex-direction: column;
+}
+
+.div-categories-description {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+#div-middle-right-popularSeries {
+  margin-top: 10px;
+}
+
+#div-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#div-top {
+  position:fixed;
+  top:0;
+  display:flex;
+  justify-content:space-between;
+  width: 100%;
+  background: #01121a;
+  height: 80px;
+  box-sizing: border-box;
+  padding: 20px;
+  border-bottom:1px solid rgba(255, 255, 255, 0.1);
+  z-index:10;
+}
+
+#div-middle {
+  padding:80px 0px 0 80px;
+  margin-left:20px;
+  display: flex;
+  flex: 1;
+}
+
+#div-middle-left {
+  position:fixed;
+  left:0;
+  display:flex;
+  flex-direction: column;
+  justify-content:flex-start;
+  width: 80px;
+  align-items: center;
+  height:100%;
+  background:#01121a;
+  box-sizing: border-box;
+  padding: 20px 20px 20px 20px;
+  border-right:1px solid rgba(255, 255, 255, 0.1);
+  gap:30px;
+  z-index:10;
+}
+.btn-middle-left{
+  border-radius:10px;
+  text-align:center;
+  border:none;
+  width:50px;
+  height:50px;
+}
+.btn-middle-left:hover #img-middle-left{
+  background-color: rgba(0,0,0,0%);
+}
+.btn-middle-left:hover{
+  background-color: rgba(0,0,0,20%);
+}
+#img-middle-left{
+  height:30px;
+  width:30px;
+}
+
+#div-middle-right {
+  flex: 1;
+  background: #01121a;
+  box-sizing: border-box; padding: 20px;
+}
+
+#div-middle-right-continueWatching,
+#div-middle-right-popularMovies,
+#div-middle-right-popularSeries {
+  position: relative;
+  padding-left: 5px;
+  display: flex;
+  justify-content: flex-start;
+  overflow-x: auto;
+  /* width: 1700px; */
+  box-sizing: border-box;
+}
+
+
+.div-MovieElement {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-right:10px;
+  pointer-events: auto;
+  height: 360px;
+  width: 180px;
+}
+
+.img-MoviePoster {
+  width: 180px;
+  height: 276px;
+  border-radius: 10px;
+  border: 3px solid rgba(255,255,255,0%);
+  position: static; 
+  object-fit: cover;
+}
+
+.parag-MovieTitle {
+  margin-top: 10px;
+  text-align: center;
+  width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.div-MovieElement:hover .img-MoviePoster{
+  cursor:pointer;
+  border-color:white;
+}
+.div-MovieElement:hover .parag-MovieTitle {
+  text-align: center;
+}
+
+.div-MovieElement:active .img-MoviePoster{
+}
+
+.div-MovieElement:hover{
+  cursor:pointer;
+}
+
+#div-input-container{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+#input-searchForMovie{
+  font-size:16px;
+  padding:7px 14px 7px 14px;
+  min-width:400px;
+  height:38px;
+  background-color:#1f2328;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,30%);
+  border-radius:10px 0px 0px 10px;
+  border-right:0px;
+}
+#input-searchForMovie:focus{
+  border:2px solid #386299;
+  outline:none;
+}
+
+
+#btn-input-button{
+  min-width:40px;
+  min-height:38px;
+  background-color:#1f2328;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,30%);
+  border-radius:0px 10px 10px 0px;
+  border-left:none;
+}
+
+#btn-input-button:hover{
+  cursor:pointer;
+  background-color:rgba(255,255,255,30%);
+}
+#btn-input-button:active{
+  cursor:pointer;
+  background-color:rgba(255,255,255,40%);
+}
+
+#img-input-button{
+  background-color:rgba(255,255,255,0%);
+  width:15px;
+  height:15px;
+}
+
+.btnSeeAll{
+  font-size:17px; 
+  background-color:  rgba(255,255,255,0%);
+  border:none;
+  width:100px;
+  height:50px;
+  border-radius:10px;
+
+}
+
+.btnSeeAll:hover{
+  background-color:  rgba(255,255,255,10%);
+}
+
+#btn-fullscreen{
+  width:50px;
+  height:50px;
+  background-color:  #0b1b23;
+  border:none;
+  border-radius:10px;
+}
+
+#img-fullscreen{
+  background-color:  rgba(0,0,0,0%);
+  width:30px;
+  height:30px;
+}
+
+#btn-fullscreen:hover{
+  background-color:  #1f2328;
+}
+
+
+.btn-floatingNextMovie{
+  display: block;
+}
+.img-loading-gif{
+  width:100px;
+  height:100px;
+}

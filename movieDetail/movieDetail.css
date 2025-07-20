@@ -1,0 +1,215 @@
+#div-main {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+body::-webkit-scrollbar{
+  background: rgba(0,0,0,0%);
+  width:0px
+}
+
+body{
+  background-color: rgba(0,0,0,0%);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+h1,
+h2,
+p{
+  padding:0px;
+  background-color:rgba(0,0,0,0%);
+}
+#div-main,
+#div-middle,
+#div-top{
+  background-color:rgba(0,0,0,0%);
+  border:none;
+}
+#btn-fullscreen,
+#btn-goBack{
+  width:50px;
+  height:50px;
+  background-color:  rgba(0,0,0,0%);
+  border:none;
+  border-radius:10px;
+}
+
+#img-goBack,
+#img-fullscreen{
+  background-color:  rgba(0,0,0,0%);
+  width:30px;
+  height:30px;
+}
+#btn-goBack:hover,
+#btn-fullscreen:hover{
+  background-color:  rgba(0,0,0,20%);
+}
+
+#div-middle {
+  display: flex;
+  flex: 1; 
+  height: 0; 
+  min-height: 0; 
+}
+
+#div-movieDetails {
+  flex: 1;
+  height: 100%;
+  background-color: rgba(0,0,0,0%);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.preloadingTorrent{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#div-movieMedias-LoadingGif{
+  margin:150px;
+  background-color:rgba(0,0,0,0%);
+}
+#div-movieMedias{
+  display: flex;
+  flex-direction: column;
+  height: 100%; 
+  background-color: rgba(1, 18, 26, 0.9);
+  border-radius: 20px 0px 0px 0px;
+  gap: 10px;
+  padding-top: 15px;
+  padding-bottom: 10px;
+  overflow-y: auto; 
+  min-width: 600px;
+  box-sizing: border-box;
+}
+#div-TorrentMedia {
+  background-color: rgba(1, 18, 26, 0);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0%);
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  gap: 10px;
+  margin:0px 10px 0px 10px;
+}
+#div-TorrentMedia:hover{
+  background-color: rgba(255, 255, 255, 10%);
+  cursor: pointer;
+}
+#div-TorrentMedia:active{
+  border: 2px solid rgba(255, 255, 255, 100%);
+  background-color: rgba(255, 255, 255, 10%);
+}
+.div-MediaQuality{
+  font-weight:bold;
+  margin-right:20px;
+  background-color: rgba(1, 18, 26, 0);
+  flex-shrink: 0;
+  min-width: 0;
+  min-height: 0;
+  color: #fff;
+  font-size:19px;
+  display: flex;
+  align-items: center;
+}
+.div-MediaDescription {
+  background-color: rgba(1, 18, 26, 0);
+  padding:0px;
+  margin:0px;
+  font-size:17px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.div-MediaDescription p {
+  background-color: rgba(1, 18, 26, 0);
+  padding:0px;
+  margin:0px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size:17px;
+}
+#div-directorInfos,
+#div-genresInfos{
+  max-width:500px;
+}
+#div-castInfos{
+  max-width:400px;
+}
+#div-movieSummary{
+  max-width: 700px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+#p-movieDuration,
+#p-movieYearOfRelease,
+#p-movieRating{
+  padding:30px 30px 30px 20px;
+  display:inline;
+  font-weight:bold;
+  font-size: 19px;
+}
+#p-movieRating{
+  padding-right:10px;
+}
+.btn-MovieDetailsButtons{
+  margin-left:6px; 
+  margin-bottom:7px; 
+  font-size:15px;
+  padding:10px 20px 10px 20px;
+  background-color:  rgba(255,255,255,10%);
+  border:2px solid rgba(255,255,255,0%);
+  border-radius:40px;
+}
+.btn-MovieDetailsButtons:hover{
+ background-color:  rgba(255,255,255,30%);
+}
+.btn-MovieDetailsButtons:active{
+ border:2px solid rgba(255,255,255,100%);
+ background-color:  rgba(255,255,255,30%);
+}
+#div-directorInfos,
+#div-genresInfos,
+#div-genelareInfos,
+#div-castInfos,
+#div-movieSummary{
+  background-color: rgba(255,255,255,0%);
+  padding-bottom: 10px;
+}
+#p-summaryParagraph{
+  font-size:16px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  margin:0px;
+  padding:0px 0px 0px 10px;
+}
+h2{
+  font-weight:100;
+  color:rgba(255,255,255,80%);
+  padding-left:5px;
+}
+h1{
+  font-size:50px;
+}
+#img-IMDBlogo{
+  width: 30px;
+}
+#img-storageImage,
+#img-seedImage{
+  width: 20px;
+  background-color:rgba(0,0,0,0%);
+}
+
+#img-storageImage{
+  margin-bottom:-8px;
+}
+
+.hideElement{
+  display:none;
+}

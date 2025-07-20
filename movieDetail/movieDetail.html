@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <title>Nomixo</title>
+    <link rel="icon" href="../cache/icons/logotype0.png" type="image/x-icon">
+    <link rel="stylesheet" href="../home/mainPage.css">
+    <link rel="stylesheet" href="movieDetail.css">
+    <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
+
+  </head>
+  
+  <body>
+    <div id="div-main">
+      <!-- top div -->
+      <div id="div-top">
+        <button id="btn-goBack" onclick="goBack()"><img src="../cache/icons/goBack.png" id="img-goBack"</img></button>
+        <button id="btn-fullscreen" onclick="fullscreenClicked()"><img src="../cache/icons/fullscreen.png" id="img-fullscreen"</img></button>
+      </div>
+      
+      <!-- middle div --> 
+      <div id="div-middle">
+        <div id="div-movieDetails">
+          <h1 id="h1-MovieTitle"></h1>
+          <div id="div-genelareInfos">
+            <p id="p-movieDuration"></p>
+            <p id="p-movieYearOfRelease"></p>
+            <p id="p-movieRating"></p><img id="img-IMDBlogo" src="../cache/icons/IMDB1.png"></img>
+          </div>
+          <div id="div-genresInfos">
+            <h2>Genres</h2>
+          </div>
+          <div id="div-directorInfos">
+            <h2>Director</h2>
+          </div>
+          <div id="div-castInfos">
+            <h2>Cast</h2> 
+          </div>
+          <div id="div-movieSummary">
+            <h2>Summary</h2>
+            <p id="p-summaryParagraph"></p>
+          </div>
+
+        </div>
+        <div id="div-movieMedias">
+          <br>
+          <img  id="div-movieMedias-LoadingGif" src="../cache/icons/loadingtype0.gif"></img>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="movieDetail.js" defer></script>
+
+</html>

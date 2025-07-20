@@ -1,0 +1,59 @@
+<html>
+  <head>
+    <title>Nomixo</title>
+    <link rel="icon" href="../cache/icons/logotype0.png" type="image/x-icon">
+    <link rel="stylesheet" href="../home/mainPage.css">
+    <link rel="stylesheet" href="searchPage.css">
+  </head>
+  
+  <body>
+    <div id="div-main">
+
+      <!-- top div -->
+      <div id="div-top">
+        <img id="img-main-logo" src="../cache/icons/logotype0.png">
+        <div id="div-input-container">
+          <input id="input-searchForMovie"></input ><button id="btn-input-button" onclick="openSearchPage()"><img id="img-input-button" src="../cache/icons/search.png"></img></button>
+
+        </div>
+        <button id="btn-fullscreen" onclick="fullscreenClicked()"><img src="../cache/icons/fullscreen.png" id="img-fullscreen"</img></button>
+      </div>
+      
+      <!-- middle div --> 
+      <div id="div-middle">
+
+        <!-- left div -->
+        <div id="div-middle-left">
+          <button class="btn-middle-left" id="btn-home" onclick="backToHome()"><img id="img-middle-left" src="../cache/icons/hometype0.png"></img></button><br>
+          <button class="btn-middle-left" id="btn-discover" onclick="openDiscoveryPage('All','All')"><img id="img-middle-left" src="../cache/icons/discovertype0.png"></img></button><br>
+          <button class="btn-middle-left" id="btn-library"><img id="img-middle-left" src="../cache/icons/librarytype0.png"></img></button><br>
+          <button class="btn-middle-left" id="btn-settings"><img id="img-middle-left" src="../cache/icons/settingstype0.png"></img></button><br>
+        </div>
+    
+        <!-- right div -->
+        <div id="div-middle-right">
+          <div class="div-categories">
+            <div class="div-categories-description">
+              <h1>Movies</h1>
+            </div>
+            <div id="div-middle-right-MoviesRecommandations"><img class="img-loading-gif" src="../cache/icons/loadingtype0.gif"></img></div><br>
+          
+          <div class="div-categories">
+            <div class="div-categories-description">
+              <h1>Series</h1>
+            </div>
+            <div id="div-middle-right-SeriesRecommandations"> <img class="img-loading-gif" src="../cache/icons/loadingtype0.gif"></img></div><br>
+
+          <div class="div-categories">
+            <div class="div-categories-description">
+              <h1>Others</h1>
+            </div>
+            <div id="div-middle-right-OtherRecommandations"><img class="img-loading-gif" src="../cache/icons/loadingtype0.gif"></img></div><br>
+
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="searchPage.js" defer></script>
+
+</html>
