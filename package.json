@@ -1,11 +1,22 @@
 {
+  "name": "Nomixo",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --linux"
+  },
   "dependencies": {
     "electron": "^37.2.3",
     "torrent-stream": "^1.2.1"
   },
-  "name": "Nomixo",
-  "main": "main.js",
-  "script": {
-    "start": "electron ."
+  "devDependencies": {
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "linux": {
+      "target": "tar.gz"
+    }
   }
 }
+
