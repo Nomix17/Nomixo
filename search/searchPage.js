@@ -5,54 +5,34 @@ let searchInput = document.getElementById("input-searchForMovie");
 
 const params = new URLSearchParams(window.location.search);
 let searchKeyword = params.get("search");
-const apiKey = "api_Key";
+const apiKey = window.electronAPI.getAPIKEY();
 
 document.title = searchKeyword +" - Nomixo";
 searchInput.value = searchKeyword; //setting the input value to the keyword that was searched
-
 let searchQuery = searchKeyword.replaceAll(" ","%20");
-fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${searchQuery}`)
-  .then(res => res.json())
-  .then(data => {
-    MoviesRecommandationDiv.innerHTML = "";
-    SeriesRecommandationDiv.innerHTML = "";
-    OtherRecommandationDiv .innerHTML = "";
-    insertResultsElement(data);
-}).catch(err=>{
-  if(err == "TypeError: results is undefined"){
-    MoviesRecommandationDiv.innerHTML = "<big>Cannot Found a Movie Named: "+ searchKeyword +"</big>";
-    SeriesRecommandationDiv.innerHTML = "<big>Cannot Found a Serie Named: "+ searchKeyword +"</big>";
-    OtherRecommandationDiv.innerHTML = "<big>Cannot Find Any Piece of Media Named: "+searchKeyword +"</big>";
-  }
-  console.log(err);
-});
 
+async function loadData(){
+  const apiKey = await window.electronAPI.getAPIKEY();
+  loadSearchInformation(apiKey);
+}
 
-
-// resize the Movies Element Container when resizing the window
-const resizeMoviesPostersContainers = ()=>{
-  let middleLeftBarWidth = document.getElementById("div-middle-left").offsetWidth;
-  let marginValue = 10;
-  let newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-80;
-  MoviesRecommandationDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
-  SeriesRecommandationDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
-};
-
-resizeMoviesPostersContainers();
-window.addEventListener("resize",resizeMoviesPostersContainers);
-window.addEventListener("keydown",(event)=>{
-  if(event.key == "Escape") window.electronAPI.goBack();
-  if (event.key == "Tab" ||
-      event.key == "Super" ||
-      event.key == "Alt" ) event.preventDefault();
-});
-
-// handle enter key press when using the search input
-searchInput.addEventListener("keypress",(event)=>{
-  if(event.key == "Enter") openSearchPage();
-});
-
-
+function loadSearchInformation(apiKey){
+  fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${searchQuery}`)
+    .then(res => res.json())
+    .then(data => {
+      MoviesRecommandationDiv.innerHTML = "";
+      SeriesRecommandationDiv.innerHTML = "";
+      OtherRecommandationDiv .innerHTML = "";
+      insertResultsElement(data);
+  }).catch(err=>{
+    if(err == "TypeError: results is undefined"){
+      MoviesRecommandationDiv.innerHTML = "<big>Cannot Found a Movie Named: "+ searchKeyword +"</big>";
+      SeriesRecommandationDiv.innerHTML = "<big>Cannot Found a Serie Named: "+ searchKeyword +"</big>";
+      OtherRecommandationDiv.innerHTML = "<big>Cannot Find Any Piece of Media Named: "+searchKeyword +"</big>";
+    }
+    console.log(err);
+  });
+}
 
 
 function insertResultsElement(data){
@@ -97,6 +77,30 @@ function insertResultsElement(data){
   });
 }
 
+loadData();
+
+// resize the Movies Element Container when resizing the window
+const resizeMoviesPostersContainers = ()=>{
+  let middleLeftBarWidth = document.getElementById("div-middle-left").offsetWidth;
+  let marginValue = 10;
+  let newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-80;
+  MoviesRecommandationDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
+  SeriesRecommandationDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
+};
+
+resizeMoviesPostersContainers();
+window.addEventListener("resize",resizeMoviesPostersContainers);
+window.addEventListener("keydown",(event)=>{
+  if(event.key == "Escape") window.electronAPI.goBack();
+  if (event.key == "Tab" ||
+      event.key == "Super" ||
+      event.key == "Alt" ) event.preventDefault();
+});
+
+// handle enter key press when using the search input
+searchInput.addEventListener("keypress",(event)=>{
+  if(event.key == "Enter") openSearchPage();
+});
 
 //on click functions 
 // open a Movie details page when pressing a movie element
@@ -112,7 +116,7 @@ function openSearchPage(){
   let path;
   let searchKeyword = searchInput.value;
   if(searchKeyword !=""){
-    path ="searchPage.html?search="+searchKeyword;
+    path ="./search/searchPage.html?search="+searchKeyword;
     window.electronAPI.navigateTo(path);
   }
 } 

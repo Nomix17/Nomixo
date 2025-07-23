@@ -2,6 +2,7 @@ const { BrowserWindow, app, nativeTheme, ipcMain, webFrame } = require("electron
 const torrentStream = require('torrent-stream')
 const http = require('http')
 const path = require("path");
+require("dotenv").config();
 
 nativeTheme.themeSource = "dark";
 const createWindow = () => {
@@ -45,6 +46,10 @@ ipcMain.handle("request-fullscreen",()=>{
   const win = BrowserWindow.getFocusedWindow();
   if(win.isFullScreen()) win.setFullScreen(false);
   else if(!win.isFullScreen()) win.setFullScreen(true);
+});
+
+ipcMain.handle("get-api-key",()=>{
+  return process.env.API_KEY;
 });
 
 ipcMain.handle('get-video-url', async (event,magnet) => {

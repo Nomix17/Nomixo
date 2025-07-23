@@ -1,41 +1,45 @@
 const data = new URLSearchParams(window.location.search);
 let movieId = data.get("MovieId");
 let MediaType = data.get("MediaType");
-const apiKey = "api_Key";
 var backgroundImage;
 
 let TorrentContainer = document.getElementById("div-movieMedias");
 TorrentContainer.classList.add("preloadingTorrent");
-//load Movie information
-fetch(`https://api.themoviedb.org/3/${MediaType}/${movieId}?api_key=${apiKey}`)
-  .then(res=>res.json())  
-  .then(data =>{
-    insertMovieElements(data);
-    let ReleaseYear;
-    let Title;
-    if(data.hasOwnProperty("release_date")) ReleaseYear = new Date(data["release_date"]).getFullYear();
-    else ReleaseYear = new Date(data["first_air_date"]).getFullYear();
-    if(data.hasOwnProperty("title"))  Title = data["title"]+" "+ReleaseYear;
-    else Title = data["name"]+" "+ReleaseYear;
-    Title = Title.replaceAll(" ","%20");
-    fetchTorrent(Title); 
-  })
-  .catch(error => console.log(error));
 
-// load Cast and Crew information
-fetch(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${apiKey}`)
-  .then(res => res.json())
-  .then(data => insertCastElements(data))
-  .catch(err =>{
-    console.log(err);
-});
+async function fetchInformation(){
+  const apiKey = await window.electronAPI.getAPIKEY();
+  loadMovieInformation(apiKey);
+  loadCastInformation(apiKey);
+}
 
-window.addEventListener("keydown",(event)=>{
-  if(event.key == "Escape") window.electronAPI.goBack();
-  if (event.key == "Tab" ||
-      event.key == "Super" ||
-      event.key == "Alt" ) event.preventDefault();
-});
+function loadMovieInformation(apiKey){
+  //load Movie information
+  fetch(`https://api.themoviedb.org/3/${MediaType}/${movieId}?api_key=${apiKey}`)
+    .then(res=>res.json())  
+    .then(data =>{
+      insertMovieElements(data);
+      let ReleaseYear;
+      let Title;
+      if(data.hasOwnProperty("release_date")) ReleaseYear = new Date(data["release_date"]).getFullYear();
+      else ReleaseYear = new Date(data["first_air_date"]).getFullYear();
+      if(data.hasOwnProperty("title"))  Title = data["title"]+" "+ReleaseYear;
+      else Title = data["name"]+" "+ReleaseYear;
+      Title = Title.replaceAll(" ","%20");
+      fetchTorrent(Title); 
+    })
+    .catch(error => console.log(error));
+}
+
+function loadCastInformation(apiKey){
+  // load Cast and Crew information
+  fetch(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${apiKey}`)
+    .then(res => res.json())
+    .then(data => insertCastElements(data))
+    .catch(err =>{
+      console.log(err);
+  });
+}
+
 
 async function fetchTorrent(Title){
   let pageNum = 1;
@@ -66,6 +70,7 @@ async function fetchTorrent(Title){
       }
   }
 }
+
 
 function insertMovieElements(data){
   let Title = "Unknown";
@@ -185,6 +190,15 @@ function insertTorrentInfoElement(data){
       TorrentContainer.classList.remove("preloadingTorrent");
 }
 
+
+fetchInformation();
+
+window.addEventListener("keydown",(event)=>{
+  if(event.key == "Escape") window.electronAPI.goBack();
+  if (event.key == "Tab" ||
+      event.key == "Super" ||
+      event.key == "Alt" ) event.preventDefault();
+});
 
 function openDiscoveryPage(genreId, MediaType){
   let path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;

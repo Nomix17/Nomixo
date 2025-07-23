@@ -1,7 +1,7 @@
 let data = new URLSearchParams(window.location.search);
 let genreId = data.get("GenreId");
 let MediaType = data.get("MediaType") == "All"? "movie": data.get("MediaType") ;
-const apiKey = "api_Key";
+
 
 let SelectMediaType = document.getElementById("select-type");
 let SelectGenre = document.getElementById("select-Genres");
@@ -9,7 +9,7 @@ let MediaSuggestions = document.getElementById("div-MediaSuggestions")
 SelectMediaType.value = MediaType;
 
 
-function fetchData(genreId, ThisMediaType,page){
+function fetchData(apiKey,genreId, ThisMediaType,page){
   let url ="";
   ThisMediaType = SelectMediaType.value;
   SelectMediaType.value = ThisMediaType;
@@ -61,7 +61,7 @@ function insertDataIntoDiv(GenreData,ThisMediaType){
 }
 
 
-function loadGenres(){
+function loadGenres(apiKey){
   SelectGenre.innerHTML = "";
   MediaType = SelectMediaType.value;
   SelectGenre.innerHTML ="<option value='All'>All</option>";
@@ -80,19 +80,53 @@ function loadGenres(){
   });
 }
 
-
-loadGenres();
-MediaSuggestions.innerHTML ="";
-fetchData(genreId,MediaType,2);
-fetchData(genreId,MediaType,1);
-
-SelectMediaType.addEventListener("change",()=>{
-  MediaType = SelectMediaType.value;
-
+async function loadData(){
   MediaSuggestions.innerHTML ="";
-  fetchData("all", MediaType,2);
-  fetchData("all", MediaType,1);
-  loadGenres();
+  const apiKey = await window.electronAPI.getAPIKEY();
+
+
+  loadGenres(apiKey);
+  fetchData(apiKey,genreId,MediaType,2);
+  fetchData(apiKey,genreId,MediaType,1);
+
+  SelectMediaType.addEventListener("change",()=>{
+    MediaType = SelectMediaType.value;
+
+    MediaSuggestions.innerHTML ="";
+    fetchData(apiKey,"all", MediaType,2);
+    fetchData(apiKey,"all", MediaType,1);
+    loadGenres(apiKey);
+  });
+
+
+  SelectGenre.addEventListener("change",(event)=>{
+    let newGenreId = SelectGenre.value;
+    let name = event.target.selectedOptions[0].text;
+    MediaType = SelectMediaType.value;
+    
+    MediaSuggestions.innerHTML ="";
+    fetchData(apikey,newGenreId, MediaType,2);
+    fetchData(apiKey,newGenreId, MediaType,1);
+
+    document.querySelector("h1").innerText = name;
+    SelectGenre.target.selectedOptions[0].text = name;
+  });
+
+  let pageLoaded = 2;
+  window.addEventListener('scroll', function() {
+    if(window.innerHeight + window.scrollY >= document.body.scrollHeight){
+      pageLoaded += 2; 
+      fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded+1);
+      fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded);
+    }
+  });
+}
+
+loadData();
+
+let searchInput = document.getElementById("input-searchForMovie");
+searchInput.addEventListener("keypress",(event)=>{
+  if(event.key == "Enter") openSearchPage();
 });
 
 window.addEventListener("keydown",(event)=>{
@@ -101,36 +135,6 @@ window.addEventListener("keydown",(event)=>{
       event.key == "Super" ||
       event.key == "Alt" ) event.preventDefault();
 });
-
-
-SelectGenre.addEventListener("change",(event)=>{
-  let newGenreId = SelectGenre.value;
-  let name = event.target.selectedOptions[0].text;
-  MediaType = SelectMediaType.value;
-  
-  MediaSuggestions.innerHTML ="";
-  fetchData(newGenreId, MediaType,2);
-  fetchData(newGenreId, MediaType,1);
-
-  document.querySelector("h1").innerText = name;
-  SelectGenre.target.selectedOptions[0].text = name;
-});
-
-let pageLoaded = 2;
-window.addEventListener('scroll', function() {
-  if(window.innerHeight + window.scrollY >= document.body.scrollHeight){
-    pageLoaded += 2; 
-    fetchData(SelectGenre.value, MediaType,pageLoaded+1);
-    fetchData(SelectGenre.value, MediaType,pageLoaded);
-  }
-
-});
-let searchInput = document.getElementById("input-searchForMovie");
-searchInput.addEventListener("keypress",(event)=>{
-  if(event.key == "Enter") openSearchPage();
-});
-
-
 
 
 // on click functions

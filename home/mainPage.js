@@ -5,7 +5,35 @@ let searchInput = document.getElementById("input-searchForMovie");
 let continueWatchingArray = [];
 if(continueWatchingArray.length === 0) document.querySelector(".div-categories-description").remove();
 
-const apiKey = "api_Key";
+async function loadMovies(){
+
+  const apiKey = await window.electronAPI.getAPIKEY().then();
+
+  Promise.all([
+    fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&page=1`).then(res=>res.json()),
+    fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${apiKey}&page=1`).then(res=>res.json())
+  ]).then(([MovieData,TVShowData])=>{
+      continueWatchingDiv.innerHTML = "";
+      popularMoviesDiv.innerHTML = "";
+      popularSeriesDiv.innerHTML = "";
+   
+      let MoviesSearchResults =  MovieData.results;
+      let TVShowSearchResults = TVShowData.results;
+
+      insertMovieElements(MoviesSearchResults);
+      insertSerieElement(TVShowSearchResults);
+
+  }).catch(err=>{
+    if(err == "TypeError: results is undefined"){
+      popularMoviesDiv.innerHTML = "<big>Cannot Found a Movie Named: "+ searchKeyword +"</big>";
+      popularSeriesDiv.innerHTML = "<big>Cannot Found a Serie Named: "+ searchKeyword +"</big>";
+      OtherRecommandationDiv.innerHTML = "<big>Cannot Find Any Piece of Media Named: "+searchKeyword +"</big>";
+    } 
+    console.log(err);
+  });
+}
+
+loadMovies()
 
 // resize the Movies Element Containers when resizing the page
 const resizeMoviesPostersContainers = ()=>{
@@ -31,29 +59,6 @@ searchInput.addEventListener("keypress",(event)=>{
   if(event.key == "Enter") openSearchPage();
 });
 
-
-Promise.all([
-  fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&page=1`).then(res=>res.json()),
-  fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${apiKey}&page=1`).then(res=>res.json())
-]).then(([MovieData,TVShowData])=>{
-    continueWatchingDiv.innerHTML = "";
-    popularMoviesDiv.innerHTML = "";
-    popularSeriesDiv.innerHTML = "";
- 
-    let MoviesSearchResults =  MovieData.results;
-    let TVShowSearchResults = TVShowData.results;
-
-    insertMovieElements(MoviesSearchResults);
-    insertSerieElement(TVShowSearchResults);
-
-}).catch(err=>{
-  if(err == "TypeError: results is undefined"){
-    popularMoviesDiv.innerHTML = "<big>Cannot Found a Movie Named: "+ searchKeyword +"</big>";
-    popularSeriesDiv.innerHTML = "<big>Cannot Found a Serie Named: "+ searchKeyword +"</big>";
-    OtherRecommandationDiv.innerHTML = "<big>Cannot Find Any Piece of Media Named: "+searchKeyword +"</big>";
-  } 
-  console.log(err);
-});
 
 
 function insertMovieElements(MoviesSearchResults){
