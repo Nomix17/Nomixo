@@ -132,18 +132,10 @@ function TogglePauseUnpause(){
   }
 }
 
-// function toggleVolume(){
-//   if(VideoElement.volume > 0.0){
-//     oldVolume = VideoElement.volume;
-//     VideoElement.volume = 0.0;
-//   }else{
-//     VideoElement.volume = oldVolume;
-//     oldVolume = 0.0;
-//   }
-//   console.log(oldVolume);
-
-//   updateVolumeIcons();
-// }
+function toggleVolume(){
+  VideoElement.muted = !VideoElement.muted;
+  updateVolumeIcons();
+}
 
 function updateVolumeIcons(){
   if(VideoElement.volume <= 0.0) VolumeButton.children[0].src = "../cache/icons/BMute.png";
