@@ -9,7 +9,6 @@
   "dependencies": {
     "dotenv": "^17.2.0",
     "electron": "^37.2.4",
-    "subtitle-converter": "^3.0.12",
     "torrent-stream": "^1.2.1"
   },
   "devDependencies": {
