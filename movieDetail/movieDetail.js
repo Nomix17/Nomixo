@@ -48,6 +48,7 @@ async function fetchTorrent(Title){
       try{
         const torrentRes = await fetch(`https://torrent-api-py-nx0x.onrender.com/api/v1/search?site=piratebay&query=${Title}&page=${pageNum}`)
         const torrentData = await torrentRes.json();
+        if (pageNum == 1) TorrentContainer.innerHTML ="";
         if(torrentData.hasOwnProperty("error")) throw new Error(torrentData["error"]);
         insertTorrentInfoElement(torrentData)
         pageNum++;
@@ -152,11 +153,16 @@ function insertCastElements(data){
 
 function insertTorrentInfoElement(data){
     let TorrentResutls = data.data;
-    TorrentContainer.innerHTML ="";
     TorrentResutls.forEach(element => {
       let FullName = element.name;
       let Categorie = element.category;
-
+      let Size = element.size;
+      
+      if(!Size.includes("GiB")){
+        if(!Size.includes("MiB")) return;
+        if(parseInt(Size.split("MiB")[0]) < 500) return
+      }
+      console.log(Size);
       let Resolution =
         Categorie.includes("CAM") ? "CAM" :
         FullName.includes("CAM") ? "CAM" :
@@ -170,7 +176,6 @@ function insertTorrentInfoElement(data){
 
       FullName = FullName.length > 35 ?FullName.slice(0,45):FullName
 
-      let Size = element.size;
       let SeedersNumber = element.seeders;
       let MagnetLink = element.magnet;
       
@@ -184,7 +189,7 @@ function insertTorrentInfoElement(data){
           <p><img id="img-storageImage" src="../cache/icons/storage.png">${Size}</p>
         </div>
       `;
-      TorrentElement.addEventListener("click",()=>{openMediaVideo(MagnetLink)});
+      TorrentElement.addEventListener("click",()=>{openMediaVideo(movieId,MagnetLink)});
       TorrentContainer.append(TorrentElement);
     });
       TorrentContainer.classList.remove("preloadingTorrent");
@@ -217,9 +222,10 @@ function goBack(){
   window.electronAPI.goBack();
 }
 
-function openMediaVideo(MagnetLink){
+function openMediaVideo(movieId,MagnetLink){
+  // console.log(MagnetLink);
   let b64MagnetLink = btoa(MagnetLink);
-  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&bgPath=${backgroundImage}`;
+  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&id=${movieId}&bgPath=${backgroundImage}`;
   window.electronAPI.navigateTo(path); 
 }
 

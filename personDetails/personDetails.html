@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <title>Discovery</title>
     <link rel="icon" href="../cache/icons/logotype0.png" type="image/x-icon">
-    <link rel="stylesheet" href="discoveryPage.css">
+    <link rel="stylesheet" href="personDetails.css">
     <link rel="stylesheet" href="../home/mainPage.css">
 
   </head>
@@ -26,32 +26,32 @@
         <!-- left div -->
         <div id="div-middle-left">
           <button class="btn-middle-left" id="btn-home" onclick="backToHome()"><img id="img-middle-left" src="../cache/icons/hometype0.png"></img></button><br>
-          <button class="btn-middle-left" id="btn-discover"><img id="img-middle-left" src="../cache/icons/discovertype0.png"></img></button><br>
+          <button class="btn-middle-left" id="btn-discover" onclick="openDiscoveryPage('All', 'All')"><img id="img-middle-left" src="../cache/icons/discovertype0.png"></img></button><br>
           <button class="btn-middle-left" id="btn-library"><img id="img-middle-left" src="../cache/icons/librarytype0.png"></img></button><br>
           <button class="btn-middle-left" id="btn-settings"><img id="img-middle-left" src="../cache/icons/settingstype0.png"></img></button><br>
         </div>
     
         <!-- right div -->
         <div id="div-middle-right">
-          <div id="div-OptionsContainer">
-            <select name="Type" id="select-type">
-              <option value="movie">Movie</option>
-              <option value="tv">Tv Show</option>
-            </select>
-            <select name="Genres" id="select-Genres">
-              <option value="All">All</option>
-            </select>
-
+          <div id ="div-Person-description">
+            <div id="div-left-Person-description">
+              <img id="img-personProfilePic"></img>
+            </div>
+            <div id="div-right-Person-description">
+              <p id="para-personName"></p>
+              <p id="para-personDepartment"></p>
+              <p id="Biography-Title">Biography :</p></br>
+              <p id="para-personBiography"></p>
+            </div>
           </div>
-
           <div class="div-categories-description">
-            <h1>All</h1>
+            <h1>Famous Work</h1>
           </div>
          <div id="div-MediaSuggestions"><img class="img-loading-gif" src="../cache/icons/loadingtype0.gif"></img></div>
         </div>
       </div>
     </div>
   </body>
-  <script src="discoveryPage.js" defer></script>
+  <script src="personDetails.js" defer></script>
 
 </html>

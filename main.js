@@ -1,7 +1,10 @@
 const { BrowserWindow, app, nativeTheme, ipcMain, webFrame } = require("electron");
-const torrentStream = require('torrent-stream')
-const http = require('http')
+const torrentStream = require('torrent-stream');
+const http = require('http');
 const path = require("path");
+const fs = require("fs");
+const https = require("https");
+
 require("dotenv").config();
 
 nativeTheme.themeSource = "dark";
@@ -40,7 +43,8 @@ ipcMain.handle("change-page", (event,page) => {
     const fullPath = path.join(__dirname, filePath);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
     win.loadURL(url);
-  }});
+  }
+});
 
 ipcMain.handle("request-fullscreen",()=>{
   const win = BrowserWindow.getFocusedWindow();
@@ -58,15 +62,18 @@ ipcMain.handle('get-video-url', async (event,magnet) => {
 
     engine.on('ready', () => {
       const file = engine.files.find(f =>
-        f.name.endsWith('.mp4') ||
-        f.name.endsWith('.webm') ||
-        f.name.endsWith('.mkv'))
-
-
+        (f.name.endsWith('.mp4') ||
+         f.name.endsWith('.webm') ||
+         f.name.endsWith('.mkv')) && f.length/(10**9) > 0.5 
+      )
       if (!file) {
         reject('No video file found in torrent')
         return null;
       }
+      let mimeType = file.name.endsWith('.mkv') ? "video/x-matroska" :
+           file.name.endsWith('.mp4') ? "video/mp4" :
+           file.name.endsWith('.webm') ? "video/webm" :
+           "application/octet-stream";
 
       server = http.createServer((req, res) => {
         const range = req.headers.range
@@ -81,11 +88,12 @@ ipcMain.handle('get-video-url', async (event,magnet) => {
         const end = positions[1] ? parseInt(positions[1], 10) : fileSize - 1
         const chunkSize = (end - start) + 1
 
+
         res.writeHead(206, {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunkSize,
-          'Content-Type': 'video/mp4',
+          'Content-Type': mimeType,
         })
 
         const stream = file.createReadStream({ start, end })
@@ -94,11 +102,13 @@ ipcMain.handle('get-video-url', async (event,magnet) => {
 
       server.listen(0, () => {
         const port = server.address().port
-        resolve(`http://localhost:${port}`)
+        resolve([`http://localhost:${port}`,mimeType])
       })
     })
 
     engine.on('error', reject)
   })
-})
+});
+
+
 

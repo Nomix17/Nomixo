@@ -1,34 +1,80 @@
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>Nomixo</title>
     <link rel="icon" href="../cache/icons/logotype0.png" type="image/x-icon">
     <link rel="stylesheet" href="videoPlayer.css">
+    <link rel="stylesheet" href="toggleSwitch.css">
+    <link rel="stylesheet" href="subDivStyle.css">
   </head>
   
   <body>
+    <div class="hideElement" id="div-MainSubtitleContainer"> 
+      <div id="div-TopSubContainer">
+        <p>Toggle Subtitles</p> 
+        <label class="toggle-switch">
+          <input id="toggle-subs" type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+                  
+      <div class="hideElement" id="div-BottomSubContainer">
+                        
+        <div id="div-LeftSubContainer">
+          <!-- add language here -->
+          <button style='background-color:rgba(255,255,255,0.1)' onclick="loadLanguageSub(this)" value="en">English</button>
+          <button onclick="loadLanguageSub(this)" value="fr">French</button>
+          <button onclick="loadLanguageSub(this)" value="ar">Arabic</button>
+          <button onclick="loadLanguageSub(this)" value="es">Spanish</button>
+          <button onclick="loadLanguageSub(this)" value="ru">Russian</button>
+          <button onclick="loadLanguageSub(this)" value="ja">Turkish</button>
+          <button onclick="loadLanguageSub(this)"  value="ko">Korean</button>
+          <button onclick="loadLanguageSub(this)" value="it">Italian</button>
+        </div>
+
+        <div id="div-RightSubContainer">
+          <div id="div-subsList">
+          <!-- add subs here -->
+          </div>
+          <p>Subtitles Size</p><br>
+          <div id="div-subSize">
+            <button onclick="SubSize('-')">-</button>
+            <p>0%</p>
+            <button onclick="SubSize('+')">+</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
         <!-- top div -->
         <div id="div-topButtonsContainer">
-          <button id="btn-goBack" onclick="goBack()"><img src="../cache/icons/goBack.png" id="img-goBack"</img></button>
-          <button id="btn-fullscreen" onclick="fullscreenClicked()"><img src="../cache/icons/fullscreen.png" id="img-fullscreen"</img></button>
+          <button id="btn-goBack" onclick="goBack()"><img src="../cache/icons/goBack.png" id="img-goBack"></button>
+          <button id="btn-fullscreen" onclick="fullscreenClicked()"><img src="../cache/icons/fullscreen.png" id="img-fullscreen"></button>
         </div>
       
       <!-- middle div --> 
         <div id="div-videoContainer">
-          <img id="img-movieMedias-LoadingGif" src="../cache/icons/loadingtype0.gif"></img>
-          <video style="display:none"></video>
+          <img id="img-movieMedias-LoadingGif" src="../cache/icons/loadingtype0.gif">
+            <div class="hideElement" id="div-Subtitles"> 
+              hello
+            </div>
+          <video style="display:none" preload="metadata">
+          </video>
         </div>
 
         <div id="div-bottomButtonsContainer">
           <div id="div-topBottomContainer">
             <p id="p-videoPosition">00:00:00</p>
-            <input value="0" type="range" id="input-videoSlider"></input>
+            <input value="0" type="range" id="input-videoSlider">
             <p id="p-videoDuration">00:00:00</p>
           </div>
           <div id="div-bottomBottomContainer">
-            <button id="btn-PauseButton" onclick="TogglePauseUnpause()"><img src="../cache/icons/BPause.png" id="img-PauseButton"</img></button>
-            <div id="div-volumeControls">
-              <button id="btn-VolumeButton" ><img src="../cache/icons/BVolumeMid.png" id="img-VolumeButton"</img></button>
-              <input id = "input-volumeSlider" value="50" type="range"></input>
+            <button id="btn-PauseButton" onclick="TogglePauseUnpause()"><img src="../cache/icons/BPause.png" id="img-PauseButton"></button>
+            <div id="div-rightSide">
+              <button id="btn-OpenSubtitle" onclick="OpenSubtitles()"><img src="../cache/icons/Subs.png" id="img-OpenSubtitle">
+              </button>
+              <button id="btn-VolumeButton" onclick="toggleVolume()"><img src="../cache/icons/BVolumeMid.png" id="img-VolumeButton"></button>
+              <input id="input-volumeSlider" value="50" type="range">
             </div>
           </div>
         </div>
@@ -36,3 +82,4 @@
 <script src="videoPlayer.js" defer></script>
 
 </html>
+

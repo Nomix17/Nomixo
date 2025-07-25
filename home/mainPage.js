@@ -59,8 +59,6 @@ searchInput.addEventListener("keypress",(event)=>{
   if(event.key == "Enter") openSearchPage();
 });
 
-
-
 function insertMovieElements(MoviesSearchResults){
   MoviesSearchResults.reverse().forEach(obj => {
     let Id = "Unknown";

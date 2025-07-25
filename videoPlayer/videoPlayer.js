@@ -1,10 +1,11 @@
 const data = new URLSearchParams(window.location.search);
 let Magnet = atob(data.get("MagnetLink"));
 let bgImagePath = data.get("bgPath");
+let mediaId = data.get("id");
 
 let TopButtonsContainer = document.getElementById("div-topButtonsContainer");
 let BottomButtonsContainer = document.getElementById("div-bottomButtonsContainer");
-
+let SubDivDisplay = document.getElementById("div-Subtitles");
 let loadingGif = document.getElementById("img-movieMedias-LoadingGif");
 let VideoContainer = document.getElementById("div-middle");
 let VideoElement = document.getElementsByTagName("video")[0];
@@ -13,9 +14,12 @@ let VideoPositionElement = document.getElementById("p-videoPosition");
 let VideoDurationElement = document.getElementById("p-videoDuration");
 let VolumeButton = document.getElementById("btn-VolumeButton");
 let VolumeSliderElement = document.getElementById("input-volumeSlider");
+let SubButton = document.getElementById("btn-OpenSubtitle");
+let SubDiv = document.getElementById("div-MainSubtitleContainer");
+
 var oldVolume = 0;
 let mouseHoveringOnControlDiv;
-
+var SubsStruct = [];
 
 VideoElement.volume = 0.5;
 document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${bgImagePath}')`;
@@ -24,7 +28,8 @@ document.documentElement.style.backgroundPosition = `center center`;
 document.documentElement.style.backgroundSize = `cover`;
 document.documentElement.style.backgroundAttachment = `fixed`;
 
-loadVideo(Magnet)
+loadVideo(Magnet);
+getSubs(mediaId,"en");
 
 TopButtonsContainer.addEventListener("mouseenter", ()=>{ mouseHoveringOnControlDiv = true });
 TopButtonsContainer.addEventListener("mouseleave", ()=>{ mouseHoveringOnControlDiv = false });
@@ -36,16 +41,19 @@ window.addEventListener("mousemove",()=>{
   clearTimeout(timeout);
   TopButtonsContainer.style.top = "0";
   BottomButtonsContainer.style.bottom = "0";
+  SubDivDisplay.style.bottom = BottomButtonsContainer.getBoundingClientRect().height;
+
   timeout = setTimeout(()=>{
-    if(!mouseHoveringOnControlDiv){
-      TopButtonsContainer.style.top = "-50%";
+    if(!mouseHoveringOnControlDiv && SubDiv.classList.contains("hideElement")){
+      TopButtonsContainer.style.top = "-150%";
       BottomButtonsContainer.style.bottom = "150%";
+      SubDivDisplay.style.bottom = "5%";
     }
   },1000);
 
 });
 
-VideoElement.addEventListener("playing", ()=>{
+VideoElement.addEventListener("playing", (event)=>{
   loadingGif.setAttribute("style","display:none");
 });
 
@@ -61,7 +69,19 @@ VideoElement.addEventListener("timeupdate",()=>{
   }
 });
 
+
+VideoElement.addEventListener('progress', function() {
+ const buffered = VideoElement.buffered;
+ for (let i = 0; i < buffered.length; i++) {
+   const start = buffered.start(i);
+   const end = buffered.end(i);
+   console.clear();
+   console.log(`Buffered range ${i}: ${start} - ${end}`);
+ }
+});
+
 VolumeSliderElement.addEventListener("input", ()=>{
+  VideoElement.muted = false;
   VideoElement.volume = VolumeSliderElement.value / 100;
   updateVolumeIcons();
 });
@@ -72,8 +92,16 @@ VideoSlider.addEventListener("input", ()=>{
   }
 });
 
-window.addEventListener("dblclick",()=>{
-  window.electronAPI.toggleFullscreen();
+window.addEventListener("dblclick",(event)=>{
+  let ElementsThatWerePressed = document.elementsFromPoint(event.clientX,event.clientY);
+  let dontFullScreen = false;
+  for(let i=0;i<ElementsThatWerePressed.length;i++){
+    if(ElementsThatWerePressed[i].tagName == "BUTTON" || ElementsThatWerePressed[i].tagName == "INPUT"){
+      dontFullScreen = true;
+      break;
+    }
+  }
+  if(!dontFullScreen) window.electronAPI.toggleFullscreen();
 });
 
 window.addEventListener("keydown",(event)=>{
@@ -92,6 +120,58 @@ window.addEventListener("keydown",(event)=>{
 });
 
 
+let switchToggle = document.getElementById("toggle-subs");
+switchToggle.addEventListener("click",(event)=>{
+  let bottomSubElement = document.getElementById("div-BottomSubContainer");
+  let subsList = document.getElementById("div-subsList");
+  bottomSubElement.classList.toggle("hideElement");
+  SubsStruct = [];
+  SubDivDisplay.innerHTML = "";
+  Array.from(subsList.children).forEach(element => element.removeAttribute("style"));
+
+  event.stopImmediatePropagation();
+});
+
+window.addEventListener("resize",()=>{
+  resizeSubMainDiv();
+});
+
+async function getSubs(id, language) {
+  try {
+    const res = await fetch(`https://sub.wyzie.ru/search?id=${id}&language=${language}`);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const data = await res.json();
+    insertSubElements(data);
+  } catch (err) {
+    document.getElementById("div-subsList").innerHTML = "Cannot Find Subtitles In This Language";
+    console.error(err);
+  }
+}
+
+async function insertSubElements(fetchedData){
+  let subsList = document.getElementById("div-subsList");
+  subsList.innerHTML = "";
+  for(let i=0 ;i<fetchedData.length;i++){
+    let SubSource = fetchedData[i].url;
+    let subElement = document.createElement("button");
+    subElement.innerText = i;
+    subElement.value = SubSource; 
+    subElement.addEventListener("click", () => {
+      Array.from(subsList.children).forEach(element => element.removeAttribute("style"));
+      subElement.style.backgroundColor = "rgba(255,255,255,0.05)";
+      subElement.style.borderBottom = "1px solid cyan"
+      fetch(SubSource).then(res => res.text()
+        ).then(data => {
+          scrapSubs(data);
+        });
+    });
+    subsList.append(subElement);
+  };
+}
+
+resizeSubMainDiv()
 
 function gettingformatedTime(time){
   let hours = parseInt((time / 60) / 60);
@@ -102,15 +182,84 @@ function gettingformatedTime(time){
 }
 
 function loadVideo(Magnet){
-  window.electronAPI.getVideoUrl(Magnet).then( url => {
+  window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
     VideoElement.id = "video-MediaPlayer";
-    VideoElement.innerHTML = `<source src=${url} type='video/mp4'>`;
+    VideoElement.innerHTML = `<source src=${url} type='${mimeType}'>`;
     VideoElement.load();
     VideoElement.play();
     VideoElement.removeAttribute("style");
     document.documentElement.removeAttribute("style");
     document.documentElement.style.backgroundColor = "black";
+  }).catch(err=>{
+    console.error(err);
   });
+}
+function loadLanguageSub(button){
+  Array.from(button.parentElement.children).forEach(element => element.removeAttribute("style"));
+  button.style.backgroundColor = "rgba(255,255,255,0.1)";
+  getSubs(mediaId,button.value);
+}
+
+function SubObj(startTime, endTime, content){
+  this.startTime = startTime;
+  this.endTime = endTime;
+  this.content = content;
+}
+
+function getTimeInSecFromString(text){
+  let Hour = parseInt(text.split(":")[0])*60*60;
+  let Minute = parseInt(text.split(":")[1])*60;
+  let Second = parseInt(text.split(":")[2].split(",")[0]);
+  let MilSecond = parseInt(text.split(":")[2].split(",")[1])*0.001;
+
+  let Time  = Hour + Minute + Second + MilSecond;
+  
+  return Time;
+}
+
+
+function scrapSubs(SubsText){
+  SubsStruct = [];
+  SubDivDisplay.innerHTML = "";
+
+  let subLines = SubsText.split("\n");  
+  subLines.forEach((line, index) => {
+    if(line.includes(" --> ")){
+      let stringStartTime = line.split(" --> ")[0];
+      let stringEndTime = line.split(" --> ")[1];
+
+      let startTime = getTimeInSecFromString(stringStartTime);
+      let endTime = getTimeInSecFromString(stringEndTime);
+      
+      let chunk = "";
+      for(let startPoint=index+1; startPoint < subLines.length ;startPoint++){
+        if(!isNaN(subLines[startPoint]) && subLines[startPoint+1].includes(" --> ") ) break;
+        else if(subLines[startPoint].trim() != "") chunk += subLines[startPoint]+"\n";
+      }
+      let newSubObj = new SubObj(startTime, endTime, chunk); 
+      SubsStruct.push(newSubObj);
+    }
+  });
+  VideoElement.removeEventListener("timeupdate",displaySub);
+  VideoElement.addEventListener("timeupdate", displaySub);
+}
+
+function displaySub(){
+  let founded = false;
+  for(let i=0;i<SubsStruct.length;i++){
+    if(SubsStruct[i].startTime <= VideoElement.currentTime && SubsStruct[i].endTime >= VideoElement.currentTime){
+
+      if(SubDivDisplay.innerHTML !== SubsStruct[i].content){ 
+        SubDivDisplay.innerHTML = SubsStruct[i].content.replaceAll("\n","<br>");
+        SubDivDisplay.classList.remove("hideElement");
+      }
+      founded = true;
+      break;
+    }
+  }
+  if(!founded){
+    SubDivDisplay.classList.add("hideElement");
+  }
 }
 
 function fullscreenClicked(){
@@ -138,9 +287,41 @@ function toggleVolume(){
 }
 
 function updateVolumeIcons(){
-  if(VideoElement.volume <= 0.0) VolumeButton.children[0].src = "../cache/icons/BMute.png";
+  if(VideoElement.volume <= 0.0 || VideoElement.muted) VolumeButton.children[0].src = "../cache/icons/BMute.png";
   else if(VideoElement.volume <= 0.25) VolumeButton.children[0].src = "../cache/icons/BVolumeLow.png";
   else if(VideoElement.volume <= 0.75) VolumeButton.children[0].src = "../cache/icons/BVolumeMid.png";
   else if(VideoElement.volume > 0.75) VolumeButton.children[0].src = "../cache/icons/BVolumeControl.png";
 } 
+
+function hideSubDiv(event){
+  let SubDivPositionXStart =  SubDiv.getBoundingClientRect().left;
+  let SubDivPositionYStart = SubDiv.getBoundingClientRect().top;
+  let SubDivPositionXEnd =  SubDiv.getBoundingClientRect().right;
+  let SubDivPositionYEnd = SubDiv.getBoundingClientRect().bottom;
+  
+  let SubButtonPositionXStart = SubButton.getBoundingClientRect().left;
+  let SubButtonPositionYStart = SubButton.getBoundingClientRect().top;
+  let SubButtonPositionXEnd = SubButton.getBoundingClientRect().right;
+  let SubButtonPositionYEnd = SubButton.getBoundingClientRect().bottom;
+  
+  let cursorIsInsideSubDiv =  (event.clientX >= SubDivPositionXStart) && (event.clientX <= SubDivPositionXEnd) &&
+                              (event.clientY >= SubDivPositionYStart) && (event.clientY <= SubDivPositionYEnd);
+
+  let cursorIsInsideSubButton = (event.clientX >= SubButtonPositionXStart) && (event.clientX <= SubButtonPositionXEnd) &&
+                                (event.clientY >= SubButtonPositionYStart) && (event.clientY <= SubButtonPositionYEnd);
+
+  if(!cursorIsInsideSubDiv && !cursorIsInsideSubButton){
+    SubDiv.classList.add("hideElement");
+    window.removeEventListener("mousedown",hideSubDiv);
+  }
+}
+
+function OpenSubtitles(){
+  SubDiv.classList.toggle("hideElement");
+  window.addEventListener("mousedown",hideSubDiv);
+}
+
+function resizeSubMainDiv(){
+  SubDiv.style.left = SubButton.getBoundingClientRect().left + SubButton.offsetWidth/2+"px";
+}
 

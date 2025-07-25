@@ -3,21 +3,43 @@
   src: url("../cache/fonts/Montserrat-VariableFont_wght.ttf");
 }
 *{
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-drag: none;
   user-select: none;
+  cursor: default;
+}
+
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+input, button, textarea, :focus {
+    outline: none;
 }
 
 html,body{
-  font-family: "Montserrat", sans-serif;
+  font-family: "Montserrat", 'Cairo', 'Noto Sans Arabic', sans-serif;
   padding:0;
   margin:0;
 }
+
+.hideElement{
+  display: none !important;
+}
+
 ::-webkit-scrollbar{
   background: rgba(0,0,0,0%);
   width:0px;
 }
+
 #btn-fullscreen,
 #btn-goBack,
 #btn-PauseButton,
+#btn-OpenSubtitle,
 #btn-VolumeButton {
   width:50px;
   height:50px;
@@ -29,6 +51,7 @@ html,body{
 #img-fullscreen,
 #img-goBack,
 #img-PauseButton,
+#img-OpenSubtitle,
 #img-VolumeButton {
   width:30px;
   height:30px;
@@ -38,8 +61,12 @@ html,body{
 #btn-fullscreen:hover,
 #btn-goBack:hover,
 #btn-PauseButton:hover,
-#btn-VolumeButton:hover{
+#btn-VolumeButton:hover,
+#btn-OpenSubtitle:hover{
   background-color:  rgba(0,0,0,20%);
+}
+#btn-OpenSubtitle{
+  margin-right:50px;
 }
 
 #div-main {
@@ -59,7 +86,7 @@ html,body{
 }
 #div-topButtonsContainer {
   display:flex;
-  top:-50%;
+  top:-150%;
 }
 #div-bottomButtonsContainer {
   bottom:150%;
@@ -122,7 +149,24 @@ video{
   padding:0px 5px 0px 5px;
   margin:0px;
 }
-#div-volumeControls{
+#div-rightSide{
   display: flex;
   align-items:center;
+}
+
+#div-Subtitles{
+  background-color:rgba(0,0,0,0%);
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform: translate(-50%);
+  color:white;
+   text-shadow:
+      -1px -1px 0 black,
+       1px -1px 0 black,
+      -1px  1px 0 black,
+       1px  1px 0 black;
+  font-size:35px;
+  z-index:1;
+  margin:10px;
 }

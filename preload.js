@@ -5,6 +5,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   goBack: () => ipcRenderer.invoke('go-back',event),
   getVideoUrl: (magnet) => ipcRenderer.invoke('get-video-url', magnet),
   toggleFullscreen: () => ipcRenderer.invoke("request-fullscreen"),
-  getAPIKEY: () => ipcRenderer.invoke("get-api-key")
+  getAPIKEY: () => ipcRenderer.invoke("get-api-key"),
 });
 

@@ -1,6 +1,8 @@
 let MoviesRecommandationDiv = document.getElementById("div-middle-right-MoviesRecommandations");
 let SeriesRecommandationDiv = document.getElementById("div-middle-right-SeriesRecommandations");
+let FiguresRecommandationDiv = document.getElementById("div-middle-right-FiguresRecommandations");
 let OtherRecommandationDiv = document.getElementById("div-middle-right-OtherRecommandations");
+
 let searchInput = document.getElementById("input-searchForMovie");
 
 const params = new URLSearchParams(window.location.search);
@@ -22,14 +24,18 @@ function loadSearchInformation(apiKey){
     .then(data => {
       MoviesRecommandationDiv.innerHTML = "";
       SeriesRecommandationDiv.innerHTML = "";
-      OtherRecommandationDiv .innerHTML = "";
+      FiguresRecommandationDiv.innerHTML = "";
+      OtherRecommandationDiv.innerHTML = "";
       insertResultsElement(data);
+
+      if(MoviesRecommandationDiv.innerHTML == "") document.getElementById("MoviesRecommandationsContainer").remove();
+      if(SeriesRecommandationDiv.innerHTML == "") document.getElementById("SeriesRecommandationsContainer").remove();
+      if(FiguresRecommandationDiv.innerHTML == "") document.getElementById("FiguresRecommandationsContainer").remove();
+      if(OtherRecommandationDiv.innerHTML == "") document.getElementById("OtherRecommandationsContainer").remove();
+
+      if(data.results.length == 0) throw new Error(`Cannot Any Media Named: ${searchKeyword}`)
+
   }).catch(err=>{
-    if(err == "TypeError: results is undefined"){
-      MoviesRecommandationDiv.innerHTML = "<big>Cannot Found a Movie Named: "+ searchKeyword +"</big>";
-      SeriesRecommandationDiv.innerHTML = "<big>Cannot Found a Serie Named: "+ searchKeyword +"</big>";
-      OtherRecommandationDiv.innerHTML = "<big>Cannot Find Any Piece of Media Named: "+searchKeyword +"</big>";
-    }
     console.log(err);
   });
 }
@@ -37,7 +43,7 @@ function loadSearchInformation(apiKey){
 
 function insertResultsElement(data){
   let searchResults = data.results;
-  searchResults.reverse().forEach(obj => {
+  searchResults.forEach(obj => {
     let Id = "Unknown";
     let Title = "Unknown";
     let Adult = "Unknown";
@@ -49,12 +55,13 @@ function insertResultsElement(data){
     else Title = obj["name"];
 
     if(obj.hasOwnProperty("adult")) Adult = obj["adult"];
-     
+    if(obj.hasOwnProperty("media_type")) MediaType = obj["media_type"];
+ 
     if(obj.hasOwnProperty("poster_path") && obj["poster_path"] != null) PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["poster_path"];
     else if(obj.hasOwnProperty("profile_path") && obj["profile_path"] != null)  PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["profile_path"];
+    else if(MediaType == "person") PosterImage = "../cache/ProfileNotFound.png"
     else PosterImage = "../cache/PosterNotFound.png"
 
-    if(obj.hasOwnProperty("media_type")) MediaType = obj["media_type"];
     
     let movieDomElement = document.createElement("div");
     let moviePosterElement = document.createElement("img");
@@ -71,8 +78,9 @@ function insertResultsElement(data){
     movieDomElement.appendChild(movieNameElement); 
 
     movieDomElement.addEventListener("click",function(){openMovieDetails(Id,MediaType)});
-    if(MediaType.toLowerCase() == "movie") MoviesRecommandationDiv.prepend(movieDomElement);
-    else if(MediaType.toLowerCase() == "tv") SeriesRecommandationDiv.prepend(movieDomElement);
+    if(MediaType.toLowerCase() == "movie") MoviesRecommandationDiv.append(movieDomElement);
+    else if(MediaType.toLowerCase() == "tv") SeriesRecommandationDiv.append(movieDomElement);
+    else if(MediaType.toLowerCase() == "person") FiguresRecommandationDiv.append(movieDomElement);
     else OtherRecommandationDiv.prepend(movieDomElement);
   });
 }
@@ -86,6 +94,8 @@ const resizeMoviesPostersContainers = ()=>{
   let newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-80;
   MoviesRecommandationDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
   SeriesRecommandationDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
+  FiguresRecommandationDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
+  OtherRecommandationDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
 };
 
 resizeMoviesPostersContainers();

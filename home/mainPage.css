@@ -10,23 +10,36 @@ h1{
   width:10px;
   height:10px;
 }
-
 ::-webkit-scrollbar-thumb{
   background-color: rgba(255,255,255,10%);
   border-radius:20px;
 }
+::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+}
 
-/* .div-hidingScrollBar{ */
-  /* -ms-overflow-style: none; /1* IE and Edge *1/ */
-  /* scrollbar-width: none; /1* Firefox *1/ */
-/* } */
-/* .div-hidingScrollBar::-webkit-scrollbar{ */
-  /* display:none; */
-/* } */
+
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+input, button, textarea, :focus {
+    outline: none;
+}
+
 *{
-  user-select: none;
   background-color:#01121a;
   color:white;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-drag: none;
+  user-select: none;
+  cursor: default;
 }
 button{
   cursor:pointer;
@@ -34,7 +47,7 @@ button{
 
 body, html {
   background-color:#01121a;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Montserrat", 'Cairo', 'Noto Sans Arabic', sans-serif;
   font-size:14px;
   margin: 0;
   padding: 0;
