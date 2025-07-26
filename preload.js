@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getVideoUrl: (magnet) => ipcRenderer.invoke('get-video-url', magnet),
   toggleFullscreen: () => ipcRenderer.invoke("request-fullscreen"),
   getAPIKEY: () => ipcRenderer.invoke("get-api-key"),
+  saveVideo: () => ipcRenderer.invoke("save-video")
 });
 

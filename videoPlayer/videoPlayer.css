@@ -161,12 +161,13 @@ video{
   left:50%;
   transform: translate(-50%);
   color:white;
-   text-shadow:
-      -1px -1px 0 black,
-       1px -1px 0 black,
-      -1px  1px 0 black,
-       1px  1px 0 black;
+  text-shadow:
+    -1px -1px 0 black,
+     1px -1px 0 black,
+    -1px  1px 0 black,
+     1px  1px 0 black;
   font-size:35px;
   z-index:1;
   margin:10px;
+  font-size: 30px;
 }

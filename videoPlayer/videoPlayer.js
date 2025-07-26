@@ -61,6 +61,10 @@ VideoElement.addEventListener("waiting", ()=>{
   loadingGif.setAttribute("style","");
 });
 
+VideoElement.addEventListener("ended", ()=>{
+  window.electronAPI.saveVideo();
+});
+
 VideoElement.addEventListener("timeupdate",()=>{
   if(isFinite(VideoElement.duration) && isFinite(VideoSlider.value)){
     VideoSlider.value = (VideoElement.currentTime/VideoElement.duration) * 100;
@@ -71,12 +75,14 @@ VideoElement.addEventListener("timeupdate",()=>{
 
 
 VideoElement.addEventListener('progress', function() {
- const buffered = VideoElement.buffered;
- for (let i = 0; i < buffered.length; i++) {
-   const start = buffered.start(i);
-   const end = buffered.end(i);
-   console.clear();
-   console.log(`Buffered range ${i}: ${start} - ${end}`);
+  const buffered = VideoElement.buffered;
+  for (let i = 0; i < buffered.length; i++) {
+    let start = buffered.start(i);
+    let end = buffered.end(i);
+    console.clear();
+    start = gettingformatedTime(start);
+    end = gettingformatedTime(end);
+    console.log(`Buffered range ${i}: ${start} - ${end}`);
  }
 });
 
@@ -324,4 +330,12 @@ function OpenSubtitles(){
 function resizeSubMainDiv(){
   SubDiv.style.left = SubButton.getBoundingClientRect().left + SubButton.offsetWidth/2+"px";
 }
-
+let SubSizeCounter = 0;
+function SubSize(operation){
+  let SubSizeDivP = document.getElementById("div-subSize").querySelector("p");
+  if(operation == "+" && SubSizeCounter < 200) SubSizeCounter += 10;
+  else if(operation == "-" && SubSizeCounter > -100 ) SubSizeCounter -= 10;
+  let Sign = SubSizeCounter >= 0 ?"+":"";
+  SubSizeDivP.innerText =  Sign+SubSizeCounter+ "%"
+  SubDivDisplay.style.fontSize = (30*(SubSizeCounter+100))/100 + "px";
+}

@@ -4,6 +4,7 @@ const http = require('http');
 const path = require("path");
 const fs = require("fs");
 const https = require("https");
+const os = require("os");
 
 require("dotenv").config();
 
@@ -24,10 +25,18 @@ const createWindow = () => {
 
 };
 
+var closeWindow = true;
 
 app.on("ready", () => {
   createWindow();
 });
+
+app.on("window-all-closed", () => {
+  if(closeWindow){
+    app.quit();
+  }
+});
+
 
 ipcMain.handle("go-back",(event)=>{
   const webContents = event.sender;
@@ -111,4 +120,22 @@ ipcMain.handle('get-video-url', async (event,magnet) => {
 });
 
 
+ipcMain.on("save-video",() => {
+  closewindow = false;
+  const tmpDir = os.tmpdir()+"/torrent-stream";
+  const tmpDirContent = fs.readdir(tmpDir);
+  tmpDirContent.forEach(element => {
+    let sourcePath = tmpDir+"/"+element;
+    let distinationPath =  __dirname+"/Downloads/"+element;
 
+    fs.stat(sourcePath, (err,stats) =>{
+      if(stats.isDirectory() || stats.size/(10**9) > 0.5){
+        fs.rename(sourcePath,distinationPath,(err) => {
+          if(err) throw err;
+          closeWindow = true;
+          console.log("Media Was Moved");
+        });
+      }
+    });
+  });
+});
