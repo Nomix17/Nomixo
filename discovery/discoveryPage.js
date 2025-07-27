@@ -105,22 +105,23 @@ async function loadData(){
     MediaType = SelectMediaType.value;
     
     MediaSuggestions.innerHTML ="";
-    fetchData(apikey,newGenreId, MediaType,2);
+    fetchData(apiKey,newGenreId, MediaType,2);
     fetchData(apiKey,newGenreId, MediaType,1);
 
     document.querySelector("h1").innerText = name;
     SelectGenre.target.selectedOptions[0].text = name;
   });
-
   let pageLoaded = 2;
   window.addEventListener('scroll', function() {
-    if(window.innerHeight + window.scrollY >= document.body.scrollHeight){
+    if(window.innerHeight + window.scrollY + 30 >= document.body.scrollHeight){
+      console.log("hello");
       pageLoaded += 2; 
       fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded+1);
       fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded);
     }
   });
 }
+
 
 loadData();
 
@@ -140,17 +141,22 @@ window.addEventListener("keydown",(event)=>{
 // on click functions
 function openSearchPage(){
   let searchKeyword = document.getElementById("input-searchForMovie").value;
-  if(searchKeyword !="") location.href="../search/searchPage.html?search="+searchKeyword;
-
+  path ="./search/searchPage.html?search="+searchKeyword;
+  window.electronAPI.navigateTo(path);
 }
 function openDetailPage(movieId,mediaType){
-  location.href = "../movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
+  path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
+  window.electronAPI.navigateTo(path);
 }
 function backToHome(){
-  location.href = "../home/mainPage.html"
+  path = "./home/mainPage.html"
+  window.electronAPI.navigateTo(path);
 }
 function fullscreenClicked(){
   window.electronAPI.toggleFullscreen();
 }
 
-
+function OpenSettingsPage(){
+  path = "./settingsPage/settingsPage.html"
+  window.electronAPI.navigateTo(path);
+}

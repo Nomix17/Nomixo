@@ -6,7 +6,6 @@ function getPersonInfo(apiKey,personId){
   fetch(`https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}`)
   .then(PersonData => PersonData.json())
   .then(PersonInfo =>{
-    console.log(PersonInfo);
     let Name = PersonInfo.name;
     let ProfilePic = PersonInfo.profile_path
     let Department = PersonInfo.known_for_department;
@@ -95,17 +94,20 @@ function insertDataIntoDiv(MediaData, personJob){
 
 // on click functions
 function backToHome(){
-  location.href = "../home/mainPage.html"
+  path = "./home/mainPage.html"
+  window.electronAPI.navigateTo(path);
 }
+
 function openSearchPage(){
+  path = "./search/searchPage.html?search="+searchKeyword;
   let searchKeyword = document.getElementById("input-searchForMovie").value;
-  if(searchKeyword !="") location.href="../search/searchPage.html?search="+searchKeyword;
+  if(searchKeyword !="") window.electronAPI.navigateTo(path);
 
 }
 function openDetailPage(movieId,MediaType){
-  location.href = "../movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+MediaType;
+  path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+MediaType;
+  window.electronAPI.navigateTo(path);
 }
-
 
 MediaSuggestions.innerHTML ="";
 
@@ -136,5 +138,11 @@ function goBack(){
 }
 
 function openDiscoveryPage(genreId, MediaType){
-  location.href = `../discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
+  path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
+  window.electronAPI.navigateTo(path);
+}
+
+function OpenSettingsPage(){
+  path = "./settingsPage/settingsPage.html"
+  window.electronAPI.navigateTo(path);
 }

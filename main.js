@@ -6,24 +6,32 @@ const fs = require("fs");
 const https = require("https");
 const os = require("os");
 
+let SettingsFilePath = path.join(__dirname,"settings.json");
 require("dotenv").config();
 
+var mainzoomFactor = 1;
+
 nativeTheme.themeSource = "dark";
-const createWindow = () => {
+const createWindow = async () => {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1100,
+    height: 650,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
-
   });
   win.setMenuBarVisibility(false);
   win.loadFile("./home/mainPage.html");
 
-};
+  mainzoomFactor = loadSettings().PageZoomFactor;
+  win.webContents.on('did-finish-load', () => {
+    win.webContents.setZoomFactor(mainzoomFactor);
+  });
+
+}
+
 
 var closeWindow = true;
 
@@ -37,6 +45,24 @@ app.on("window-all-closed", () => {
   }
 });
 
+ipcMain.handle("load-settings",() => {
+  return new Promise((resolve, reject) => {
+    try{
+      let settingsObj = loadSettings();
+      resolve(settingsObj);
+    }catch{
+      reject("Something Went Wrong!");
+    }
+  });
+});
+
+ipcMain.handle("apply-settings",(event, SettingsObj) => {
+  const webContents = event.sender;
+  SettingsObj.PageZoomFactor = Math.max(0.1,SettingsObj.PageZoomFactor);
+  mainzoomFactor = SettingsObj.PageZoomFactor;
+  webContents.setZoomFactor(SettingsObj.PageZoomFactor);
+  fs.writeFile(SettingsFilePath, JSON.stringify(SettingsObj, null, 2), (err) => {console.log(err)});
+});
 
 ipcMain.handle("go-back",(event)=>{
   const webContents = event.sender;
@@ -52,6 +78,8 @@ ipcMain.handle("change-page", (event,page) => {
     const fullPath = path.join(__dirname, filePath);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
     win.loadURL(url);
+    const webContents = event.sender;
+    webContents.setZoomFactor(mainzoomFactor);
   }
 });
 
@@ -139,3 +167,22 @@ ipcMain.on("save-video",() => {
     });
   });
 });
+
+
+function loadSettings() {
+  try {
+    const data = fs.readFileSync(SettingsFilePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    return {
+      PageZoomFactor: 1,
+      TurnOnSubsByDefault: false,
+      SubFontSize: 100,
+      SubFontFamilly: "monospace",
+      SubColor: "white",
+      SubBackgroundColor: "black",
+      SubBackgroundOpacityLevel: 0
+    };
+  }
+}
+

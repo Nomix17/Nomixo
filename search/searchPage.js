@@ -146,3 +146,8 @@ function openDiscoveryPage(genreId, MediaType){
   path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
   window.electronAPI.navigateTo(path);
 }
+
+function OpenSettingsPage(){
+  path = "./settingsPage/settingsPage.html"
+  window.electronAPI.navigateTo(path);
+}

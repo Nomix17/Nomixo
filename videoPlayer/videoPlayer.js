@@ -2,6 +2,7 @@ const data = new URLSearchParams(window.location.search);
 let Magnet = atob(data.get("MagnetLink"));
 let bgImagePath = data.get("bgPath");
 let mediaId = data.get("id");
+let defaultFontSize = 30;
 
 let TopButtonsContainer = document.getElementById("div-topButtonsContainer");
 let BottomButtonsContainer = document.getElementById("div-bottomButtonsContainer");
@@ -14,8 +15,10 @@ let VideoPositionElement = document.getElementById("p-videoPosition");
 let VideoDurationElement = document.getElementById("p-videoDuration");
 let VolumeButton = document.getElementById("btn-VolumeButton");
 let VolumeSliderElement = document.getElementById("input-volumeSlider");
+let switchToggle = document.getElementById("toggle-subs");
 let SubButton = document.getElementById("btn-OpenSubtitle");
 let SubDiv = document.getElementById("div-MainSubtitleContainer");
+let bottomSubElement = document.getElementById("div-BottomSubContainer");
 
 var oldVolume = 0;
 let mouseHoveringOnControlDiv;
@@ -28,6 +31,7 @@ document.documentElement.style.backgroundPosition = `center center`;
 document.documentElement.style.backgroundSize = `cover`;
 document.documentElement.style.backgroundAttachment = `fixed`;
 
+loadSubSettings();
 loadVideo(Magnet);
 getSubs(mediaId,"en");
 
@@ -41,7 +45,8 @@ window.addEventListener("mousemove",()=>{
   clearTimeout(timeout);
   TopButtonsContainer.style.top = "0";
   BottomButtonsContainer.style.bottom = "0";
-  SubDivDisplay.style.bottom = BottomButtonsContainer.getBoundingClientRect().height;
+  SubDiv.style.bottom = BottomButtonsContainer.getBoundingClientRect().height+10+"px";
+  SubDivDisplay.style.bottom = BottomButtonsContainer.getBoundingClientRect().height+"px";
 
   timeout = setTimeout(()=>{
     if(!mouseHoveringOnControlDiv && SubDiv.classList.contains("hideElement")){
@@ -126,9 +131,7 @@ window.addEventListener("keydown",(event)=>{
 });
 
 
-let switchToggle = document.getElementById("toggle-subs");
-switchToggle.addEventListener("click",(event)=>{
-  let bottomSubElement = document.getElementById("div-BottomSubContainer");
+switchToggle.addEventListener("change",(event)=>{
   let subsList = document.getElementById("div-subsList");
   bottomSubElement.classList.toggle("hideElement");
   SubsStruct = [];
@@ -337,5 +340,22 @@ function SubSize(operation){
   else if(operation == "-" && SubSizeCounter > -100 ) SubSizeCounter -= 10;
   let Sign = SubSizeCounter >= 0 ?"+":"";
   SubSizeDivP.innerText =  Sign+SubSizeCounter+ "%"
-  SubDivDisplay.style.fontSize = (30*(SubSizeCounter+100))/100 + "px";
+  SubDivDisplay.style.fontSize = (defaultFontSize*(SubSizeCounter+100))/100 + "px";
+}
+
+async function loadSubSettings(){
+  let Settings = await window.electronAPI.loadSettings(); 
+
+  SubDivDisplay.style.fontSize = (defaultFontSize*Settings.SubFontSize)/100
+  SubDivDisplay.style.fontFamily = Settings.SubFontFamily
+  SubDivDisplay.style.color = Settings.SubColor;
+  let numberInHex = parseInt(Settings.SubBackgroundColor.split("#")[1],16);
+  let r = (numberInHex >> 16) & 255;
+  let g = (numberInHex >> 8) & 255;
+  let b = (numberInHex) & 255;
+  SubDivDisplay.style.backgroundColor = `rgba(${r},${g},${b},${Settings.SubBackgroundOpacityLevel/100}`;
+  if(Settings.TurnOnSubsByDefault){
+    switchToggle.checked = true;
+    bottomSubElement.classList.toggle("hideElement");
+  }
 }

@@ -6,6 +6,7 @@ var backgroundImage;
 let TorrentContainer = document.getElementById("div-movieMedias");
 TorrentContainer.classList.add("preloadingTorrent");
 
+
 async function fetchInformation(){
   const apiKey = await window.electronAPI.getAPIKEY();
   loadMovieInformation(apiKey);
@@ -162,7 +163,6 @@ function insertTorrentInfoElement(data){
         if(!Size.includes("MiB")) return;
         if(parseInt(Size.split("MiB")[0]) < 500) return
       }
-      console.log(Size);
       let Resolution =
         Categorie.includes("CAM") ? "CAM" :
         FullName.includes("CAM") ? "CAM" :
@@ -173,9 +173,7 @@ function insertTorrentInfoElement(data){
         Categorie.includes("HD") ? "1080p" :
         Categorie.includes("720p") ? "720p":
         "?p";
-
-      FullName = FullName.length > 35 ?FullName.slice(0,45):FullName
-
+  
       let SeedersNumber = element.seeders;
       let MagnetLink = element.magnet;
       
@@ -183,8 +181,8 @@ function insertTorrentInfoElement(data){
       TorrentElement.id = "div-TorrentMedia";
       TorrentElement.innerHTML = `
         <div style="   flex: 0 0 50px;  display: flex; justify-content: center;align-items: center; " class="div-MediaQuality"><p style="padding-right: 0px">${Resolution}</p></div>
-        <div style="  flex: 1 1 auto; "  class="div-MediaDescription">
-          <p>${FullName+"..."}</a><br>
+        <div style="max-width:80%;width: fit-content; "  class="div-MediaDescription">
+          <p>${FullName}</p><br>
           <p><img id="img-seedImage" src="../cache/icons/seeds.png"></img>${SeedersNumber}</p>
           <p><img id="img-storageImage" src="../cache/icons/storage.png">${Size}</p>
         </div>
@@ -205,6 +203,13 @@ window.addEventListener("keydown",(event)=>{
       event.key == "Alt" ) event.preventDefault();
 });
 
+TorrentContainer.style.maxWidth = window.innerWidth*0.3+"px";
+TorrentContainer.style.minWidth = window.innerWidth*0.3+"px";
+window.addEventListener("resize",(event)=>{
+TorrentContainer.style.maxWidth = window.innerWidth*0.3+"px";
+TorrentContainer.style.minWidth = window.innerWidth*0.3+"px";
+});
+
 function openDiscoveryPage(genreId, MediaType){
   let path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
   window.electronAPI.navigateTo(path);
@@ -223,7 +228,6 @@ function goBack(){
 }
 
 function openMediaVideo(movieId,MagnetLink){
-  // console.log(MagnetLink);
   let b64MagnetLink = btoa(MagnetLink);
   let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&id=${movieId}&bgPath=${backgroundImage}`;
   window.electronAPI.navigateTo(path); 

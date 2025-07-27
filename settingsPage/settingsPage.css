@@ -1,0 +1,91 @@
+#div-ZoomFactor{
+  display:flex;
+  flex-direction: column;
+  justify-content; center;
+}
+
+#div-PlayerSubtitles{
+  display:flex;
+  flex-direction: column;
+  justify-content; center;
+}
+table{
+  border-spacing:50px;
+  margin:0px 70px 0px 70px;
+}
+td{
+  font-size:25px;
+  border:none;
+  margin:10px 0px 10px 0px;
+}
+
+h1{
+  font-size:35px;
+  margin:40px 0px 40px 0px;
+}
+#input-ZoomFactor{
+  margin:0px 120px 0px 120px;
+}
+
+input[type="color"] {
+  -webkit-appearance: none;
+  border: none;
+  width: 100px;
+  height: 40px;
+  overflow: hidden;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: 1px solid #888888;
+  border-radius: 10px;
+}
+.btn-changeNum{
+  width:35px;
+  height:30px;
+  border-radius:5px;
+  border:1px solid #605f5f;
+  background-color:#14161b;
+}
+.btn-changeNum:hover{
+  background-color:rgba(20,22,27,0.5);
+  cursor:pointer;
+}
+.btn-changeNum:active{
+  background-color:rgba(20,22,27,0.0);
+}
+
+.toCenter p{
+  border-radius:5px;
+  padding: 5px;
+  margin: 5px;
+  font-size:25px;
+}
+
+#div-ApplyButton{
+  margin-top:100px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+  
+#btn-applySettings{
+  width: 120px;
+  height: 50px;
+  border-radius: 10px;
+  border:none;
+  background-color: rgba(15,65,96,0.5);
+  font-size:25px;
+}
+#btn-applySettings:hover{
+  background-color: rgba(15,65,96,0.2);
+  cursor:pointer;
+}
+#btn-applySettings:active{
+  background-color: rgba(0,0,0,0.0);
+}

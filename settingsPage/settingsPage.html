@@ -1,0 +1,116 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Nomixo</title>
+    <link rel="icon" href="../cache/icons/logotype0.png" type="image/x-icon">
+    <link rel="stylesheet" href="../home/mainPage.css">
+    <link rel="stylesheet" href="settingsPage.css">
+    <link rel="stylesheet" href="toggleSwitch.css">
+    <link rel="stylesheet" href="dropDown.css">
+
+  </head>
+  
+  <body>
+    <div id="div-main">
+      <div id="div-top">
+        <img id="img-main-logo" src="../cache/icons/logotype0.png" />
+        <button id="btn-fullscreen" onclick="fullscreenClicked()">
+          <img src="../cache/icons/fullscreen.png" id="img-fullscreen" />
+        </button>
+      </div>
+ 
+      <!-- middle div --> 
+      <div id="div-middle">
+
+        <!-- left div -->
+        <div id="div-middle-left">
+          <button class="btn-middle-left" id="btn-home" onclick="backToHome()">
+            <img id="img-middle-left" src="../cache/icons/hometype0.png" />
+          </button><br>
+          <button class="btn-middle-left" id="btn-discover" onclick="openDiscoveryPage('All','All')">
+            <img id="img-middle-left" src="../cache/icons/discovertype0.png" />
+          </button><br>
+          <button class="btn-middle-left" id="btn-library">
+            <img id="img-middle-left" src="../cache/icons/librarytype0.png" />
+          </button><br>
+          <button class="btn-middle-left" id="btn-settings" onclick="OpenSettingsPage()">
+            <img id="img-middle-left" src="../cache/icons/settingstype0.png" />
+          </button><br>
+        </div>
+    
+        <!-- right div -->
+        <div id="div-middle-right">
+          <div id="div-ZoomFactor">
+            <h1>Page Zoom Factor</h1>
+            <input id="input-ZoomFactor" type="range"></input>
+          </div>
+          <!-- <div id="div-Theme"> -->
+          <!--   <h1>Change Theme</h1> -->
+          <!-- </div> -->
+          <div id="div-PlayerSubtitles">
+            <h1>Subtitles</h1>
+            <table>
+              <tr>
+                <td>Enable Subtitles By Default</td>
+                <td class="toCenter">
+                  <label class="custom-toggle">
+                    <input id="toggleDefaultSubtitles" type="checkbox" />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                  </label>
+                </td>
+              </tr>
+              <tr>
+                <td>Font Size</td>
+                <td class="toCenter">
+                  <button class="btn-changeNum" id="btn-decreaseFontSize">-</button>
+                  <p id="p-fontSize">100%</p>
+                  <button class="btn-changeNum" id="btn-increaseFontSize">+</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Font Family</td>
+                <td class="toCenter">
+                  <div class="dropdown">
+                    <div id="currrectFont" class="dropdown-toggle">Menu</div>
+                    <div id="dropDownMenu-Font" class="dropdown-menu">
+                      <div style="font-family: Arial">Arial</div>
+                      <div style="font-family: 'Montserrat'">Montserrat</div>
+                      <div style="font-family: monospace">monospace</div>
+                      <div style="font-family: 'Times New Roman'">Times New Roman</div>
+                      <div style="font-family: 'Courier New'">Courier New</div>
+                      <div style="font-family: Georgia">Georgia</div>
+                      <div style="font-family: 'Comic Sans MS'">Comic Sans MS</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Text Color</td>
+                <td class="toCenter"><input id="input-TextColor" type="color"></input> </td>
+              </tr>
+              <tr>
+                <td>Background Color</td>
+                <td class="toCenter"><input id="input-BackgroundColor" type="color"></input> </td>
+              </tr>
+              <tr>
+                <td>Background Opacity</td>
+                <td class="toCenter">
+                  <button class="btn-changeNum" id="btn-decreaseOpacity">-</button>
+                  <p id="p-Opacity">0%</p>
+                  <button class="btn-changeNum" id="btn-increaseOpacity">+</button>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div id="div-ApplyButton">
+            <button id="btn-applySettings">Apply</button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="settingsPage.js" defer></script>
+</html>
+
