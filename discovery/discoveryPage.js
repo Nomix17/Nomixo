@@ -2,6 +2,14 @@ let data = new URLSearchParams(window.location.search);
 let genreId = data.get("GenreId");
 let MediaType = data.get("MediaType") == "All"? "movie": data.get("MediaType") ;
 
+async function loadTheme(){
+  let Settings = await window.electronAPI.loadSettings();
+  let ThemeName = Settings.Theme;
+  let CSSFile = document.getElementById("theme");
+  CSSFile.href = `../Themes/${ThemeName}.css`;
+}
+
+loadTheme();
 
 let SelectMediaType = document.getElementById("select-type");
 let SelectGenre = document.getElementById("select-Genres");

@@ -22,6 +22,7 @@ const createWindow = async () => {
       nodeIntegration: false
     }
   });
+  win.maximize()
   win.setMenuBarVisibility(false);
   win.loadFile("./home/mainPage.html");
 

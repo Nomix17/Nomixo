@@ -8,6 +8,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAPIKEY: () => ipcRenderer.invoke("get-api-key"),
   saveVideo: () => ipcRenderer.invoke("save-video"),
   applySettings: (SettingsObj) => ipcRenderer.invoke("apply-settings", SettingsObj),
-  loadSettings: () => ipcRenderer.invoke("load-settings")
+  loadSettings: () => ipcRenderer.invoke("load-settings"),
 });
 

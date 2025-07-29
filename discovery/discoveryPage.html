@@ -2,7 +2,8 @@
   <head>
     <meta charset="UTF-8">
     <title>Discovery</title>
-    <link rel="icon" href="../cache/icons/logotype0.png" type="image/x-icon">
+    <link id="theme" rel="stylesheet" href="../Themes/Original.css">
+    <link rel="icon" href="../cache/icons/logo.png" type="image/x-icon">
     <link rel="stylesheet" href="discoveryPage.css">
     <link rel="stylesheet" href="../home/mainPage.css">
 
@@ -13,7 +14,7 @@
 
       <!-- top div -->
       <div id="div-top">
-        <img id="img-main-logo" src="../cache/icons/logotype0.png">
+        <img id="img-main-logo" src="../cache/icons/logo.png">
         <div id="div-input-container">
           <input id="input-searchForMovie"></input ><button id="btn-input-button" onclick="openSearchPage()"><img id="img-input-button" src="../cache/icons/search.png"></img></button>
         </div>
@@ -25,10 +26,10 @@
 
         <!-- left div -->
         <div id="div-middle-left">
-          <button class="btn-middle-left" id="btn-home" onclick="backToHome()"><img id="img-middle-left" src="../cache/icons/hometype0.png"></img></button><br>
-          <button class="btn-middle-left" id="btn-discover"><img id="img-middle-left" src="../cache/icons/discovertype0.png"></img></button><br>
-          <button class="btn-middle-left" id="btn-library"><img id="img-middle-left" src="../cache/icons/librarytype0.png"></img></button><br>
-          <button class="btn-middle-left" id="btn-settings" onclick="OpenSettingsPage()"><img id="img-middle-left" src="../cache/icons/settingstype0.png"></img></button><br>
+          <button class="btn-middle-left" id="btn-home" onclick="backToHome()"><img id="img-middle-left" src="../cache/icons/home.png"></img></button><br>
+          <button class="btn-middle-left" id="btn-discover"><img id="img-middle-left" src="../cache/icons/discover.png"></img></button><br>
+          <button class="btn-middle-left" id="btn-library"><img id="img-middle-left" src="../cache/icons/library.png"></img></button><br>
+          <button class="btn-middle-left" id="btn-settings" onclick="OpenSettingsPage()"><img id="img-middle-left" src="../cache/icons/settings.png"></img></button><br>
         </div>
     
         <!-- right div -->
@@ -41,13 +42,12 @@
             <select name="Genres" id="select-Genres">
               <option value="All">All</option>
             </select>
-
           </div>
 
           <div class="div-categories-description">
             <h1>All</h1>
           </div>
-         <div id="div-MediaSuggestions"><img class="img-loading-gif" src="../cache/icons/loadingtype0.gif"></img></div>
+         <div id="div-MediaSuggestions"><img class="img-loading-gif" src="../cache/icons/loading.gif"></img></div>
         </div>
       </div>
     </div>

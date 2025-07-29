@@ -1,0 +1,8 @@
+:root{
+  --primary-color: 1,18,26;
+  /* --primary-color: 22,20,49; */
+  --text-color: #ffffff;
+  --input-color: 0,0,0,0.2;
+  --hovering-color:0,0,0,0.2;
+  --MovieElement-hover-BorderColor: 255,255,255;
+}

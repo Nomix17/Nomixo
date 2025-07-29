@@ -6,7 +6,6 @@ var backgroundImage;
 let TorrentContainer = document.getElementById("div-movieMedias");
 TorrentContainer.classList.add("preloadingTorrent");
 
-
 async function fetchInformation(){
   const apiKey = await window.electronAPI.getAPIKEY();
   loadMovieInformation(apiKey);
@@ -54,17 +53,12 @@ async function fetchTorrent(Title){
         insertTorrentInfoElement(torrentData)
         pageNum++;
       }catch(err){
-        if(err == "TypeError: TorrentResutls is undefined"){
-          if(pageNum == 0){ 
-            let TorrentContainer = document.getElementById("div-movieMedias");
-            let noResultsFoundedElement = document.createElement("img");
-            TorrentContainer.innerHTML ="";
-            noResultsFoundedElement.src = "../cache/NoResultsFound.png";
-            noResultsFoundedElement.style = "padding:100px;width:300px; background-color:rgba(0,0,0,0%);";
-            TorrentContainer.style = "display:flex;justify-content:center;align-items:center;";
-            TorrentContainer.appendChild(noResultsFoundedElement);
-            console.log("no stream was found");
-          }
+        if(pageNum == 1){ 
+          let TorrentContainer = document.getElementById("div-movieMedias");
+          let NothingWasFound = document.createElement("span");
+          NothingWasFound.innerHTML = "No Results Were Found !";
+          TorrentContainer.appendChild(NothingWasFound);
+          console.log("no stream was found");
         }
         continueLoop = false;
         console.log(err);

@@ -38,8 +38,8 @@ loadMovies()
 // resize the Movies Element Containers when resizing the page
 const resizeMoviesPostersContainers = ()=>{
   let middleLeftBarWidth = document.getElementById("div-middle-left").offsetWidth;
-  let marginValue = 10;
-  let newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-80;
+  let marginValue = 40;
+  let newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-marginValue;
   continueWatchingDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
   popularMoviesDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);
   popularSeriesDiv.setAttribute("style",`max-width:${newMoviesPostersContainerWidth};`);

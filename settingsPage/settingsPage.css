@@ -20,7 +20,6 @@ td{
 }
 
 h1{
-  font-size:35px;
   margin:40px 0px 40px 0px;
 }
 #input-ZoomFactor{
@@ -81,6 +80,7 @@ input[type="color"]::-webkit-color-swatch {
   border:none;
   background-color: rgba(15,65,96,0.5);
   font-size:25px;
+  margin-bottom:50px;
 }
 #btn-applySettings:hover{
   background-color: rgba(15,65,96,0.2);
