@@ -192,6 +192,8 @@ function gettingformatedTime(time){
 
 function loadVideo(Magnet){
   window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
+    console.log(`Video Format: ${mimeType}`);
+    if(mimeType == "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
     VideoElement.id = "video-MediaPlayer";
     VideoElement.innerHTML = `<source src=${url} type='${mimeType}'>`;
     VideoElement.load();
@@ -201,6 +203,10 @@ function loadVideo(Magnet){
     document.documentElement.style.backgroundColor = "black";
   }).catch(err=>{
     console.error(err);
+    let getElementById = document.getElementById("div-SomethingWentWrong");
+    getElementById.innerHTML = err.message;
+    loadingGif.style.display = "none";
+    getElementById.style.display = "flex";
   });
 }
 function loadLanguageSub(button){

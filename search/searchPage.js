@@ -62,12 +62,15 @@ function loadSearchInformation(apiKey){
 
 function insertResultsElement(data){
   let searchResults = data.results;
+  console.log(searchResults);
   searchResults.forEach(obj => {
     let Id = "Unknown";
     let Title = "Unknown";
     let Adult = "Unknown";
     let PosterImage = "Unknown";
     let MediaType = "Unknown";
+    let isAnime = false;
+
     if(obj.hasOwnProperty("id")) Id = obj["id"];
     
     if(obj.hasOwnProperty("title")) Title = obj["title"];
@@ -80,8 +83,19 @@ function insertResultsElement(data){
     else if(obj.hasOwnProperty("profile_path") && obj["profile_path"] != null)  PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["profile_path"];
     else if(MediaType == "person") PosterImage = "../cache/ProfileNotFound.png"
     else PosterImage = "../cache/PosterNotFound.png"
+    if((obj.hasOwnProperty("original_language")) && obj.hasOwnProperty("genre_ids")){
+      let mediaIsFromJapan = false;
+      if(obj.hasOwnProperty("origin_country"))
+        mediaIsFromJapan = obj["origin_country"].includes("JP");
+      else
+        mediaIsFromJapan = obj["original_language"].includes("ja");
 
+      let mediaIsAnimation = obj["genre_ids"].includes(16);
+      isAnime = mediaIsFromJapan;
+    }
     
+    console.log(isAnime)
+
     let movieDomElement = document.createElement("div");
     let moviePosterElement = document.createElement("img");
     let movieNameElement = document.createElement("p");

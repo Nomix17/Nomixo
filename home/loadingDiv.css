@@ -2,10 +2,7 @@
   --ballsSize: 26px;
 }
 .loader {
-  background-color:rgba(0,0,0,0);
-    position: relative;
-    width: 80px;
-    height: 80px;
+  position: relative;
 }
 
 .dot {

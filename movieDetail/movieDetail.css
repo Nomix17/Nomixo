@@ -1,6 +1,6 @@
 #div-main {
   height: 100vh;
-  display: flex;
+  display: none;
   flex-direction: column;
 }
 ::-webkit-scrollbar{
@@ -35,6 +35,7 @@ body{
   padding: 0;
   overflow: hidden;
 }
+
 h1,
 h2,
 p{
@@ -54,6 +55,9 @@ p{
 #div-top{
   background-color:rgba(0,0,0,0%);
   border:none;
+}
+#div-middle{
+  margin-top:10px;
 }
 #btn-fullscreen,
 #btn-goBack{
@@ -75,7 +79,6 @@ p{
 #btn-fullscreen:hover,
 #btn-goBack:hover{
   background-color:  rgba(0,0,0,0.3);
-  /* background-color:  var(--hovering-color); */
 }
 
 #div-middle {
@@ -107,12 +110,6 @@ p{
   display: flex;
   align-items: center; 
   justify-content: center;
-  flex-direction: column;
-}
-
-#div-serieEpisodes,
-#div-movieMedias{
-  display: flex;
   flex-direction: column;
   height: 100%; 
   background-color: rgba(var(--primary-color), 0.9);
@@ -188,13 +185,13 @@ p{
   justify-content: center;
 }
 .div-MediaDescription p {
-  background-color: rgba(1, 18, 26, 0);
+  background-color: rgba(0, 0, 0, 0);
   padding:0px;
   margin:0px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size:17px;
+  font-size:15px;
 }
 #div-directorInfos,
 #div-genresInfos{
@@ -226,12 +223,14 @@ p{
   margin-bottom:7px; 
   font-size:15px;
   padding:10px 20px 10px 20px;
-  background-color:  rgba(255,255,255,10%);
+  background: rgba(255, 255, 255, 0.1);
   border:2px solid rgba(255,255,255,0%);
   border-radius:40px;
+  backdrop-filter: blur(3px);
+  cursor:pointer;
 }
 .btn-MovieDetailsButtons:hover{
- background-color:  rgba(255,255,255,30%);
+ background-color:  rgba(255,255,255,0.2);
 }
 .btn-MovieDetailsButtons:active{
  border:2px solid rgba(255,255,255,100%);
@@ -271,6 +270,9 @@ h1{
   background-color:rgba(0,0,0,0%);
 }
 
+#img-seedImage{
+  margin-bottom:-2px;
+}
 #img-storageImage{
   margin-bottom:-8px;
 }
@@ -321,5 +323,15 @@ h1{
   border:none;
 }
 
+#div-globlaLoadingGif{
+  position:fixed;
+  left:50.1%;
+  top:50%;
+  transform: translate(-50%, 50%);
+  opacity:0;
+}
 
-
+.img-movieMedias-LoadingGif{
+  position:relative;
+  margin-left:20px;
+}

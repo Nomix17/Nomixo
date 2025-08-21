@@ -65,7 +65,6 @@ function insertDataIntoDiv(GenreData,ThisMediaType){
       movieDomElement.addEventListener("click",function() {openDetailPage(Id,ThisMediaType)});
       let loadingGif = document.querySelector(".img-loading-gif");
       if(loadingGif) loadingGif.remove();
-      console.log(MediaSuggestions);
       MediaSuggestions.appendChild(movieDomElement);
 
     });
@@ -94,8 +93,8 @@ function loadGenres(apiKey){
 async function loadData(){
   MediaSuggestions.innerHTML ="";
   const apiKey = await window.electronAPI.getAPIKEY();
-
-
+  let loadingGifDiv =  document.getElementById("div-loadingGifDiv");
+  loadingGifDiv.innerHTML = "";
   loadGenres(apiKey);
   fetchData(apiKey,genreId,MediaType,2);
   fetchData(apiKey,genreId,MediaType,1);
@@ -125,10 +124,10 @@ async function loadData(){
   let pageLoaded = 2;
   window.addEventListener('scroll', function() {
     if(window.innerHeight + window.scrollY + 30 >= document.body.scrollHeight){
-      console.log("hello");
       pageLoaded += 2;
-      if(!MediaSuggestions.querySelector(".img-loading-gif"))
-        MediaSuggestions.innerHTML += `<img class="img-loading-gif" src="../cache/icons/loading.gif" />`;
+      if(!loadingGifDiv.querySelector(".img-loading-gif"))
+        loadingGifDiv.innerHTML += ` <img style="display:block;" class="img-loading-gif" src="../cache/icons/loading.gif" /> `;
+
       fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded+1);
       fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded);
     }

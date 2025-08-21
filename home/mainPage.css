@@ -211,7 +211,7 @@ body, html {
   cursor:text;
 }
 #input-searchForMovie:focus{
-  border:2px solid #386299;
+  border:2px solid rgba(255,255,255,0.5);
   outline:none;
 }
 

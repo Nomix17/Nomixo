@@ -14,6 +14,9 @@ let selectElement = document.getElementById("select-Seasons");
 let serieEpisodeloadingDiv = document.getElementById("div-serieEpisodes-LoadingGif");
 let movieMediaLoadingDiv = document.getElementById("div-movieMedias-LoadingGif");
 
+let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
+setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
+
 let seasonsDivArray = [];
 
 async function fetchInformation(){
@@ -113,7 +116,7 @@ function insertEpisodesElements(data,title){
         fetchTorrent(searchQuery);
         TorrentContainer.style.display = "flex";
         TorrentContainer.innerHTML = `
-          <div id="img-movieMedias-LoadingGif" class="loader">
+          <div class="img-movieMedias-LoadingGif" class="loader">
               <div class="dot dot1"></div>
               <div class="dot dot2"></div>
               <div class="dot dot3"></div>
@@ -144,11 +147,12 @@ async function fetchTorrent(Title){
         pageNum++;
       }catch(err){
         if(pageNum == 1){ 
+          TorrentContainer.innerHTML = "";
           let NothingWasFound = document.createElement("span");
           NothingWasFound.innerHTML = "No Results Were Found !";
           NothingWasFound.style.backgroundColor = "rgba(0,0,0,0)";
           TorrentContainer.appendChild(NothingWasFound);
-          console.log("no stream was found");
+          console.error(err);
         }
         continueLoop = false;
         console.log(err);
@@ -183,6 +187,12 @@ function insertMovieElements(data,apiKey){
   if(data.hasOwnProperty("seasons")) Seasons = data["seasons"];
 
 
+  document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
+  document.documentElement.style.backgroundRepeat = `no-repeat`;
+  document.documentElement.style.backgroundPosition = `center center`;
+  document.documentElement.style.backgroundSize = `cover`;
+  document.documentElement.style.backgroundAttachment = `fixed`;
+
   if(Seasons){
     SerieEpisode.style.display = "flex";
     Seasons.forEach(season =>{
@@ -214,6 +224,8 @@ function insertMovieElements(data,apiKey){
   if(Duration == "TV Show") TorrentContainer.style.display = "none";
   else SerieEpisode.style.display = "none";
 
+  globalLoadingGif.remove();
+
   let DivGenresContainer = document.getElementById("div-genresInfos");
   Genres.forEach(element=>{
     let newGenreElement = document.createElement("button");
@@ -222,13 +234,7 @@ function insertMovieElements(data,apiKey){
     newGenreElement.innerText = element.name;
     DivGenresContainer.append(newGenreElement);
   });
-   
-  document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
-  document.documentElement.style.backgroundRepeat = `no-repeat`;
-  document.documentElement.style.backgroundPosition = `center center`;
-  document.documentElement.style.backgroundSize = `cover`;
-  document.documentElement.style.backgroundAttachment = `fixed`;
-  
+  document.getElementById("div-main").style.display = "flex";
 }
 
 function insertCastElements(data){
@@ -290,11 +296,13 @@ function insertTorrentInfoElement(data){
       let TorrentElement = document.createElement("div");
       TorrentElement.id = "div-TorrentMedia";
       TorrentElement.innerHTML = `
-        <div style="flex: 0 0 50px;  display: flex; justify-content: center;align-items: center;" class="div-MediaQuality"><p style="padding-right: 0px">${Resolution}</p></div>
+        <div style="flex: 0 0 50px;  display: flex; justify-content: center;align-items: center;" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Resolution}</p></div>
         <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">
-          <p>${FullName}</p><br>
-          <p><img id="img-seedImage" src="../cache/icons/seeds.png"></img>${SeedersNumber}</p>
-          <p><img id="img-storageImage" src="../cache/icons/storage.png">${Size}</p>
+          <p style="padding:0px 10px 10px 0px;">${FullName}</p>
+          <p style="font-size:13px;">
+            <img id="img-storageImage" src="../cache/icons/storage.png"/> ${Size} &ensp;
+            <img id="img-seedImage" src="../cache/icons/seeds.png"/> ${SeedersNumber} 
+          </p>
         </div>
       `;
       TorrentElement.addEventListener("click",()=>{openMediaVideo(movieId,MagnetLink)});
