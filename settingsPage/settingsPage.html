@@ -14,7 +14,7 @@
   <body>
     <div id="div-main">
       <div id="div-top">
-        <img id="img-main-logo" src="../cache/icons/logo.png" />
+        <img id="img-main-logo" src="../cache/icons/logo_fulltrans.png" />
         <button id="btn-fullscreen" onclick="fullscreenClicked()">
           <img src="../cache/icons/fullscreen.png" id="img-fullscreen" />
         </button>
@@ -43,7 +43,10 @@
         <div id="div-middle-right">
           <div id="div-ZoomFactor">
             <h1>Page Zoom Factor</h1>
-            <input id="input-ZoomFactor" type="range"></input>
+            <div id="zommFactorContainer">
+              <input id="input-ZoomFactor" type="range" name="foo"></input>
+              <output for="foo" onforminput="value = foo.valueAsNumber;"></output>
+            </div>
           </div>
           <!-- <div id="div-Theme"> -->
           <!--   <h1>Change Theme</h1> -->

@@ -62,6 +62,7 @@ p{
   background-color:  rgba(0,0,0,0%);
   border:none;
   border-radius:10px;
+  cursor:pointer;
 }
 
 #img-goBack,
@@ -69,10 +70,12 @@ p{
   background-color:  rgba(0,0,0,0%);
   width:30px;
   height:30px;
+  cursor:pointer;
 }
-#btn-goBack:hover,
-#btn-fullscreen:hover{
-  background-color:  var(--hovering-color);
+#btn-fullscreen:hover,
+#btn-goBack:hover{
+  background-color:  rgba(0,0,0,0.3);
+  /* background-color:  var(--hovering-color); */
 }
 
 #div-middle {
@@ -94,10 +97,20 @@ p{
   justify-content: center;
   align-items: center;
 }
+#div-serieEpisodes-LoadingGif,
 #div-movieMedias-LoadingGif{
-  margin:150px;
   background-color:rgba(0,0,0,0%);
 }
+
+#div-serieEpisodes,
+#div-movieMedias {
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  flex-direction: column;
+}
+
+#div-serieEpisodes,
 #div-movieMedias{
   display: flex;
   flex-direction: column;
@@ -110,12 +123,18 @@ p{
   overflow-y: auto; 
   box-sizing: border-box;
 }
+
+#div-serieEpisodes span,
 #div-movieMedias span{
   font-size:20px;
   font-weight: 700;
   background-color:rgba(0,0,0,0);
   color: rgba(255,255,255,0.6);
 }
+#div-serieEpisodes h4{
+  margin:0;
+}
+.div-episodes-Element,
 #div-TorrentMedia {
   background-color: rgba(0, 0, 0, 0);
   border-radius: 20px;
@@ -124,11 +143,12 @@ p{
   flex: 0 0 auto;
   min-width: 0;
   min-height: 0;
-  padding: 20px;
+  padding: 20px 0 20px 20px ;
   box-sizing: border-box;
   gap: 10px;
   margin:0px 10px 0px 10px;
 }
+
 #div-TorrentMedia:hover{
   background-color: rgba(255, 255, 255, 10%);
   cursor: pointer;
@@ -137,6 +157,15 @@ p{
   border: 2px solid rgba(255, 255, 255, 100%);
   background-color: rgba(255, 255, 255, 10%);
 }
+.div-episodes-Element{
+  z-index:100;
+}
+.div-episodes-Element,
+.div-episodes-Element img:hover,
+#div-TorrentMedia img:hover{
+  cursor: pointer;
+}
+
 .div-MediaQuality{
   font-weight:bold;
   margin-right:20px;
@@ -178,6 +207,7 @@ p{
   max-width: 700px;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  margin-bottom:40px;
 }
 #p-movieDuration,
 #p-movieYearOfRelease,
@@ -186,6 +216,7 @@ p{
   display:inline;
   font-weight:bold;
   font-size: 19px;
+  background-color:rgba(0,0,0,0);
 }
 #p-movieRating{
   padding-right:10px;
@@ -232,6 +263,7 @@ h1{
 }
 #img-IMDBlogo{
   width: 30px;
+  background-color:rgba(0,0,0,0%);
 }
 #img-storageImage,
 #img-seedImage{
@@ -247,8 +279,47 @@ h1{
   display:none;
 }
 
-
-.icon {
-  filter: invert(100%) sepia(100%) hue-rotate(180deg); /* Changes icon color */
+.div-episodes-Element{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
 }
+
+.div-episodes-Element *{
+  margin:0px 10px 0px 10px;
+  background-color:rgba(0,0,0,0);
+}
+
+.div-episodes-element img{
+  border-radius:10px;
+  background-color:rgba(0,0,0,0);
+}
+
+.div-episodes-Element p{
+  padding:0;
+  margin:0;
+}
+
+.div-episode-information{
+  background-color:rgba(0,0,0,0);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+#select-Seasons{
+  font-size:15px;
+  font-weight: bold;
+  padding:10;
+  max-width:25%;
+  border-radius:10px;
+  margin:5px 0px 15px 15px;
+  border:2px solid rgba(255,255,255,0.5);
+}
+
+#select-Seasons option {
+  border:none;
+}
+
+
 

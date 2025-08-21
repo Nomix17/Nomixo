@@ -163,6 +163,7 @@ function backToHome(){
   let path = "./home/mainPage.html";
   window.electronAPI.navigateTo(path);
 }
+
 function openDiscoveryPage(genreId, MediaType){
   let path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
   window.electronAPI.navigateTo(path);

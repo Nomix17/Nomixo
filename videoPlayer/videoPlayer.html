@@ -3,6 +3,7 @@
     <meta charset="UTF-8">
     <title>Nomixo</title>
     <link rel="icon" href="../cache/icons/logo.png" type="image/x-icon">
+    <link id="test" rel="stylesheet" href="../home/loadingDiv.css">
     <link id="test" rel="stylesheet" href="../Themes/Original.css">
     <link rel="stylesheet" href="videoPlayer.css">
     <link rel="stylesheet" href="toggleSwitch.css">
@@ -55,7 +56,13 @@
       
       <!-- middle div --> 
         <div id="div-videoContainer">
-          <img id="img-movieMedias-LoadingGif" src="../cache/icons/loading.gif">
+          <div id="img-movieMedias-LoadingGif" class="loader">
+              <div class="dot dot1"></div>
+              <div class="dot dot2"></div>
+              <div class="dot dot3"></div>
+              <div class="dot dot4"></div>
+          </div>
+
             <div class="hideElement" id="div-Subtitles"> 
             </div>
           <video style="display:none" preload="metadata">

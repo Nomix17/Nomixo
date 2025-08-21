@@ -2,9 +2,9 @@
   "name": "Nomixo",
   "version": "1.0.0",
   "description": "Media streaming app for movies, TV shows, and animations",
-  "author":{
-    "name":"Nomix17",
-    "email":"https://github.com/Nomix17/Nomixo"
+  "author": {
+    "name": "Nomix17",
+    "email": "https://github.com/Nomix17/Nomixo"
   },
   "main": "main.js",
   "scripts": {
@@ -27,4 +27,3 @@
     }
   }
 }
-

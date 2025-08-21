@@ -63,7 +63,10 @@ function insertDataIntoDiv(GenreData,ThisMediaType){
       movieDomElement.appendChild(movieNameElement); 
 
       movieDomElement.addEventListener("click",function() {openDetailPage(Id,ThisMediaType)});
-      MediaSuggestions.append(movieDomElement);
+      let loadingGif = document.querySelector(".img-loading-gif");
+      if(loadingGif) loadingGif.remove();
+      console.log(MediaSuggestions);
+      MediaSuggestions.appendChild(movieDomElement);
 
     });
 }
@@ -123,7 +126,9 @@ async function loadData(){
   window.addEventListener('scroll', function() {
     if(window.innerHeight + window.scrollY + 30 >= document.body.scrollHeight){
       console.log("hello");
-      pageLoaded += 2; 
+      pageLoaded += 2;
+      if(!MediaSuggestions.querySelector(".img-loading-gif"))
+        MediaSuggestions.innerHTML += `<img class="img-loading-gif" src="../cache/icons/loading.gif" />`;
       fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded+1);
       fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded);
     }

@@ -1,3 +1,6 @@
+*{
+  background-color:rgba(var(--primary-color));
+}
 #div-MediaSuggestions{
   display: flex;
   flex-wrap: wrap;

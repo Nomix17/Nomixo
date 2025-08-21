@@ -32,10 +32,29 @@ function loadSearchInformation(apiKey){
       if(SeriesRecommandationDiv.innerHTML == "") document.getElementById("SeriesRecommandationsContainer").remove();
       if(FiguresRecommandationDiv.innerHTML == "") document.getElementById("FiguresRecommandationsContainer").remove();
       if(OtherRecommandationDiv.innerHTML == "") document.getElementById("OtherRecommandationsContainer").remove();
-
-      if(data.results.length == 0) throw new Error(`Cannot Any Media Named: ${searchKeyword}`)
+    
+      if(data.results.length == 0) throw new Error(`Cannot Found Any Media Named: ${searchKeyword}`)
 
   }).catch(err=>{
+    let middleDiv = document.getElementById("div-middle-right");
+    let NotFoundDiv = document.createElement("div");
+    let fullScreenWith = document.body.offsetWidth;
+    let leftDivWidth = document.getElementById("div-middle-left").offsetWidth;
+
+    NotFoundDiv.innerHTML = `<p>${err.message}</p>`
+    NotFoundDiv.style = `display:flex;
+                         align-items:center;
+                         justify-content:center;
+                         height:80%;`;
+
+    NotFoundDiv.firstChild.style = `
+                        margin-right: ${leftDivWidth}px;
+                        font-size:20px;
+                        font-weight: 700;
+                        background-color:rgba(0,0,0,0);
+                        color: rgba(255,255,255,0.6);`;
+
+    middleDiv.appendChild(NotFoundDiv);
     console.log(err);
   });
 }

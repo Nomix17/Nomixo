@@ -1,0 +1,135 @@
+:root{
+  --ballsSize: 26px;
+}
+.loader {
+  background-color:rgba(0,0,0,0);
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.dot {
+    position: absolute;
+    width: var(--ballsSize);
+    height: var(--ballsSize);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 0;
+    border: none;
+}
+
+.dot1 {
+    transform: translate(-7px, -7px) rotate(0deg) translateX(25px);
+    animation: spin1 3s linear infinite;
+}
+
+.dot2 {
+    transform: translate(-7px, -7px) rotate(90deg) translateX(25px);
+    animation: spin2 3s linear infinite;
+}
+
+.dot3 {
+    transform: translate(-7px, -7px) rotate(180deg) translateX(25px);
+    animation: spin3 3s linear infinite;
+}
+
+.dot4 {
+    transform: translate(-7px, -7px) rotate(270deg) translateX(25px);
+    animation: spin4 3s linear infinite;
+}
+
+@keyframes spin1 {
+    0% {
+        transform: translate(-9px, -9px) rotate(0deg) translateX(35px);
+        background-color: white; /* Top position */
+    }
+    25% {
+        transform: translate(-9px, -9px) rotate(90deg) translateX(15px);
+        background-color: #999; /* Transition */
+    }
+    50% {
+        transform: translate(-9px, -9px) rotate(180deg) translateX(35px);
+        background-color: #444; /* Bottom position */
+    }
+    75% {
+        transform: translate(-9px, -9px) rotate(270deg) translateX(15px);
+        background-color: #999; /* Transition */
+    }
+    100% {
+        transform: translate(-9px, -9px) rotate(360deg) translateX(35px);
+        background-color: white; /* Back to top */
+    }
+}
+
+@keyframes spin2 {
+    0% {
+        transform: translate(-9px, -9px) rotate(90deg) translateX(35px);
+        background-color: #bbb; /* Right position */
+    }
+    25% {
+        transform: translate(-9px, -9px) rotate(180deg) translateX(15px);
+        background-color: #999; /* Transition */
+    }
+    50% {
+        transform: translate(-9px, -9px) rotate(270deg) translateX(35px);
+        background-color: black; /* Left position */
+    }
+    75% {
+        transform: translate(-9px, -9px) rotate(360deg) translateX(15px);
+        background-color: #999; /* Transition */
+    }
+    100% {
+        transform: translate(-9px, -9px) rotate(450deg) translateX(35px);
+        background-color: #bbb; /* Back to right */
+    }
+}
+
+@keyframes spin3 {
+    0% {
+        transform: translate(-9px, -9px) rotate(180deg) translateX(35px);
+        background-color: #444; /* Bottom position */
+    }
+    25% {
+        transform: translate(-9px, -9px) rotate(270deg) translateX(15px);
+        background-color: #999; /* Transition */
+    }
+    50% {
+        transform: translate(-9px, -9px) rotate(360deg) translateX(35px);
+        background-color: white; /* Top position */
+    }
+    75% {
+        transform: translate(-9px, -9px) rotate(450deg) translateX(15px);
+        background-color: #999; /* Transition */
+    }
+    100% {
+        transform: translate(-9px, -9px) rotate(540deg) translateX(35px);
+        background-color: #444; /* Back to bottom */
+    }
+}
+
+@keyframes spin4 {
+    0% {
+        transform: translate(-9px, -9px) rotate(270deg) translateX(35px);
+        background-color: black; /* Left position */
+    }
+    25% {
+        transform: translate(-9px, -9px) rotate(360deg) translateX(15px);
+        background-color: #999; /* Transition */
+    }
+    50% {
+        transform: translate(-9px, -9px) rotate(450deg) translateX(35px);
+        background-color: #bbb; /* Right position */
+    }
+    75% {
+        transform: translate(-9px, -9px) rotate(540deg) translateX(15px);
+        background-color: #999; /* Transition */
+    }
+    100% {
+        transform: translate(-9px, -9px) rotate(630deg) translateX(35px);
+        background-color: black; /* Back to left */
+    }
+}
+
+
+

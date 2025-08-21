@@ -1,0 +1,9 @@
+-fix the width of the subtitles div (it expand with the number of subtitles)
+
+-display when the video is a marioshka (cannot be played)
+
+-fix when pressing the space bar to pause, when the return button is seleted(in the background) it exit the movie player
+
+-fix the fast resize of the page when the resize value is anything but 1
+
+

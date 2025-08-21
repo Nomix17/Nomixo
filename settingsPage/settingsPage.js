@@ -25,11 +25,24 @@ let FontFamily = "monospace";
 let TextColor = "white";
 let BackgroundColor ="black";
 let Opacity = 0;
+let choosenTheme;
+
 
 loadSettings();
 
 ZoomFactorInput.addEventListener("input",(event)=>{
   ZoomFactorValue = ZoomFactorInput.value/50;
+  console.log(ZoomFactorValue);
+  setBubbleValue(ZoomFactorValue);
+});
+
+ZoomFactorInput.addEventListener("mouseenter",()=>{
+  let bubble = document.querySelector('output[for="foo"]');
+  bubble.style.opacity = "1";
+});
+ZoomFactorInput.addEventListener("mouseleave",()=>{
+  let bubble = document.querySelector('output[for="foo"]');
+  bubble.style.opacity = "0";
 });
 
 toggleButton.addEventListener("change",()=>{
@@ -72,6 +85,7 @@ decreaseOpacity.addEventListener("click",()=>{
 ApplyButton.addEventListener("click",()=>{
   let SettingsObj = {
     PageZoomFactor: ZoomFactorValue,
+    Theme: choosenTheme,
     TurnOnSubsByDefault: SubtitlesOnByDefault,
     SubFontSize: FontSize,
     SubFontFamily: FontFamily,
@@ -81,6 +95,8 @@ ApplyButton.addEventListener("click",()=>{
   }
 
   window.electronAPI.applySettings(SettingsObj);
+
+  setBubbleValue(ZoomFactorInput.value);
 });
 window.addEventListener("keydown",(event)=>{
   if(event.key == "Escape") window.electronAPI.goBack();
@@ -92,7 +108,8 @@ window.addEventListener("keydown",(event)=>{
 async function loadSettings(){
   SettingsObj = await window.electronAPI.loadSettings();
 
-  ZoomFactorValue= SettingsObj.PageZoomFactor;
+  ZoomFactorValue = SettingsObj.PageZoomFactor;
+  choosenTheme = SettingsObj.Theme;
   SubtitlesOnByDefault = SettingsObj.TurnOnSubsByDefault ;
   FontSize = SettingsObj.SubFontSize;
   FontFamily = SettingsObj.SubFontFamily;
@@ -101,6 +118,7 @@ async function loadSettings(){
   Opacity = SettingsObj.SubBackgroundOpacityLevel;
 
   ZoomFactorInput.value =   ZoomFactorValue*50;
+  setBubbleValue(ZoomFactorValue);
   if(SubtitlesOnByDefault) toggleButton.click();
   FontSizePara.innerText = FontSize+"%";
   CurrentFont.innerText = FontFamily;
@@ -108,6 +126,24 @@ async function loadSettings(){
   inputBackgroundColor.value = BackgroundColor;
   OpacityPara.innerText = Opacity+"%";
 }
+
+
+function setBubbleValue(value) {
+  let bubble = document.querySelector('output[for="foo"]');
+  bubble.innerHTML = Math.round(value * 100) + " %";
+  let marginLeft = 120;
+  let min = 0;
+  let max = 2;
+
+  let percent = (value - min) / (max - min);
+
+  let inputBarSize = ZoomFactorInput.offsetWidth;
+
+  let newLeft = percent * inputBarSize;
+
+  bubble.style.left = marginLeft+newLeft + "px";
+}
+
 
 function fullscreenClicked(){
   window.electronAPI.toggleFullscreen();

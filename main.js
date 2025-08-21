@@ -75,12 +75,12 @@ ipcMain.handle("go-back",(event)=>{
 ipcMain.handle("change-page", (event,page) => {
   const win = BrowserWindow.getFocusedWindow();
   if (win) {
+    const webContents = event.sender;
+    webContents.setZoomFactor(mainzoomFactor);
     const [filePath, query] = page.split('?');
     const fullPath = path.join(__dirname, filePath);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
     win.loadURL(url);
-    const webContents = event.sender;
-    webContents.setZoomFactor(mainzoomFactor);
   }
 });
 
@@ -186,4 +186,3 @@ function loadSettings() {
     };
   }
 }
-

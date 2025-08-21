@@ -113,8 +113,8 @@ body, html {
   border-radius:10px;
   text-align:center;
   border:none;
-  width:50px;
-  height:50px;
+  width:45px;
+  height:45px;
 }
 .btn-middle-left:hover #img-middle-left{
   cursor:pointer;
@@ -208,6 +208,7 @@ body, html {
   border:1px solid rgba(255,255,255,30%);
   border-radius:10px 0px 0px 10px;
   border-right:0px;
+  cursor:text;
 }
 #input-searchForMovie:focus{
   border:2px solid #386299;
@@ -263,7 +264,6 @@ body, html {
   border:none;
   border-radius:10px;
 }
-
 #img-fullscreen{
   background-color:  rgba(0,0,0,0%);
   width:30px;
@@ -282,6 +282,15 @@ body, html {
   display: block;
 }
 .img-loading-gif{
-  width:100px;
-  height:100px;
+  margin:0 auto;
+  width:150px;
+  height:150px;
 }
+
+
+#img-main-logo{
+  margin-top:-5px;
+  width:40;
+  height:40;
+}
+
