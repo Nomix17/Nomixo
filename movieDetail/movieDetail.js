@@ -27,7 +27,8 @@ async function fetchInformation(){
 
 function loadMovieInformation(apiKey){
   //load Movie information
-  fetch(`https://api.themoviedb.org/3/${MediaType}/${movieId}?api_key=${apiKey}`)
+  let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
+  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}?api_key=${apiKey}`)
     .then(res=>res.json())  
     .then(data =>{
       insertMovieElements(data,apiKey);
@@ -48,7 +49,8 @@ function loadMovieInformation(apiKey){
 
 function loadCastInformation(apiKey){
   // load Cast and Crew information
-  fetch(`https://api.themoviedb.org/3/${MediaType}/${movieId}/credits?api_key=${apiKey}`)
+  let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
+  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/credits?api_key=${apiKey}`)
     .then(res => res.json())
     .then(data => insertCastElements(data))
     .catch(err =>{
@@ -72,7 +74,6 @@ function loadEpisodes(apiKey,series_id,season_number,title){
 }
 
 function insertEpisodesElements(data,title){
-  // console.log(data);
   let SeasonDiv = document.createElement("div");
   SeasonDiv.style.backgroundColor = "rgba(0,0,0,0)";
   let episodes = data.episodes;
@@ -88,33 +89,37 @@ function insertEpisodesElements(data,title){
          <p style="font-weight:bold;font-size:11px;margin-top:20px;">${episode.air_date}</p>
        </div>
      `
-    let episodeInformation = episode.name;
     EpisodeElement.addEventListener("mouseenter",()=>{
       EpisodeElement.style.backgroundColor = "rgba(255, 255, 255, 10%)";
     });
 
     EpisodeElement.addEventListener("mouseleave",()=>{
-      console.log(EpisodeElement.style.borderColor);
       if(EpisodeElement.style.borderColor != "rgb(255, 255, 255)")
         EpisodeElement.style.backgroundColor = "rgba(0,0,0,0)";
     });
-    EpisodeElement.addEventListener("click",(episodeInformation) => {
-      let EpisodeElements = SeasonDiv.querySelectorAll("div");
+    EpisodeElement.addEventListener("click",() => {
+      let EpisodeElements = SeasonDiv.querySelectorAll('div[class="div-episodes-Element"');
+      console.log(EpisodeElements);
       EpisodeElements.forEach(element =>{
-        element.style.borderColor = "rgba(0,0,0,0)";
-        element.style.backgroundColor = "rgba(0,0,0,0)";
+        if(element != EpisodeElement){
+          element.style.borderColor = "rgba(0,0,0,0)";
+          element.style.backgroundColor = "rgba(0,0,0,0)";
+        }else{
+          element.style.borderColor = "rgba(255, 255, 255, 100%)";
+          element.style.backgroundColor = "rgba(255, 255, 255, 10%)";
+        }
       });
 
-      EpisodeElement.style.borderColor = "rgba(255, 255, 255, 100%)";
-      EpisodeElement.style.backgroundColor = "rgba(255, 255, 255, 10%)";
 
       let seasonNumber = String(episode.season_number).padStart(2,"0");
       let episodeNumber = String(episode.episode_number).padStart(2,"0");
+      let episodeName = episode.name;
 
       let searchQuery = `${title} S${seasonNumber}E${episodeNumber}`;
       try{
         fetchTorrent(searchQuery);
         TorrentContainer.style.display = "flex";
+        TorrentContainer.style.borderRadius = "0px";
         TorrentContainer.innerHTML = `
           <div class="img-movieMedias-LoadingGif" class="loader">
               <div class="dot dot1"></div>
@@ -122,7 +127,6 @@ function insertEpisodesElements(data,title){
               <div class="dot dot3"></div>
               <div class="dot dot4"></div>
           </div>`
-
       }catch(error){
         error => console.log(error)
       }
@@ -142,21 +146,21 @@ async function fetchTorrent(Title){
         const torrentRes = await fetch(`https://torrent-api-py-nx0x.onrender.com/api/v1/search?site=piratebay&query=${Title}&page=${pageNum}`)
         const torrentData = await torrentRes.json();
         if (pageNum == 1) TorrentContainer.innerHTML ="";
-        if(torrentData.hasOwnProperty("error")) throw new Error(torrentData["error"]);
+        if(torrentData.hasOwnProperty("error")) throw new Error("No Results Were Found !");
         insertTorrentInfoElement(torrentData)
         pageNum++;
       }catch(err){
-        if(pageNum == 1){ 
+        if(pageNum == 1 || err.message == "No Useful Results Were found !"){ 
           TorrentContainer.innerHTML = "";
           let NothingWasFound = document.createElement("span");
-          NothingWasFound.innerHTML = "No Results Were Found !";
+          NothingWasFound.innerHTML = err.message;
           NothingWasFound.style.backgroundColor = "rgba(0,0,0,0)";
           TorrentContainer.appendChild(NothingWasFound);
           console.error(err);
         }
         continueLoop = false;
-        console.log(err);
         console.log("Pages Fetched: "+pageNum);
+        console.log(err);
       }
   }
 }
@@ -245,12 +249,18 @@ function insertCastElements(data){
     let DirectorsObjects = ["Unknown"];
     let MainCastObjects = ["Unknown"];
 
-    if(Crew[0].hasOwnProperty("job")) DirectorsObjects = Crew.filter(element => element.job=="Director");
+    if(Crew[0].hasOwnProperty("job") || Crew[0].hasOwnProperty("known_for_department")){
+      DirectorsObjects = Crew.filter(element => element.job=="Director" && element.known_for_department=="Directing");
+      if(DirectorsObjects.lenght){
+        DirectorsObjects = Crew.filter(element => element.job=="Director" || element.known_for_department=="Directing");
+      }
+    }
+
     if(Cast[0].hasOwnProperty("name")) MainCastObjects = Cast.slice(0,5);
 
     let divCastElement = document.getElementById("div-castInfos");
     let divDirectoryElement = document.getElementById("div-directorInfos");
-    
+
     DirectorsObjects.forEach(directorObject=>{
        let newDirectorElement = document.createElement("button");
        newDirectorElement.onclick = ()=>{openProfilePage(directorObject.id)};
@@ -266,6 +276,7 @@ function insertCastElements(data){
        newCastElement.innerText = castObject.name;
        divCastElement.append(newCastElement);
     });
+    if(divDirectoryElement.innerHTML.trim() == "<h2>Director</h2>") divDirectoryElement.remove();
 }
 
 function insertTorrentInfoElement(data){
@@ -292,24 +303,26 @@ function insertTorrentInfoElement(data){
   
       let SeedersNumber = element.seeders;
       let MagnetLink = element.magnet;
-      
-      let TorrentElement = document.createElement("div");
-      TorrentElement.id = "div-TorrentMedia";
-      TorrentElement.innerHTML = `
-        <div style="flex: 0 0 50px;  display: flex; justify-content: center;align-items: center;" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Resolution}</p></div>
-        <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">
-          <p style="padding:0px 10px 10px 0px;">${FullName}</p>
-          <p style="font-size:13px;">
-            <img id="img-storageImage" src="../cache/icons/storage.png"/> ${Size} &ensp;
-            <img id="img-seedImage" src="../cache/icons/seeds.png"/> ${SeedersNumber} 
-          </p>
-        </div>
-      `;
-      TorrentElement.addEventListener("click",()=>{openMediaVideo(movieId,MagnetLink)});
-      TorrentContainer.append(TorrentElement);
+      if(parseInt(SeedersNumber)){
+        let TorrentElement = document.createElement("div");
+        TorrentElement.id = "div-TorrentMedia";
+        TorrentElement.innerHTML = `
+          <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Resolution}</p></div>
+          <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">
+            <p style="padding:0px 10px 10px 0px;">${FullName}</p>
+            <p style="font-size:13px;">
+              <img id="img-storageImage" src="../cache/icons/storage.png"/> ${Size} &ensp;
+              <img id="img-seedImage" src="../cache/icons/seeds.png"/> ${SeedersNumber} 
+            </p>
+          </div>
+        `;
+        TorrentElement.addEventListener("click",()=>{openMediaVideo(movieId,MagnetLink)});
+        TorrentContainer.append(TorrentElement);
+      }
     });
-    TorrentContainer.style.display = "block";
     TorrentContainer.classList.remove("preloadingTorrent");
+    if(TorrentContainer.innerHTML.trim() == "") throw new Error("No Useful Results Were found !");
+    TorrentContainer.style.display = "block";
 }
 
 function displayEpisodes(seasonNumber){
@@ -321,7 +334,6 @@ function displayEpisodes(seasonNumber){
   selectElement.value = seasonIndex;
   SerieEpisode.appendChild(selectElement);
   SerieEpisode.appendChild(currentSeasonDiv);
-  // console.log(seasonsDivArray);
 }
 
 fetchInformation();

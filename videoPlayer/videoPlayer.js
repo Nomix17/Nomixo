@@ -205,7 +205,7 @@ function loadVideo(Magnet){
     console.error(err);
     let getElementById = document.getElementById("div-SomethingWentWrong");
     getElementById.innerHTML = err.message;
-    loadingGif.style.display = "none";
+    loadingGif.remove();
     getElementById.style.display = "flex";
   });
 }

@@ -91,10 +91,10 @@ function insertResultsElement(data){
         mediaIsFromJapan = obj["original_language"].includes("ja");
 
       let mediaIsAnimation = obj["genre_ids"].includes(16);
-      isAnime = mediaIsFromJapan;
+      isAnime = mediaIsFromJapan && mediaIsAnimation;
     }
-    
-    console.log(isAnime)
+  
+    if(isAnime) MediaType = "anime"
 
     let movieDomElement = document.createElement("div");
     let moviePosterElement = document.createElement("img");
@@ -112,7 +112,7 @@ function insertResultsElement(data){
 
     movieDomElement.addEventListener("click",function(){openMovieDetails(Id,MediaType)});
     if(MediaType.toLowerCase() == "movie") MoviesRecommandationDiv.append(movieDomElement);
-    else if(MediaType.toLowerCase() == "tv") SeriesRecommandationDiv.append(movieDomElement);
+    else if(MediaType.toLowerCase() == "tv" || MediaType.toLowerCase() == "anime" ) SeriesRecommandationDiv.append(movieDomElement);
     else if(MediaType.toLowerCase() == "person") FiguresRecommandationDiv.append(movieDomElement);
     else OtherRecommandationDiv.prepend(movieDomElement);
   });
