@@ -2,15 +2,6 @@ let data = new URLSearchParams(window.location.search);
 let genreId = data.get("GenreId");
 let MediaType = data.get("MediaType") == "All"? "movie": data.get("MediaType") ;
 
-async function loadTheme(){
-  let Settings = await window.electronAPI.loadSettings();
-  let ThemeName = Settings.Theme;
-  let CSSFile = document.getElementById("theme");
-  CSSFile.href = `../Themes/${ThemeName}.css`;
-}
-
-loadTheme();
-
 let SelectMediaType = document.getElementById("select-type");
 let SelectGenre = document.getElementById("select-Genres");
 let MediaSuggestions = document.getElementById("div-MediaSuggestions")
@@ -156,16 +147,25 @@ function openSearchPage(){
   path ="./search/searchPage.html?search="+searchKeyword;
   window.electronAPI.navigateTo(path);
 }
+
 function openDetailPage(movieId,mediaType){
   path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
   window.electronAPI.navigateTo(path);
 }
+
+function fullscreenClicked(){
+  window.electronAPI.toggleFullscreen();
+}
+
 function backToHome(){
   path = "./home/mainPage.html"
   window.electronAPI.navigateTo(path);
 }
-function fullscreenClicked(){
-  window.electronAPI.toggleFullscreen();
+
+
+function OpenLibaryPage(){
+  path = "./libraryPage/libraryPage.html";
+  window.electronAPI.navigateTo(path);
 }
 
 function OpenSettingsPage(){

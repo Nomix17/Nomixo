@@ -14,11 +14,8 @@ let selectElement = document.getElementById("select-Seasons");
 let serieEpisodeloadingDiv = document.getElementById("div-serieEpisodes-LoadingGif");
 let movieMediaLoadingDiv = document.getElementById("div-movieMedias-LoadingGif");
 
-let addToLibraryButton = document.getElementById("bookmarkbtn");
-
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
-
 
 let seasonsDivArray = [];
 
@@ -194,14 +191,19 @@ function insertMovieElements(data,apiKey){
   if(data.hasOwnProperty("seasons")) Seasons = data["seasons"];
 
 
-  // console.log(backgroundImage);
-  if(backgroundImage != "https://image.tmdb.org/t/p/original/null"){
-    document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
-    document.documentElement.style.backgroundRepeat = `no-repeat`;
-    document.documentElement.style.backgroundPosition = `center center`;
-    document.documentElement.style.backgroundSize = `cover`;
-    document.documentElement.style.backgroundAttachment = `fixed`;
-  }
+  document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
+  document.documentElement.style.backgroundRepeat = `no-repeat`;
+  document.documentElement.style.backgroundPosition = `center center`;
+  document.documentElement.style.backgroundSize = `cover`;
+  document.documentElement.style.backgroundAttachment = `fixed`;
+
+  let addToLibraryDiv = document.getElementById("addToLibrary");
+
+  addToLibraryDiv.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
+  addToLibraryDiv.style.backgroundRepeat = `no-repeat`;
+  addToLibraryDiv.style.backgroundPosition = `center center`;
+  addToLibraryDiv.style.backgroundSize = `cover`;
+  addToLibraryDiv.style.backgroundAttachment = `fixed`;
 
   if(Seasons){
     SerieEpisode.style.display = "flex";
@@ -341,7 +343,7 @@ function displayEpisodes(seasonNumber){
   SerieEpisode.appendChild(selectElement);
   SerieEpisode.appendChild(currentSeasonDiv);
 }
-loadMediaEntryPointLibraryInfo();
+
 fetchInformation();
 
 window.addEventListener("keydown",(event)=>{
@@ -388,50 +390,19 @@ function openMediaVideo(movieId,MagnetLink){
   window.electronAPI.navigateTo(path); 
 }
 
-function setAddToLibraryButtonToPressed(){
-  addToLibraryButton.innerHTML = `<svg id="bookmarkicon" style="margin-left:3px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                  <path d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z"/>
-                                </svg>Saved !
+function addMediaToLibrary(){
+  let addToLibraryButton = document.getElementById("bookmarkbtn");
+  console.log("hello");
+  if(!addToLibraryButton.hasAttribute("pressed")){
+    addToLibraryButton.innerHTML = `<svg id="bookmarkicon" style="margin-left:3px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z"/>
+                              </svg>Added
 `
     addToLibraryButton.setAttribute("pressed"," ");
-}
-
-function setAddToLibraryButtonToNormal(){
-  addToLibraryButton.innerHTML =`<svg id="bookmarkicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                    <use href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/regular/bookmark.svg"></use>
-                                  </svg>Save To Library`
-    addToLibraryButton.removeAttribute("pressed");
-}
-
-function addMediaToLibrary(){
-  let mediaLibraryEntryPointObject = formatMediaLibraryObject()
-  if(!addToLibraryButton.hasAttribute("pressed")){
-    window.electronAPI.addMediaToLibrary(mediaLibraryEntryPointObject);
-    setAddToLibraryButtonToPressed();
   }else{
-    window.electronAPI.removeMediaFromLibrary(mediaLibraryEntryPointObject);
-    setAddToLibraryButtonToNormal();
-  }
-}
-
-function formatMediaLibraryObject(){
-  let MediaLibraryObject = {
-    MediaId:movieId,
-    MediaType:MediaType,
-    episodesWatched:[],
-    lastPlaybackPosition:0,
-    timeWatched:0
-  }
-  return MediaLibraryObject;
-}
-
-async function loadMediaEntryPointLibraryInfo(){
-  let MediaLibraryInfo = await window.electronAPI.loadMediaLibraryInfo({MediaId:movieId, MediaType:MediaType})
-    .catch((err)=>{
-      console.error(err);
-      return null;
-    });
-  if(MediaLibraryInfo){
-    setAddToLibraryButtonToPressed();
+    addToLibraryButton.innerHTML =`<svg id="bookmarkicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <use href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/regular/bookmark.svg"></use>
+                  </svg>Add To Library!`
+    addToLibraryButton.removeAttribute("pressed");
   }
 }

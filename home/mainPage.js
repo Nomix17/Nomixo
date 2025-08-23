@@ -173,3 +173,8 @@ function OpenSettingsPage(){
   path = "./settingsPage/settingsPage.html"
   window.electronAPI.navigateTo(path);
 }
+
+function OpenLibaryPage(){
+  path = "./libraryPage/libraryPage.html"
+  window.electronAPI.navigateTo(path);
+}

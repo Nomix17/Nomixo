@@ -210,7 +210,7 @@ p{
   max-width: 700px;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  margin-bottom:40px;
+  margin-bottom:80px;
 }
 #p-movieDuration,
 #p-movieYearOfRelease,
@@ -224,6 +224,7 @@ p{
 #p-movieRating{
   padding-right:10px;
 }
+
 .btn-MovieDetailsButtons{
   margin-left:6px; 
   margin-bottom:7px; 
@@ -340,4 +341,31 @@ h1{
 .img-movieMedias-LoadingGif{
   position:relative;
   margin-left:20px;
+}
+
+#addToLibrary{
+  padding-top:10px;
+  position:absolute;
+  bottom:0px;
+  width:50%;
+  background-color:transparent;
+}
+
+#addToLibrary button{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:180px;
+  height:49px;
+  border:1px solid white;
+  border-radius:26px;
+}
+
+
+#bookmarkicon{
+  margin:0px 10px 5px 0px;
+  padding:0;
+  fill:white;
+  background-color:transparent;
+  width:19px;
 }

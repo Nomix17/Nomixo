@@ -1,27 +1,23 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <script src="mainPage.js" defer></script>
-    <title>Nomixo</title>
-    <link id="test" rel="stylesheet" href="../Themes/Original.css">
-    <link rel="stylesheet" href="mainPage.css">
+    <title>Library</title>
+    <link id="theme" rel="stylesheet" href="../Themes/Original.css">
     <link rel="icon" href="../cache/icons/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="libraryPage.css">
+    <link rel="stylesheet" href="../home/mainPage.css">
   </head>
   
   <body>
     <div id="div-main">
+
       <!-- top div -->
       <div id="div-top">
-        <img id="img-main-logo" src="../cache/icons/logo_fulltrans.png"/>
+        <img id="img-main-logo" src="../cache/icons/logo_fulltrans.png">
         <div id="div-input-container">
-          <input id="input-searchForMovie" />
-          <button id="btn-input-button" onclick="openSearchPage()">
-            <img id="img-input-button" src="../cache/icons/search.png" />
-          </button>
+          <input id="input-searchForMovie"></input ><button id="btn-input-button" onclick="openSearchPage()"><img id="img-input-button" src="../cache/icons/search.png"></img></button>
         </div>
-        <button id="btn-fullscreen" onclick="fullscreenClicked()">
-          <img src="../cache/icons/fullscreen.png" id="img-fullscreen" />
-        </button>
+        <button id="btn-fullscreen" onclick="fullscreenClicked()"><img src="../cache/icons/fullscreen.png" id="img-fullscreen"</img></button>
       </div>
       
       <!-- middle div --> 
@@ -42,7 +38,7 @@
             </svg>
           </button></br>
 
-          <button class="btn-middle-left" id="btn-library" onclick="OpenLibaryPage()" aria-label="Library">
+          <button class="btn-middle-left" id="btn-library" aria-label="Library">
             <svg class="icon" viewBox="0 0 640 640">
               <path d="M192 64C156.7 64 128 92.7 128 128L128 544C128 555.5 134.2 566.2 144.2 571.8C154.2 577.4 166.5 577.3 176.4 571.4L320 485.3L463.5 571.4C473.4 577.3 485.7 577.5 495.7 571.8C505.7 566.1 512 555.5 512 544L512 128C512 92.7 483.3 64 448 64L192 64z"/>
             </svg>
@@ -57,40 +53,29 @@
     
         <!-- right div -->
         <div id="div-middle-right">
-          <div class="div-categories">
-            <div class="div-categories-description">
-              <h1>Continue Watching</h1> <button class="btnSeeAll">See All</button>
-            </div>
-            <div class="div-hidingScrollBar" id="div-middle-right-continueWatching">
-              <img class="img-loading-gif" src="../cache/icons/loading.gif" />
-            </div>
+          <div id="div-OptionsContainer">
+            <h1>My Library</h1>
+            <select name="Type" id="select-type">
+              <option value="all">All</option>
+              <option value="movie">Movies</option>
+              <option value="tv">Tv Shows</option>
+            </select>
+        <div id="div-categories-description">
+        </div>
+         <div id="div-SavedMedia">
+          <div class="img-movieMedias-LoadingGif" class="loader">
+              <div class="dot dot1"></div>
+              <div class="dot dot2"></div>
+              <div class="dot dot3"></div>
+              <div class="dot dot4"></div>
           </div>
-
-          <br>
-
-          <div class="div-categories">
-            <div class="div-categories-description">
-              <h1>Movies - Popular</h1> <button onclick="openDiscoveryPage('All','movie')" class="btnSeeAll">See All</button>
-            </div>
-            <div class="div-hidingScrollBar" id="div-middle-right-popularMovies">
-              <img class="img-loading-gif" src="../cache/icons/loading.gif" />
-            </div>
           </div>
-
-          <br>
-
-          <div class="div-categories">
-            <div class="div-categories-description">
-              <h1>Series - Popular</h1> <button onclick="openDiscoveryPage('All','tv')" class="btnSeeAll">See All</button>
-            </div>
-            <div class="div-hidingScrollBar" id="div-middle-right-popularSeries">
-              <img class="img-loading-gif" src="../cache/icons/loading.gif" />
-            </div>
-          </div>
-
+         </div>
+         <div id="div-loadingGifDiv"></div>
         </div>
       </div>
     </div>
   </body>
-</html>
+  <script src="libraryPage.js" defer></script>
 
+</html>

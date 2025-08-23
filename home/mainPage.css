@@ -40,7 +40,7 @@ input, button, textarea, :focus {
   user-drag: none;
   user-select: none;
   cursor: default;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: fill 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 button{
   cursor:pointer;
@@ -114,23 +114,30 @@ body, html {
   border-radius:10px;
   text-align:center;
   border:none;
-  width:45px;
-  height:45px;
-}
-.btn-middle-left:hover #img-middle-left{
+  width:55px;
+  height:55px;
   cursor:pointer;
-  background-color: rgba(0,0,0,0%);
-}
-.btn-middle-left:hover{
-  cursor:pointer;
-  background-color: rgba(var(--hovering-color));
-}
-#img-middle-left{
-  height:30px;
-  width:30px;
 }
 
-#div-middle-right {
+.btn-middle-left .icon{
+  fill: rgba(var(--icon-color),1);
+  background-color:transparent;
+  cursor:pointer;
+}
+
+.btn-middle-left:hover .icon {
+  fill: rgba(var(--icon-hover-color),0.9);
+}
+
+.btn-middle-left:hover{
+  background-color: rgba(var(--hovering-color));
+}
+.btn-middle-left .icon{
+  height:40px;
+  width:40px;
+}
+
+#div-middle-right{
   flex: 1;
   background: rgba(var(--primary-color));
   box-sizing: border-box;

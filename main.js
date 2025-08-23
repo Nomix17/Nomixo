@@ -33,7 +33,7 @@ const createWindow = async () => {
 
 }
 
-
+let libraryFilePath = __dirname+"/library.json";
 var closeWindow = true;
 
 app.on("ready", () => {
@@ -168,6 +168,49 @@ ipcMain.on("save-video",() => {
     });
   });
 });
+
+ipcMain.on("add-to-lib", (event,mediaInfo)=>{
+  let LibraryInfo = getLibraryInfo() 
+  LibraryInfo.media.push(mediaInfo); 
+  insertNewInfoToLibrary(LibraryInfo);
+});
+
+ipcMain.on("remove-from-lib", (event,mediaInfo) => {
+  let LibraryInfo = getLibraryInfo();
+  LibraryInfo.media = LibraryInfo.media.filter(element => !(element.MediaId == mediaInfo.MediaId && element.MediaType == mediaInfo.MediaType));
+  insertNewInfoToLibrary(LibraryInfo);
+});
+
+ipcMain.handle("load-from-lib", (event, targetIdentification)=>{
+    let LibraryInfo = getLibraryInfo();
+    if(LibraryInfo.media.length){
+    if(targetIdentification == undefined) return LibraryInfo.media;
+      console.log(LibraryInfo)
+      let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId == targetIdentification.MediaId && element.MediaType == targetIdentification.MediaType);
+      console.log(targetLibraryInfo)
+      if(targetLibraryInfo.length) return targetLibraryInfo; 
+      throw new Error("Target Not Found");
+    }else{
+      throw new Error("Target Not Found");
+    }
+});
+
+function getLibraryInfo(){
+  try{
+    const LibraryData = fs.readFileSync(libraryFilePath,"utf-8");
+    return JSON.parse(LibraryData);
+  }catch(err){
+    return {media:[]};
+  }
+}
+
+function insertNewInfoToLibrary(newData){
+  fs.writeFile(libraryFilePath,JSON.stringify(newData,null,2), err=>{
+     if(err){
+       console.error(err);
+     }
+  });
+}
 
 
 function loadSettings() {

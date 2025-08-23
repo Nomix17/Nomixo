@@ -25,18 +25,30 @@
 
         <!-- left div -->
         <div id="div-middle-left">
-          <button class="btn-middle-left" id="btn-home" onclick="backToHome()">
-            <img id="img-middle-left" src="../cache/icons/home.png" />
-          </button><br>
-          <button class="btn-middle-left" id="btn-discover" onclick="openDiscoveryPage('All','All')">
-            <img id="img-middle-left" src="../cache/icons/discover.png" />
-          </button><br>
-          <button class="btn-middle-left" id="btn-library">
-            <img id="img-middle-left" src="../cache/icons/library.png" />
-          </button><br>
-          <button class="btn-middle-left" id="btn-settings" onclick="OpenSettingsPage()">
-            <img id="img-middle-left" src="../cache/icons/settings.png" />
-          </button><br>
+          <button class="btn-middle-left" id="btn-home" onclick="backToHome()" aria-label="Home">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z"/>
+              <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z"/>
+            </svg>
+          </button></br>
+
+          <button class="btn-middle-left" id="btn-discover" onclick="openDiscoveryPage('All','All')" aria-label="Discover">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+              <path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM370.7 389.1L226.4 444.6C207 452.1 187.9 433 195.4 413.6L250.9 269.3C254.2 260.8 260.8 254.2 269.3 250.9L413.6 195.4C433 187.9 452.1 207 444.6 226.4L389.1 370.7C385.9 379.2 379.2 385.8 370.7 389.1zM352 320C352 302.3 337.7 288 320 288C302.3 288 288 302.3 288 320C288 337.7 302.3 352 320 352C337.7 352 352 337.7 352 320z"/>
+            </svg>
+          </button></br>
+
+          <button class="btn-middle-left" id="btn-library" onclick="OpenLibaryPage()" aria-label="Library">
+            <svg class="icon" viewBox="0 0 640 640">
+              <path d="M192 64C156.7 64 128 92.7 128 128L128 544C128 555.5 134.2 566.2 144.2 571.8C154.2 577.4 166.5 577.3 176.4 571.4L320 485.3L463.5 571.4C473.4 577.3 485.7 577.5 495.7 571.8C505.7 566.1 512 555.5 512 544L512 128C512 92.7 483.3 64 448 64L192 64z"/>
+            </svg>
+          </button></br>
+
+          <button class="btn-middle-left" id="btn-settings" onclick="OpenSettingsPage()" aria-label="Settings">
+            <svg class="icon" viewBox="0 0 640 640">
+              <path d="M259.1 73.5C262.1 58.7 275.2 48 290.4 48L350.2 48C365.4 48 378.5 58.7 381.5 73.5L396 143.5C410.1 149.5 423.3 157.2 435.3 166.3L503.1 143.8C517.5 139 533.3 145 540.9 158.2L570.8 210C578.4 223.2 575.7 239.8 564.3 249.9L511 297.3C511.9 304.7 512.3 312.3 512.3 320C512.3 327.7 511.8 335.3 511 342.7L564.4 390.2C575.8 400.3 578.4 417 570.9 430.1L541 481.9C533.4 495 517.6 501.1 503.2 496.3L435.4 473.8C423.3 482.9 410.1 490.5 396.1 496.6L381.7 566.5C378.6 581.4 365.5 592 350.4 592L290.6 592C275.4 592 262.3 581.3 259.3 566.5L244.9 496.6C230.8 490.6 217.7 482.9 205.6 473.8L137.5 496.3C123.1 501.1 107.3 495.1 99.7 481.9L69.8 430.1C62.2 416.9 64.9 400.3 76.3 390.2L129.7 342.7C128.8 335.3 128.4 327.7 128.4 320C128.4 312.3 128.9 304.7 129.7 297.3L76.3 249.8C64.9 239.7 62.3 223 69.8 209.9L99.7 158.1C107.3 144.9 123.1 138.9 137.5 143.7L205.3 166.2C217.4 157.1 230.6 149.5 244.6 143.4L259.1 73.5zM320.3 400C364.5 399.8 400.2 363.9 400 319.7C399.8 275.5 363.9 239.8 319.7 240C275.5 240.2 239.8 276.1 240 320.3C240.2 364.5 276.1 400.2 320.3 400z"/>
+            </svg>
+          </button></br>
         </div>
     
         <!-- right div -->
