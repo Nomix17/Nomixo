@@ -2,6 +2,10 @@ let data = new URLSearchParams(window.location.search);
 let personId = data.get("personId");
 let MediaSuggestions = document.getElementById("div-MediaSuggestions")
 
+setTimeout(()=>{
+  document.body.style.opacity = "1";
+},80);
+
 function getPersonInfo(apiKey,personId){
   fetch(`https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}`)
   .then(PersonData => PersonData.json())
@@ -99,11 +103,11 @@ function backToHome(){
 }
 
 function openSearchPage(){
-  path = "./search/searchPage.html?search="+searchKeyword;
   let searchKeyword = document.getElementById("input-searchForMovie").value;
+  path = "./search/searchPage.html?search="+searchKeyword;
   if(searchKeyword !="") window.electronAPI.navigateTo(path);
-
 }
+
 function openDetailPage(movieId,MediaType){
   path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+MediaType;
   window.electronAPI.navigateTo(path);

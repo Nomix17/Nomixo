@@ -7,6 +7,9 @@ let SelectGenre = document.getElementById("select-Genres");
 let MediaSuggestions = document.getElementById("div-MediaSuggestions")
 SelectMediaType.value = MediaType;
 
+setTimeout(()=>{
+  document.body.style.opacity = "1";
+},80);
 
 function fetchData(apiKey,genreId, ThisMediaType,page){
   let url ="";
@@ -144,8 +147,10 @@ window.addEventListener("keydown",(event)=>{
 // on click functions
 function openSearchPage(){
   let searchKeyword = document.getElementById("input-searchForMovie").value;
-  path ="./search/searchPage.html?search="+searchKeyword;
-  window.electronAPI.navigateTo(path);
+  if(searchKeyword.trim() != ""){
+    path ="./search/searchPage.html?search="+searchKeyword;
+    window.electronAPI.navigateTo(path);
+  }
 }
 
 function openDetailPage(movieId,mediaType){
@@ -172,3 +177,10 @@ function OpenSettingsPage(){
   path = "./settingsPage/settingsPage.html"
   window.electronAPI.navigateTo(path);
 }
+
+setLeftButtonStyle("btn-discover");
+function setLeftButtonStyle(buttonId){
+  let targetedButton = document.getElementById(buttonId);
+  let buttonIcon = targetedButton.querySelector(".icon");
+  buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
+} 

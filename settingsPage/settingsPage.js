@@ -27,12 +27,14 @@ let BackgroundColor ="black";
 let Opacity = 0;
 let choosenTheme;
 
+setTimeout(()=>{
+  document.body.style.opacity = "1";
+},100);
 
 loadSettings();
 
 ZoomFactorInput.addEventListener("input",(event)=>{
   ZoomFactorValue = ZoomFactorInput.value/50;
-  console.log(ZoomFactorValue);
   setBubbleValue(ZoomFactorValue);
 });
 
@@ -94,16 +96,56 @@ ApplyButton.addEventListener("click",()=>{
     SubBackgroundOpacityLevel: Opacity
   }
 
+  let ThemeObj = getThemeSettings();
   window.electronAPI.applySettings(SettingsObj);
-
+  window.electronAPI.applyTheme(ThemeObj);
+  window.location.reload()
   setBubbleValue(ZoomFactorInput.value);
 });
+
+
 window.addEventListener("keydown",(event)=>{
   if(event.key == "Escape") window.electronAPI.goBack();
   if (event.key == "Tab" ||
       event.key == "Super" ||
       event.key == "Alt" ) event.preventDefault();
 });
+
+loadTheme();
+
+async function loadTheme(){
+  let ThemeObj = await window.electronAPI.loadTheme();
+  ThemeObj.theme.forEach(obj => {
+  //   if(elementId != 
+    let elementId = Object.keys(obj)[0];
+    let elementValue = obj[Object.keys(obj)[0]];
+
+    if(elementId == "dont-Smooth-transition-between-pages"){
+      if(!parseInt(elementValue)) document.getElementById("dont-Smooth-transition-between-pages").click();
+    }
+    let inputColor;
+    let alphaValue;
+
+    let inputElement = document.getElementById(elementId);
+
+    if(elementValue.split(",").length === 4){
+      let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
+      inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
+      alphaValue = elementValue.split(",")[3];
+      alphaInputRange.value = parseFloat(alphaValue)*100;
+    }else{
+      inputColor = elementValue;
+    }
+
+    inputElement.value = rgbToHex(inputColor);
+  });
+}
+
+function rgbToHex(rgb){
+  let parts = rgb.split(",").map(Number);
+  return "#" + parts.map(x => x.toString(16).padStart(2,"0")).join("");
+}
+
 
 async function loadSettings(){
   SettingsObj = await window.electronAPI.loadSettings();
@@ -158,12 +200,72 @@ function openDiscoveryPage(genreId, MediaType){
   window.electronAPI.navigateTo(path);
 }
 
-function OpenSettingsPage(){
-  path = "./settingsPage/settingsPage.html"
-  window.electronAPI.navigateTo(path);
-}
-
 function OpenLibaryPage(){
   path = "./libraryPage/libraryPage.html";
   window.electronAPI.navigateTo(path);
 }
+
+setLeftButtonStyle("btn-settings");
+function setLeftButtonStyle(buttonId){
+  let targetedButton = document.getElementById(buttonId);
+  let buttonIcon = targetedButton.querySelector(".icon");
+  buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
+}
+
+function hexToRgb(hex){
+  let HexadisimalColor = parseInt(hex.replace("#",""),16);
+  let r = (HexadisimalColor >> 16) & 0xff;
+  let g = (HexadisimalColor >> 8) & 0xff;
+  let b = (HexadisimalColor) & 0xff;
+  return [r,g,b];
+}
+
+// saveThemeSettings();
+function getThemeSettings(){
+  let ThemeObjs = {theme:[]};
+  let ThemeSettingsInputElements = document.querySelectorAll('#themeTable input[type="color"]');
+  let SmoothTransition =  document.getElementById("dont-Smooth-transition-between-pages");
+  ThemeObjs.theme.push({"--dont-Smooth-transition-between-pages":SmoothTransition.checked?0:1});
+  ThemeSettingsInputElements.forEach(input => {
+    let colorValue = [...hexToRgb(input.value)];
+    let inputParent = input.parentElement;
+    let alphaRangeElement = inputParent.getElementsByClassName("alphaRangeValue")[0];
+    if(alphaRangeElement) colorValue.push(alphaRangeElement.value/100);
+    let rgbaColor = colorValue.join(",");
+    ThemeObjs.theme.push({["--"+input.id]:rgbaColor});
+  })
+  return ThemeObjs;
+}
+
+(function(){
+  let ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
+  ColorInputsWithAlphaValue.forEach(input => {
+    input.addEventListener("input", ()=>{
+      let ouputElement = input.parentElement.querySelector("input[type='range']");
+      let rgbaColor = hexToRgb(input.value);
+      let startingColor = `rgba(${rgbaColor[0]},${rgbaColor[1]},${rgbaColor[2]},0)`;
+      let endingColor = `rgba(${rgbaColor[0]},${rgbaColor[1]},${rgbaColor[2]},1)`;
+      ouputElement.style.background = `linear-gradient(to right, ${startingColor}, ${endingColor})`
+    });
+  });
+})();
+
+(function(){
+  let alphaInputs = document.querySelectorAll(".alphaRangeValue");
+  alphaInputs.forEach(inputelement => {
+    let ouputElement = inputelement.parentElement.querySelector("output[class='alphaValueFloatingDiv']");
+    inputelement.addEventListener("input", () => {
+      ouputElement.style.left = 20+inputelement.offsetWidth*(inputelement.value/100);
+      ouputElement.innerHTML = `<span style="font-size:13px;white-space:nowrap;background-color:rgba(0,0,0,0)">alpha: ${inputelement.value}%</span>`;
+      ouputElement.style.opacity = 1;
+    });
+    inputelement.addEventListener("mouseenter", () => {
+      ouputElement.style.left = 20+inputelement.offsetWidth*(inputelement.value/100);
+      ouputElement.innerHTML = `<span style="font-size:13px;white-space:nowrap;background-color:rgba(0,0,0,0)">alpha: ${inputelement.value}%</span>`;
+      ouputElement.style.opacity = 1;
+    });
+    inputelement.addEventListener("mouseleave", () => {
+      ouputElement.style.opacity = 0;
+    });
+  });
+})();

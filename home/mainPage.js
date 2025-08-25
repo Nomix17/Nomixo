@@ -5,6 +5,10 @@ let searchInput = document.getElementById("input-searchForMovie");
 let continueWatchingArray = [];
 if(continueWatchingArray.length === 0) document.querySelector(".div-categories-description").remove();
 
+setTimeout(()=>{
+  document.body.style.opacity = "1";
+},80);
+
 async function loadMovies(){
 
   const apiKey = await window.electronAPI.getAPIKEY().then();
@@ -149,7 +153,7 @@ function openDetailPage(movieId,mediaType){
 // on click functions
 function openSearchPage(){
   let searchKeyword = searchInput.value;
-  if(searchKeyword !=""){
+  if(searchKeyword.trim() !=""){
     let path ="./search/searchPage.html?search="+searchKeyword;
     window.electronAPI.navigateTo(path);
   }
@@ -157,11 +161,6 @@ function openSearchPage(){
 
 function fullscreenClicked(){
   window.electronAPI.toggleFullscreen();
-}
-
-function backToHome(){
-  let path = "./home/mainPage.html";
-  window.electronAPI.navigateTo(path);
 }
 
 function openDiscoveryPage(genreId, MediaType){
@@ -178,3 +177,10 @@ function OpenLibaryPage(){
   path = "./libraryPage/libraryPage.html"
   window.electronAPI.navigateTo(path);
 }
+
+setLeftButtonStyle("btn-home");
+function setLeftButtonStyle(buttonId){
+  let targetedButton = document.getElementById(buttonId);
+  let buttonIcon = targetedButton.querySelector(".icon");
+  buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
+} 

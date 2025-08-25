@@ -2,6 +2,10 @@ let SelectMediaType = document.getElementById("select-type");
 let SavedMedia = document.getElementById("div-SavedMedia")
 SelectMediaType.value = "all";
 
+setTimeout(()=>{
+  document.body.style.opacity = "1";
+},80);
+
 function fetchMediaData(apiKey,wholeLibraryInformation){
   wholeLibraryInformation.forEach(mediaEntryPoint =>{
     let MediaId = mediaEntryPoint.MediaId;
@@ -93,9 +97,12 @@ window.addEventListener("keydown",(event)=>{
 // on click functions
 function openSearchPage(){
   let searchKeyword = document.getElementById("input-searchForMovie").value;
-  path ="./search/searchPage.html?search="+searchKeyword;
-  window.electronAPI.navigateTo(path);
+  if(searchKeyword.trim() != ""){
+    path ="./search/searchPage.html?search="+searchKeyword;
+    window.electronAPI.navigateTo(path);
+  }
 }
+
 function openDetailPage(movieId,mediaType){
   path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
   window.electronAPI.navigateTo(path);
@@ -117,4 +124,11 @@ function fullscreenClicked(){
 function OpenSettingsPage(){
   path = "./settingsPage/settingsPage.html"
   window.electronAPI.navigateTo(path);
+}
+
+setLeftButtonStyle("btn-library");
+function setLeftButtonStyle(buttonId){
+  let targetedButton = document.getElementById(buttonId);
+  let buttonIcon = targetedButton.querySelector(".icon");
+  buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
 }

@@ -7,6 +7,9 @@ const https = require("https");
 const os = require("os");
 
 let SettingsFilePath = path.join(__dirname,"settings.json");
+let ThemeFilePath = path.join(__dirname,"Themes/Original.css");
+let libraryFilePath = path.join(__dirname,"library.json");
+
 require("dotenv").config();
 
 var mainzoomFactor = 1;
@@ -33,7 +36,6 @@ const createWindow = async () => {
 
 }
 
-let libraryFilePath = __dirname+"/library.json";
 var closeWindow = true;
 
 app.on("ready", () => {
@@ -52,7 +54,18 @@ ipcMain.handle("load-settings",() => {
       let settingsObj = loadSettings();
       resolve(settingsObj);
     }catch{
-      reject("Something Went Wrong!");
+      reject("Something Went Wrong When Loading Settings!");
+    }
+  });
+});
+
+ipcMain.handle("load-theme",()=>{
+  return new Promise((resolve,reject) => {
+    try{
+      let themeObj = loadTheme();
+      resolve(themeObj);
+    }catch{
+      reject("Something Went Wrong When Loading Theme!");
     }
   });
 });
@@ -63,6 +76,18 @@ ipcMain.handle("apply-settings",(event, SettingsObj) => {
   mainzoomFactor = SettingsObj.PageZoomFactor;
   webContents.setZoomFactor(SettingsObj.PageZoomFactor);
   fs.writeFile(SettingsFilePath, JSON.stringify(SettingsObj, null, 2), (err) => {console.log(err)});
+});
+
+ipcMain.on("apply-theme",(event, ThemeObj) =>{
+  let formatedThemeObj = ThemeObj.theme.map(obj=>`${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`);
+
+  let themeFileContent = `:root{
+    ${formatedThemeObj.join(";\n")}
+  ;}`;
+
+  fs.writeFile(ThemeFilePath,themeFileContent, (err)=>{
+    console.log(err)
+  });
 });
 
 ipcMain.handle("go-back",(event)=>{
@@ -185,9 +210,7 @@ ipcMain.handle("load-from-lib", (event, targetIdentification)=>{
     let LibraryInfo = getLibraryInfo();
     if(LibraryInfo.media.length){
     if(targetIdentification == undefined) return LibraryInfo.media;
-      console.log(LibraryInfo)
       let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId == targetIdentification.MediaId && element.MediaType == targetIdentification.MediaType);
-      console.log(targetLibraryInfo)
       if(targetLibraryInfo.length) return targetLibraryInfo; 
       throw new Error("Target Not Found");
     }else{
@@ -227,5 +250,37 @@ function loadSettings() {
       SubBackgroundColor: "black",
       SubBackgroundOpacityLevel: 0
     };
+  }
+}
+
+function loadTheme(){
+  try{
+    let ThemeObj = {theme:[]};
+    let savedTheme = fs.readFileSync(ThemeFilePath, "utf-8");
+    savedTheme = savedTheme.replaceAll(":root{","").replaceAll("}","").replaceAll("--","").replaceAll(";","").replaceAll(" ","");
+    let linesArray = savedTheme.split("\n").filter(line => line != "");
+    ThemeObj.theme = linesArray.map(obj => {
+      const [key, value] = obj.split(":");
+      return {[key]:value};
+    });
+    return ThemeObj;
+  }catch(err){
+    console.error(err);
+    ThemeObj = {
+      theme:[
+        {'secondary-color':'0,0,0,0.5'},
+        {'main-buttons-color':'0,0,0,0.3'},
+        {'primary-color':'22,20,49'},
+        {'div-containers-borders-color':'255,255,255,0.0'},
+        {'MovieElement-hover-BorderColor':'255,255,255'},
+        {'input-backgroundColor':'0,0,0,0.2'},
+        {'drop-down-color':'13,12,29,1'},
+        {'icon-color':'50,50,100'},
+        {'icon-hover-color':'100,70,190,1'},
+        {'text-color':'#ffffff'},
+        {'dont-Smooth-transition-between-pages':'0'}
+      ]
+    }
+    return ThemeObj;
   }
 }

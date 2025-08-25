@@ -5,6 +5,10 @@ let OtherRecommandationDiv = document.getElementById("div-middle-right-OtherReco
 
 let searchInput = document.getElementById("input-searchForMovie");
 
+setTimeout(()=>{
+  document.body.style.opacity = "1";
+},80);
+
 const params = new URLSearchParams(window.location.search);
 let searchKeyword = params.get("search");
 const apiKey = window.electronAPI.getAPIKEY();
@@ -62,7 +66,6 @@ function loadSearchInformation(apiKey){
 
 function insertResultsElement(data){
   let searchResults = data.results;
-  console.log(searchResults);
   searchResults.forEach(obj => {
     let Id = "Unknown";
     let Title = "Unknown";
@@ -186,6 +189,6 @@ function OpenSettingsPage(){
 }
 
 function OpenLibaryPage(){
-  path = "./settingsPage/libraryPage.html"
+  path = "./libraryPage/libraryPage.html"
   window.electronAPI.navigateTo(path);
 }

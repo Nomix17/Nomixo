@@ -1,6 +1,6 @@
 #div-main {
   height: 100vh;
-  display: none;
+  opacity: var(--dont-Smooth-transition-between-pages);
   flex-direction: column;
 }
 ::-webkit-scrollbar{
@@ -27,7 +27,7 @@ input, button, textarea, :focus {
   user-drag: none;
   user-select: none;
   cursor: default;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
 }
 
 body{
@@ -35,7 +35,9 @@ body{
   margin: 0;
   padding: 0;
   overflow: hidden;
+  opacity:1;
 }
+
 
 h1,
 h2,
@@ -79,7 +81,7 @@ p{
 }
 #btn-fullscreen:hover,
 #btn-goBack:hover{
-  background-color:  rgba(0,0,0,0.3);
+  background-color:  rgba(var(--main-buttons-color));
 }
 
 #div-middle {
@@ -154,7 +156,7 @@ p{
   cursor: pointer;
 }
 #div-TorrentMedia:active{
-  border: 2px solid rgba(255, 255, 255, 100%);
+  border: 2px solid rgba(var(--MovieElement-hover-BorderColor));
   background-color: rgba(255, 255, 255, 10%);
 }
 .div-episodes-Element{

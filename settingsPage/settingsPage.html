@@ -53,18 +53,112 @@
     
         <!-- right div -->
         <div id="div-middle-right">
-          <div id="div-ZoomFactor">
-            <h1>Page Zoom Factor</h1>
-            <div id="zommFactorContainer">
+          <div id="ThemeOptionContainer">
+            <h1>Theme</h1>
+            <div id="zoomFactorContainer">
+              <h4>Page Zoom Factor</h4>
               <input id="input-ZoomFactor" type="range" name="foo"></input>
               <output for="foo" onforminput="value = foo.valueAsNumber;"></output>
             </div>
+            <table id="themeTable">
+              <tr>
+                <td>Page Smooth Transitions</td>
+                <td class="toCenter">
+                  <label class="custom-toggle">
+                    <input type="checkbox" id="dont-Smooth-transition-between-pages" />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                  </label>
+                </td>
+              <tr>
+                <td>Primary Color</td>
+                <td class="toCenter">
+                  <input id="primary-color" type="color"/>
+                </td>
+              </tr>
+              <tr>
+                <td>Secondary Color</td>
+                <td class="toCenter">
+                  <div class="ElementsTopOfEachOther">
+                    <input type="color" id="secondary-color"/>
+                    <input name="SecondaryColorAlphaRange" id="SecondaryColorAlphaRange" class="alphaRangeValue" type="range"/>
+                    <output class="alphaValueFloatingDiv" for="SecondaryColorAlphaRange" onforminput="value = foo.valueasnumber;"></output>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Frame Color</td>
+                <td class="toCenter">
+                  <div class="ElementsTopOfEachOther">
+                    <input type="color" id="div-containers-borders-color"/>
+                    <input name="frameColorAlphaValueRange" id="frameColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+                    <output class="alphaValueFloatingDiv" for="frameColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Main Buttons Color</td>
+                <td class="toCenter">
+                  <div class="ElementsTopOfEachOther">
+                    <input type="color" id="main-buttons-color"/>
+                    <input name="leftButtonsColorAlphaValueRange" id="leftButtonsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+                    <output class="alphaValueFloatingDiv" for="leftButtonsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Hovered Element Border Color</td>
+                <td class="toCenter">
+                  <input type="color" id="MovieElement-hover-BorderColor"/>
+                </td>
+              </tr>
+              <tr>
+                <td>Input Background Color</td>
+                <td class="toCenter">
+                  <div class="ElementsTopOfEachOther">
+                    <input type="color" id="input-backgroundColor"/>
+                    <input name="InputBgColorAlphaValueRange" id="InputBgColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+                    <output class="alphaValueFloatingDiv" for="InputBgColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Drop Down Color</td>
+                <td class="toCenter">
+                  <div class="ElementsTopOfEachOther">
+                    <input type="color" id="drop-down-color"/>
+                    <input name="DropDownAlphaValueRange" id="DropDownAlphaValueRange" class="alphaRangeValue" type="range"/>
+                    <output class="alphaValueFloatingDiv" for="DropDownAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+                  </div>
+                </td>
+              </tr>
+                <td>Icon Color</td>
+                <td class="toCenter">
+                  <input type="color" id="icon-color"/>
+                </td>
+              </tr>
+              <tr>
+                <td>Hoved Icon Color</td>
+                <td class="toCenter">
+                  <div class="ElementsTopOfEachOther">
+                    <input type="color" id="icon-hover-color"/>
+                    <input name="HoveredIconsBgAlphaValueRange" id="HoveredIconsBgAlphaValueRange" class="alphaRangeValue" type="range"/>
+                    <output class="alphaValueFloatingDiv" for="HoveredIconsBgAlphaValueRange" onforminput="value = foo.valueasnumber;"></output>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Text Color</td>
+                <td class="toCenter">
+                  <input type="color" id="text-color"/>
+                </td>
+              </tr>
+            </table>
           </div>
-          <!-- <div id="div-Theme"> -->
-          <!--   <h1>Change Theme</h1> -->
-          <!-- </div> -->
+          <div class="border"></div>
+          <h1>Subtitles</h1>
           <div id="div-PlayerSubtitles">
-            <h1>Subtitles</h1>
             <table>
               <tr>
                 <td>Enable Subtitles By Default</td>
@@ -91,12 +185,12 @@
                   <div class="dropdown">
                     <div id="currrectFont" class="dropdown-toggle">Menu</div>
                     <div id="dropDownMenu-Font" class="dropdown-menu">
-                      <div style="font-family: Arial">Arial</div>
+                      <div style="font-family: 'Arial'">Arial</div>
                       <div style="font-family: 'Montserrat'">Montserrat</div>
-                      <div style="font-family: monospace">monospace</div>
+                      <div style="font-family: 'monospace'">monospace</div>
                       <div style="font-family: 'Times New Roman'">Times New Roman</div>
                       <div style="font-family: 'Courier New'">Courier New</div>
-                      <div style="font-family: Georgia">Georgia</div>
+                      <div style="font-family: 'Georgia'">Georgia</div>
                       <div style="font-family: 'Comic Sans MS'">Comic Sans MS</div>
                   </div>
                 </td>

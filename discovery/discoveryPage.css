@@ -1,5 +1,9 @@
+body{
+  opacity:0;
+}
 *{
   background-color:rgba(var(--primary-color));
+  transition:opacity 0.1s ease;
 }
 #div-MediaSuggestions{
   display: flex;

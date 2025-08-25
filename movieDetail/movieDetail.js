@@ -97,19 +97,18 @@ function insertEpisodesElements(data,title){
     });
 
     EpisodeElement.addEventListener("mouseleave",()=>{
-      if(EpisodeElement.style.borderColor != "rgb(255, 255, 255)")
+      if(EpisodeElement.style.borderColor != "rgba(var(--MovieElement-hover-BorderColor), 100%)")
         EpisodeElement.style.backgroundColor = "rgba(0,0,0,0)";
     });
     EpisodeElement.addEventListener("click",() => {
       let EpisodeElements = SeasonDiv.querySelectorAll('div[class="div-episodes-Element"');
-      console.log(EpisodeElements);
       EpisodeElements.forEach(element =>{
         if(element != EpisodeElement){
           element.style.borderColor = "rgba(0,0,0,0)";
           element.style.backgroundColor = "rgba(0,0,0,0)";
         }else{
-          element.style.borderColor = "rgba(255, 255, 255, 100%)";
-          element.style.backgroundColor = "rgba(255, 255, 255, 10%)";
+          element.style.borderColor = "rgba(var(--MovieElement-hover-BorderColor), 100%)";
+          element.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
         }
       });
 
@@ -194,7 +193,6 @@ function insertMovieElements(data,apiKey){
   if(data.hasOwnProperty("seasons")) Seasons = data["seasons"];
 
 
-  // console.log(backgroundImage);
   if(backgroundImage != "https://image.tmdb.org/t/p/original/null"){
     document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
     document.documentElement.style.backgroundRepeat = `no-repeat`;
@@ -244,7 +242,9 @@ function insertMovieElements(data,apiKey){
     newGenreElement.innerText = element.name;
     DivGenresContainer.append(newGenreElement);
   });
-  document.getElementById("div-main").style.display = "flex";
+
+    document.getElementById("div-main").style.opacity = "1";
+
 }
 
 function insertCastElements(data){

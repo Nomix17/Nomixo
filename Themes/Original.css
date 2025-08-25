@@ -1,10 +1,13 @@
 :root{
-  /* --primary-color: 1,18,26; */
-  --primary-color: 22,20,49;
-  --icon-color: 50,50,100;
-  --icon-hover-color:100,100,150;
-  --text-color: #ffffff;
-  --input-color: 0,0,0,0.2;
-  --hovering-color:0,0,0,0.2;
-  --MovieElement-hover-BorderColor: 255,255,255;
-}
+    --dont-Smooth-transition-between-pages:0;
+--primary-color:22,20,49;
+--secondary-color:0,0,0,0.5;
+--div-containers-borders-color:255,255,255,0;
+--main-buttons-color:0,0,0,0.3;
+--MovieElement-hover-BorderColor:255,255,255;
+--input-backgroundColor:0,0,0,0.16;
+--drop-down-color:13,12,29,1;
+--icon-color:50,50,100;
+--icon-hover-color:105,91,210,0.74;
+--text-color:0,0,0
+  ;}
