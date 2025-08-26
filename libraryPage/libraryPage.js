@@ -1,10 +1,10 @@
 let SelectMediaType = document.getElementById("select-type");
 let SavedMedia = document.getElementById("div-SavedMedia")
+let searchInput = document.getElementById("input-searchForMovie");
+
 SelectMediaType.value = "all";
 
-setTimeout(()=>{
-  document.body.style.opacity = "1";
-},80);
+addSmoothTransition();
 
 function fetchMediaData(apiKey,wholeLibraryInformation){
   wholeLibraryInformation.forEach(mediaEntryPoint =>{
@@ -41,35 +41,45 @@ function createMediaElement(mediaData, ThisMediaType){
       
       let movieDomElement = document.createElement("div");
       let moviePosterElement = document.createElement("img");
+      let removeFromLibraryButton = document.createElement("button"); 
       let movieNameElement = document.createElement("p");
-
       movieNameElement.innerText = Title;
       moviePosterElement.src = PosterImage;
       
       movieDomElement.classList.add("div-MovieElement");
       moviePosterElement.classList.add("img-MoviePoster");
+      removeFromLibraryButton.classList.add("btn-remove-from-library");
       movieNameElement.classList.add("parag-MovieTitle");
-
+      
+      removeFromLibraryButton.innerHTML = `            
+        <svg class="closeButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" preserveAspectRatio="none">
+          <path d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"/>
+        </svg>`
       movieDomElement.appendChild(moviePosterElement);
+      movieDomElement.appendChild(removeFromLibraryButton);
       movieDomElement.appendChild(movieNameElement); 
-
-      movieDomElement.addEventListener("click",function() {openDetailPage(Id,ThisMediaType)});
+      
+      removeFromLibraryButton.addEventListener("click",()=>{removeMediaFromLibrary(Id,ThisMediaType,movieDomElement)});
+      movieDomElement.addEventListener("click",()=>{openDetailPage(Id,ThisMediaType)});
       return movieDomElement;
 }
 
+function displayThatTheLibraryEmpty(){
+  let EmptyLibraryElement = document.createElement("span");
+  EmptyLibraryElement.innerText = "Your Library is Empty";
+  SavedMedia.appendChild(EmptyLibraryElement);
+  return EmptyLibraryElement;
+}
+
 async function loadData(){
-  // SavedMedia.innerHTML ="";
   const apiKey = await window.electronAPI.getAPIKEY();
   const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
   if(wholeLibraryInformation == undefined){
-    let EmptyLibraryElement = document.createElement("span");
-    EmptyLibraryElement.innerText = "Your Library is Empty";
-    SavedMedia.appendChild(EmptyLibraryElement);
+    displayThatTheLibraryEmpty();
     return;
   }
-  
-  let loadingGifDiv =  document.getElementById("div-loadingGifDiv");
-  loadingGifDiv.innerHTML = "";
+  let loadingGifDiv =  document.getElementById("MainLoadingGif");
+  loadingGifDiv.remove();
   fetchMediaData(apiKey,wholeLibraryInformation);
 
   SelectMediaType.addEventListener("change",()=>{
@@ -79,56 +89,30 @@ async function loadData(){
   });
 }
 
+function removeMediaFromLibrary(mediaId,mediaType,parentDiv){
+  let MediaLibraryObject = {
+    MediaId:mediaId,
+    MediaType:mediaType
+  }
+  parentDiv.style.opacity = 0;
+  setTimeout(()=>{
+    let MediaElementsContainer = parentDiv.parentElement;
+    parentDiv.remove();
+    if(MediaElementsContainer.innerHTML.trim() == ""){
+      displayThatTheLibraryEmpty();
+    }
+  },100);
+
+  window.electronAPI.removeMediaFromLibrary(MediaLibraryObject);
+
+  event.stopPropagation();
+}
+
+
 loadData();
 
-let searchInput = document.getElementById("input-searchForMovie");
-searchInput.addEventListener("keypress",(event)=>{
-  if(event.key == "Enter") openSearchPage();
-});
+setupKeyPressesForInputElement(searchInput);
 
-window.addEventListener("keydown",(event)=>{
-  if(event.key == "Escape") window.electronAPI.goBack();
-  if (event.key == "Tab" ||
-      event.key == "Super" ||
-      event.key == "Alt" ) event.preventDefault();
-});
-
-
-// on click functions
-function openSearchPage(){
-  let searchKeyword = document.getElementById("input-searchForMovie").value;
-  if(searchKeyword.trim() != ""){
-    path ="./search/searchPage.html?search="+searchKeyword;
-    window.electronAPI.navigateTo(path);
-  }
-}
-
-function openDetailPage(movieId,mediaType){
-  path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
-  window.electronAPI.navigateTo(path);
-}
-function backToHome(){
-  path = "./home/mainPage.html"
-  window.electronAPI.navigateTo(path);
-}
-
-function openDiscoveryPage(genreId, MediaType){
-  let path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
-  window.electronAPI.navigateTo(path);
-}
-
-function fullscreenClicked(){
-  window.electronAPI.toggleFullscreen();
-}
-
-function OpenSettingsPage(){
-  path = "./settingsPage/settingsPage.html"
-  window.electronAPI.navigateTo(path);
-}
+setupKeyPressesHandler();
 
 setLeftButtonStyle("btn-library");
-function setLeftButtonStyle(buttonId){
-  let targetedButton = document.getElementById(buttonId);
-  let buttonIcon = targetedButton.querySelector(".icon");
-  buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
-}

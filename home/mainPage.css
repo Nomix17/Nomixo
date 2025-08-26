@@ -2,6 +2,10 @@
   font-family: Montserrat;
   src: url("../cache/fonts/Montserrat-VariableFont_wght.ttf");
 }
+img,
+svg{
+    pointer-events: none;
+}
 h1{
   padding-left: 5px;
 }
@@ -318,5 +322,55 @@ body, html {
 
 input::selection {
   background: rgba(100,100,100,40%);
- ;
+}
+
+.btn-toggle-in-library,
+.btn-remove-from-library{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:absolute;
+  top:7%;
+  right:4%;
+  width:30px;
+  height:30px;
+  border-radius:100%;
+  border:3px solid rgba(255,255,255,0.0);
+  background-color:rgba(255,255,255,0.0);
+  z-index:0;
+  cursor:pointer;
+}
+.btn-toggle-in-library[pressed=" "] .toggleButtonIcon{
+  fill: rgba(255,255,255,0.3);
+}
+
+.toggleButtonIcon,
+.closeButtonIcon{
+  width:25px;
+  height:25px;
+  background-color:transparent;
+  fill: rgba(255,255,255,0.0);
+  flex-shrink: 0;
+  cursor:pointer;
+}
+.toggleButtonIcon{
+  width:20px;
+  height:20px;
+}
+.div-MovieElement:hover .closeButtonIcon,
+.div-MovieElement:hover .toggleButtonIcon{
+  fill: rgba(255,255,255,0.3);
+}
+
+
+.btn-toggle-in-library:hover .toggleButtonIcon,
+.btn-remove-from-library:hover .closeButtonIcon{
+  fill:white;
+  transform: scale(1.07);
+}
+
+.btn-toggle-in-library:active .toggleButtonIcon,
+.btn-remove-from-library:active .closeButtonIcon{
+  fill:rgba(255,255,255,0.3);
+  transform: scale(0.99);
 }

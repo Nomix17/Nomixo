@@ -27,15 +27,9 @@ let BackgroundColor ="black";
 let Opacity = 0;
 let choosenTheme;
 
-setTimeout(()=>{
-  document.body.style.opacity = "1";
-},100);
-
-loadSettings();
-
 ZoomFactorInput.addEventListener("input",(event)=>{
   ZoomFactorValue = ZoomFactorInput.value/50;
-  setBubbleValue(ZoomFactorValue);
+  setFloatingZoomFactorDiv(ZoomFactorValue);
 });
 
 ZoomFactorInput.addEventListener("mouseenter",()=>{
@@ -100,18 +94,8 @@ ApplyButton.addEventListener("click",()=>{
   window.electronAPI.applySettings(SettingsObj);
   window.electronAPI.applyTheme(ThemeObj);
   window.location.reload()
-  setBubbleValue(ZoomFactorInput.value);
+  setFloatingZoomFactorDiv(ZoomFactorInput.value);
 });
-
-
-window.addEventListener("keydown",(event)=>{
-  if(event.key == "Escape") window.electronAPI.goBack();
-  if (event.key == "Tab" ||
-      event.key == "Super" ||
-      event.key == "Alt" ) event.preventDefault();
-});
-
-loadTheme();
 
 async function loadTheme(){
   let ThemeObj = await window.electronAPI.loadTheme();
@@ -160,7 +144,7 @@ async function loadSettings(){
   Opacity = SettingsObj.SubBackgroundOpacityLevel;
 
   ZoomFactorInput.value =   ZoomFactorValue*50;
-  setBubbleValue(ZoomFactorValue);
+  setFloatingZoomFactorDiv(ZoomFactorValue);
   if(SubtitlesOnByDefault) toggleButton.click();
   FontSizePara.innerText = FontSize+"%";
   CurrentFont.innerText = FontFamily;
@@ -170,7 +154,7 @@ async function loadSettings(){
 }
 
 
-function setBubbleValue(value) {
+function setFloatingZoomFactorDiv(value) {
   let bubble = document.querySelector('output[for="foo"]');
   bubble.innerHTML = Math.round(value * 100) + " %";
   let marginLeft = 120;
@@ -186,32 +170,6 @@ function setBubbleValue(value) {
   bubble.style.left = marginLeft+newLeft + "px";
 }
 
-
-function fullscreenClicked(){
-  window.electronAPI.toggleFullscreen();
-}
-
-function backToHome(){
-  let path = "./home/mainPage.html";
-  window.electronAPI.navigateTo(path);
-}
-function openDiscoveryPage(genreId, MediaType){
-  let path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
-  window.electronAPI.navigateTo(path);
-}
-
-function OpenLibaryPage(){
-  path = "./libraryPage/libraryPage.html";
-  window.electronAPI.navigateTo(path);
-}
-
-setLeftButtonStyle("btn-settings");
-function setLeftButtonStyle(buttonId){
-  let targetedButton = document.getElementById(buttonId);
-  let buttonIcon = targetedButton.querySelector(".icon");
-  buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
-}
-
 function hexToRgb(hex){
   let HexadisimalColor = parseInt(hex.replace("#",""),16);
   let r = (HexadisimalColor >> 16) & 0xff;
@@ -220,7 +178,6 @@ function hexToRgb(hex){
   return [r,g,b];
 }
 
-// saveThemeSettings();
 function getThemeSettings(){
   let ThemeObjs = {theme:[]};
   let ThemeSettingsInputElements = document.querySelectorAll('#themeTable input[type="color"]');
@@ -269,3 +226,14 @@ function getThemeSettings(){
     });
   });
 })();
+
+
+addSmoothTransition();
+
+loadTheme();
+
+loadSettings();
+
+setupKeyPressesHandler();
+
+setLeftButtonStyle("btn-settings");

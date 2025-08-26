@@ -263,6 +263,7 @@ function loadTheme(){
       const [key, value] = obj.split(":");
       return {[key]:value};
     });
+    console.log(savedTheme);
     return ThemeObj;
   }catch(err){
     console.error(err);

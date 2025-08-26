@@ -3,6 +3,8 @@
     <meta charset="UTF-8">
     <title>Nomixo</title>
     <link rel="icon" href="../cache/icons/logo.png" type="image/x-icon">
+    <script src="../sharedFuncs.js" defer></script>
+    <script src="movieDetail.js" defer></script>
     <link rel="stylesheet" href="../Themes/Original.css">
     <link rel="stylesheet" href="../home/loadingDiv.css">
     <link rel="stylesheet" href="../home/mainPage.css">
@@ -49,7 +51,7 @@
           </div>
           <div id="addToLibrary">
             <button id="bookmarkbtn" class="btn-MovieDetailsButtons" onclick="addMediaToLibrary()">
-                <svg id="bookmarkicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <svg class="toggleButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                   <use href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/regular/bookmark.svg"></use>
                 </svg>Save To Library
             </button>
@@ -78,6 +80,5 @@
       </div>
     </div>
   </body>
-  <script src="movieDetail.js" defer></script>
 
 </html>

@@ -2,7 +2,9 @@ const data = new URLSearchParams(window.location.search);
 let movieId = data.get("MovieId");
 let MediaType = data.get("MediaType");
 var backgroundImage;
-let Title;
+
+console.log("hello");
+console.log(MediaType);
 
 let TorrentContainer = document.getElementById("div-movieMedias");
 let SerieEpisode = document.getElementById("div-serieEpisodes");
@@ -36,7 +38,7 @@ function loadMovieInformation(apiKey){
     .then(data =>{
       insertMovieElements(data,apiKey);
       let ReleaseYear;
-      Title;
+      let Title;
       if(data.hasOwnProperty("release_date")) ReleaseYear = new Date(data["release_date"]).getFullYear();
       else ReleaseYear = new Date(data["first_air_date"]).getFullYear();
       if(data.hasOwnProperty("title"))  Title = data["title"]+" "+ReleaseYear;
@@ -62,7 +64,6 @@ function loadCastInformation(apiKey){
 }
 
 function loadEpisodes(apiKey,series_id,season_number,title){
-  // serieEpisodeDiv.remove();
   fetch(`https://api.themoviedb.org/3/tv/${series_id}/season/${season_number}?api_key=${apiKey}`)
     .then(res => res.json())
     .then(data => insertEpisodesElements(data,title))
@@ -341,15 +342,10 @@ function displayEpisodes(seasonNumber){
   SerieEpisode.appendChild(selectElement);
   SerieEpisode.appendChild(currentSeasonDiv);
 }
+
+setupKeyPressesHandler();
 loadMediaEntryPointLibraryInfo();
 fetchInformation();
-
-window.addEventListener("keydown",(event)=>{
-  if(event.key == "Escape") window.electronAPI.goBack();
-  if (event.key == "Tab" ||
-      event.key == "Super" ||
-      event.key == "Alt" ) event.preventDefault();
-});
 
 resizeTorrentAndEpisodeElement(0.3);
 window.addEventListener("resize",(event)=>{
@@ -364,22 +360,9 @@ function resizeTorrentAndEpisodeElement(radio){
   TorrentContainer.style.minWidth = window.innerWidth*radio+"px";
 }
 
-function openDiscoveryPage(genreId, MediaType){
-  let path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
-  window.electronAPI.navigateTo(path);
-}
-
 function openProfilePage(personId){
   let path = `./personDetails/personDetails.html?personId=${personId}`;
   window.electronAPI.navigateTo(path);
-
-}
-function fullscreenClicked(){
-  window.electronAPI.toggleFullscreen();
-}
-
-function goBack(){
-  window.electronAPI.goBack();
 }
 
 function openMediaVideo(movieId,MagnetLink){
@@ -388,29 +371,16 @@ function openMediaVideo(movieId,MagnetLink){
   window.electronAPI.navigateTo(path); 
 }
 
-function setAddToLibraryButtonToPressed(){
-  addToLibraryButton.innerHTML = `<svg id="bookmarkicon" style="margin-left:3px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                  <path d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z"/>
-                                </svg>Saved !
-`
-    addToLibraryButton.setAttribute("pressed"," ");
-}
-
-function setAddToLibraryButtonToNormal(){
-  addToLibraryButton.innerHTML =`<svg id="bookmarkicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                    <use href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/regular/bookmark.svg"></use>
-                                  </svg>Save To Library`
-    addToLibraryButton.removeAttribute("pressed");
-}
-
 function addMediaToLibrary(){
   let mediaLibraryEntryPointObject = formatMediaLibraryObject()
   if(!addToLibraryButton.hasAttribute("pressed")){
     window.electronAPI.addMediaToLibrary(mediaLibraryEntryPointObject);
-    setAddToLibraryButtonToPressed();
+    setAddToLibraryButtonToPressed(addToLibraryButton);
+    addToLibraryButton.innerHTML+="Saved!";
   }else{
     window.electronAPI.removeMediaFromLibrary(mediaLibraryEntryPointObject);
-    setAddToLibraryButtonToNormal();
+    setAddToLibraryButtonToNormal(addToLibraryButton);
+    addToLibraryButton.innerHTML+="Save To Library";
   }
 }
 
@@ -432,6 +402,7 @@ async function loadMediaEntryPointLibraryInfo(){
       return null;
     });
   if(MediaLibraryInfo){
-    setAddToLibraryButtonToPressed();
+    setAddToLibraryButtonToPressed(addToLibraryButton);
+    addToLibraryButton.innerHTML+="Saved!";
   }
 }

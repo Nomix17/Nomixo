@@ -2,6 +2,8 @@ let data = new URLSearchParams(window.location.search);
 let personId = data.get("personId");
 let MediaSuggestions = document.getElementById("div-MediaSuggestions")
 
+let LibraryInformation;
+
 setTimeout(()=>{
   document.body.style.opacity = "1";
 },80);
@@ -40,12 +42,13 @@ function getPersonInfo(apiKey,personId){
     fetchData(apiKey,personId,Department); 
   });
 }
-function fetchData(apiKey,personId, personjob){
+async function fetchData(apiKey,personId, personjob){
+  LibraryInformation = await loadLibraryInfo();
   fetch(`https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${apiKey}`).then(res=>res.json())
-    .then(MediaData => insertDataIntoDiv(MediaData, personjob));
+    .then(MediaData => insertDataIntoDiv(MediaData, personjob,LibraryInformation));
 }
 
-function insertDataIntoDiv(MediaData, personJob){
+function insertDataIntoDiv(MediaData, personJob,LibraryInformation){
   let tempArray=[];
   let GeneraleWorkData;
   let CrewData = MediaData.crew;
@@ -53,64 +56,7 @@ function insertDataIntoDiv(MediaData, personJob){
   if(personJob == "Acting") GeneraleWorkData = [...CastData,...CrewData];
   else  GeneraleWorkData = [...CrewData,...CastData];
 
-
-  GeneraleWorkData.forEach(obj => {
-    let Id = "Unknown";
-    let Title = "Unknown";
-    let Adult = "Unknown";
-    let PosterPath = "Unknown";
-    let MediaType = "Unknown";
-    if(obj.hasOwnProperty("id")) Id = obj["id"];
-    
-    if(obj.hasOwnProperty("title")) Title = obj["title"];
-    else Title = obj["name"];
-
-    if(!tempArray.includes(Title)){
-      tempArray.push(Title); 
-
-      if(obj.hasOwnProperty("adult")) Adult = obj["adult"];
-     
-      if(obj.hasOwnProperty("poster_path") && obj["poster_path"] != null) PosterPath = "https://image.tmdb.org/t/p/w500/"+obj["poster_path"];
-      else PosterPath = "../cache/PosterNotFound.png"
-
-      if(obj.hasOwnProperty("media_type") && obj["media_type"] != null) MediaType = obj["media_type"];
-      
-      let movieDomElement = document.createElement("div");
-      let moviePosterElement = document.createElement("img");
-      let movieNameElement = document.createElement("p");
-
-      movieNameElement.innerText = Title;
-      moviePosterElement.src = PosterPath;
-      
-      movieDomElement.classList.add("div-MovieElement");
-      moviePosterElement.classList.add("img-MoviePoster");
-      movieNameElement.classList.add("parag-MovieTitle");
-
-      movieDomElement.appendChild(moviePosterElement);
-      movieDomElement.appendChild(movieNameElement); 
-
-      movieDomElement.addEventListener("click",function() {openDetailPage(Id,MediaType)});
-      MediaSuggestions.append(movieDomElement);
-    }
-  });
-}
-
-
-// on click functions
-function backToHome(){
-  path = "./home/mainPage.html"
-  window.electronAPI.navigateTo(path);
-}
-
-function openSearchPage(){
-  let searchKeyword = document.getElementById("input-searchForMovie").value;
-  path = "./search/searchPage.html?search="+searchKeyword;
-  if(searchKeyword !="") window.electronAPI.navigateTo(path);
-}
-
-function openDetailPage(movieId,MediaType){
-  path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+MediaType;
-  window.electronAPI.navigateTo(path);
+  insertMediaElements(GeneraleWorkData,MediaSuggestions,undefined,LibraryInformation);
 }
 
 MediaSuggestions.innerHTML ="";
@@ -120,38 +66,10 @@ MediaSuggestions.innerHTML ="";
   getPersonInfo(apiKey,personId)
 })();
 
-window.addEventListener("keydown",(event)=>{
-  if(event.key == "Escape") window.electronAPI.goBack();
-  if (event.key == "Tab" ||
-      event.key == "Super" ||
-      event.key == "Alt" ) event.preventDefault();
-});
+setupKeyPressesHandler();
 
 let searchInput = document.getElementById("input-searchForMovie");
 searchInput.addEventListener("keypress",(event)=>{
   if(event.key == "Enter") openSearchPage();
 });
 
-
-function fullscreenClicked(){
-  window.electronAPI.toggleFullscreen();
-}
-
-function goBack(){
-  window.electronAPI.goBack();
-}
-
-function openDiscoveryPage(genreId, MediaType){
-  path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
-  window.electronAPI.navigateTo(path);
-}
-
-function OpenSettingsPage(){
-  path = "./settingsPage/settingsPage.html"
-  window.electronAPI.navigateTo(path);
-}
-
-function OpenLibaryPage(){
-  path = "./libraryPage/libraryPage.html";
-  window.electronAPI.navigateTo(path);
-}

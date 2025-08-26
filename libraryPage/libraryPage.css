@@ -37,3 +37,7 @@
   background-color:rgba(0,0,0,0);
   color: rgba(255,255,255,0.6);
 }
+.div-MovieElement{
+  transition: opacity 0.05s linear;
+}
+
