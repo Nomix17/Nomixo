@@ -1,10 +1,16 @@
+let RightmiddleDiv = document.getElementById("div-middle-right");
 let continueWatchingDiv = document.getElementById("div-middle-right-continueWatching");
 let popularMoviesDiv = document.getElementById("div-middle-right-popularMovies");
 let popularSeriesDiv = document.getElementById("div-middle-right-popularSeries");
 let searchInput = document.getElementById("input-searchForMovie");
+let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
+
 let continueWatchingArray = [];
 let LibraryInformation ;
 
+
+addSmoothTransition();
+setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
 if(continueWatchingArray.length === 0) document.querySelector(".div-categories-description").remove();
 
@@ -21,36 +27,35 @@ async function loadMovies(){
       continueWatchingDiv.innerHTML = "";
       popularMoviesDiv.innerHTML = "";
       popularSeriesDiv.innerHTML = "";
-   
+      if(MovieData.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please Check your connection and refresh!");
       let MoviesSearchResults =  MovieData.results;
       let TVShowSearchResults = TVShowData.results;
-      console.log(MoviesSearchResults);
+      globalLoadingGif.remove();
+      RightmiddleDiv.style.opacity = 1;
       insertMediaElements(MoviesSearchResults,popularMoviesDiv,"movie",LibraryInformation);
       insertMediaElements(TVShowSearchResults,popularSeriesDiv,"tv",LibraryInformation);
 
   }).catch(err=>{
-    if(err == "TypeError: results is undefined"){
-      popularMoviesDiv.innerHTML = "<big>Cannot Found a Movie Named: "+ searchKeyword +"</big>";
-      popularSeriesDiv.innerHTML = "<big>Cannot Found a Serie Named: "+ searchKeyword +"</big>";
-      OtherRecommandationDiv.innerHTML = "<big>Cannot Find Any Piece of Media Named: "+searchKeyword +"</big>";
-    } 
-    console.log(err);
+    console.error(err);
+    setTimeout(()=>{
+      RightmiddleDiv.innerHTML ="";
+      let WarningElement = DisplayWarningOrErrorForUser(err.message);
+      RightmiddleDiv.appendChild(WarningElement);
+      globalLoadingGif.remove();
+      RightmiddleDiv.style.opacity = 1;
+    },800);
   });
+
 }
 
 
 
 loadMovies();
 
-addSmoothTransition();
-
 setupKeyPressesHandler();
-
-setupWindowResizingHandler();
 
 setLeftButtonStyle("btn-home");
 
 setupKeyPressesForInputElement(searchInput); 
 
 resizeMoviesPostersContainers([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
-

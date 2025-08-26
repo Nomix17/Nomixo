@@ -1,8 +1,15 @@
-:root{
-  --ballsSize: 26px;
+:root {
+    --ballsSize: 30px;
+    --min-distance: 25px;
+    --max-distance: 45px;
 }
+
 .loader {
-  position: relative;
+  position: fixe;
+  left:50%;
+  top:50%;
+  transform: translate(-50%, -50%);
+  background-color: transparent;
 }
 
 .dot {
@@ -12,121 +19,118 @@
     border-radius: 50%;
     top: 50%;
     left: 50%;
-    transform-origin: 0 0;
+    transform-origin: 13px 13px;
     border: none;
 }
 
 .dot1 {
-    transform: translate(-7px, -7px) rotate(0deg) translateX(25px);
+    transform: translate(-13px, -13px) rotate(0deg) translateX(var(--max-distance));
     animation: spin1 3s linear infinite;
 }
 
 .dot2 {
-    transform: translate(-7px, -7px) rotate(90deg) translateX(25px);
+    transform: translate(-13px, -13px) rotate(90deg) translateX(var(--max-distance));
     animation: spin2 3s linear infinite;
 }
 
 .dot3 {
-    transform: translate(-7px, -7px) rotate(180deg) translateX(25px);
+    transform: translate(-13px, -13px) rotate(180deg) translateX(var(--max-distance));
     animation: spin3 3s linear infinite;
 }
 
 .dot4 {
-    transform: translate(-7px, -7px) rotate(270deg) translateX(25px);
+    transform: translate(-13px, -13px) rotate(270deg) translateX(var(--max-distance));
     animation: spin4 3s linear infinite;
 }
 
 @keyframes spin1 {
     0% {
-        transform: translate(-9px, -9px) rotate(0deg) translateX(35px);
-        background-color: white; /* Top position */
+        transform: translate(-13px, -13px) rotate(0deg) translateX(var(--max-distance));
+        background-color: white;
     }
     25% {
-        transform: translate(-9px, -9px) rotate(90deg) translateX(15px);
-        background-color: #999; /* Transition */
+        transform: translate(-13px, -13px) rotate(90deg) translateX(var(--min-distance));
+        background-color: #999;
     }
     50% {
-        transform: translate(-9px, -9px) rotate(180deg) translateX(35px);
-        background-color: #444; /* Bottom position */
+        transform: translate(-13px, -13px) rotate(180deg) translateX(var(--max-distance));
+        background-color: #444;
     }
     75% {
-        transform: translate(-9px, -9px) rotate(270deg) translateX(15px);
-        background-color: #999; /* Transition */
+        transform: translate(-13px, -13px) rotate(270deg) translateX(var(--min-distance));
+        background-color: #999;
     }
     100% {
-        transform: translate(-9px, -9px) rotate(360deg) translateX(35px);
-        background-color: white; /* Back to top */
+        transform: translate(-13px, -13px) rotate(360deg) translateX(var(--max-distance));
+        background-color: white;
     }
 }
 
 @keyframes spin2 {
     0% {
-        transform: translate(-9px, -9px) rotate(90deg) translateX(35px);
-        background-color: #bbb; /* Right position */
+        transform: translate(-13px, -13px) rotate(90deg) translateX(var(--max-distance));
+        background-color: #bbb;
     }
     25% {
-        transform: translate(-9px, -9px) rotate(180deg) translateX(15px);
-        background-color: #999; /* Transition */
+        transform: translate(-13px, -13px) rotate(180deg) translateX(var(--min-distance));
+        background-color: #999;
     }
     50% {
-        transform: translate(-9px, -9px) rotate(270deg) translateX(35px);
-        background-color: black; /* Left position */
+        transform: translate(-13px, -13px) rotate(270deg) translateX(var(--max-distance));
+        background-color: black;
     }
     75% {
-        transform: translate(-9px, -9px) rotate(360deg) translateX(15px);
-        background-color: #999; /* Transition */
+        transform: translate(-13px, -13px) rotate(360deg) translateX(var(--min-distance));
+        background-color: #999;
     }
     100% {
-        transform: translate(-9px, -9px) rotate(450deg) translateX(35px);
-        background-color: #bbb; /* Back to right */
+        transform: translate(-13px, -13px) rotate(450deg) translateX(var(--max-distance));
+        background-color: #bbb;
     }
 }
 
 @keyframes spin3 {
     0% {
-        transform: translate(-9px, -9px) rotate(180deg) translateX(35px);
-        background-color: #444; /* Bottom position */
+        transform: translate(-13px, -13px) rotate(180deg) translateX(var(--max-distance));
+        background-color: #444;
     }
     25% {
-        transform: translate(-9px, -9px) rotate(270deg) translateX(15px);
-        background-color: #999; /* Transition */
+        transform: translate(-13px, -13px) rotate(270deg) translateX(var(--min-distance));
+        background-color: #999;
     }
     50% {
-        transform: translate(-9px, -9px) rotate(360deg) translateX(35px);
-        background-color: white; /* Top position */
+        transform: translate(-13px, -13px) rotate(360deg) translateX(var(--max-distance));
+        background-color: white;
     }
     75% {
-        transform: translate(-9px, -9px) rotate(450deg) translateX(15px);
-        background-color: #999; /* Transition */
+        transform: translate(-13px, -13px) rotate(450deg) translateX(var(--min-distance));
+        background-color: #999;
     }
     100% {
-        transform: translate(-9px, -9px) rotate(540deg) translateX(35px);
-        background-color: #444; /* Back to bottom */
+        transform: translate(-13px, -13px) rotate(540deg) translateX(var(--max-distance));
+        background-color: #444;
     }
 }
 
 @keyframes spin4 {
     0% {
-        transform: translate(-9px, -9px) rotate(270deg) translateX(35px);
-        background-color: black; /* Left position */
+        transform: translate(-13px, -13px) rotate(270deg) translateX(var(--max-distance));
+        background-color: black;
     }
     25% {
-        transform: translate(-9px, -9px) rotate(360deg) translateX(15px);
-        background-color: #999; /* Transition */
+        transform: translate(-13px, -13px) rotate(360deg) translateX(var(--min-distance));
+        background-color: #999;
     }
     50% {
-        transform: translate(-9px, -9px) rotate(450deg) translateX(35px);
-        background-color: #bbb; /* Right position */
+        transform: translate(-13px, -13px) rotate(450deg) translateX(var(--max-distance));
+        background-color: #bbb;
     }
     75% {
-        transform: translate(-9px, -9px) rotate(540deg) translateX(15px);
-        background-color: #999; /* Transition */
+        transform: translate(-13px, -13px) rotate(540deg) translateX(var(--min-distance));
+        background-color: #999;
     }
     100% {
-        transform: translate(-9px, -9px) rotate(630deg) translateX(35px);
-        background-color: black; /* Back to left */
+        transform: translate(-13px, -13px) rotate(630deg) translateX(var(--max-distance));
+        background-color: black;
     }
 }
-
-
-

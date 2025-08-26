@@ -1,3 +1,4 @@
+let RightmiddleDiv = document.getElementById("div-middle-right");
 let ZoomFactorInput = document.getElementById("input-ZoomFactor");
 let toggleButton = document.getElementById("toggleDefaultSubtitles");
 
@@ -16,6 +17,8 @@ let increaseOpactiy = document.getElementById("btn-increaseOpacity");
 let OpacityPara = document.getElementById("p-Opacity");
 let decreaseOpacity = document.getElementById("btn-decreaseOpacity");
 
+let ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
+
 let ApplyButton = document.getElementById("btn-applySettings");
 
 let ZoomFactorValue=1;
@@ -27,6 +30,8 @@ let BackgroundColor ="black";
 let Opacity = 0;
 let choosenTheme;
 
+RightmiddleDiv.style.opacity = 1;
+
 ZoomFactorInput.addEventListener("input",(event)=>{
   ZoomFactorValue = ZoomFactorInput.value/50;
   setFloatingZoomFactorDiv(ZoomFactorValue);
@@ -34,6 +39,7 @@ ZoomFactorInput.addEventListener("input",(event)=>{
 
 ZoomFactorInput.addEventListener("mouseenter",()=>{
   let bubble = document.querySelector('output[for="foo"]');
+  setFloatingZoomFactorDiv(ZoomFactorValue);
   bubble.style.opacity = "1";
 });
 ZoomFactorInput.addEventListener("mouseleave",()=>{
@@ -150,6 +156,7 @@ async function loadSettings(){
   CurrentFont.innerText = FontFamily;
   inputTextColor.value = TextColor;
   inputBackgroundColor.value = BackgroundColor;
+  applySelectedColor(ColorInputsWithAlphaValue)
   OpacityPara.innerText = Opacity+"%";
 }
 
@@ -195,17 +202,26 @@ function getThemeSettings(){
 }
 
 (function(){
-  let ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
-  ColorInputsWithAlphaValue.forEach(input => {
-    input.addEventListener("input", ()=>{
-      let ouputElement = input.parentElement.querySelector("input[type='range']");
-      let rgbaColor = hexToRgb(input.value);
-      let startingColor = `rgba(${rgbaColor[0]},${rgbaColor[1]},${rgbaColor[2]},0)`;
-      let endingColor = `rgba(${rgbaColor[0]},${rgbaColor[1]},${rgbaColor[2]},1)`;
-      ouputElement.style.background = `linear-gradient(to right, ${startingColor}, ${endingColor})`
+  ColorInputsWithAlphaValue.forEach(element => {
+    element.addEventListener("input",()=>{
+      applySelectedColor(Array(element)); 
     });
   });
 })();
+
+function changeColorOfInputElement(input){
+  let ouputElement = input.parentElement.querySelector("input[type='range']");
+  let rgbaColor = hexToRgb(input.value);
+  let startingColor = `rgba(${rgbaColor[0]},${rgbaColor[1]},${rgbaColor[2]},0)`;
+  let endingColor = `rgba(${rgbaColor[0]},${rgbaColor[1]},${rgbaColor[2]},1)`;
+  ouputElement.style.background = `linear-gradient(to right, ${startingColor}, ${endingColor}), url("../cache/transparentBg.png")`;
+}
+
+function applySelectedColor(inputElements){
+  inputElements.forEach(element => {
+    changeColorOfInputElement(element)
+  });
+};
 
 (function(){
   let alphaInputs = document.querySelectorAll(".alphaRangeValue");

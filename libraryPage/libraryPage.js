@@ -1,10 +1,13 @@
+let RightmiddleDiv = document.getElementById("div-middle-right");
 let SelectMediaType = document.getElementById("select-type");
 let SavedMedia = document.getElementById("div-SavedMedia")
 let searchInput = document.getElementById("input-searchForMovie");
+let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
 SelectMediaType.value = "all";
 
 addSmoothTransition();
+setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
 function fetchMediaData(apiKey,wholeLibraryInformation){
   wholeLibraryInformation.forEach(mediaEntryPoint =>{
@@ -15,7 +18,20 @@ function fetchMediaData(apiKey,wholeLibraryInformation){
 
       fetch(searchQuery)
         .then(res=>res.json())
-        .then(data => SavedMedia.appendChild(createMediaElement(data,MediaType)));
+        .then(data => {
+          if(data.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please Check your connection and refresh!");
+          globalLoadingGif.remove();
+          SavedMedia.appendChild(createMediaElement(data,MediaType));
+        })
+        .catch(err=>{
+          setTimeout(()=>{
+            RightmiddleDiv.innerHTML ="";
+            let WarningElement = DisplayWarningOrErrorForUser(err.message);
+            RightmiddleDiv.appendChild(WarningElement);
+            globalLoadingGif.remove();
+            RightmiddleDiv.style.opacity = 1;
+          },800);
+        });
     }
   });
 }
@@ -74,12 +90,12 @@ function displayThatTheLibraryEmpty(){
 async function loadData(){
   const apiKey = await window.electronAPI.getAPIKEY();
   const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
+  RightmiddleDiv.style.opacity = 1;
+  globalLoadingGif.remove();
   if(wholeLibraryInformation == undefined){
-    displayThatTheLibraryEmpty();
+    DisplayWarningOrErrorForUser("Your Library is Empty");
     return;
   }
-  let loadingGifDiv =  document.getElementById("MainLoadingGif");
-  loadingGifDiv.remove();
   fetchMediaData(apiKey,wholeLibraryInformation);
 
   SelectMediaType.addEventListener("change",()=>{
@@ -99,7 +115,7 @@ function removeMediaFromLibrary(mediaId,mediaType,parentDiv){
     let MediaElementsContainer = parentDiv.parentElement;
     parentDiv.remove();
     if(MediaElementsContainer.innerHTML.trim() == ""){
-      displayThatTheLibraryEmpty();
+      DisplayWarningOrErrorForUser("Your Library is Empty");
     }
   },100);
 

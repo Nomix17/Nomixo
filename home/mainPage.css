@@ -150,6 +150,7 @@ body, html {
   background: rgba(var(--primary-color));
   box-sizing: border-box;
   padding: 0px;
+  opacity:0;
 }
 
 #div-middle-right-continueWatching,
@@ -373,4 +374,10 @@ input::selection {
 .btn-remove-from-library:active .closeButtonIcon{
   fill:rgba(255,255,255,0.3);
   transform: scale(0.99);
+}
+
+.loader{
+  position:fixed;
+  opacity:0;
+  z-index:2000;
 }

@@ -5,16 +5,22 @@ window.addSmoothTransition = function(){
 }
 
 window.resizeMoviesPostersContainers = (divsToResize)=>{
+  CalculateMoviePostersContainer(divsToResize)
+  window.addEventListener("resize",() => {CalculateMoviePostersContainer(divsToResize)});
+};
+
+function CalculateMoviePostersContainer(divsToResize){
   let middleLeftBarWidth = document.getElementById("div-middle-left").offsetWidth;
   let marginValue = 40;
   let newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-marginValue;
   divsToResize.forEach(div => {
     div.style = `max-width:${newMoviesPostersContainerWidth}`;
   });
-};
+}
 
 window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaType,LibraryInformation){
   let tempArray = [];
+  if(MediaSearchResults == undefined || MediaSearchResults.length == 0) throw new Error("No data was Fetched");
   MediaSearchResults.forEach(obj => {
     let Id = "Unknown";
     let Title = "Unknown";
@@ -126,10 +132,6 @@ window.setLeftButtonStyle = (buttonId) => {
   buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
 }
 
-window.setupWindowResizingHandler = ()=>{
-  window.addEventListener("resize",() => {resizeMoviesPostersContainers([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv])});
-};
-
 window.setupKeyPressesForInputElement = (searchInput)=>{
   searchInput.addEventListener("keypress",(event)=>{
     if(event.key == "Enter") openSearchPage();
@@ -146,6 +148,20 @@ window.setupKeyPressesHandler = () =>{
 }
 
 
+window.DisplayWarningOrErrorForUser = (warningMessage) => {
+  let WarningDiv = document.createElement("div");
+  let WarningMessage = document.createElement("span");
+  WarningDiv.className = "div-WarningMessage";
+  WarningMessage.className = "span-WarningMessage";
+  WarningMessage.innerHTML = warningMessage;
+
+  let leftDiv = document.getElementById("div-middle-left");
+  let leftDivWidth = leftDiv? leftDiv.offsetWidth : 0;
+  WarningMessage.style.marginRight = `${leftDivWidth}px`;
+
+  WarningDiv.appendChild(WarningMessage);
+  return WarningDiv;
+}
 function goBack(){
   window.electronAPI.goBack();
 }

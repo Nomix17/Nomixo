@@ -36,3 +36,9 @@ option{
 #div-OptionsContainer{
   margin-top:35px;
 }
+
+.loader{
+  position:fixed;
+  opacity:0;
+  z-index:2000;
+}

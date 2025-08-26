@@ -2,6 +2,8 @@ let data = new URLSearchParams(window.location.search);
 let genreId = data.get("GenreId");
 let MediaType = data.get("MediaType") == "All"? "movie": data.get("MediaType") ;
 
+let RightmiddleDiv = document.getElementById("div-middle-right");
+let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 let searchInput = document.getElementById("input-searchForMovie");
 let SelectMediaType = document.getElementById("select-type");
 let SelectGenre = document.getElementById("select-Genres");
@@ -10,7 +12,9 @@ let MediaSuggestions = document.getElementById("div-MediaSuggestions")
 SelectMediaType.value = MediaType;
 
 let LibraryInformation = [];
+
 addSmoothTransition();
+setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
 async function fetchData(apiKey,genreId, ThisMediaType,page){
   let url ="";
@@ -22,7 +26,11 @@ async function fetchData(apiKey,genreId, ThisMediaType,page){
 
   if(!LibraryInformation.length) LibraryInformation = await loadLibraryInfo();
   Promise.all([fetch(url).then(res=>res.json())])
-    .then(GenreData => insertMediaElements(GenreData[0].results,MediaSuggestions,ThisMediaType,LibraryInformation));
+    .then(GenreData => {
+      insertMediaElements(GenreData[0].results,MediaSuggestions,ThisMediaType,LibraryInformation);
+      globalLoadingGif.remove();
+    }
+  );
 
 }
 
@@ -35,6 +43,7 @@ function loadGenres(apiKey){
   fetch(url)
   .then(res => res.json())
   .then(data => {
+    if(data.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please Check your connection and refresh!");
     let GenresData = data.genres; 
     GenresData.forEach(GenreObj => {
       let OptionElement = document.createElement("option");
@@ -42,10 +51,20 @@ function loadGenres(apiKey){
       OptionElement.innerText = GenreObj.name;
       SelectGenre.append(OptionElement);
     });
-      SelectGenre.value = genreId;
-      document.querySelector("h1").innerHTML = SelectGenre.selectedOptions[0].text;
+    SelectGenre.value = genreId;
+    document.querySelector("h1").innerHTML = SelectGenre.selectedOptions[0].text;
+    RightmiddleDiv.style.opacity = 1;
 
-  });
+  }).catch(err => {
+    setTimeout(()=>{
+      console.error(err);
+      RightmiddleDiv.innerHTML ="";
+      let WarningElement = DisplayWarningOrErrorForUser(err.message);
+      RightmiddleDiv.appendChild(WarningElement);
+      globalLoadingGif.remove();
+      RightmiddleDiv.style.opacity = 1;
+    },800);
+  })
 }
 
 async function loadData(){
