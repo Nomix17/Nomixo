@@ -37,15 +37,17 @@ function loadMovieInformation(apiKey){
     .then(res=>res.json())  
     .then(data =>{
       insertMovieElements(data,apiKey);
-      let ReleaseYear;
+      let ReleaseYear = "";
       let Title;
       if(data.hasOwnProperty("release_date")) ReleaseYear = new Date(data["release_date"]).getFullYear();
       else ReleaseYear = new Date(data["first_air_date"]).getFullYear();
       if(data.hasOwnProperty("title"))  Title = data["title"]+" "+ReleaseYear;
       else Title = data["name"]+" "+ReleaseYear;
       Title = Title.replaceAll(" ","%20");
-      if(MediaType == "movie")
-        return fetchTorrent(Title); 
+      if(MediaType == "movie"){
+        let SearchQuery = `${Title} ${ReleaseYear}`;
+        return fetchTorrent(SearchQuery); 
+      }
       else
         return "";
     })

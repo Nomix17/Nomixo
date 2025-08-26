@@ -43,7 +43,7 @@ function loadGenres(apiKey){
   fetch(url)
   .then(res => res.json())
   .then(data => {
-    if(data.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please Check your connection and refresh!");
+    if(data.status_code == 7 ) throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");
     let GenresData = data.genres; 
     GenresData.forEach(GenreObj => {
       let OptionElement = document.createElement("option");
@@ -57,6 +57,7 @@ function loadGenres(apiKey){
 
   }).catch(err => {
     setTimeout(()=>{
+      err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
       console.error(err);
       RightmiddleDiv.innerHTML ="";
       let WarningElement = DisplayWarningOrErrorForUser(err.message);

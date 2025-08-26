@@ -1,18 +1,3 @@
 {
-  "media": [
-    {
-      "MediaId": 911430,
-      "MediaType": "movie",
-      "episodesWatched": [],
-      "lastPlaybackPosition": 0,
-      "timeWatched": 0
-    },
-    {
-      "MediaId": 755898,
-      "MediaType": "movie",
-      "episodesWatched": [],
-      "lastPlaybackPosition": 0,
-      "timeWatched": 0
-    }
-  ]
+  "media": []
 }

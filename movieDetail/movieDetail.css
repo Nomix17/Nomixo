@@ -345,22 +345,18 @@ h1{
   margin-left:20px;
 }
 
-#addToLibrary{
+#bookmarkbtn{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  max-width:180px;
+  height:49px;
+  border:1px solid white;
+  border-radius:26px;
   padding-top:10px;
   position:absolute;
   bottom:0px;
   width:50%;
-  background-color:transparent;
-}
-
-#addToLibrary button{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  width:180px;
-  height:49px;
-  border:1px solid white;
-  border-radius:26px;
 }
 
 

@@ -1,12 +1,13 @@
+let RightmiddleDiv = document.getElementById("div-middle-right");
 let data = new URLSearchParams(window.location.search);
 let personId = data.get("personId");
 let MediaSuggestions = document.getElementById("div-MediaSuggestions")
+let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
 let LibraryInformation;
 
-setTimeout(()=>{
-  document.body.style.opacity = "1";
-},80);
+addSmoothTransition();
+setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
 function getPersonInfo(apiKey,personId){
   fetch(`https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}`)
@@ -40,12 +41,26 @@ function getPersonInfo(apiKey,personId){
     personDepartmentElement.innerText = "Department : "+Department;
     personBioElement.prepend(Biography+" ");
     fetchData(apiKey,personId,Department); 
-  });
+  }).catch((err) => {
+    err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
+    console.error(err);
+    setTimeout(()=>{
+      RightmiddleDiv.innerHTML ="";
+      let WarningElement = DisplayWarningOrErrorForUser(err.message);
+      RightmiddleDiv.appendChild(WarningElement);
+      globalLoadingGif.remove();
+      RightmiddleDiv.style.opacity = 1;
+    },800);
+  })
 }
+
 async function fetchData(apiKey,personId, personjob){
   LibraryInformation = await loadLibraryInfo();
   fetch(`https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${apiKey}`).then(res=>res.json())
     .then(MediaData => insertDataIntoDiv(MediaData, personjob,LibraryInformation));
+  globalLoadingGif.remove();
+  RightmiddleDiv.style.opacity = 1;
+
 }
 
 function insertDataIntoDiv(MediaData, personJob,LibraryInformation){

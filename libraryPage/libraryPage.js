@@ -5,7 +5,6 @@ let searchInput = document.getElementById("input-searchForMovie");
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
 SelectMediaType.value = "all";
-
 addSmoothTransition();
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
@@ -19,14 +18,16 @@ function fetchMediaData(apiKey,wholeLibraryInformation){
       fetch(searchQuery)
         .then(res=>res.json())
         .then(data => {
-          if(data.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please Check your connection and refresh!");
+          if(data.status_code == 7) throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
           globalLoadingGif.remove();
           SavedMedia.appendChild(createMediaElement(data,MediaType));
         })
         .catch(err=>{
+          err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data</br>Please Check your connection and refresh!":err.message;
           setTimeout(()=>{
             RightmiddleDiv.innerHTML ="";
             let WarningElement = DisplayWarningOrErrorForUser(err.message);
+            WarningElement.style.paddingBottom = "1000px;";
             RightmiddleDiv.appendChild(WarningElement);
             globalLoadingGif.remove();
             RightmiddleDiv.style.opacity = 1;
@@ -80,20 +81,14 @@ function createMediaElement(mediaData, ThisMediaType){
       return movieDomElement;
 }
 
-function displayThatTheLibraryEmpty(){
-  let EmptyLibraryElement = document.createElement("span");
-  EmptyLibraryElement.innerText = "Your Library is Empty";
-  SavedMedia.appendChild(EmptyLibraryElement);
-  return EmptyLibraryElement;
-}
-
 async function loadData(){
   const apiKey = await window.electronAPI.getAPIKEY();
   const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
   RightmiddleDiv.style.opacity = 1;
-  globalLoadingGif.remove();
   if(wholeLibraryInformation == undefined){
-    DisplayWarningOrErrorForUser("Your Library is Empty");
+    let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
+    RightmiddleDiv.appendChild(WarningElement);
+    globalLoadingGif.remove();
     return;
   }
   fetchMediaData(apiKey,wholeLibraryInformation);
@@ -115,7 +110,9 @@ function removeMediaFromLibrary(mediaId,mediaType,parentDiv){
     let MediaElementsContainer = parentDiv.parentElement;
     parentDiv.remove();
     if(MediaElementsContainer.innerHTML.trim() == ""){
-      DisplayWarningOrErrorForUser("Your Library is Empty");
+      let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
+      WarningElement.style.marginBottom = "100px";
+      RightmiddleDiv.appendChild(WarningElement);
     }
   },100);
 

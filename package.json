@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "dotenv": "^17.2.0",
+    "electron": "^37.3.1",
     "torrent-stream": "^1.2.1"
   },
   "devDependencies": {

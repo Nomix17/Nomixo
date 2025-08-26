@@ -1,15 +1,52 @@
+*{
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
 .div-WarningMessage{
   display:flex;
   align-items:center;
   justify-content:center;
+  flex-direction:column;
   text-align:center;
   height:80%;
 }
 
 .span-WarningMessage{
-  font-size:20px;
+  font-size:25px;
   font-weight: 700;
   background-color:rgba(0,0,0,0);
   color: rgba(255,255,255,0.6);
+  margin-top:10px;
+}
+
+.btn-refreshAfterWarningMessage{
+  width:40px;
+  height:40px;
+  background-color:transparent;
+  border-radius:100%;
+  border:none;
+  margin-top:2%;
+  cursor:pointer;
+}
+
+#refreshButtonIcon{
+  width:25px;
+  height:25px;
+  background-color:transparent;
+  fill:rgba(255,255,255,0.5);
+  z-index:-1;
+}
+
+.btn-refreshAfterWarningMessage:hover{
+  background-color:rgba(255,255,255,0.2);
+}
+
+.btn-refreshAfterWarningMessage:hover #refreshButtonIcon{
+  fill:white;
+  transform: rotate(180deg);
+}
+
+.btn-refreshAfterWarningMessage:active{
+  transform:scale(0.9);
 }
 

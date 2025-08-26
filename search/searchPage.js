@@ -28,22 +28,25 @@ function loadSearchInformation(apiKey){
   fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${searchQuery}`)
     .then(res => res.json())
     .then(data => {
+
+      console.log(data);  
       MoviesRecommandationDiv.innerHTML = "";
       SeriesRecommandationDiv.innerHTML = "";
       FiguresRecommandationDiv.innerHTML = "";
       OtherRecommandationDiv.innerHTML = "";
-      if(data.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please Check your connection and refresh!");
+      if(data.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");
+      if(data.total_results == 0) throw new Error(`Cannot Found Any Media Named: ${searchKeyword}`)
+
       RightmiddleDiv.style.opacity = 1;
       insertResultsElement(data);
       if(MoviesRecommandationDiv.innerHTML == "") document.getElementById("MoviesRecommandationsContainer").remove();
       if(SeriesRecommandationDiv.innerHTML == "") document.getElementById("SeriesRecommandationsContainer").remove();
       if(FiguresRecommandationDiv.innerHTML == "") document.getElementById("FiguresRecommandationsContainer").remove();
       if(OtherRecommandationDiv.innerHTML == "") document.getElementById("OtherRecommandationsContainer").remove();
-    
-      if(data.results.length == 0) throw new Error(`Cannot Found Any Media Named: ${searchKeyword}`)
       globalLoadingGif.remove();
 
   }).catch(err=>{
+    err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
     console.error(err)
     let RightmiddleDiv = document.getElementById("div-middle-right");
     RightmiddleDiv.innerHTML ="";
@@ -66,4 +69,4 @@ loadData();
 resizeMoviesPostersContainers([MoviesRecommandationDiv,SeriesRecommandationDiv,FiguresRecommandationDiv,OtherRecommandationDiv]);
 setupKeyPressesHandler();
 
-setupKeyPressesForInputElement();
+setupKeyPressesForInputElement(searchInput);
