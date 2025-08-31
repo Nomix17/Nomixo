@@ -335,6 +335,7 @@ h1{
   border-radius:13px;
   margin:5px 0px 15px 15px;
   border:2px solid rgba(255,255,255,0.5);
+  background-color:rbga(var(--primary-color),1);
 }
 
 #select-Seasons option {

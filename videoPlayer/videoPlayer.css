@@ -48,6 +48,9 @@ html::-webkit-scrollbar{
 #btn-PauseButton,
 #btn-OpenSubtitle,
 #btn-VolumeButton {
+  display:flex;
+  justify-content:center;
+  align-items:center;
   width:50px;
   height:50px;
   background-color: rgba(0,0,0,0%);
@@ -62,13 +65,13 @@ html::-webkit-scrollbar{
 }
 
 #img-fullscreen,
-#img-goBack,
 #img-PauseButton,
 #img-OpenSubtitle,
 #img-VolumeButton {
-  width:30px;
-  height:30px;
+  width:75%;
+  height:75%;
   background-color: rgba(0,0,0,0%);
+  object-fit: contain;
 }
 
 #btn-fullscreen:hover,

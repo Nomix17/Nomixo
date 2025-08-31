@@ -1,3 +1,11 @@
 {
-  "media": []
+  "media": [
+    {
+      "MediaId": 219760,
+      "MediaType": "tv",
+      "episodesWatched": [],
+      "lastPlaybackPosition": 0,
+      "timeWatched": 0
+    }
+  ]
 }

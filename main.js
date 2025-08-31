@@ -1,4 +1,4 @@
-const { BrowserWindow, app, nativeTheme, ipcMain, webFrame } = require("electron");
+const {BrowserWindow, app, nativeTheme, ipcMain, webFrame } = require("electron");
 const torrentStream = require('torrent-stream');
 const http = require('http');
 const path = require("path");
