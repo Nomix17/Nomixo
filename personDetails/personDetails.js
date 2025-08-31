@@ -24,14 +24,27 @@ function getPersonInfo(apiKey,personId){
     let personProfileElement = document.getElementById("img-personProfilePic");
     let personDepartmentElement = document.getElementById("para-personDepartment");
     let personBioElement = document.getElementById("para-personBiography");
-     
+    personBioElement.setAttribute("displayState","less"); 
 
     if(Biography.length > 576){
       let OldBiography = Biography;
       Biography = Biography.slice(0,573)+"...";
       let readMoreElement = document.createElement("a");
       readMoreElement.style.color = "grey";
-      readMoreElement.addEventListener("click",()=>{personBioElement.innerHTML = OldBiography});
+
+      readMoreElement.addEventListener("click",()=>{
+        if(personBioElement.getAttribute("displayState") == "less"){
+          readMoreElement.innerText = " read less"
+          personBioElement.innerHTML = OldBiography;
+          personBioElement.append(readMoreElement);
+          personBioElement.setAttribute("displayState","full");
+        }else{
+          readMoreElement.innerText = "read more"
+          personBioElement.innerHTML = Biography;
+          personBioElement.append(readMoreElement);
+          personBioElement.setAttribute("displayState","less");
+        }
+      });
       readMoreElement.innerText = "read more";
       personBioElement.append(readMoreElement);
     }

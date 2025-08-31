@@ -2,7 +2,6 @@ body{
   opacity:0;
 }
 *{
-  background-color:rgba(var(--primary-color));
   transition:opacity 0.1s ease;
 }
 #div-MediaSuggestions{
@@ -31,7 +30,7 @@ body{
 }
 
 option{
-  background-color:#1f2328;
+  background-color:rgba(var(--primary-color),1);
 }
 #div-OptionsContainer{
   margin-top:35px;

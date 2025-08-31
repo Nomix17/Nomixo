@@ -1,6 +1,6 @@
 {
   "PageZoomFactor": 1.32,
-  "TurnOnSubsByDefault": true,
+  "TurnOnSubsByDefault": false,
   "SubFontSize": 100,
   "SubFontFamily": "Montserrat",
   "SubColor": "white",

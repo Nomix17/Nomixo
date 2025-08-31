@@ -1,6 +1,6 @@
 :root{
     --dont-Smooth-transition-between-pages:0;
---display-scroll-bar:none;
+--display-scroll-bar:block;
 --primary-color:22,20,49;
 --secondary-color:52,73,94,0.5;
 --div-containers-borders-color:255,255,255,0;

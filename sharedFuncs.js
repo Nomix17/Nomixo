@@ -5,8 +5,12 @@ window.addSmoothTransition = function(){
 }
 
 window.resizeMoviesPostersContainers = (divsToResize)=>{
-  CalculateMoviePostersContainer(divsToResize)
-  window.addEventListener("resize",() => {CalculateMoviePostersContainer(divsToResize)});
+  CalculateMoviePostersContainer(divsToResize);
+  checkIfDivShouldHaveMoveToRightOrLeftButton(divsToResize);
+  window.addEventListener("resize",() => {
+    CalculateMoviePostersContainer(divsToResize);
+    checkIfDivShouldHaveMoveToRightOrLeftButton(divsToResize);
+  });
 };
 
 function CalculateMoviePostersContainer(divsToResize){
@@ -15,6 +19,15 @@ function CalculateMoviePostersContainer(divsToResize){
   let newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-marginValue;
   divsToResize.forEach(div => {
     div.style = `max-width:${newMoviesPostersContainerWidth}`;
+  });
+}
+
+window.checkIfDivShouldHaveMoveToRightOrLeftButton = (MediaDivs) => {
+  MediaDivs.forEach(MediaDiv => {
+    if(MediaDiv.scrollWidth == MediaDiv.clientWidth)
+      MediaDiv.parentElement.querySelectorAll("button").forEach(btn => btn.style.display = "none");
+    else
+      MediaDiv.parentElement.querySelectorAll("button").forEach(btn => btn.style.display = "flex");
   });
 }
 
@@ -79,6 +92,7 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
     }
   });
 }
+
 
 window.setAddToLibraryButtonToNormal = (toggleInLibrary) => {
   toggleInLibrary.innerHTML = `<svg class="toggleButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -147,6 +161,32 @@ window.setupKeyPressesHandler = () =>{
   });
 }
 
+window.setupNavigationBtnHandler = ()=>{
+  let moveRightBtns = document.querySelectorAll(".moveMovieElementsToTheRightBtn");
+  let moveLeftBtns = document.querySelectorAll(".moveMovieElementsToTheLeftBtn");
+  moveRightBtns.forEach(btn => {
+    btn.addEventListener("click",()=>{
+      let btnDivParent = btn.parentElement;
+      let MediaDiv = btnDivParent.querySelector(".div-hidingScrollBar");
+      MediaDiv.scrollTo({
+        top:0,
+        left:MediaDiv.scrollLeft + 600,
+        behavior:"smooth"
+      });
+    });
+  });
+  moveLeftBtns.forEach(btn => {
+    btn.addEventListener("click",()=>{
+      let btnDivParent = btn.parentElement;
+      let MediaDiv = btnDivParent.querySelector(".div-hidingScrollBar");
+      MediaDiv.scrollTo({
+        top:0,
+        left:MediaDiv.scrollLeft - 600,
+        behavior:"smooth"
+      });
+    });
+  });
+}
 
 window.DisplayWarningOrErrorForUser = (warningMessage) => {
   let WarningDiv = document.createElement("div");

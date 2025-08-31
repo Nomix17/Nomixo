@@ -29,7 +29,6 @@ function loadSearchInformation(apiKey){
     .then(res => res.json())
     .then(data => {
 
-      console.log(data);  
       MoviesRecommandationDiv.innerHTML = "";
       SeriesRecommandationDiv.innerHTML = "";
       FiguresRecommandationDiv.innerHTML = "";
@@ -44,7 +43,7 @@ function loadSearchInformation(apiKey){
       if(FiguresRecommandationDiv.innerHTML == "") document.getElementById("FiguresRecommandationsContainer").remove();
       if(OtherRecommandationDiv.innerHTML == "") document.getElementById("OtherRecommandationsContainer").remove();
       globalLoadingGif.remove();
-
+      checkIfDivShouldHaveMoveToRightOrLeftButton([MoviesRecommandationDiv,SeriesRecommandationDiv,FiguresRecommandationDiv,OtherRecommandationDiv]);
   }).catch(err=>{
     err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
     console.error(err)
@@ -67,6 +66,9 @@ function insertResultsElement(data){
 loadData();
 
 resizeMoviesPostersContainers([MoviesRecommandationDiv,SeriesRecommandationDiv,FiguresRecommandationDiv,OtherRecommandationDiv]);
+
 setupKeyPressesHandler();
+
+setupNavigationBtnHandler();
 
 setupKeyPressesForInputElement(searchInput);

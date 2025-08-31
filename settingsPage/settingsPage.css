@@ -27,7 +27,7 @@ h1{
 }
 
 #input-ZoomFactor{
-  accent-color:#132b48; 
+  accent-color:rgba(var(--secondary-color)); 
   margin:0px 120px 0px 120px;
 }
 
@@ -82,7 +82,6 @@ p{
   justify-content:center;
   align-items:center;
 }
-
   
 #btn-applySettings{
   width: 120px;

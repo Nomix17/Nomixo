@@ -7,7 +7,7 @@ let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
 let continueWatchingArray = [];
 let LibraryInformation ;
-
+let SelectedMediaDivIndex = -1;
 
 addSmoothTransition();
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
@@ -34,7 +34,7 @@ async function loadMovies(){
       RightmiddleDiv.style.opacity = 1;
       insertMediaElements(MoviesSearchResults,popularMoviesDiv,"movie",LibraryInformation);
       insertMediaElements(TVShowSearchResults,popularSeriesDiv,"tv",LibraryInformation);
-
+      checkIfDivShouldHaveMoveToRightOrLeftButton([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
   }).catch(err=>{
     err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
     console.error(err);
@@ -59,4 +59,7 @@ setLeftButtonStyle("btn-home");
 
 setupKeyPressesForInputElement(searchInput); 
 
+setupNavigationBtnHandler();
+
 resizeMoviesPostersContainers([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
+

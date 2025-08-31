@@ -36,7 +36,7 @@
 }
 
 .custom-toggle input:checked + .toggle-track {
-  background: #34495e;
+  background: rgba(var(--secondary-color));
 }
 
 .custom-toggle input:checked + .toggle-track .toggle-thumb {

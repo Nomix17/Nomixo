@@ -106,12 +106,14 @@ ApplyButton.addEventListener("click",()=>{
 async function loadTheme(){
   let ThemeObj = await window.electronAPI.loadTheme();
   ThemeObj.theme.forEach(obj => {
-  //   if(elementId != 
     let elementId = Object.keys(obj)[0];
     let elementValue = obj[Object.keys(obj)[0]];
 
     if(elementId == "dont-Smooth-transition-between-pages"){
-      if(!parseInt(elementValue)) document.getElementById("dont-Smooth-transition-between-pages").click();
+      if(!parseInt(elementValue)) document.getElementById(elementId).click();
+    }
+    if(elementId == "display-scroll-bar"){
+      if(elementValue == "block") document.getElementById(elementId).click();
     }
     let inputColor;
     let alphaValue;
@@ -189,7 +191,11 @@ function getThemeSettings(){
   let ThemeObjs = {theme:[]};
   let ThemeSettingsInputElements = document.querySelectorAll('#themeTable input[type="color"]');
   let SmoothTransition =  document.getElementById("dont-Smooth-transition-between-pages");
+  let DisplayScrollBar = document.getElementById("display-scroll-bar");
+
   ThemeObjs.theme.push({"--dont-Smooth-transition-between-pages":SmoothTransition.checked?0:1});
+  ThemeObjs.theme.push({"--display-scroll-bar":DisplayScrollBar.checked?"block":"none"});
+
   ThemeSettingsInputElements.forEach(input => {
     let colorValue = [...hexToRgb(input.value)];
     let inputParent = input.parentElement;

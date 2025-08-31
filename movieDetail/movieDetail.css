@@ -64,6 +64,9 @@ p{
 }
 #btn-fullscreen,
 #btn-goBack{
+  display:flex;
+  justify-content:center;
+  align-items:center;
   width:50px;
   height:50px;
   background-color:  rgba(0,0,0,0%);
@@ -83,7 +86,13 @@ p{
 #btn-goBack:hover{
   background-color:  rgba(var(--main-buttons-color));
 }
-
+#icon-fullscreen{
+  fill:white;
+  width:25px;
+}
+#icon-goBack{
+  width:40px;
+}
 #div-middle {
   display: flex;
   flex: 1; 
