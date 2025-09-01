@@ -82,7 +82,8 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
       mediaDomElement.addEventListener("click",function() {openDetailPage(Id,NewMediaType)});
 
       if(MediaContainer.length == undefined){
-        MediaContainer.appendChild(mediaDomElement);
+        if(!Array.from(MediaContainer.querySelectorAll(".div-MovieElement")).map(element => element.innerHTML).includes(mediaDomElement.innerHTML))
+          MediaContainer.appendChild(mediaDomElement);
       }else{
         if(NewMediaType.toLowerCase() == "movie") MediaContainer[0].append(mediaDomElement);
         else if(NewMediaType.toLowerCase() == "tv" || NewMediaType.toLowerCase() == "anime" ) MediaContainer[1].append(mediaDomElement);

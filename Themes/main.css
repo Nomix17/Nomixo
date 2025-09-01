@@ -1,8 +1,8 @@
 :root{
     --dont-Smooth-transition-between-pages:0;
---display-scroll-bar:block;
+--display-scroll-bar:none;
 --primary-color:22,20,49;
---secondary-color:52,73,94,0.5;
+--secondary-color:37,69,111,0.5;
 --div-containers-borders-color:255,255,255,0;
 --main-buttons-color:0,0,0,0.3;
 --MovieElement-hover-BorderColor:255,255,255;

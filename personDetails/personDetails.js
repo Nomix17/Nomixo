@@ -95,6 +95,7 @@ MediaSuggestions.innerHTML ="";
 })();
 
 setupKeyPressesHandler();
+loadIconsDynamically();
 
 let searchInput = document.getElementById("input-searchForMovie");
 searchInput.addEventListener("keypress",(event)=>{

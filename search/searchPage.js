@@ -72,3 +72,5 @@ setupKeyPressesHandler();
 setupNavigationBtnHandler();
 
 setupKeyPressesForInputElement(searchInput);
+
+loadIconsDynamically();
