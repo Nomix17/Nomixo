@@ -319,10 +319,10 @@ function insertTorrentInfoElement(data){
           <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Resolution}</p></div>
           <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">
             <p style="padding:0px 10px 10px 0px;">${FullName}</p>
-            <p style="font-size:13px;">
-              <img id="img-storageImage" src="../cache/icons/storage.png"/> ${Size} &ensp;
-              <img id="img-seedImage" src="../cache/icons/seeds.png"/> ${SeedersNumber} 
-            </p>
+            <div style="display:flex;justify-content:flex-start;align-items:center;flex-direction:row;font-size:13px;">
+              <div id="div-storageImage"></div> ${Size} &ensp;
+              <div id="div-seedImage"></div> ${SeedersNumber} 
+            </div>
           </div>
         `;
         TorrentElement.addEventListener("click",()=>{openMediaVideo(movieId,MagnetLink)});
@@ -332,6 +332,7 @@ function insertTorrentInfoElement(data){
     TorrentContainer.classList.remove("preloadingTorrent");
     if(TorrentContainer.innerHTML.trim() == "") throw new Error("No Useful Results Were found !");
     TorrentContainer.style.display = "block";
+    loadIconsDynamically();
 }
 
 function displayEpisodes(seasonNumber){
@@ -408,3 +409,5 @@ async function loadMediaEntryPointLibraryInfo(){
     addToLibraryButton.innerHTML+="Saved!";
   }
 }
+
+

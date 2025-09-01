@@ -259,3 +259,4 @@ loadSettings();
 setupKeyPressesHandler();
 
 setLeftButtonStyle("btn-settings");
+loadIconsDynamically();

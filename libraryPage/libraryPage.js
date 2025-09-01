@@ -129,3 +129,5 @@ setupKeyPressesForInputElement(searchInput);
 setupKeyPressesHandler();
 
 setLeftButtonStyle("btn-library");
+
+loadIconsDynamically();

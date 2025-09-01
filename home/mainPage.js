@@ -63,3 +63,4 @@ setupNavigationBtnHandler();
 
 resizeMoviesPostersContainers([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
 
+loadIconsDynamically();

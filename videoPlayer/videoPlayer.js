@@ -23,6 +23,7 @@ let bottomSubElement = document.getElementById("div-BottomSubContainer");
 var oldVolume = 0;
 let mouseHoveringOnControlDiv;
 var SubsStruct = [];
+let subtitlesArray = [];
 
 VideoElement.volume = 0.5;
 document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${bgImagePath}')`;
@@ -33,7 +34,8 @@ document.documentElement.style.backgroundAttachment = `fixed`;
 
 loadSubSettings();
 loadVideo(Magnet);
-getSubs(mediaId,"en");
+
+loadingAllSubs(mediaId);
 
 TopButtonsContainer.addEventListener("mouseenter", ()=>{ mouseHoveringOnControlDiv = true });
 TopButtonsContainer.addEventListener("mouseleave", ()=>{ mouseHoveringOnControlDiv = false });
@@ -145,18 +147,44 @@ window.addEventListener("resize",()=>{
   resizeSubMainDiv();
 });
 
-async function getSubs(id, language) {
-  try {
-    const res = await fetch(`https://sub.wyzie.ru/search?id=${id}&language=${language}`);
+async function loadingAllSubs(id){
+  try{
+    const res = await fetch(`https://sub.wyzie.ru/search?id=${id}`);
+    
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
+    
     const data = await res.json();
-    insertSubElements(data);
-  } catch (err) {
-    document.getElementById("div-subsList").innerHTML = "Cannot Find Subtitles In This Language";
+    subtitlesArray = data;
+    getSubsViaLanguage("en");
+    let languages = [];
+    subtitlesArray.forEach(sub => {if(!languages.includes(sub.language)) languages.push(sub.language)});
+    insertLanguageButton(languages); 
+  }catch(err){
     console.error(err);
   }
+}
+function insertLanguageButton(langArray){
+  let subBtnDiv = document.getElementById("div-LeftSubContainer");
+  langArray.forEach((lang,index) => {
+    let buttonElement = document.createElement("button");
+    const displayName = new Intl.DisplayNames(["en"],{type:"language"});
+    if(index == 0) buttonElement.style.backgroundColor = "rgba(255,255,255,0.1)";
+    buttonElement.setAttribute("onclick","loadLanguageSub(this)");
+    buttonElement.value = lang;
+    buttonElement.innerText = displayName.of(lang);
+    subBtnDiv.append(buttonElement);
+  });
+}
+
+function getSubsViaLanguage(language){
+  let languageData = subtitlesArray.filter(sub => sub.language == language);
+  if(!languageData.length){
+    document.getElementById("div-subsList").innerHTML = "Cannot Find Subtitles In This Language";
+    return;
+  }
+  insertSubElements(languageData);
 }
 
 async function insertSubElements(fetchedData){
@@ -168,7 +196,10 @@ async function insertSubElements(fetchedData){
     subElement.innerText = i;
     subElement.value = SubSource; 
     subElement.addEventListener("click", () => {
-      Array.from(subsList.children).forEach(element => element.removeAttribute("style"));
+      Array.from(subsList.children).forEach(element => {
+        element.style.backgroundColor = "transparent";
+        element.style.borderColor = "transparent";
+      });
       subElement.style.backgroundColor = "rgba(255,255,255,0.05)";
       subElement.style.borderBottom = "1px solid cyan"
       fetch(SubSource).then(res => res.text()
@@ -212,7 +243,7 @@ function loadVideo(Magnet){
 function loadLanguageSub(button){
   Array.from(button.parentElement.children).forEach(element => element.removeAttribute("style"));
   button.style.backgroundColor = "rgba(255,255,255,0.1)";
-  getSubs(mediaId,button.value);
+  getSubsViaLanguage(button.value);
 }
 
 function SubObj(startTime, endTime, content){

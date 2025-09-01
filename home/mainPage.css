@@ -310,11 +310,25 @@ body, html {
   width:150px;
   height:150px;
 }
-
-
-#img-main-logo{
-  width:44;
-  height:44;
+#div-main-logo{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:44px;
+  margin-left:-2px;
+}
+#div-main-logo svg{
+  width:100%;
+  height:100%;
+}
+#div-main-logo .transBackground{
+  fill:rgb(var(--primary-color));
+}
+#div-main-logo .mainColor{
+  fill:rgb(var(--icon-color));
+}
+#div-main-logo .secondColor{
+  fill:rgb(var(--icon-hover-color));
 }
 #btn-library .icon{
   width:35px;

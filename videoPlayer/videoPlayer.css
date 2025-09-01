@@ -154,8 +154,13 @@ video{
   margin-bottom:10px;
 }
 #input-videoSlider{
+  accent-color:rgba(var(--secondary-color)); 
   width:100%;
   margin:0px 10px 0px 10px;
+}
+
+#input-volumeSlider{
+  accent-color:rgba(var(--secondary-color));
 }
 
 #p-videoPosition,

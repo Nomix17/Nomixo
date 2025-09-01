@@ -34,12 +34,11 @@
     transition: transform 0.3s;
 }
 
-/* Toggled state */
 .toggle-switch input:checked + .slider {
-    background-color: #34495e;
+    background-color: rgb(var(--secondary-color));
 }
 
 .toggle-switch input:checked + .slider::before {
-    transform: translateX(30px) translateY(-50%); /* Corrected translateY */
+    transform: translateX(30px) translateY(-50%);
 }
 

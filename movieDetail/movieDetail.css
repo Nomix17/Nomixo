@@ -278,21 +278,36 @@ h2{
 h1{
   font-size:50px;
 }
+
 #img-IMDBlogo{
   width: 30px;
   background-color:rgba(0,0,0,0%);
 }
-#img-storageImage,
-#img-seedImage{
-  width: 20px;
-  background-color:rgba(0,0,0,0%);
+
+#div-seedImage svg,
+#div-storageImage svg {
+  width:100%;
+  height:100%;
 }
 
-#img-seedImage{
-  margin-bottom:-2px;
+#div-seedImage,
+#div-storageImage{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:22px;
+  margin-right:7px;
 }
-#img-storageImage{
-  margin-bottom:-8px;
+#div-seedImage{
+  width:26px;
+}
+#div-seedImage .seed,
+#div-storageImage .center{
+  fill:rgba(var(--icon-color));
+}
+
+#div-storageImage .border{
+  fill:black;
 }
 
 .hideElement{

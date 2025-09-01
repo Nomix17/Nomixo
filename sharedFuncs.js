@@ -216,6 +216,35 @@ window.DisplayWarningOrErrorForUser = (warningMessage) => {
 
   return WarningDiv;
 }
+
+window.loadIconsDynamically = ()=>{
+  fetch('../cache/icons/storage.svg')
+    .then(response => response.text())
+    .then(svgText => {
+      document.querySelectorAll('#div-storageImage').forEach(element=>element.innerHTML = svgText);
+    });
+  fetch('../cache/icons/seeds.svg')
+    .then(response => response.text())
+    .then(svgText => {
+      document.querySelectorAll('#div-seedImage').forEach(element=>element.innerHTML = svgText);
+    });
+  fetch('../cache/icons/logo.svg')
+    .then(response => response.text())
+    .then(svgText => {
+      document.getElementById('div-main-logo').innerHTML = svgText;
+    });
+  fetch('../cache/icons/home.svg')
+    .then(response => response.text())
+    .then(svgText => {
+      document.getElementById('div-main-logo').innerHTML = svgText;
+    });
+  fetch('../cache/icons/logo.svg')
+    .then(response => response.text())
+    .then(svgText => {
+      document.getElementById('div-main-logo').innerHTML = svgText;
+    });
+}
+
 function goBack(){
   window.electronAPI.goBack();
 }

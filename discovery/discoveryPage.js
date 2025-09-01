@@ -107,3 +107,4 @@ setupKeyPressesHandler();
 
 setLeftButtonStyle("btn-discover");
 
+loadIconsDynamically();
