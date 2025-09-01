@@ -35,7 +35,7 @@ button{
   background-color: rgba(var(--primary-color),1);
   bottom: 11%;
   z-index:2;
-  max-width:330px;
+  width:25%;
 }
 #div-MainSubtitleContainer p{
   margin:0;

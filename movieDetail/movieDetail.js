@@ -3,9 +3,6 @@ let movieId = data.get("MovieId");
 let MediaType = data.get("MediaType");
 var backgroundImage;
 
-console.log("hello");
-console.log(MediaType);
-
 let TorrentContainer = document.getElementById("div-movieMedias");
 let SerieEpisode = document.getElementById("div-serieEpisodes");
 

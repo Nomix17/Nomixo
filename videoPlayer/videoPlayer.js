@@ -159,7 +159,12 @@ async function loadingAllSubs(id){
     subtitlesArray = data;
     getSubsViaLanguage("en");
     let languages = [];
-    subtitlesArray.forEach(sub => {if(!languages.includes(sub.language)) languages.push(sub.language)});
+    languages.push({display:"English",language:"en"});
+    languages.push({display:"Arabic",language:"ar"});
+    subtitlesArray.forEach(sub => {
+      if(!languages.some(langObj => langObj.display === sub.display && langObj.language === sub.language))
+        languages.push({display:sub.display,language:sub.language});
+    });
     insertLanguageButton(languages); 
   }catch(err){
     console.error(err);
@@ -169,11 +174,10 @@ function insertLanguageButton(langArray){
   let subBtnDiv = document.getElementById("div-LeftSubContainer");
   langArray.forEach((lang,index) => {
     let buttonElement = document.createElement("button");
-    const displayName = new Intl.DisplayNames(["en"],{type:"language"});
     if(index == 0) buttonElement.style.backgroundColor = "rgba(255,255,255,0.1)";
     buttonElement.setAttribute("onclick","loadLanguageSub(this)");
-    buttonElement.value = lang;
-    buttonElement.innerText = displayName.of(lang);
+    buttonElement.value = lang.language;
+    buttonElement.innerText = lang.display;
     subBtnDiv.append(buttonElement);
   });
 }
