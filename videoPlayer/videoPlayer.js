@@ -205,7 +205,7 @@ async function insertSubElements(fetchedData){
         element.style.borderColor = "transparent";
       });
       subElement.style.backgroundColor = "rgba(255,255,255,0.05)";
-      subElement.style.borderBottom = "1px solid cyan"
+      subElement.style.borderBottom = "4px solid rgba(var(--secondary-color))"
       fetch(SubSource).then(res => res.text()
         ).then(data => {
           scrapSubs(data);

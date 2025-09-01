@@ -53,16 +53,16 @@ button{
   background-color:rgba(0,0,0,0);
   border:none;
   border-radius:3px;
-  margin: 0px 5px 0px 5px;
+  margin: 0px 5px 2px 5px;
   padding:10px;
-  height:90%;
+  height:96%;
   width:30px;
   font-size:15px;
 }
 
 #div-subsList button:hover{
   background-color:rgba(255,255,255,0.05);
-  border-bottom:1px solid cyan;
+  border-bottom:4px solid rgba(var(--secondary-color));
   cursor:pointer;
 }
 
