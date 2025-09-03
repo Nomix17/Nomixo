@@ -79,7 +79,9 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
       mediaDomElement.appendChild(movieNameElement);
 
       toggleInLibraryBtn.addEventListener("click",function() {ToggleInLibrary(Id,NewMediaType,toggleInLibraryBtn)});
-      mediaDomElement.addEventListener("click",function() {openDetailPage(Id,NewMediaType)});
+      mediaDomElement.addEventListener("click",function() {
+        openDetailPage(Id,NewMediaType);
+      });
 
       if(MediaContainer.length == undefined){
         if(!Array.from(MediaContainer.querySelectorAll(".div-MovieElement")).map(element => element.innerHTML).includes(mediaDomElement.innerHTML))

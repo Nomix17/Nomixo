@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torrent Video Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .input-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="text"]:focus {
+            background: white;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        button {
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 16px;
+            min-height: 24px;
+        }
+        
+        .loading {
+            color: #ffd93d;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .success {
+            color: #6bcf7f;
+        }
+        
+        .video-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        video {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            background: #000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .video-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .video-info strong {
+            color: #ffd93d;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .controls button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: linear-gradient(45deg, #4834d4, #686de0);
+        }
+        
+        .sample-magnets {
+            margin-top: 20px;
+        }
+        
+        .sample-magnets h3 {
+            margin-bottom: 10px;
+            color: #ffd93d;
+        }
+        
+        .magnet-sample {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            word-break: break-all;
+        }
+        
+        .magnet-sample:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #ffd93d;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Torrent Video Player</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="magnetInput" 
+                    placeholder="Paste magnet link here..."
+                    autocomplete="off"
+                />
+                <button id="streamBtn" onclick="startStream()">
+                    🚀 Stream Video
+                </button>
+            </div>
+            
+            <div id="status" class="status"></div>
+            
+            <div class="sample-magnets">
+                <h3>📎 Sample Magnet Links (Click to use):</h3>
+                <div class="magnet-sample" onclick="useSampleMagnet(this)">
+                    magnet:?xt=urn:btih:example1&dn=Sample+Movie+2023&tr=udp://tracker.example.com:8080
+                </div>
+                <div class="magnet-sample" onclick="useSampleMagnet(this)">
+                    magnet:?xt=urn:btih:example2&dn=Another+Sample+Video&tr=udp://another.tracker.com:8080
+                </div>
+                <p style="font-size: 12px; color: #ccc; margin-top: 10px;">
+                    ⚠️ Note: These are example magnet links. Use real magnet links for actual content.
+                </p>
+            </div>
+            
+            <!-- Debug Section -->
+            <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 12px;">
+                <h4 style="color: #ffd93d; margin-bottom: 10px;">🔍 Debug Info:</h4>
+                <div id="debugInfo">
+                    <div>Electron API: <span id="apiStatus">Checking...</span></div>
+                    <div>getVideoUrl function: <span id="functionStatus">Checking...</span></div>
+                    <div>Last error: <span id="lastError">None</span></div>
+                </div>
+                <button onclick="runDiagnostics()" style="margin-top: 10px; padding: 5px 10px; font-size: 11px;">
+                    🔧 Run Diagnostics
+                </button>
+            </div>
+        </div>
+        
+        <div id="videoSection" class="video-section" style="display: none;">
+            <video 
+                id="videoPlayer" 
+                controls 
+                preload="metadata"
+                onloadstart="onVideoLoadStart()"
+                oncanplay="onVideoCanPlay()"
+                onerror="onVideoError()"
+                onprogress="onVideoProgress()"
+            >
+                Your browser does not support the video tag.
+            </video>
+            
+            <div id="videoInfo" class="video-info" style="display: none;"></div>
+            
+            <div class="controls">
+                <button onclick="toggleFullscreen()">🔲 Fullscreen</button>
+                <button onclick="downloadVideo()" id="downloadBtn" style="display: none;">📥 Download</button>
+                <button onclick="stopStream()">🛑 Stop Stream</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStreamUrl = null;
+        let currentMimeType = null;
+
+        function setStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function useSampleMagnet(element) {
+            document.getElementById('magnetInput').value = element.textContent.trim();
+        }
+
+        function runDiagnostics() {
+            const apiStatus = document.getElementById('apiStatus');
+            const functionStatus = document.getElementById('functionStatus');
+            const lastError = document.getElementById('lastError');
+            
+            // Check API availability
+            if (typeof window.electronAPI !== 'undefined') {
+                apiStatus.textContent = '✅ Available';
+                apiStatus.style.color = '#6bcf7f';
+            } else {
+                apiStatus.textContent = '❌ Not Available';
+                apiStatus.style.color = '#ff6b6b';
+            }
+            
+            // Check function
+            if (typeof window.electronAPI?.getVideoUrl === 'function') {
+                functionStatus.textContent = '✅ Available';
+                functionStatus.style.color = '#6bcf7f';
+            } else {
+                functionStatus.textContent = '❌ Not Available';
+                functionStatus.style.color = '#ff6b6b';
+            }
+            
+            // Show window object info
+            console.log('Window electronAPI:', window.electronAPI);
+            console.log('Available functions:', window.electronAPI ? Object.keys(window.electronAPI) : 'None');
+        }
+
+        async function startStream() {
+            const magnetInput = document.getElementById('magnetInput');
+            const streamBtn = document.getElementById('streamBtn');
+            const videoSection = document.getElementById('videoSection');
+            const video = document.getElementById('videoPlayer');
+            
+            const magnet = magnetInput.value.trim();
+            
+            if (!magnet) {
+                setStatus('❌ Please enter a magnet link', 'error');
+                return;
+            }
+            
+            if (!magnet.startsWith('magnet:')) {
+                setStatus('❌ Invalid magnet link format', 'error');
+                return;
+            }
+            
+            // Reset previous stream
+            stopStream();
+            
+            // Update UI
+            streamBtn.disabled = true;
+            setStatus('<span class="spinner"></span>Connecting to torrent...', 'loading');
+            videoSection.style.display = 'none';
+            
+            // Add timeout to prevent infinite loading
+            const timeoutId = setTimeout(() => {
+                setStatus('❌ Timeout: Stream took too long to start (60s)', 'error');
+                streamBtn.disabled = false;
+            }, 60000);
+            
+            try {
+                // Debug: Check if API exists
+                console.log('Electron API available:', !!window.electronAPI);
+                console.log('getVideoUrl function:', typeof window.electronAPI?.getVideoUrl);
+                
+                setStatus('<span class="spinner"></span>Calling Electron API...', 'loading');
+                
+                // Call your Electron API with additional logging
+                console.log('Calling getVideoUrl with magnet:', magnet.substring(0, 50) + '...');
+                const result = await window.electronAPI.getVideoUrl(magnet);
+                
+                clearTimeout(timeoutId);
+                console.log('API Result:', result);
+                
+                if (!result) {
+                    throw new Error('API returned null/undefined');
+                }
+                
+                if (!Array.isArray(result)) {
+                    throw new Error(`Expected array, got: ${typeof result}`);
+                }
+                
+                if (!result[0]) {
+                    throw new Error('No streaming URL in result array');
+                }
+                
+                const [streamUrl, mimeType] = result;
+                currentStreamUrl = streamUrl;
+                currentMimeType = mimeType;
+                
+                console.log('Stream URL:', streamUrl);
+                console.log('MIME Type:', mimeType);
+                
+                setStatus('🎉 Stream ready! Loading video...', 'success');
+                
+                // Setup video
+                video.src = streamUrl;
+                videoSection.style.display = 'block';
+                
+                // Show video info
+                showVideoInfo(streamUrl, mimeType);
+                
+                setStatus('▶️ Video ready to play!', 'success');
+                
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.error('Streaming error:', error);
+                console.error('Error stack:', error.stack);
+                
+                // More detailed error messages
+                let errorMsg = 'Failed to start stream';
+                if (error.message) {
+                    errorMsg = error.message;
+                }
+                if (!window.electronAPI) {
+                    errorMsg = 'Electron API not available - are you running in Electron?';
+                } else if (!window.electronAPI.getVideoUrl) {
+                    errorMsg = 'getVideoUrl function not found in preload.js';
+                }
+                
+                setStatus(`❌ Error: ${errorMsg}`, 'error');
+            } finally {
+                streamBtn.disabled = false;
+            }
+        }
+
+        function showVideoInfo(url, mimeType) {
+            const videoInfo = document.getElementById('videoInfo');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            videoInfo.innerHTML = `
+                <div><strong>Stream URL:</strong> ${url}</div>
+                <div><strong>MIME Type:</strong> ${mimeType}</div>
+                <div><strong>Status:</strong> <span id="videoStatus">Initializing...</span></div>
+            `;
+            videoInfo.style.display = 'block';
+            downloadBtn.style.display = 'inline-block';
+        }
+
+        function stopStream() {
+            const video = document.getElementById('videoPlayer');
+            const videoSection = document.getElementById('videoSection');
+            const videoInfo = document.getElementById('videoInfo');
+            
+            if (video.src) {
+                video.pause();
+                video.src = '';
+                video.load();
+            }
+            
+            videoSection.style.display = 'none';
+            videoInfo.style.display = 'none';
+            currentStreamUrl = null;
+            currentMimeType = null;
+            
+            setStatus('Stream stopped', '');
+        }
+
+        function toggleFullscreen() {
+            const video = document.getElementById('videoPlayer');
+            
+            if (!document.fullscreenElement) {
+                video.requestFullscreen().catch(err => {
+                    console.error('Fullscreen error:', err);
+                    setStatus('❌ Fullscreen not supported', 'error');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function downloadVideo() {
+            if (currentStreamUrl) {
+                const a = document.createElement('a');
+                a.href = currentStreamUrl;
+                a.download = 'video.mp4';
+                a.click();
+            }
+        }
+
+        // Video event handlers
+        function onVideoLoadStart() {
+            document.getElementById('videoStatus').textContent = 'Loading...';
+        }
+
+        function onVideoCanPlay() {
+            document.getElementById('videoStatus').textContent = 'Ready to play';
+            setStatus('✅ Video loaded successfully!', 'success');
+        }
+
+        function onVideoError() {
+            const video = document.getElementById('videoPlayer');
+            const error = video.error;
+            let errorMessage = 'Unknown video error';
+            
+            if (error) {
+                switch (error.code) {
+                    case 1: errorMessage = 'Video loading aborted'; break;
+                    case 2: errorMessage = 'Network error'; break;
+                    case 3: errorMessage = 'Video decode error'; break;
+                    case 4: errorMessage = 'Video format not supported'; break;
+                }
+            }
+            
+            document.getElementById('videoStatus').textContent = 'Error';
+            setStatus(`❌ Video Error: ${errorMessage}`, 'error');
+        }
+
+        function onVideoProgress() {
+            const video = document.getElementById('videoPlayer');
+            if (video.buffered.length > 0) {
+                const buffered = (video.buffered.end(0) / video.duration) * 100;
+                document.getElementById('videoStatus').textContent = 
+                    `Buffered: ${Math.round(buffered)}%`;
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.id === 'magnetInput') {
+                startStream();
+            } else if (e.key === 'Escape') {
+                stopStream();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        // Initial focus and diagnostics
+        document.getElementById('magnetInput').focus();
+        
+        // Run initial diagnostics
+        window.addEventListener('load', () => {
+            setTimeout(runDiagnostics, 1000);
+        });
+    </script>
+</body>
+</html>

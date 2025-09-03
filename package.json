@@ -2,6 +2,7 @@
   "name": "Nomixo",
   "version": "1.0.0",
   "description": "Media streaming app for movies, TV shows, and animations",
+  "type": "module",
   "author": {
     "name": "Nomix17",
     "email": "https://github.com/Nomix17/Nomixo"
@@ -14,7 +15,9 @@
   "dependencies": {
     "dotenv": "^17.2.0",
     "electron": "^37.3.1",
-    "torrent-stream": "^1.2.1"
+    "express": "^5.1.0",
+    "torrent-stream": "^1.2.1",
+    "webtorrent": "^2.8.4"
   },
   "devDependencies": {
     "electron-builder": "^26.0.12"

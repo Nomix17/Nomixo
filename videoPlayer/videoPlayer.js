@@ -1,9 +1,9 @@
 const data = new URLSearchParams(window.location.search);
 let Magnet = atob(data.get("MagnetLink"));
 let bgImagePath = data.get("bgPath");
-let mediaId = data.get("id");
+let mediaImdbId = data.get("id");
 let defaultFontSize = 30;
-
+console.log(Magnet);
 let TopButtonsContainer = document.getElementById("div-topButtonsContainer");
 let BottomButtonsContainer = document.getElementById("div-bottomButtonsContainer");
 let SubDivDisplay = document.getElementById("div-Subtitles");
@@ -35,7 +35,7 @@ document.documentElement.style.backgroundAttachment = `fixed`;
 loadSubSettings();
 loadVideo(Magnet);
 
-loadingAllSubs(mediaId);
+loadingAllSubs(mediaImdbId);
 
 TopButtonsContainer.addEventListener("mouseenter", ()=>{ mouseHoveringOnControlDiv = true });
 TopButtonsContainer.addEventListener("mouseleave", ()=>{ mouseHoveringOnControlDiv = false });
@@ -228,7 +228,7 @@ function gettingformatedTime(time){
 function loadVideo(Magnet){
   window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
     console.log(`Video Format: ${mimeType}`);
-    if(mimeType == "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
+    // if(mimeType == "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
     VideoElement.id = "video-MediaPlayer";
     VideoElement.innerHTML = `<source src=${url} type='${mimeType}'>`;
     VideoElement.load();

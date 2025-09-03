@@ -1,20 +1,33 @@
-const {BrowserWindow, app, nativeTheme, ipcMain, webFrame } = require("electron");
-const torrentStream = require('torrent-stream');
-const http = require('http');
-const path = require("path");
-const fs = require("fs");
-const https = require("https");
-const os = require("os");
+import { BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain } from "electron";
+import WebTorrent from "webtorrent";
+import { spawn } from "child_process";
+import express from "express";
+import mime from "mime";
+import path from "path";
+import fs from "fs";
+import os from "os";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 
-let SettingsFilePath = path.join(__dirname,"settings.json");
-let ThemeFilePath = path.join(__dirname,"Themes/Original.css");
-let libraryFilePath = path.join(__dirname,"library.json");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-require("dotenv").config();
+dotenv.config();
 
-var mainzoomFactor = 1;
+// ======================= PATHS =======================
+const SettingsFilePath = path.join(__dirname, "settings.json");
+const ThemeFilePath = path.join(__dirname, "Themes/Original.css");
+const libraryFilePath = path.join(__dirname, "library.json");
 
+// ======================= GLOBALS =======================
+let mpv;
+let mainzoomFactor = 1;
 nativeTheme.themeSource = "dark";
+
+// WebTorrent client
+const client = new WebTorrent();
+
+// ======================= ELECTRON WINDOW =======================
 const createWindow = async () => {
   const win = new BrowserWindow({
     width: 1100,
@@ -25,222 +38,197 @@ const createWindow = async () => {
       nodeIntegration: false
     }
   });
-  win.maximize()
+
+  win.maximize();
   win.setMenuBarVisibility(false);
   win.loadFile("./home/mainPage.html");
 
   mainzoomFactor = loadSettings().PageZoomFactor;
+
   win.webContents.on('did-finish-load', () => {
     win.webContents.setZoomFactor(mainzoomFactor);
   });
+};
 
-}
+let closeWindow = true;
 
-var closeWindow = true;
-
-app.on("ready", () => {
-  createWindow();
-});
+app.on("ready", () => createWindow());
 
 app.on("window-all-closed", () => {
-  if(closeWindow){
-    app.quit();
-  }
+  if (closeWindow) app.quit();
 });
 
-ipcMain.handle("load-settings",() => {
-  return new Promise((resolve, reject) => {
-    try{
-      let settingsObj = loadSettings();
-      resolve(settingsObj);
-    }catch{
-      reject("Something Went Wrong When Loading Settings!");
-    }
-  });
+// ======================= IPC HANDLERS =======================
+
+// Settings & Theme
+ipcMain.handle("load-settings", () => {
+  try { return loadSettings(); }
+  catch { throw new Error("Failed to load settings"); }
 });
 
-ipcMain.handle("load-theme",()=>{
-  return new Promise((resolve,reject) => {
-    try{
-      let themeObj = loadTheme();
-      resolve(themeObj);
-    }catch{
-      reject("Something Went Wrong When Loading Theme!");
-    }
-  });
+ipcMain.handle("load-theme", () => {
+  try { return loadTheme(); }
+  catch { throw new Error("Failed to load theme"); }
 });
 
-ipcMain.handle("apply-settings",(event, SettingsObj) => {
+ipcMain.handle("apply-settings", (event, SettingsObj) => {
   const webContents = event.sender;
-  SettingsObj.PageZoomFactor = Math.max(0.1,SettingsObj.PageZoomFactor);
+  SettingsObj.PageZoomFactor = Math.max(0.1, SettingsObj.PageZoomFactor);
   mainzoomFactor = SettingsObj.PageZoomFactor;
-  webContents.setZoomFactor(SettingsObj.PageZoomFactor);
-  fs.writeFile(SettingsFilePath, JSON.stringify(SettingsObj, null, 2), (err) => {console.log(err)});
+  webContents.setZoomFactor(mainzoomFactor);
+  fs.writeFileSync(SettingsFilePath, JSON.stringify(SettingsObj, null, 2));
 });
 
-ipcMain.on("apply-theme",(event, ThemeObj) =>{
-  let formatedThemeObj = ThemeObj.theme.map(obj=>`${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`);
-
-  let themeFileContent = `:root{
-    ${formatedThemeObj.join(";\n")}
-  ;}`;
-
-  fs.writeFile(ThemeFilePath,themeFileContent, (err)=>{
-    console.log(err)
-  });
+ipcMain.on("apply-theme", (event, ThemeObj) => {
+  const formatedThemeObj = ThemeObj.theme.map(obj => `${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`);
+  const themeFileContent = `:root{\n${formatedThemeObj.join(";\n")};\n}`;
+  fs.writeFileSync(ThemeFilePath, themeFileContent);
 });
 
-ipcMain.handle("go-back",(event)=>{
+ipcMain.handle("go-back", (event) => {
   const webContents = event.sender;
-  if(webContents.navigationHistory.canGoBack()){
-    webContents.navigationHistory.goBack();
-  }
-});
-
-ipcMain.handle("change-page", (event,page) => {
+  if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
+  if (mpv) mpv.kill();
   const win = BrowserWindow.getFocusedWindow();
-  if (win) {
-    const webContents = event.sender;
-    webContents.setZoomFactor(mainzoomFactor);
-    const [filePath, query] = page.split('?');
-    const fullPath = path.join(__dirname, filePath);
-    const url = `file://${fullPath}${query ? '?' + query : ''}`;
-    win.loadURL(url);
-  }
+  if (win) win.show();
 });
 
-ipcMain.handle("request-fullscreen",()=>{
+ipcMain.handle("change-page", (event, page) => {
   const win = BrowserWindow.getFocusedWindow();
-  if(win.isFullScreen()) win.setFullScreen(false);
-  else if(!win.isFullScreen()) win.setFullScreen(true);
+  if (!win) return;
+
+  const [filePath, query] = page.split('?');
+  const fullPath = path.join(__dirname, filePath);
+  const url = `file://${fullPath}${query ? '?' + query : ''}`;
+  win.webContents.setZoomFactor(mainzoomFactor);
+  win.loadURL(url);
 });
 
-ipcMain.handle("get-api-key",()=>{
-  return process.env.API_KEY;
+ipcMain.handle("request-fullscreen", () => {
+  const win = BrowserWindow.getFocusedWindow();
+  if (!win) return;
+  win.setFullScreen(!win.isFullScreen());
 });
 
-ipcMain.handle('get-video-url', async (event,magnet) => {
+ipcMain.handle("get-api-key", () => process.env.API_KEY);
+
+// ======================= PLAY TORRENT =======================
+ipcMain.handle('play-torrent', async (event, magnet) => {
   return new Promise((resolve, reject) => {
-    const engine = torrentStream(magnet)
+    client.add(magnet, (torrent) => {
+      const file = torrent.files.find(f =>
+        /\.(mp4|webm|ogv|avi|mkv)$/i.test(f.name) && f.length > 0.5 * 1e9
+      );
+      if (!file) return reject(new Error('No suitable video file found'));
 
-    engine.on('ready', () => {
-      const file = engine.files.find(f =>
-        (f.name.endsWith('.mp4') ||
-         f.name.endsWith('.webm') ||
-         f.name.endsWith('.mkv')) && f.length/(10**9) > 0.5 
-      )
-      if (!file) {
-        reject('No video file found in torrent')
-        return null;
-      }
-      let mimeType = file.name.endsWith('.mkv') ? "video/x-matroska" :
-           file.name.endsWith('.mp4') ? "video/mp4" :
-           file.name.endsWith('.webm') ? "video/webm" :
-           "application/octet-stream";
+      const app = express();
+      app.get('/video', (req, res) => {
+        const range = req.headers.range;
+        if (!range) return res.status(416).send('Requires Range header');
 
-      server = http.createServer((req, res) => {
-        const range = req.headers.range
-        if (!range) {
-          res.statusCode = 416
-          return res.end()
-        }
-
-        const positions = range.replace(/bytes=/, '').split('-')
-        const start = parseInt(positions[0], 10)
-        const fileSize = file.length
-        const end = positions[1] ? parseInt(positions[1], 10) : fileSize - 1
-        const chunkSize = (end - start) + 1
-
+        const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(startStr, 10);
+        const end = endStr ? parseInt(endStr, 10) : file.length - 1;
+        const chunkSize = end - start + 1;
 
         res.writeHead(206, {
-          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Content-Range': `bytes ${start}-${end}/${file.length}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunkSize,
-          'Content-Type': mimeType,
-        })
-
-        const stream = file.createReadStream({ start, end })
-        stream.pipe(res)
-      })
-
-      server.listen(0, () => {
-        const port = server.address().port
-        resolve([`http://localhost:${port}`,mimeType])
-      })
-    })
-
-    engine.on('error', reject)
-  })
-});
-
-
-ipcMain.on("save-video",() => {
-  closewindow = false;
-  const tmpDir = os.tmpdir()+"/torrent-stream";
-  const tmpDirContent = fs.readdir(tmpDir);
-  tmpDirContent.forEach(element => {
-    let sourcePath = tmpDir+"/"+element;
-    let distinationPath =  __dirname+"/Downloads/"+element;
-
-    fs.stat(sourcePath, (err,stats) =>{
-      if(stats.isDirectory() || stats.size/(10**9) > 0.5){
-        fs.rename(sourcePath,distinationPath,(err) => {
-          if(err) throw err;
-          closeWindow = true;
-          console.log("Media Was Moved");
+          'Content-Type': mime.getType(file.name)
         });
-      }
+
+        const stream = file.createReadStream({ start, end });
+        let downloaded = 0;
+        stream.on("data", chunk => {
+          downloaded += chunk.length;
+          const percentage = ((downloaded / file.length) * 100).toFixed(2);
+          const win = BrowserWindow.getFocusedWindow();
+          if (win) win.webContents.send('torrent-progress', {
+            downloaded,
+            total: file.length,
+            percent: percentage
+          });
+        });
+        stream.pipe(res);
+      });
+
+      const server = app.listen(0, () => {
+        const port = server.address().port;
+        const url = `http://localhost:${port}/video`;
+        console.log(`Streaming URL: ${url}`);
+        const win = BrowserWindow.getFocusedWindow();
+        if (win) win.hide();
+        mpv = spawn('mpv', [url], { stdio: 'inherit' });
+        mpv.on('close', () => {
+          console.log('Playback finished');
+          server.close();
+          torrent.destroy();
+          const webContents = event.sender;
+          if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
+          if (win) win.show();
+        });
+
+        resolve(url);
+      });
     });
   });
 });
 
-ipcMain.on("add-to-lib", (event,mediaInfo)=>{
-  let LibraryInfo = getLibraryInfo() 
-  LibraryInfo.media.push(mediaInfo); 
-  insertNewInfoToLibrary(LibraryInfo);
-});
+// ======================= LIBRARY & SAVE VIDEO =======================
+ipcMain.on("save-video", () => {
+  closeWindow = false;
+  const tmpDir = path.join(os.tmpdir(), "torrent-stream");
+  if (!fs.existsSync(tmpDir)) return;
 
-ipcMain.on("remove-from-lib", (event,mediaInfo) => {
-  let LibraryInfo = getLibraryInfo();
-  LibraryInfo.media = LibraryInfo.media.filter(element => !(element.MediaId == mediaInfo.MediaId && element.MediaType == mediaInfo.MediaType));
-  insertNewInfoToLibrary(LibraryInfo);
-});
-
-ipcMain.handle("load-from-lib", (event, targetIdentification)=>{
-    let LibraryInfo = getLibraryInfo();
-    if(LibraryInfo.media.length){
-    if(targetIdentification == undefined) return LibraryInfo.media;
-      let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId == targetIdentification.MediaId && element.MediaType == targetIdentification.MediaType);
-      if(targetLibraryInfo.length) return targetLibraryInfo; 
-      throw new Error("Target Not Found");
-    }else{
-      throw new Error("Target Not Found");
+  const tmpDirContent = fs.readdirSync(tmpDir);
+  tmpDirContent.forEach(element => {
+    const sourcePath = path.join(tmpDir, element);
+    const destinationPath = path.join(__dirname, "Downloads", element);
+    const stats = fs.statSync(sourcePath);
+    if (stats.isDirectory() || stats.size / 1e9 > 0.5) {
+      fs.renameSync(sourcePath, destinationPath);
+      closeWindow = true;
+      console.log("Media Was Moved");
     }
+  });
 });
 
-function getLibraryInfo(){
-  try{
-    const LibraryData = fs.readFileSync(libraryFilePath,"utf-8");
-    return JSON.parse(LibraryData);
-  }catch(err){
-    return {media:[]};
-  }
+ipcMain.on("add-to-lib", (event, mediaInfo) => {
+  const LibraryInfo = getLibraryInfo();
+  LibraryInfo.media.push(mediaInfo);
+  insertNewInfoToLibrary(LibraryInfo);
+});
+
+ipcMain.on("remove-from-lib", (event, mediaInfo) => {
+  const LibraryInfo = getLibraryInfo();
+  LibraryInfo.media = LibraryInfo.media.filter(e => !(e.MediaId === mediaInfo.MediaId && e.MediaType === mediaInfo.MediaType));
+  insertNewInfoToLibrary(LibraryInfo);
+});
+
+ipcMain.handle("load-from-lib", (event, targetIdentification) => {
+  const LibraryInfo = getLibraryInfo();
+  if (!LibraryInfo.media.length) throw new Error("Target Not Found");
+  if (!targetIdentification) return LibraryInfo.media;
+
+  const targetLibraryInfo = LibraryInfo.media.filter(e => e.MediaId === targetIdentification.MediaId && e.MediaType === targetIdentification.MediaType);
+  if (targetLibraryInfo.length) return targetLibraryInfo;
+  throw new Error("Target Not Found");
+});
+
+// ======================= SETTINGS & THEME =======================
+function getLibraryInfo() {
+  try { return JSON.parse(fs.readFileSync(libraryFilePath, "utf-8")); }
+  catch { return { media: [] }; }
 }
 
-function insertNewInfoToLibrary(newData){
-  fs.writeFile(libraryFilePath,JSON.stringify(newData,null,2), err=>{
-     if(err){
-       console.error(err);
-     }
-  });
+function insertNewInfoToLibrary(newData) {
+  fs.writeFileSync(libraryFilePath, JSON.stringify(newData, null, 2));
 }
-
 
 function loadSettings() {
-  try {
-    const data = fs.readFileSync(SettingsFilePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (err) {
+  try { return JSON.parse(fs.readFileSync(SettingsFilePath, "utf-8")); }
+  catch {
     return {
       PageZoomFactor: 1,
       TurnOnSubsByDefault: false,
@@ -253,34 +241,34 @@ function loadSettings() {
   }
 }
 
-function loadTheme(){
-  try{
-    let ThemeObj = {theme:[]};
-    let savedTheme = fs.readFileSync(ThemeFilePath, "utf-8");
-    savedTheme = savedTheme.replaceAll(":root{","").replaceAll("}","").replaceAll("--","").replaceAll(";","").replaceAll(" ","");
-    let linesArray = savedTheme.split("\n").filter(line => line != "");
-    ThemeObj.theme = linesArray.map(obj => {
-      const [key, value] = obj.split(":");
-      return {[key]:value};
-    });
-    return ThemeObj;
-  }catch(err){
-    console.error(err);
-    ThemeObj = {
-      theme:[
-        {'secondary-color':'0,0,0,0.5'},
-        {'main-buttons-color':'0,0,0,0.3'},
-        {'primary-color':'22,20,49'},
-        {'div-containers-borders-color':'255,255,255,0.0'},
-        {'MovieElement-hover-BorderColor':'255,255,255'},
-        {'input-backgroundColor':'0,0,0,0.2'},
-        {'drop-down-color':'13,12,29,1'},
-        {'icon-color':'50,50,100'},
-        {'icon-hover-color':'100,70,190,1'},
-        {'text-color':'#ffffff'},
-        {'dont-Smooth-transition-between-pages':'0'}
+function loadTheme() {
+  try {
+    const savedTheme = fs.readFileSync(ThemeFilePath, "utf-8")
+      .replaceAll(":root{", "")
+      .replaceAll("}", "")
+      .replaceAll("--", "")
+      .replaceAll(";", "")
+      .replaceAll(" ", "");
+    const linesArray = savedTheme.split("\n").filter(line => line !== "");
+    return { theme: linesArray.map(line => {
+      const [key, value] = line.split(":");
+      return { [key]: value };
+    })};
+  } catch {
+    return {
+      theme: [
+        { 'secondary-color': '0,0,0,0.5' },
+        { 'main-buttons-color': '0,0,0,0.3' },
+        { 'primary-color': '22,20,49' },
+        { 'div-containers-borders-color': '255,255,255,0.0' },
+        { 'MovieElement-hover-BorderColor': '255,255,255' },
+        { 'input-backgroundColor': '0,0,0,0.2' },
+        { 'drop-down-color': '13,12,29,1' },
+        { 'icon-color': '50,50,100' },
+        { 'icon-hover-color': '100,70,190,1' },
+        { 'text-color': '#ffffff' },
+        { 'dont-Smooth-transition-between-pages': '0' }
       ]
-    }
-    return ThemeObj;
+    };
   }
 }
