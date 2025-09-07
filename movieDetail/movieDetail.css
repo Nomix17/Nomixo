@@ -1,0 +1,394 @@
+#div-main {
+  height: 100vh;
+  opacity: var(--dont-Smooth-transition-between-pages);
+  flex-direction: column;
+}
+::-webkit-scrollbar{
+   background: rgba(0,0,0,0%);
+ } 
+body::-webkit-scrollbar{
+  width:0px
+}
+
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+input, button, textarea, :focus {
+    outline: none;
+}
+
+*{
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-drag: none;
+  user-select: none;
+  cursor: default;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+body{
+  background-color: rgba(0,0,0,0%);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  opacity:1;
+}
+
+
+h1,
+h2,
+p{
+  padding:0px;
+  background-color:rgba(0,0,0,0%);
+}
+
+.div-MediaDescription p{
+  max-width:100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#div-main,
+#div-middle,
+#div-top{
+  background-color:rgba(0,0,0,0%);
+  border:none;
+}
+#div-middle{
+  margin-top:10px;
+}
+#btn-fullscreen,
+#btn-goBack{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:50px;
+  height:50px;
+  background-color:  rgba(0,0,0,0%);
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+#img-goBack,
+#img-fullscreen{
+  background-color:  rgba(0,0,0,0%);
+  width:30px;
+  height:30px;
+  cursor:pointer;
+}
+#btn-fullscreen:hover,
+#btn-goBack:hover{
+  background-color:  rgba(var(--main-buttons-color));
+}
+#icon-fullscreen{
+  fill:white;
+  width:25px;
+}
+#icon-goBack{
+  width:40px;
+}
+#div-middle {
+  display: flex;
+  flex: 1; 
+  height: 0; 
+  min-height: 0; 
+}
+
+#div-movieDetails {
+  flex: 1;
+  height: 100%;
+  background-color: rgba(0,0,0,0%);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.preloadingTorrent{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#div-serieEpisodes-LoadingGif,
+#div-movieMedias-LoadingGif{
+  background-color:rgba(0,0,0,0%);
+}
+
+#div-serieEpisodes,
+#div-movieMedias {
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  flex-direction: column;
+  height: 100%; 
+  background-color: rgba(var(--primary-color), 0.9);
+  border-radius: 20px 0px 0px 0px;
+  gap: 10px;
+  padding-top: 15px;
+  padding-bottom: 10px;
+  overflow-y: auto; 
+  box-sizing: border-box;
+}
+
+#div-serieEpisodes span,
+#div-movieMedias span{
+  font-size:20px;
+  font-weight: 700;
+  background-color:rgba(0,0,0,0);
+  color: rgba(255,255,255,0.6);
+}
+#div-serieEpisodes h4{
+  margin:0;
+}
+.div-episodes-Element,
+#div-TorrentMedia {
+  background-color: rgba(0, 0, 0, 0);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0%);
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 20px 0 20px 20px ;
+  box-sizing: border-box;
+  gap: 10px;
+  margin:0px 10px 0px 10px;
+
+
+}
+
+#div-TorrentMedia:hover{
+  background-color: rgba(255, 255, 255, 10%);
+  cursor: pointer;
+}
+#div-TorrentMedia:active{
+  border: 2px solid rgba(var(--MovieElement-hover-BorderColor));
+  background-color: rgba(255, 255, 255, 10%);
+}
+.div-episodes-Element{
+  z-index:100;
+}
+.div-episodes-Element,
+.div-episodes-Element img:hover,
+#div-TorrentMedia img:hover{
+  cursor: pointer;
+}
+
+.div-MediaQuality{
+  display: flex;
+  flex: 0 0 50px;
+  margin-right:5px;
+  font-weight:bold;
+  background-color: transparent;
+  flex-shrink: 0;
+  min-width: 0;
+  min-height: 0;
+  color: #fff;
+  font-size:19px;
+  justify-content: center;
+  align-items: center;
+  padding:0;
+}
+.div-MediaDescription {
+  background-color: transparent;
+  padding:0px;
+  margin:0px;
+  font-size:17px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.div-MediaDescription p {
+  background-color: rgba(0, 0, 0, 0);
+  padding:0px;
+  margin:0px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size:15px;
+}
+#div-directorInfos,
+#div-genresInfos{
+  max-width:500px;
+}
+#div-castInfos{
+  max-width:400px;
+}
+#div-movieSummary{
+  max-width: 700px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  margin-bottom:80px;
+}
+#p-movieDuration,
+#p-movieYearOfRelease,
+#p-movieRating{
+  padding:30px 30px 30px 20px;
+  display:inline;
+  font-weight:bold;
+  font-size: 19px;
+  background-color:rgba(0,0,0,0);
+}
+#p-movieRating{
+  padding-right:10px;
+}
+
+.btn-MovieDetailsButtons{
+  margin-left:6px; 
+  margin-bottom:7px; 
+  font-size:15px;
+  padding:10px 20px 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border:2px solid rgba(255,255,255,0%);
+  border-radius:40px;
+  backdrop-filter: blur(3px);
+  cursor:pointer;
+}
+.btn-MovieDetailsButtons:hover{
+ background-color:  rgba(255,255,255,0.2);
+}
+.btn-MovieDetailsButtons:active{
+ border:2px solid rgba(255,255,255,100%);
+ background-color:  rgba(255,255,255,30%);
+}
+#div-directorInfos,
+#div-genresInfos,
+#div-genelareInfos,
+#div-castInfos,
+#div-movieSummary{
+  background-color: rgba(255,255,255,0%);
+  padding-bottom: 10px;
+}
+#p-summaryParagraph{
+  font-size:16px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  margin:0px;
+  padding:0px 0px 0px 10px;
+}
+h2{
+  font-weight:100;
+  color:rgba(255,255,255,80%);
+  padding-left:5px;
+}
+h1{
+  font-size:50px;
+}
+
+#img-IMDBlogo{
+  width: 30px;
+  background-color:rgba(0,0,0,0%);
+}
+
+#div-seedImage svg,
+#div-storageImage svg {
+  width:100%;
+  height:100%;
+}
+
+#div-seedImage,
+#div-storageImage{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:22px;
+  margin-right:7px;
+}
+#div-seedImage{
+  width:26px;
+}
+#div-seedImage .seed,
+#div-storageImage .center{
+  fill:rgba(var(--icon-color));
+}
+
+#div-storageImage .border{
+  fill:black;
+}
+
+.hideElement{
+  display:none;
+}
+
+.div-episodes-Element{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+}
+
+.div-episodes-Element *{
+  margin:0px 10px 0px 10px;
+  background-color:rgba(0,0,0,0);
+}
+
+.div-episodes-element img{
+  border-radius:10px;
+  background-color:rgba(0,0,0,0);
+}
+
+.div-episodes-Element p{
+  padding:0;
+  margin:0;
+}
+
+.div-episode-information{
+  background-color:rgba(0,0,0,0);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+#select-Seasons{
+  font-size:15px;
+  font-weight: bold;
+  padding:10;
+  max-width:25%;
+  border-radius:13px;
+  margin:5px 0px 15px 15px;
+  border:2px solid rgba(255,255,255,0.5);
+  background-color:rbga(var(--primary-color),1);
+}
+
+#select-Seasons option {
+  border:none;
+}
+
+#div-globlaLoadingGif{
+  position:fixed;
+  left:50.1%;
+  top:50%;
+  transform: translate(-50%, 50%);
+  opacity:0;
+}
+
+.img-movieMedias-LoadingGif{
+  position:relative;
+  margin-left:20px;
+}
+
+#bookmarkbtn{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  max-width:180px;
+  height:49px;
+  border:1px solid white;
+  border-radius:26px;
+  padding-top:10px;
+  position:absolute;
+  bottom:0px;
+  width:50%;
+}
+
+
+.toggleButtonIcon{
+  margin:0px 10px 5px 0px;
+  padding:0;
+  fill:white;
+  background-color:transparent;
+  width:19px;
+}

@@ -1,0 +1,54 @@
+#div-MediaSuggestions {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#div-Person-description {
+  display: flex;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+#div-left-Person-description {
+  width: 200px;
+  padding: 30px 0 0 20px;
+}
+
+#div-right-Person-description {
+  flex: 1;
+  margin-left: 20px;
+}
+
+#img-personProfilePic {
+  height: 300px;
+  border-radius: 10px;
+  display: block;
+}
+
+#para-personName {
+  font-size: 30px;
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+#para-personDepartment {
+  font-size: 19px;
+  margin: 0;
+  padding: 0;
+  margin-left: 10px;
+}
+
+#Biography-Title {
+  margin: 20px 0 0 10px;
+  font-size: 19px;
+}
+
+#para-personBiography {
+  margin-top: 0;
+  margin-left: 20px;
+}
+
+a:hover {
+  cursor: pointer;
+}
+
