@@ -1,4 +1,4 @@
-import { BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain } from "electron";
+import {BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain } from "electron";
 import WebTorrent from "webtorrent";
 import { spawn } from "child_process";
 import express from "express";
@@ -26,10 +26,10 @@ nativeTheme.themeSource = "dark";
 
 // WebTorrent client
 const client = new WebTorrent();
-
+let win;
 // ======================= ELECTRON WINDOW =======================
 const createWindow = async () => {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1100,
     height: 650,
     webPreferences: {
@@ -89,12 +89,12 @@ ipcMain.handle("go-back", (event) => {
   const webContents = event.sender;
   if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
   if (mpv) mpv.kill();
-  const win = BrowserWindow.getFocusedWindow();
+  // const win = BrowserWindow.getFocusedWindow();
   if (win) win.show();
 });
 
 ipcMain.handle("change-page", (event, page) => {
-  const win = BrowserWindow.getFocusedWindow();
+  // const win = BrowserWindow.getFocusedWindow();
   if (!win) return;
 
   const [filePath, query] = page.split('?');
@@ -105,7 +105,7 @@ ipcMain.handle("change-page", (event, page) => {
 });
 
 ipcMain.handle("request-fullscreen", () => {
-  const win = BrowserWindow.getFocusedWindow();
+  // const win = BrowserWindow.getFocusedWindow();
   if (!win) return;
   win.setFullScreen(!win.isFullScreen());
 });
@@ -154,9 +154,9 @@ ipcMain.handle('play-torrent', async (event, magnet, subsUrl) => {
         const port = server.address().port;
         const url = `http://localhost:${port}/video`;
         console.log(`Streaming URL: ${url}`);
-        const win = BrowserWindow.getFocusedWindow();
-        if (win) win.hide();
-        mpv = spawn('mpv', ['--ontop',url], { stdio: 'inherit' });
+        // const win = BrowserWindow.getFocusedWindow();
+        let wid = gettingWindowWid();
+        mpv = spawn('mpv', ['--ontop',"--wid="+wid ,'--no-border', '--fullscreen',url], { stdio: 'inherit' });
         mpv.on('close', () => {
           console.log('Playback finished');
           server.close();
@@ -171,6 +171,15 @@ ipcMain.handle('play-torrent', async (event, magnet, subsUrl) => {
     });
   });
 });
+
+function gettingWindowWid(){
+  // const win = BrowserWindow.getFocusedWindow();
+  let handleBuffer = win.getNativeWindowHandle();
+  let wid;
+  if(process.platform === "darwin") wid = handleBuffer.readBigUInt64LE(0);
+  else wid = handleBuffer.readUInt32LE(0);
+  return wid;
+}
 
 // ======================= LIBRARY & SAVE VIDEO =======================
 ipcMain.on("save-video", () => {
