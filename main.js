@@ -1,13 +1,14 @@
 import {BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain } from "electron";
-import WebTorrent from "webtorrent";
+import downloadMultiple from "./downloadSubtitles.js";
 import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+import WebTorrent from "webtorrent";
 import express from "express";
+import dotenv from "dotenv";
 import mime from "mime";
 import path from "path";
 import fs from "fs";
 import os from "os";
-import dotenv from "dotenv";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,16 +18,21 @@ dotenv.config();
 // ======================= PATHS =======================
 const SettingsFilePath = path.join(__dirname, "settings.json");
 const ThemeFilePath = path.join(__dirname, "Themes/Original.css");
+const mpvConfigDiv = path.join(__dirname,"mpvConfigs");
+const SubConfigFile = path.join(mpvConfigDiv, "mpv.conf");
 const libraryFilePath = path.join(__dirname, "library.json");
+const subDirectory="/tmp/tempSubs";
 
 // ======================= GLOBALS =======================
 let mpv;
 let mainzoomFactor = 1;
+let subsPaths;
 nativeTheme.themeSource = "dark";
 
 // WebTorrent client
 const client = new WebTorrent();
 let win;
+
 // ======================= ELECTRON WINDOW =======================
 const createWindow = async () => {
   win = new BrowserWindow({
@@ -56,6 +62,7 @@ app.on("ready", () => createWindow());
 
 app.on("window-all-closed", () => {
   if (closeWindow) app.quit();
+  fs.readdirSync(subDirectory).forEach(file => {fs.unlinkSync(path.join(subDirectory,file))});
 });
 
 // ======================= IPC HANDLERS =======================
@@ -71,6 +78,12 @@ ipcMain.handle("load-theme", () => {
   catch { throw new Error("Failed to load theme"); }
 });
 
+ipcMain.handle("load-sub", ()=>{
+  try { return loadSubConfigs();}
+  catch { throw new Error("Failed to load sub configs");}
+});
+
+
 ipcMain.handle("apply-settings", (event, SettingsObj) => {
   const webContents = event.sender;
   SettingsObj.PageZoomFactor = Math.max(0.1, SettingsObj.PageZoomFactor);
@@ -85,16 +98,18 @@ ipcMain.on("apply-theme", (event, ThemeObj) => {
   fs.writeFileSync(ThemeFilePath, themeFileContent);
 });
 
+ipcMain.on("apply-sub-config", (event,SubConfig) => {
+  applySubConfigs(SubConfig);
+});
+
 ipcMain.handle("go-back", (event) => {
   const webContents = event.sender;
   if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
   if (mpv) mpv.kill();
-  // const win = BrowserWindow.getFocusedWindow();
   if (win) win.show();
 });
 
 ipcMain.handle("change-page", (event, page) => {
-  // const win = BrowserWindow.getFocusedWindow();
   if (!win) return;
 
   const [filePath, query] = page.split('?');
@@ -105,7 +120,6 @@ ipcMain.handle("change-page", (event, page) => {
 });
 
 ipcMain.handle("request-fullscreen", () => {
-  // const win = BrowserWindow.getFocusedWindow();
   if (!win) return;
   win.setFullScreen(!win.isFullScreen());
 });
@@ -113,10 +127,9 @@ ipcMain.handle("request-fullscreen", () => {
 ipcMain.handle("get-api-key", () => process.env.API_KEY);
 
 // ======================= PLAY TORRENT =======================
-ipcMain.handle('play-torrent', async (event, magnet, subsUrl) => {
+ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
   return new Promise((resolve, reject) => {
     client.add(magnet, (torrent) => {
-      console.log("hello");
       const file = torrent.files.find(f =>
         /\.(mp4|webm|ogv|avi|mkv)$/i.test(f.name) && f.length > 0.5 * 1e9
       );
@@ -144,61 +157,76 @@ ipcMain.handle('play-torrent', async (event, magnet, subsUrl) => {
         stream.on("data", chunk => {
           downloaded += chunk.length;
           const percentage = ((downloaded / file.length) * 100).toFixed(2);
-          console.log("Buffered:",percentage);
         });
+        stream.on('error', (err) => {
+          console.error('Stream error:', err);
+        });
+        res.on('close', () => {
+          stream.destroy();
+        });
+
         stream.pipe(res);
       });
-      let subsArgument = subsUrl.map(url => ` --sub-file="${url}"`);
+      const server = app.listen(0, async() => {
+        try{
+          const port = server.address().port;
+          const url = `http://localhost:${port}/video`;
+          console.log(`Streaming URL: ${url}`);
 
-      const server = app.listen(0, () => {
-        const port = server.address().port;
-        const url = `http://localhost:${port}/video`;
-        console.log(`Streaming URL: ${url}`);
-        // const win = BrowserWindow.getFocusedWindow();
-        let wid = gettingWindowWid();
-        mpv = spawn('mpv', ['--ontop',"--wid="+wid ,'--no-border', '--fullscreen',url], { stdio: 'inherit' });
-        mpv.on('close', () => {
-          console.log('Playback finished');
-          server.close();
-          torrent.destroy();
-          const webContents = event.sender;
-          if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
-          if (win) win.show();
-        });
+          let downloadResponce = await downloadMultiple(subDirectory,subsObjects);
+          subsPaths = downloadResponce.filter(responce => responce.status == "success").map(responce => responce.file);
+          let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
+          console.log(`--config-dir=${mpvConfigDiv}`);
+         
+          let childProcessArguments = [url, `--config-dir=${mpvConfigDiv}`,...subsArgument];
+          if(win.isFullScreen()) childProcessArguments = ["--fullscreen",...childProcessArguments];
 
-        resolve(url);
+          mpv = spawn('mpv', childProcessArguments);
+          mpv.on('close', () => {
+            console.log('Playback finished');
+            server.close();
+            torrent.destroy();
+
+            mpv.stdout.off('data', hideMainWindow);
+            mpv.stderr.off('data', hideMainWindow);
+
+            subsPaths.forEach(file => {fs.unlinkSync(file)});
+            const webContents = event.sender;
+            if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
+            if (win) win.show();
+          });
+          mpv.stdout.on('data', hideMainWindow);
+          mpv.stderr.on('data', hideMainWindow);
+          resolve(url);
+        }catch(error){console.error(error.message)};
       });
     });
   });
 });
 
-function gettingWindowWid(){
-  // const win = BrowserWindow.getFocusedWindow();
-  let handleBuffer = win.getNativeWindowHandle();
-  let wid;
-  if(process.platform === "darwin") wid = handleBuffer.readBigUInt64LE(0);
-  else wid = handleBuffer.readUInt32LE(0);
-  return wid;
-}
+const hideMainWindow = (data)=>{
+  if(win && win.isVisible()) win.hide();
+  process.stdout.write(data.toString());
+};
 
 // ======================= LIBRARY & SAVE VIDEO =======================
-ipcMain.on("save-video", () => {
-  closeWindow = false;
-  const tmpDir = path.join(os.tmpdir(), "torrent-stream");
-  if (!fs.existsSync(tmpDir)) return;
+// ipcMain.on("save-video", () => {
+//   closeWindow = false;
+//   const tmpDir = path.join(os.tmpdir(), "torrent-stream");
+//   if (!fs.existsSync(tmpDir)) return;
 
-  const tmpDirContent = fs.readdirSync(tmpDir);
-  tmpDirContent.forEach(element => {
-    const sourcePath = path.join(tmpDir, element);
-    const destinationPath = path.join(__dirname, "Downloads", element);
-    const stats = fs.statSync(sourcePath);
-    if (stats.isDirectory() || stats.size / 1e9 > 0.5) {
-      fs.renameSync(sourcePath, destinationPath);
-      closeWindow = true;
-      console.log("Media Was Moved");
-    }
-  });
-});
+//   const tmpDirContent = fs.readdirSync(tmpDir);
+//   tmpDirContent.forEach(element => {
+//     const sourcePath = path.join(tmpDir, element);
+//     const destinationPath = path.join(__dirname, "Downloads", element);
+//     const stats = fs.statSync(sourcePath);
+//     if (stats.isDirectory() || stats.size / 1e9 > 0.5) {
+//       fs.renameSync(sourcePath, destinationPath);
+//       closeWindow = true;
+//       console.log("Media Was Moved");
+//     }
+//   });
+// });
 
 ipcMain.on("add-to-lib", (event, mediaInfo) => {
   const LibraryInfo = getLibraryInfo();
@@ -236,15 +264,47 @@ function loadSettings() {
   try { return JSON.parse(fs.readFileSync(SettingsFilePath, "utf-8")); }
   catch {
     return {
-      PageZoomFactor: 1,
-      TurnOnSubsByDefault: false,
-      SubFontSize: 100,
-      SubFontFamilly: "monospace",
-      SubColor: "white",
-      SubBackgroundColor: "black",
-      SubBackgroundOpacityLevel: 0
+      PageZoomFactor: 1
     };
   }
+}
+
+function loadSubConfigs(){
+  let JsonConfig = {};
+  let mpvConfig = fs.readFileSync(SubConfigFile,"utf-8");
+  let lines = mpvConfig.split("\n");
+  lines.forEach(line=>{
+    if(!line.includes("osc") && !line.includes("border") && !line.includes("osd-bar")){
+      if(line.includes("no-sub")){
+        JsonConfig["no-sub"] = true;
+      }else if(line.includes("=")){
+        let entitie = line.split("=");
+        let value = entitie[1] == "yes" ? true : (entitie[1] == "no" ? false : entitie[1])
+        JsonConfig[entitie[0]] = entitie[1];
+      }
+    }
+  });
+  if(JsonConfig?.["no-sub"] == undefined) JsonConfig["no-sub"] = false;
+  return JsonConfig;
+}
+
+function applySubConfigs(jsonContent){
+  let mpvConfig = "osc=yes \nborder=no \nosd-bar=no";
+
+  let Entities = Object.entries(jsonContent);
+  for(let entry of Entities){
+    if(entry[0] == "no-sub"){
+      if(entry[1]==true)
+        mpvConfig += "\nno-sub";
+    }else{
+      mpvConfig += "\n";
+      let value = (entry[1]==true && entry[0] != "sub-bg-alpha" && entry[0]!="sub-font-size") ? "yes" : (entry[1]==false && entry[0] != "sub-bg-alpha" && entry[0] != "sub-font-size" ? "no" : entry[1]);
+
+      if(value.toString().includes("#")) value = value.replaceAll('"',"");
+      mpvConfig += entry[0] + "=" + value;
+    }
+  }
+  fs.writeFileSync(SubConfigFile,mpvConfig);
 }
 
 function loadTheme() {

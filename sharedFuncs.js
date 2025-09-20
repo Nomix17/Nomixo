@@ -136,11 +136,16 @@ window.ToggleInLibrary = (mediaId,mediaType,parentDiv) => {
 }
 
 async function loadLibraryInfo(){
-  const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
-  if(wholeLibraryInformation == undefined){
-    return [];
+  try{
+    const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
+    if(wholeLibraryInformation == undefined){
+      return [];
+    }
+    return wholeLibraryInformation;
+  }catch(err){
+    console.error(err.message);
+    return undefined;
   }
-  return wholeLibraryInformation;
 }
 
 window.setLeftButtonStyle = (buttonId) => {
@@ -288,3 +293,13 @@ function openSearchPage(){
 function fullscreenClicked(){
   window.electronAPI.toggleFullscreen();
 }
+
+window.MOST_POPULAR_LANGUAGES = [
+  "English", "Spanish",
+  "Arabic", "Chinese (Simplified)",
+  "Chinese (Traditional)", "Hindi",
+  "Portuguese (BR)", "Portuguese",
+  "French", "German",
+  "Japanese", "Korean",
+  "Italian"
+]

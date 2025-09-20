@@ -2,7 +2,7 @@ const data = new URLSearchParams(window.location.search);
 let Magnet = atob(data.get("MagnetLink"));
 let bgImagePath = data.get("bgPath");
 let mediaImdbId = data.get("id");
-console.log(Magnet);
+console.log("Video Magnet:",Magnet);
 
 let loadingGif = document.getElementById("img-movieMedias-LoadingGif");
 
@@ -20,8 +20,10 @@ async function loadingAllSubs(id){
     }
     
     const data = await res.json();
-    let subsUrl = data.filter(obj => obj.language == "en" || obj.language == "ar").map(element => element.url);
-    return subsUrl;
+    let subObject = data.filter(obj => MOST_POPULAR_LANGUAGES.includes(obj.display));
+    subObject = subObject.map(obj=>{return{url:obj.url,language:obj.display}});
+
+    return subObject;
   }catch(err){
     console.error(err);
   }
@@ -44,8 +46,8 @@ function gettingformatedTime(time){
 }
 
 async function loadVideo(Magnet){
-  let subArray = await loadingAllSubs(mediaImdbId);
-  window.electronAPI.StreamVideo(Magnet,subArray);
+  let subsObjects = await loadingAllSubs(mediaImdbId);
+  window.electronAPI.StreamVideo(Magnet,subsObjects);
 }
 
 function SubObj(startTime, endTime, content){

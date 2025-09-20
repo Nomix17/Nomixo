@@ -1,5 +1,5 @@
 :root{
-    --dont-Smooth-transition-between-pages:0;
+--dont-Smooth-transition-between-pages:0;
 --display-scroll-bar:none;
 --primary-color:22,20,49;
 --secondary-color:37,69,111,0.5;
@@ -10,5 +10,5 @@
 --drop-down-color:13,12,29,1;
 --icon-color:50,50,100;
 --icon-hover-color:84,84,182,0.81;
---text-color:0,0,0
-  ;}
+--text-color:0,0,0;
+}

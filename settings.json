@@ -1,9 +1,3 @@
 {
-  "PageZoomFactor": 1.32,
-  "TurnOnSubsByDefault": false,
-  "SubFontSize": 100,
-  "SubFontFamily": "Montserrat",
-  "SubColor": "white",
-  "SubBackgroundColor": "black",
-  "SubBackgroundOpacityLevel": 0
+  "PageZoomFactor": 1
 }
