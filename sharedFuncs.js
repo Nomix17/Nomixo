@@ -278,7 +278,11 @@ function OpenSettingsPage(){
 }
 
 function openDetailPage(movieId,mediaType){
-  let path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
+  let path;
+  if(mediaType == "person")
+    path = `./personDetails/personDetails.html?personId=${movieId}`;
+  else
+    path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
   window.electronAPI.navigateTo(path);
 }
 
