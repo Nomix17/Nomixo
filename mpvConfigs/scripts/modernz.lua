@@ -20,7 +20,7 @@ local utils = require "mp.utils"
 local user_opts = {
     -- Language and display
     language = "en",                       -- set language (for available options, see: https://github.com/Samillion/ModernZ/blob/main/docs/TRANSLATIONS.md)
-    icon_theme = "fluent",                 -- set icon theme. accepts "fluent" or "material"
+    icon_theme = "material",                 -- set icon theme. accepts "fluent" or "material"
     font = "mpv-osd-symbols",              -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
 
     idlescreen = true,                     -- show mpv logo when idle
@@ -76,7 +76,7 @@ local user_opts = {
 
     -- Subtitle display settings
     raise_subtitles = true,                -- raise subtitles above the OSC when shown
-    raise_subtitle_amount = 125,           -- amount by which subtitles are raised when the OSC is shown (in pixels)
+    raise_subtitle_amount = 80,           -- amount by which subtitles are raised when the OSC is shown (in pixels)
 
     -- Buttons display and functionality
     jump_buttons = false,                   -- show the jump backward and forward buttons
@@ -402,7 +402,7 @@ local language = {
         download_in_progress = "Download in progress",
         downloading = "Downloading",
         downloaded = "Already downloaded",
-        menu = "Menu",
+        -- menu = "Menu",
     },
 }
 
