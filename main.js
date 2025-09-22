@@ -62,7 +62,8 @@ app.on("ready", () => createWindow());
 
 app.on("window-all-closed", () => {
   if (closeWindow) app.quit();
-  fs.readdirSync(subDirectory).forEach(file => {fs.unlinkSync(path.join(subDirectory,file))});
+  if(fs.existsSync(subDirectory))
+    fs.readdirSync(subDirectory).forEach(file => {fs.unlinkSync(path.join(subDirectory,file))});
 });
 
 // ======================= IPC HANDLERS =======================
