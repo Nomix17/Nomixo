@@ -294,8 +294,11 @@ function openSearchPage(){
   }
 }
 
-function fullscreenClicked(){
-  window.electronAPI.toggleFullscreen();
+async function fullscreenClicked(){
+  let isFullScreen = await window.electronAPI.toggleFullscreen();
+  let fullscreenImageElement = document.getElementById("img-fullscreen");
+  if(isFullScreen  == undefined) return;
+  fullscreenImageElement.src = isFullScreen ? "../cache/icons/unfullscreen.png" : "../cache/icons/fullscreen.png";
 }
 
 window.MOST_POPULAR_LANGUAGES = [

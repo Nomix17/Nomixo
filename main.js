@@ -121,8 +121,9 @@ ipcMain.handle("change-page", (event, page) => {
 });
 
 ipcMain.handle("request-fullscreen", () => {
-  if (!win) return;
+  if (!win) return undefined;
   win.setFullScreen(!win.isFullScreen());
+  return win.isFullScreen();
 });
 
 ipcMain.handle("get-api-key", () => process.env.API_KEY);
@@ -299,9 +300,8 @@ function applySubConfigs(jsonContent){
         mpvConfig += "\nno-sub";
     }else{
       mpvConfig += "\n";
-      let value = (entry[1]==true && entry[0] != "sub-bg-alpha" && entry[0]!="sub-font-size") ? "yes" : (entry[1]==false && entry[0] != "sub-bg-alpha" && entry[0] != "sub-font-size" ? "no" : entry[1]);
+      let value = (entry[1]==true && entry[0]!="sub-font-size") ? "yes" : (entry[1]==false && entry[0] != "sub-font-size" ? "no" : entry[1]);
 
-      if(value.toString().includes("#")) value = value.replaceAll('"',"");
       mpvConfig += entry[0] + "=" + value;
     }
   }

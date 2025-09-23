@@ -11,12 +11,6 @@ let DropDownFontMenu = document.getElementById("dropDownMenu-Font");
 
 let inputTextColor = document.getElementById("input-TextColor");
 
-let inputBackgroundColor = document.getElementById("input-BackgroundColor");
-
-let increaseOpactiy = document.getElementById("btn-increaseOpacity");
-let OpacityInput = document.getElementById("p-Opacity");
-let decreaseOpacity = document.getElementById("btn-decreaseOpacity");
-
 let ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
 
 let ApplyButton = document.getElementById("btn-applySettings");
@@ -26,9 +20,6 @@ let SubtitlesOnByDefault = false;
 let FontSize = 24;
 let FontFamily = "monospace";
 let TextColor = "white";
-let BackgroundColor ="black";
-let Opacity = 0;
-let choosenTheme;
 
 RightmiddleDiv.style.opacity = 1;
 
@@ -75,30 +66,10 @@ inputTextColor.addEventListener("input",(event)=>{
   TextColor = inputTextColor.value;
 });
 
-inputBackgroundColor.addEventListener("input",(event)=>{
-  BackgroundColor = inputBackgroundColor.value;
-});
-
 FontSizeInput.addEventListener("blur",(event) => {commitFontSize()});
 FontSizeInput.addEventListener("keypress",(event) => {
   if(event.key == "Enter")
     commitFontSize()
-});
-
-OpacityInput.addEventListener("blur",(event)=>{commitOpacityInput()});
-OpacityInput.addEventListener("keypress",(event) => {
-  if(event.key == "Enter")
-    commitOpacityInput()
-});
-
-increaseOpactiy.addEventListener("click",()=>{
-  if(Opacity < 100) Opacity += 10;
-  OpacityInput.value = Opacity + "%";
-});
-
-decreaseOpacity.addEventListener("click",()=>{
-  if(Opacity > 0) Opacity -= 10;
-  OpacityInput.value = Opacity + "px";
 });
 
 ApplyButton.addEventListener("click",()=>{
@@ -154,16 +125,6 @@ function commitFontSize(){
   FontSizeInput.blur();
 }
 
-function commitOpacityInput(){
-  let formatedValue = Number(OpacityInput.value.toString().replaceAll("%",""));
-  if(!isNaN(formatedValue)){
-    Opacity = Math.max(0,Math.min(formatedValue,100));
-    console.log(Opacity);
-  }
-  OpacityInput.value = Opacity+"%";
-  OpacityInput.blur();
-}
-
 function rgbToHex(rgb){
   let parts = rgb.split(",").map(Number);
   return "#" + parts.map(x => x.toString(16).padStart(2,"0")).join("");
@@ -173,7 +134,6 @@ async function loadSettings(){
   SettingsObj = await window.electronAPI.loadSettings();
 
   ZoomFactorValue = SettingsObj.PageZoomFactor;
-  choosenTheme = SettingsObj.Theme;
 
   ZoomFactorInput.value =   ZoomFactorValue*50;
   setFloatingZoomFactorDiv(ZoomFactorValue);
@@ -186,16 +146,12 @@ async function loadSubConfigs(){
   FontSize = parseInt(subConfigObj["sub-font-size"]);
   FontFamily = subConfigObj["sub-font"].replaceAll('"',"");
   TextColor = subConfigObj["sub-color"].replaceAll('"',"");;
-  BackgroundColor = subConfigObj["sub-bg-color"].replaceAll('"',"");;
-  Opacity = parseInt(subConfigObj["sub-bg-alpha"]*100);
 
   if(SubtitlesOnByDefault) toggleButton.click();
   FontSizeInput.value = FontSize+"px";
   CurrentFont.innerText = FontFamily;
   inputTextColor.value = TextColor;
-  inputBackgroundColor.value = BackgroundColor;
   applySelectedColor(ColorInputsWithAlphaValue)
-  OpacityInput.value = Opacity+"%";
 }
 
 function setFloatingZoomFactorDiv(value) {
@@ -225,7 +181,6 @@ function hexToRgb(hex){
 function getSettings(){
   return {
     PageZoomFactor: ZoomFactorValue,
-    Theme: choosenTheme
   }
 }
 
@@ -255,8 +210,6 @@ function getSubConfig(){
     "sub-font-size": FontSize,
     "sub-font": '"'+FontFamily+'"',
     "sub-color": '"'+TextColor+'"',
-    "sub-bg-color": '"'+BackgroundColor+'"',
-    "sub-bg-alpha": (Opacity/100).toFixed(2)
   }
 }
 
