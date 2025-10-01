@@ -12,17 +12,19 @@ let libraryFilePath = path.join(__dirname,"library.json");
 
 require("dotenv").config();
 
+let win;
+
 var mainzoomFactor = 1;
 
 nativeTheme.themeSource = "dark";
 const createWindow = async () => {
-  const win = new BrowserWindow({
-    width: 1100,
-    height: 650,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
+   win = new BrowserWindow({
+     width: 1100,
+     height: 650,
+     webPreferences: {
+       preload: path.join(__dirname, 'preload.js'),
+       contextIsolation: true,
+       nodeIntegration: false
     }
   });
   win.maximize()
@@ -98,7 +100,6 @@ ipcMain.handle("go-back",(event)=>{
 });
 
 ipcMain.handle("change-page", (event,page) => {
-  const win = BrowserWindow.getFocusedWindow();
   if (win) {
     const webContents = event.sender;
     webContents.setZoomFactor(mainzoomFactor);
@@ -110,9 +111,9 @@ ipcMain.handle("change-page", (event,page) => {
 });
 
 ipcMain.handle("request-fullscreen",()=>{
-  const win = BrowserWindow.getFocusedWindow();
-  if(win.isFullScreen()) win.setFullScreen(false);
-  else if(!win.isFullScreen()) win.setFullScreen(true);
+  if (!win) return undefined;
+  win.setFullScreen(!win.isFullScreen());
+  return win.isFullScreen();
 });
 
 ipcMain.handle("get-api-key",()=>{

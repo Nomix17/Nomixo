@@ -1,5 +1,5 @@
 :root{
-    --dont-Smooth-transition-between-pages:1;
+    --dont-Smooth-transition-between-pages:0;
 --display-scroll-bar:none;
 --primary-color:16,16,16;
 --secondary-color:30,30,30,0.5;
