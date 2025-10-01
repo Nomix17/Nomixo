@@ -79,7 +79,9 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
       mediaDomElement.appendChild(movieNameElement);
 
       toggleInLibraryBtn.addEventListener("click",function() {ToggleInLibrary(Id,NewMediaType,toggleInLibraryBtn)});
-      mediaDomElement.addEventListener("click",function() {openDetailPage(Id,NewMediaType)});
+      mediaDomElement.addEventListener("click",function() {
+        openDetailPage(Id,NewMediaType);
+      });
 
       if(MediaContainer.length == undefined){
         if(!Array.from(MediaContainer.querySelectorAll(".div-MovieElement")).map(element => element.innerHTML).includes(mediaDomElement.innerHTML))
@@ -134,11 +136,16 @@ window.ToggleInLibrary = (mediaId,mediaType,parentDiv) => {
 }
 
 async function loadLibraryInfo(){
-  const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
-  if(wholeLibraryInformation == undefined){
-    return [];
+  try{
+    const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
+    if(wholeLibraryInformation == undefined){
+      return [];
+    }
+    return wholeLibraryInformation;
+  }catch(err){
+    console.error(err.message);
+    return undefined;
   }
-  return wholeLibraryInformation;
 }
 
 window.setLeftButtonStyle = (buttonId) => {
@@ -271,7 +278,11 @@ function OpenSettingsPage(){
 }
 
 function openDetailPage(movieId,mediaType){
-  let path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
+  let path;
+  if(mediaType == "person")
+    path = `./personDetails/personDetails.html?personId=${movieId}`;
+  else
+    path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
   window.electronAPI.navigateTo(path);
 }
 
@@ -283,6 +294,19 @@ function openSearchPage(){
   }
 }
 
-function fullscreenClicked(){
-  window.electronAPI.toggleFullscreen();
+async function fullscreenClicked(){
+  let isFullScreen = await window.electronAPI.toggleFullscreen();
+  let fullscreenImageElement = document.getElementById("img-fullscreen");
+  if(isFullScreen  == undefined) return;
+  fullscreenImageElement.src = isFullScreen ? "../cache/icons/unfullscreen.png" : "../cache/icons/fullscreen.png";
 }
+
+window.MOST_POPULAR_LANGUAGES = [
+  "English", "Spanish",
+  "Arabic", "Chinese (Simplified)",
+  "Chinese (Traditional)", "Hindi",
+  "Portuguese (BR)", "Portuguese",
+  "French", "German",
+  "Japanese", "Korean",
+  "Italian"
+]

@@ -2,6 +2,7 @@ const data = new URLSearchParams(window.location.search);
 let movieId = data.get("MovieId");
 let MediaType = data.get("MediaType");
 var backgroundImage;
+let IMDB_ID;
 
 let TorrentContainer = document.getElementById("div-movieMedias");
 let SerieEpisode = document.getElementById("div-serieEpisodes");
@@ -16,7 +17,7 @@ let movieMediaLoadingDiv = document.getElementById("div-movieMedias-LoadingGif")
 let addToLibraryButton = document.getElementById("bookmarkbtn");
 
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
-setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
+setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.error(err)}},100);
 
 
 let seasonsDivArray = [];
@@ -34,21 +35,10 @@ function loadMovieInformation(apiKey){
     .then(res=>res.json())  
     .then(data =>{
       insertMovieElements(data,apiKey);
-      let ReleaseYear = "";
-      let Title;
-      if(data.hasOwnProperty("release_date")) ReleaseYear = new Date(data["release_date"]).getFullYear();
-      else ReleaseYear = new Date(data["first_air_date"]).getFullYear();
-      if(data.hasOwnProperty("title"))  Title = data["title"]+" "+ReleaseYear;
-      else Title = data["name"]+" "+ReleaseYear;
-      Title = Title.replaceAll(" ","%20");
-      if(MediaType == "movie"){
-        let SearchQuery = `${Title} ${ReleaseYear}`;
-        return fetchTorrent(SearchQuery); 
-      }
-      else
-        return "";
+      if(MediaType == "movie")
+        return fetchTorrent(apiKey,MediaType); 
     })
-    .catch(error => console.log(error));
+    .catch(error => console.error(error));
 }
 
 function loadCastInformation(apiKey){
@@ -58,14 +48,14 @@ function loadCastInformation(apiKey){
     .then(res => res.json())
     .then(data => insertCastElements(data))
     .catch(err =>{
-      console.log(err);
+      console.error(err);
   });
 }
 
 function loadEpisodes(apiKey,series_id,season_number,title){
   fetch(`https://api.themoviedb.org/3/tv/${series_id}/season/${season_number}?api_key=${apiKey}`)
     .then(res => res.json())
-    .then(data => insertEpisodesElements(data,title))
+    .then(data => insertEpisodesElements(apiKey,data,title))
     .then(() =>{displayEpisodes(1)})
     .catch(err =>{
       SerieEpisode.innerHTML = "";
@@ -76,7 +66,7 @@ function loadEpisodes(apiKey,series_id,season_number,title){
     });
 }
 
-function insertEpisodesElements(data,title){
+function insertEpisodesElements(apiKey,data,title){
   let SeasonDiv = document.createElement("div");
   SeasonDiv.style.backgroundColor = "rgba(0,0,0,0)";
   let episodes = data.episodes;
@@ -101,7 +91,7 @@ function insertEpisodesElements(data,title){
         EpisodeElement.style.backgroundColor = "rgba(0,0,0,0)";
     });
     EpisodeElement.addEventListener("click",() => {
-      let EpisodeElements = SeasonDiv.querySelectorAll('div[class="div-episodes-Element"');
+      let EpisodeElements = SeasonDiv.querySelectorAll('div[class="div-episodes-Element"]');
       EpisodeElements.forEach(element =>{
         if(element != EpisodeElement){
           element.style.borderColor = "rgba(0,0,0,0)";
@@ -117,9 +107,9 @@ function insertEpisodesElements(data,title){
       let episodeNumber = String(episode.episode_number).padStart(2,"0");
       let episodeName = episode.name;
 
-      let searchQuery = `${title} S${seasonNumber}E${episodeNumber}`;
+      let episodeInfo = {seasonNumber:seasonNumber,episodeNumber:episodeNumber}
       try{
-        fetchTorrent(searchQuery);
+        fetchTorrent(apiKey,MediaType,episodeInfo);
         TorrentContainer.style.display = "flex";
         TorrentContainer.style.borderRadius = "0px";
         TorrentContainer.innerHTML = `
@@ -130,7 +120,7 @@ function insertEpisodesElements(data,title){
               <div class="dot dot4"></div>
           </div>`
       }catch(error){
-        error => console.log(error)
+        console.error(error)
       }
     });
     SeasonDiv.appendChild(EpisodeElement);
@@ -139,34 +129,32 @@ function insertEpisodesElements(data,title){
   return "";
 }
 
+function fetchTorrent(apiKey,MediaType,episodeInfo={}){
+  let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
+  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`)
+    .then(res => res.json())
+    .then(data => {
+      IMDB_ID = data.imdb_id;
+      let fetchUrl;
+      if(MediaTypeForSearch == "tv")
+        fetchUrl = `https://torrentio.strem.fun/stream/series/${IMDB_ID}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`;
+      else
+        fetchUrl = `https://torrentio.strem.fun/stream/movie/${IMDB_ID}.json`;
 
-async function fetchTorrent(Title){
-  let pageNum = 1;
-  let continueLoop = true;
-    while(continueLoop ){
-      try{
-        const torrentRes = await fetch(`https://torrent-api-py-nx0x.onrender.com/api/v1/search?site=piratebay&query=${Title}&page=${pageNum}`)
-        const torrentData = await torrentRes.json();
-        if (pageNum == 1) TorrentContainer.innerHTML ="";
-        if(torrentData.hasOwnProperty("error")) throw new Error("No Results Were Found !");
-        insertTorrentInfoElement(torrentData)
-        pageNum++;
-      }catch(err){
-        if(pageNum == 1 || err.message == "No Useful Results Were found !"){ 
+      fetch(fetchUrl)
+        .then(res=>res.json())  
+        .then(data => insertTorrentInfoElement(data))
+
+        .catch(error =>{
           TorrentContainer.innerHTML = "";
           let NothingWasFound = document.createElement("span");
-          NothingWasFound.innerHTML = err.message;
+          NothingWasFound.innerHTML = error.message;
           NothingWasFound.style.backgroundColor = "rgba(0,0,0,0)";
           TorrentContainer.appendChild(NothingWasFound);
-          console.error(err);
-        }
-        continueLoop = false;
-        console.log("Pages Fetched: "+pageNum);
-        console.log(err);
-      }
-  }
+          console.error(error);
+        });
+    });
 }
-
 
 function insertMovieElements(data,apiKey){
   let Title = "Unknown";
@@ -286,43 +274,37 @@ function insertCastElements(data){
 }
 
 function insertTorrentInfoElement(data){
-    let TorrentResutls = data.data;
+    TorrentContainer.innerHTML = "";
+    let TorrentResutls = data.streams;
     TorrentResutls.forEach(element => {
-      let FullName = element.name;
-      let Categorie = element.category;
-      let Size = element.size;
-      
-      if(!Size.includes("GiB")){
-        if(!Size.includes("MiB")) return;
-        if(parseInt(Size.split("MiB")[0]) < 500) return
-      }
-      let Resolution =
-        Categorie.includes("CAM") ? "CAM" :
-        FullName.includes("CAM") ? "CAM" :
-        FullName.includes("2160p") ? "4k" :
-        FullName.includes("1080p") ? "1080p" :
-        FullName.includes("720p") ? "720p" :
-        Categorie.includes("UHD/4k") ? "4k" :
-        Categorie.includes("HD") ? "1080p" :
-        Categorie.includes("720p") ? "720p":
-        "?p";
-  
-      let SeedersNumber = element.seeders;
-      let MagnetLink = element.magnet;
+      let FullTitle = element.title;
+      let Title = FullTitle.split("👤")[0].split("\n")[0];
+      let Quality = element.name.split("Torrentio")[1];
+      let Hash = element.infoHash;
+      let SeedersNumber = FullTitle.split("👤")[1].split("💾")[0];
+      let Size = FullTitle.split("💾")[1].split("⚙️")[0];
+      let fileName = element?.behaviorHints?.filename || "";
+      let MagnetLink = `magnet:?xt=urn:btih:${Hash}`
+
       if(parseInt(SeedersNumber)){
         let TorrentElement = document.createElement("div");
         TorrentElement.id = "div-TorrentMedia";
+        if(fileName.endsWith('.mkv')) TorrentElement.style.borderColor = "#FFD700";
+        TorrentElement.style.marginBottom = "5px";
         TorrentElement.innerHTML = `
-          <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Resolution}</p></div>
+          <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Quality}</p></div>
           <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">
-            <p style="padding:0px 10px 10px 0px;">${FullName}</p>
+            <p style="padding:0px 10px 10px 0px;">${Title}</p>
             <div style="display:flex;justify-content:flex-start;align-items:center;flex-direction:row;font-size:13px;">
               <div id="div-storageImage"></div> ${Size} &ensp;
               <div id="div-seedImage"></div> ${SeedersNumber} 
             </div>
           </div>
         `;
-        TorrentElement.addEventListener("click",()=>{openMediaVideo(movieId,MagnetLink)});
+        TorrentElement.addEventListener("click",()=>{
+          openMediaVideo(movieId,MagnetLink)
+        });
+        // if(!fileName.endsWith('.mkv')) TorrentContainer.append(TorrentElement);
         TorrentContainer.append(TorrentElement);
       }
     });
@@ -367,7 +349,7 @@ function openProfilePage(personId){
 
 function openMediaVideo(movieId,MagnetLink){
   let b64MagnetLink = btoa(MagnetLink);
-  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&id=${movieId}&bgPath=${backgroundImage}`;
+  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&id=${IMDB_ID}&bgPath=${backgroundImage}`;
   window.electronAPI.navigateTo(path); 
 }
 
@@ -406,5 +388,4 @@ async function loadMediaEntryPointLibraryInfo(){
     addToLibraryButton.innerHTML+="Saved!";
   }
 }
-
 
