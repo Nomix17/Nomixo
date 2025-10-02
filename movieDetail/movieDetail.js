@@ -285,11 +285,12 @@ function insertTorrentInfoElement(data){
       let Size = FullTitle.split("💾")[1].split("⚙️")[0];
       let fileName = element?.behaviorHints?.filename || "";
       let MagnetLink = `magnet:?xt=urn:btih:${Hash}`
-console.log(fileName);
+
       if(parseInt(SeedersNumber)){
         let TorrentElement = document.createElement("div");
         TorrentElement.id = "div-TorrentMedia";
-       // if(fileName.endsWith('.mkv')) TorrentElement.style.borderColor = "red";
+        if(fileName.endsWith('.mkv')) TorrentElement.style.borderColor = "#FFA500";
+        TorrentElement.style.marginBottom = "5px";
         TorrentElement.innerHTML = `
           <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Quality}</p></div>
           <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">

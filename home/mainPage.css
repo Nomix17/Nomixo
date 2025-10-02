@@ -57,10 +57,14 @@ button{
 
 body{
   opacity: var(--dont-Smooth-transition-between-pages);
+  background: linear-gradient(45deg, rgba(255,255,255,0),rgba(255,255,255,var(--background-gradient-value)));
+}
+
+html{
+   background-color: rgba(var(--primary-color));
 }
 
 body, html {
-  background-color: rgba(var(--primary-color));
   font-family: "Montserrat", 'Cairo', 'Noto Sans Arabic', sans-serif;
   font-size:14px;
   margin: 0;
@@ -79,6 +83,12 @@ body, html {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  padding-bottom:10px;
+}
+.div-categories-description h1{
+  font-size:35px;
+  padding:0;
+  margin:0;
 }
 
 #div-main {
@@ -88,13 +98,12 @@ body, html {
 }
 
 #div-top {
-  position:fixed;
   top:0;
   display:flex;
   justify-content:space-between;
   align-items:center;
   width: 100%;
-  background-color: rgba(var(--primary-color));
+  background-color:transparent;
   height: 80px;
   box-sizing: border-box;
   padding: 20px;
@@ -103,27 +112,27 @@ body, html {
 }
 
 #div-middle {
-  padding:70px 0px 0 90px;
   display: flex;
   flex: 1;
 }
 
 #div-middle-left {
   border-right:1px solid rgba(var(--div-containers-borders-color));
-  position:fixed;
   left:0;
   display:flex;
   flex-direction: column;
   justify-content:flex-start;
+/* justify-content:center; */
   width: 80px;
   align-items: center;
   height:100%;
   background-color: transparent;
   box-sizing: border-box;
-  padding: 70px 20px 20px 20px;
+  padding: 20px 15px 20px 20px;
   gap:30px;
   z-index:5;
 }
+
 .btn-middle-left{
   border-radius:10px;
   text-align:center;
@@ -136,8 +145,7 @@ body, html {
 .icon{
   fill: rgba(var(--icon-color),1);
   background-color:transparent;
-  height:38px;
-  width:38px;
+  width:93%;
   cursor:pointer;
 }
 
@@ -153,8 +161,10 @@ body, html {
   flex: 1;
   background-color: transparent;
   box-sizing: border-box;
-  padding: 0px;
+  padding-left: 5px;
+  padding-top:0;
   opacity:0;
+  overflow-y:scroll;
 }
 
 #div-middle-right-continueWatching,
@@ -178,14 +188,14 @@ body, html {
   flex-direction: column;
   margin-right:10px;
   pointer-events: auto;
-  height: 360px;
-  width: 180px;
+  height: 404px;
+  width: 202px;
 }
 
 .img-MoviePoster {
-  width: 180px;
-  height: 276px;
-  border-radius: 10px;
+  width: 202px;
+  height: 310px;
+  border-radius: 15px;
   border: 3px solid rgba(255,255,255,0%);
   position: static; 
   object-fit: cover;
@@ -198,6 +208,7 @@ body, html {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size:17px;
 }
 
 .div-MovieElement:hover .img-MoviePoster{
@@ -227,23 +238,23 @@ body, html {
 #input-searchForMovie{
   font-size:16px;
   padding:10px 16px;
-  min-width:400px;
-  height:43px;
+  min-width:500px;
+  height:50px;
   background-color: rgba(var(--input-backgroundColor));
-  border:1px solid rgba(255,255,255,30%);
+  border:2px solid rgba(255,255,255,30%);
   border-radius:400px 0 0 400px;
   border-right:none;
   cursor:text;
 }
 
 #input-searchForMovie:focus{
-  border:2px solid rgba(255,255,255,0.5);
+  border:2px solid rgba(255,255,255,0.8);
   border-right:none;
   outline:none;
 }
 
 #input-searchForMovie:focus + #btn-input-button{
-  border:2px solid rgba(255,255,255,0.5);
+  border:2px solid rgba(255,255,255,0.8);
   border-left:none;
 }
 
@@ -252,9 +263,9 @@ body, html {
   justify-content:center;
   align-items:center;
   width:50px;
-  height:43px;
+  height:50px;
   background-color: rgba(var(--input-backgroundColor));
-  border:1px solid rgba(255,255,255,30%);
+  border:2px solid rgba(255,255,255,30%);
   border-radius:0 1000px 1000px 0;
   border-left:none;
   cursor:pointer;
@@ -282,16 +293,15 @@ body, html {
 }
 
 #btn-fullscreen{
-  width:50px;
-  height:50px;
+  width:55px;
+  height:55px;
   background-color: rgba(0,0,0,0%) ;
   border:none;
   border-radius:10px;
 }
 #img-fullscreen{
   background-color:  rgba(0,0,0,0%);
-  width:30px;
-  height:30px;
+  width:79%;
 }
 
 #btn-fullscreen:hover{
@@ -330,14 +340,10 @@ body, html {
 #div-main-logo .secondColor{
   fill:rgb(var(--icon-hover-color));
 }
-#btn-library .icon{
-  width:35px;
-  height:35px;
-}
 
 #searchIcon{
-  width:16px;
-  height:16px;
+  width:50%;
+  height:50%;
   margin-right:5px;
   fill: rgba(255,255,255,20%);
 }
@@ -459,3 +465,4 @@ input::selection {
 .moveMovieElementsToTheLeftBtn:active{
   transform:scale(0.999) translateY(21%);
 }
+

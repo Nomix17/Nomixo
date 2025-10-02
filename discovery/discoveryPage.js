@@ -89,8 +89,11 @@ async function loadData(){
   });
 
   let pageLoaded = 2;
-  window.addEventListener('scroll', function() {
-    if(window.innerHeight + window.scrollY + 30 >= document.body.scrollHeight){
+  RightmiddleDiv.addEventListener('scroll', function() {
+    let middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
+    console.log();
+    console.log();
+    if(RightmiddleDiv.scrollTop + middleRightDivHeight + 30 >= RightmiddleDiv.scrollHeight){
       pageLoaded += 2;
       fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded+1);
       fetchData(apiKey,SelectGenre.value, MediaType,pageLoaded);
@@ -108,3 +111,5 @@ setupKeyPressesHandler();
 setLeftButtonStyle("btn-discover");
 
 loadIconsDynamically();
+
+handlingMiddleRightDivResizing();
