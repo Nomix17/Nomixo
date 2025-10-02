@@ -57,10 +57,14 @@ button{
 
 body{
   opacity: var(--dont-Smooth-transition-between-pages);
+  background: linear-gradient(45deg, rgba(255,255,255,0),rgba(255,255,255,var(--background-gradient-value)));
+}
+
+html{
+   background-color: rgba(var(--primary-color));
 }
 
 body, html {
-  background-color: rgba(var(--primary-color));
   font-family: "Montserrat", 'Cairo', 'Noto Sans Arabic', sans-serif;
   font-size:14px;
   margin: 0;
@@ -99,7 +103,7 @@ body, html {
   justify-content:space-between;
   align-items:center;
   width: 100%;
-  background-color: rgba(var(--primary-color));
+  background-color:transparent;
   height: 80px;
   box-sizing: border-box;
   padding: 20px;
@@ -191,7 +195,7 @@ body, html {
 .img-MoviePoster {
   width: 202px;
   height: 310px;
-  border-radius: 10px;
+  border-radius: 15px;
   border: 3px solid rgba(255,255,255,0%);
   position: static; 
   object-fit: cover;

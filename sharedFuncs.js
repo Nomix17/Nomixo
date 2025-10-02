@@ -30,7 +30,6 @@ function CalculateMoviePostersContainer(divsToResize){
 
 function resizingRightMiddleDiv(){
   let rightMiddleDiv =  document.getElementById("div-middle-right")
-  console.log(rightMiddleDiv);
   if(rightMiddleDiv){
     let rightMiddleDivPosition = rightMiddleDiv.getBoundingClientRect().top;
     rightMiddleDiv.style.height = window.innerHeight - rightMiddleDivPosition  ;

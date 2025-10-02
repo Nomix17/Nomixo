@@ -3,8 +3,12 @@ let ZoomFactorInput = document.getElementById("input-ZoomFactor");
 let toggleButton = document.getElementById("toggleDefaultSubtitles");
 
 let increaseFontSizeButton = document.getElementById("btn-increaseFontSize"); 
-let FontSizePara = document.getElementById("p-fontSize");
+let FontSizeInput = document.getElementById("p-fontSize");
 let decreaseFontSizeButton = document.getElementById("btn-decreaseFontSize"); 
+
+let increaseBackgroundOpacityButton = document.getElementById("btn-increaseOpacity"); 
+let backgroundOpacityInput = document.getElementById("p-Opacity");
+let decreaseBackgroundOpacityButton = document.getElementById("btn-decreaseOpacity"); 
 
 let CurrentFont = document.getElementById("currrectFont");
 let DropDownFontMenu = document.getElementById("dropDownMenu-Font");
@@ -12,10 +16,6 @@ let DropDownFontMenu = document.getElementById("dropDownMenu-Font");
 let inputTextColor = document.getElementById("input-TextColor");
 
 let inputBackgroundColor = document.getElementById("input-BackgroundColor");
-
-let increaseOpactiy = document.getElementById("btn-increaseOpacity");
-let OpacityPara = document.getElementById("p-Opacity");
-let decreaseOpacity = document.getElementById("btn-decreaseOpacity");
 
 let ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
 
@@ -52,13 +52,23 @@ toggleButton.addEventListener("change",()=>{
 });
 
 increaseFontSizeButton.addEventListener("click",()=>{
-  if(FontSize < 200) FontSize += 10;
-  FontSizePara.innerText = FontSize+"%";
+  if(FontSize < 100) FontSize += 1;
+  FontSizeInput.value = FontSize+"px";
 });
 
 decreaseFontSizeButton.addEventListener("click",()=>{
-  if(FontSize > 0) FontSize -= 10;
-  FontSizePara.innerText = FontSize+"%";
+  if(FontSize > 0) FontSize -= 1;
+  FontSizeInput.value = FontSize+"px";
+});
+
+increaseBackgroundOpacityButton.addEventListener("click",()=>{
+  if(Opacity < 100) Opacity += 5;
+  backgroundOpacityInput.value = Opacity+"%";
+});
+
+decreaseBackgroundOpacityButton.addEventListener("click",()=>{
+  if(Opacity > 0) Opacity -= 5;
+  backgroundOpacityInput.value = Opacity+"%";
 });
 
 DropDownFontMenu.addEventListener("mousedown",(event)=>{
@@ -74,14 +84,16 @@ inputBackgroundColor.addEventListener("input",(event)=>{
   BackgroundColor = inputBackgroundColor.value;
 });
 
-increaseOpactiy.addEventListener("click",()=>{
-  if(Opacity < 100) Opacity += 10;
-  OpacityPara.innerText = Opacity + "%";
+FontSizeInput.addEventListener("blur",(event) => {commitFontSize()});
+FontSizeInput.addEventListener("keypress",(event) => {
+  if(event.key == "Enter")
+    commitFontSize()
 });
 
-decreaseOpacity.addEventListener("click",()=>{
-  if(Opacity > 0) Opacity -= 10;
-  OpacityPara.innerText = Opacity + "%";
+backgroundOpacityInput.addEventListener("blur",(event) => {commitBgOpacity()});
+backgroundOpacityInput.addEventListener("keypress",(event) => {
+  if(event.key == "Enter")
+    commitBgOpacity()
 });
 
 ApplyButton.addEventListener("click",()=>{
@@ -112,32 +124,56 @@ async function loadTheme(){
     if(elementId == "dont-Smooth-transition-between-pages"){
       if(!parseInt(elementValue)) document.getElementById(elementId).click();
     }
-    if(elementId == "display-scroll-bar"){
+    else if(elementId == "display-scroll-bar"){
       if(elementValue == "block") document.getElementById(elementId).click();
     }
-    let inputColor;
-    let alphaValue;
-
-    let inputElement = document.getElementById(elementId);
-
-    if(elementValue.split(",").length === 4){
-      let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
-      inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
-      alphaValue = elementValue.split(",")[3];
-      alphaInputRange.value = parseFloat(alphaValue)*100;
+    else if(elementId == "background-gradient-value"){
+      document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100); // I want the max value to be 25%
     }else{
-      inputColor = elementValue;
-    }
 
-    inputElement.value = rgbToHex(inputColor);
+      let inputColor;
+      let alphaValue;
+
+      let inputElement = document.getElementById(elementId);
+
+      if(elementValue.split(",").length === 4){
+        let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
+        inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
+        alphaValue = elementValue.split(",")[3];
+        alphaInputRange.value = parseFloat(alphaValue)*100;
+      }else{
+        inputColor = elementValue;
+      }
+
+      inputElement.value = rgbToHex(inputColor);
+    }
   });
+}
+
+
+function commitFontSize(){
+  let formatedValue = Number(FontSizeInput.value.toString().replaceAll("px",""));
+  console.log(FontSize);
+  if(!isNaN(formatedValue)){
+    FontSize = Math.max(0,Math.min(formatedValue,100)); 
+  }
+  FontSizeInput.value = FontSize+"px";
+  FontSizeInput.blur();
+}
+
+function commitBgOpacity(){
+  let formatedValue = Number(backgroundOpacityInput.value.toString().replaceAll("%",""));
+  if(!isNaN(formatedValue)){
+    Opacity = Math.max(0,Math.min(formatedValue,100)); 
+  }
+  backgroundOpacityInput.value = Opacity+"%";
+  backgroundOpacityInput.blur();
 }
 
 function rgbToHex(rgb){
   let parts = rgb.split(",").map(Number);
   return "#" + parts.map(x => x.toString(16).padStart(2,"0")).join("");
 }
-
 
 async function loadSettings(){
   SettingsObj = await window.electronAPI.loadSettings();
@@ -153,13 +189,14 @@ async function loadSettings(){
 
   ZoomFactorInput.value =   ZoomFactorValue*50;
   setFloatingZoomFactorDiv(ZoomFactorValue);
+
   if(SubtitlesOnByDefault) toggleButton.click();
-  FontSizePara.innerText = FontSize+"%";
+  FontSizeInput.value = FontSize+"px";
+  backgroundOpacityInput.value = Opacity+"%";
   CurrentFont.innerText = FontFamily;
   inputTextColor.value = TextColor;
   inputBackgroundColor.value = BackgroundColor;
   applySelectedColor(ColorInputsWithAlphaValue)
-  OpacityPara.innerText = Opacity+"%";
 }
 
 
@@ -192,15 +229,17 @@ function getThemeSettings(){
   let ThemeSettingsInputElements = document.querySelectorAll('#themeTable input[type="color"]');
   let SmoothTransition =  document.getElementById("dont-Smooth-transition-between-pages");
   let DisplayScrollBar = document.getElementById("display-scroll-bar");
+  let backgroundGradientValue = document.getElementById("background-gradient-value");
 
   ThemeObjs.theme.push({"--dont-Smooth-transition-between-pages":SmoothTransition.checked?0:1});
   ThemeObjs.theme.push({"--display-scroll-bar":DisplayScrollBar.checked?"block":"none"});
+  ThemeObjs.theme.push({"--background-gradient-value":(100-backgroundGradientValue.value)/100});
 
   ThemeSettingsInputElements.forEach(input => {
     let colorValue = [...hexToRgb(input.value)];
     let inputParent = input.parentElement;
     let alphaRangeElement = inputParent.getElementsByClassName("alphaRangeValue")[0];
-    if(alphaRangeElement) colorValue.push(alphaRangeElement.value/100);
+    if(alphaRangeElement &&  alphaRangeElement.id != "background-gradient-value") colorValue.push(alphaRangeElement.value/100);
     let rgbaColor = colorValue.join(",");
     ThemeObjs.theme.push({["--"+input.id]:rgbaColor});
   })
@@ -263,3 +302,9 @@ setLeftButtonStyle("btn-settings");
 loadIconsDynamically();
 
 handlingMiddleRightDivResizing();
+
+window.addEventListener("keydown",(event)=>{
+  if(event.key == "Enter"){
+    ApplyButton.click();
+  }
+});

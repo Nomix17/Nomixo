@@ -7,7 +7,9 @@ body{
 #div-MediaSuggestions{
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-around; /* or space-evenly */
 }
+
 #select-Genres,
 #select-type{
   margin-left:6px; 

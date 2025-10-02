@@ -69,6 +69,18 @@ input[type="color"]::-webkit-color-swatch {
   background-color:rgba(20,22,27,0.0);
 }
 
+#p-fontSize,
+#p-Opacity{
+  text-align: center; 
+  border-radius:5px;
+  padding: 5px;
+  margin: 5px;
+  font-size:25px;
+  background-color:transparent;
+  width:80px;
+  border:none;
+}
+
 p{
   border-radius:5px;
   padding: 5px;
