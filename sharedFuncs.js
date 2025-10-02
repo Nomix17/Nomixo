@@ -3,6 +3,12 @@ window.addSmoothTransition = function(){
     document.body.style.opacity = "1";
   },81);
 }
+window.handlingMiddleRightDivResizing = ()=>{
+  resizingRightMiddleDiv();
+  window.addEventListener("resize",() => {
+    resizingRightMiddleDiv();
+  });
+}
 
 window.resizeMoviesPostersContainers = (divsToResize)=>{
   CalculateMoviePostersContainer(divsToResize);
@@ -20,6 +26,15 @@ function CalculateMoviePostersContainer(divsToResize){
   divsToResize.forEach(div => {
     div.style = `max-width:${newMoviesPostersContainerWidth}`;
   });
+}
+
+function resizingRightMiddleDiv(){
+  let rightMiddleDiv =  document.getElementById("div-middle-right")
+  console.log(rightMiddleDiv);
+  if(rightMiddleDiv){
+    let rightMiddleDivPosition = rightMiddleDiv.getBoundingClientRect().top;
+    rightMiddleDiv.style.height = window.innerHeight - rightMiddleDivPosition  ;
+  }
 }
 
 window.checkIfDivShouldHaveMoveToRightOrLeftButton = (MediaDivs) => {
@@ -230,27 +245,26 @@ window.loadIconsDynamically = ()=>{
     .then(response => response.text())
     .then(svgText => {
       document.querySelectorAll('#div-storageImage').forEach(element=>element.innerHTML = svgText);
+    })
+    .catch(err=>{
+      console.error(err.message);
     });
   fetch('../cache/icons/seeds.svg')
     .then(response => response.text())
     .then(svgText => {
       document.querySelectorAll('#div-seedImage').forEach(element=>element.innerHTML = svgText);
+    })
+    .catch(err=>{
+      console.error(err.message);
     });
-  fetch('../cache/icons/logo.svg')
-    .then(response => response.text())
-    .then(svgText => {
-      document.getElementById('div-main-logo').innerHTML = svgText;
-    });
-  fetch('../cache/icons/home.svg')
-    .then(response => response.text())
-    .then(svgText => {
-      document.getElementById('div-main-logo').innerHTML = svgText;
-    });
-  fetch('../cache/icons/logo.svg')
-    .then(response => response.text())
-    .then(svgText => {
-      document.getElementById('div-main-logo').innerHTML = svgText;
-    });
+  // fetch('../cache/icons/logo.svg')
+  //   .then(response => response.text())
+  //   .then(svgText => {
+  //     document.getElementById('div-main-logo').innerHTML = svgText;
+  //   })
+  //   .catch(err=>{
+  //     console.error(err.message);
+  //   });
 }
 
 function goBack(){
