@@ -151,8 +151,9 @@ window.ToggleInLibrary = (mediaId,mediaType,parentDiv) => {
 
 async function loadLibraryInfo(){
   try{
-    const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
+    const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch((err)=>console.error(err.message));
     if(wholeLibraryInformation == undefined){
+      console.log("No matches in the library");
       return [];
     }
     return wholeLibraryInformation;

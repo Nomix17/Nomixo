@@ -86,7 +86,7 @@ ApplyButton.addEventListener("click",()=>{
 });
 
 async function loadTheme(){
-  ThemeObj = await window.electronAPI.loadTheme();
+  let ThemeObj = await window.electronAPI.loadTheme();
   ThemeObj.theme.forEach(obj => {
     let elementId = Object.keys(obj)[0];
     let elementValue = obj[Object.keys(obj)[0]];
@@ -94,24 +94,29 @@ async function loadTheme(){
     if(elementId == "dont-Smooth-transition-between-pages"){
       if(!parseInt(elementValue)) document.getElementById(elementId).click();
     }
-    if(elementId == "display-scroll-bar"){
+    else if(elementId == "display-scroll-bar"){
       if(elementValue == "block") document.getElementById(elementId).click();
     }
-    let inputColor;
-    let alphaValue;
-
-    let inputElement = document.getElementById(elementId);
-
-    if(elementValue.split(",").length === 4){
-      let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
-      inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
-      alphaValue = elementValue.split(",")[3];
-      alphaInputRange.value = parseFloat(alphaValue)*100;
+    else if(elementId == "background-gradient-value"){
+      document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100);
     }else{
-      inputColor = elementValue;
-    }
 
-    inputElement.value = rgbToHex(inputColor);
+      let inputColor;
+      let alphaValue;
+
+      let inputElement = document.getElementById(elementId);
+
+      if(elementValue.split(",").length === 4){
+        let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
+        inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
+        alphaValue = elementValue.split(",")[3];
+        alphaInputRange.value = parseFloat(alphaValue)*100;
+      }else{
+        inputColor = elementValue;
+      }
+
+      inputElement.value = rgbToHex(inputColor);
+    }
   });
 }
 
@@ -189,15 +194,17 @@ function getThemeConfig(){
   let ThemeSettingsInputElements = document.querySelectorAll('#themeTable input[type="color"]');
   let SmoothTransition =  document.getElementById("dont-Smooth-transition-between-pages");
   let DisplayScrollBar = document.getElementById("display-scroll-bar");
+  let backgroundGradientValue = document.getElementById("background-gradient-value");
 
   ThemeObjs.theme.push({"--dont-Smooth-transition-between-pages":SmoothTransition.checked?0:1});
   ThemeObjs.theme.push({"--display-scroll-bar":DisplayScrollBar.checked?"block":"none"});
+  ThemeObjs.theme.push({"--background-gradient-value":(100-backgroundGradientValue.value)/100});
 
   ThemeSettingsInputElements.forEach(input => {
     let colorValue = [...hexToRgb(input.value)];
     let inputParent = input.parentElement;
     let alphaRangeElement = inputParent.getElementsByClassName("alphaRangeValue")[0];
-    if(alphaRangeElement) colorValue.push(alphaRangeElement.value/100);
+    if(alphaRangeElement &&  alphaRangeElement.id != "background-gradient-value") colorValue.push(alphaRangeElement.value/100);
     let rgbaColor = colorValue.join(",");
     ThemeObjs.theme.push({["--"+input.id]:rgbaColor});
   })
@@ -267,4 +274,7 @@ loadSubConfigs();
 setupKeyPressesHandler();
 
 setLeftButtonStyle("btn-settings");
+
 loadIconsDynamically();
+
+handlingMiddleRightDivResizing();

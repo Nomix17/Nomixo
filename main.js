@@ -244,12 +244,11 @@ ipcMain.on("remove-from-lib", (event, mediaInfo) => {
 
 ipcMain.handle("load-from-lib", (event, targetIdentification) => {
   const LibraryInfo = getLibraryInfo();
-  if (!LibraryInfo.media.length) throw new Error("Target Not Found");
   if (!targetIdentification) return LibraryInfo.media;
 
   const targetLibraryInfo = LibraryInfo.media.filter(e => e.MediaId === targetIdentification.MediaId && e.MediaType === targetIdentification.MediaType);
   if (targetLibraryInfo.length) return targetLibraryInfo;
-  throw new Error("Target Not Found");
+  return [];
 });
 
 // ======================= SETTINGS & THEME =======================

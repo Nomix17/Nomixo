@@ -19,7 +19,7 @@ td{
   margin:10px 0px 10px 0px;
 }
 #div-middle-right{
-  margin:20px 0px 40px 0px;
+  padding:20px 0px 40px 0px;
 }
 
 h1{
@@ -79,6 +79,13 @@ input[type="color"]::-webkit-color-swatch {
   background-color:transparent;
   width:80px;
   border:none;
+}
+
+p{
+  border-radius:5px;
+  padding: 5px;
+  margin: 5px;
+  font-size:25px;
 }
 
 #div-ApplyButton{
