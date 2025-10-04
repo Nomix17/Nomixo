@@ -74,3 +74,5 @@ setupNavigationBtnHandler();
 setupKeyPressesForInputElement(searchInput);
 
 loadIconsDynamically();
+
+handlingMiddleRightDivResizing();

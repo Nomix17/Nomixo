@@ -289,8 +289,8 @@ function insertTorrentInfoElement(data){
       if(parseInt(SeedersNumber)){
         let TorrentElement = document.createElement("div");
         TorrentElement.id = "div-TorrentMedia";
-        if(fileName.endsWith('.mkv')) TorrentElement.style.borderColor = "#FFA500";
-        TorrentElement.style.marginBottom = "5px";
+        // if(fileName.endsWith('.mkv')) TorrentElement.style.borderColor = "#FFA500";
+        // TorrentElement.style.marginBottom = "5px";
         TorrentElement.innerHTML = `
           <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Quality}</p></div>
           <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">

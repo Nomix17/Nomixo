@@ -23,7 +23,9 @@ td{
 }
 
 h1{
-  margin:10px; 
+  font-size:35px;
+  margin:10px 10px 10px 25px;
+  /* margin:10px; */ 
 }
 
 #input-ZoomFactor{
