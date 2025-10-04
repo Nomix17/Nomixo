@@ -1,16 +1,57 @@
-const {BrowserWindow, app, nativeTheme, ipcMain, webFrame } = require("electron");
-const torrentStream = require('torrent-stream');
-const http = require('http');
-const path = require("path");
-const fs = require("fs");
-const https = require("https");
-const os = require("os");
+import {BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain, protocol} from "electron";
+import torrentStream from 'torrent-stream';
+import dotenv from "dotenv";
+import http from 'http';
+import path from "path";
+import fs from "fs";
+import https from "https";
+import os from "os";
+import { fileURLToPath} from "url";
 
-let SettingsFilePath = path.join(__dirname,"settings.json");
-let ThemeFilePath = path.join(__dirname,"Themes/Original.css");
-let libraryFilePath = path.join(__dirname,"library.json");
 
-require("dotenv").config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const __configs = path.join(app.getPath('userData'),"configs");
+
+dotenv.config();
+
+// ======================= PATHS =======================
+const SettingsFilePath = path.join(__configs, 'settings.json');
+const ThemeFilePath = path.join(__configs, 'Theme.css');
+const libraryFilePath = path.join(__configs, "library.json");
+const subDirectory="/tmp/tempSubs";
+
+function initializeDataFiles(){
+  if(!fs.existsSync(__configs)){
+    fs.mkdirSync(__configs, { recursive: true });
+  }
+  if(!fs.existsSync(SettingsFilePath)){
+    let defaultFileData = JSON.stringify({"PageZoomFactor": 1});
+    fs.writeFileSync(SettingsFilePath,defaultFileData);
+  }
+  if(!fs.existsSync(ThemeFilePath)){
+    let defaultFileData = `
+      :root{
+      --dont-Smooth-transition-between-pages:0;
+      --display-scroll-bar:none;
+      --background-gradient-value:0.1;
+      --primary-color:0,0,0;
+      --secondary-color:64,64,64,0.5;
+      --div-containers-borders-color:255,255,255,0;
+      --main-buttons-color:0,0,0,0.25;
+      --MovieElement-hover-BorderColor:255,255,255;
+      --input-backgroundColor:0,0,0,0.25;
+      --drop-down-color:0,0,0,1;
+      --icon-color:46,46,46;
+      --icon-hover-color:189,189,189,0.76;
+      --text-color:0,0,0;
+      }
+    `;
+    fs.writeFileSync(ThemeFilePath,defaultFileData);
+  }
+}
+
+initializeDataFiles();
 
 let win;
 
@@ -40,8 +81,12 @@ const createWindow = async () => {
 
 var closeWindow = true;
 
-app.on("ready", () => {
-  createWindow();
+app.on("ready", () =>{
+  protocol.handle('theme', async () => {
+    const css = await fs.promises.readFile(ThemeFilePath, 'utf8');
+    return new Response(css, { headers: { 'content-type': 'text/css' } });
+  });
+  createWindow()
 });
 
 app.on("window-all-closed", () => {
@@ -266,22 +311,8 @@ function loadTheme(){
     });
     return ThemeObj;
   }catch(err){
-    console.error(err);
-    ThemeObj = {
-      theme:[
-        {'secondary-color':'0,0,0,0.5'},
-        {'main-buttons-color':'0,0,0,0.3'},
-        {'primary-color':'22,20,49'},
-        {'div-containers-borders-color':'255,255,255,0.0'},
-        {'MovieElement-hover-BorderColor':'255,255,255'},
-        {'input-backgroundColor':'0,0,0,0.2'},
-        {'drop-down-color':'13,12,29,1'},
-        {'icon-color':'50,50,100'},
-        {'icon-hover-color':'100,70,190,1'},
-        {'text-color':'#ffffff'},
-        {'dont-Smooth-transition-between-pages':'0'}
-      ]
-    }
-    return ThemeObj;
+    console.error("Failed to Load Theme File");
+    initializeDataFiles();
+    return loadTheme();
   }
 }
