@@ -1,4 +1,4 @@
-import {BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain } from "electron";
+import {BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain, protocol} from "electron";
 import downloadMultiple from "./downloadSubtitles.js";
 import { spawn } from "child_process";
 import { fileURLToPath } from "url";
@@ -12,16 +12,60 @@ import os from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const __configs = path.join(app.getPath('userData'),"configs");
 
 dotenv.config();
 
 // ======================= PATHS =======================
-const SettingsFilePath = path.join(__dirname, "settings.json");
-const ThemeFilePath = path.join(__dirname, "Themes/Original.css");
-const mpvConfigDiv = path.join(__dirname,"mpvConfigs");
-const SubConfigFile = path.join(mpvConfigDiv, "mpv.conf");
-const libraryFilePath = path.join(__dirname, "library.json");
+const SettingsFilePath = path.join(__configs, 'settings.json');
+const ThemeFilePath = path.join(__configs, 'Theme.css');
+const mpvConfigDiv = path.join(__configs, 'mpvConfigs');
+const SubConfigFile = path.join(__configs, 'mpvConfigs/mpv.conf');
+const libraryFilePath = path.join(__configs, "library.json");
 const subDirectory="/tmp/tempSubs";
+
+function initializeDataFiles(){
+  if(!fs.existsSync(__configs)){
+    fs.mkdirSync(__configs, { recursive: true });
+  }
+  if(!fs.existsSync(SettingsFilePath)){
+    let defaultFileData = JSON.stringify({"PageZoomFactor": 1});
+    fs.writeFileSync(SettingsFilePath,defaultFileData);
+  }
+  if(!fs.existsSync(ThemeFilePath)){
+    let defaultFileData = `
+      :root{
+      --dont-Smooth-transition-between-pages:0;
+      --display-scroll-bar:none;
+      --background-gradient-value:0.1;
+      --primary-color:0,0,0;
+      --secondary-color:64,64,64,0.5;
+      --div-containers-borders-color:255,255,255,0;
+      --main-buttons-color:0,0,0,0.25;
+      --MovieElement-hover-BorderColor:255,255,255;
+      --input-backgroundColor:0,0,0,0.25;
+      --drop-down-color:0,0,0,1;
+      --icon-color:46,46,46;
+      --icon-hover-color:189,189,189,0.76;
+      --text-color:0,0,0;
+      }
+    `;
+    fs.writeFileSync(ThemeFilePath,defaultFileData);
+  }
+  if(!fs.existsSync(SubConfigFile)){
+    let defaultFileData = `
+      osc=yes 
+      border=no 
+      osd-bar=no
+      sub-font-size=30
+      sub-font="Arial"
+      sub-color="#ffffff"
+    `;
+    fs.writeFileSync(SubConfigFile,defaultFileData);
+  }
+}
+
+initializeDataFiles();
 
 // ======================= GLOBALS =======================
 let mpv;
@@ -58,7 +102,13 @@ const createWindow = async () => {
 
 let closeWindow = true;
 
-app.on("ready", () => createWindow());
+app.on("ready", () =>{
+  protocol.handle('theme', async () => {
+    const css = await fs.promises.readFile(ThemeFilePath, 'utf8');
+    return new Response(css, { headers: { 'content-type': 'text/css' } });
+  });
+  createWindow()
+});
 
 app.on("window-all-closed", () => {
   if (closeWindow) app.quit();
@@ -321,20 +371,8 @@ function loadTheme() {
       return { [key]: value };
     })};
   } catch {
-    return {
-      theme: [
-        { 'secondary-color': '0,0,0,0.5' },
-        { 'main-buttons-color': '0,0,0,0.3' },
-        { 'primary-color': '22,20,49' },
-        { 'div-containers-borders-color': '255,255,255,0.0' },
-        { 'MovieElement-hover-BorderColor': '255,255,255' },
-        { 'input-backgroundColor': '0,0,0,0.2' },
-        { 'drop-down-color': '13,12,29,1' },
-        { 'icon-color': '50,50,100' },
-        { 'icon-hover-color': '100,70,190,1' },
-        { 'text-color': '#ffffff' },
-        { 'dont-Smooth-transition-between-pages': '0' }
-      ]
-    };
+    console.error("Failed to Load Theme File");
+    initializeDataFiles();
+    return loadTheme();
   }
 }
