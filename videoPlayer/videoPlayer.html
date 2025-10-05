@@ -5,15 +5,24 @@
     <link rel="icon" href="../cache/icons/logo.png" type="image/x-icon">
     <link rel="stylesheet" href="../home/loadingDiv.css">
     <link id="test" rel="stylesheet" href="theme://theme.css">
+    <script src="../sharedFuncs.js" defer></script>
     <link rel="stylesheet" href="videoPlayer.css">
     <link rel="stylesheet" href="toggleSwitch.css">
     <link rel="stylesheet" href="subDivStyle.css">
     <script src="videoPlayer.js" defer></script>
-    <script src="../sharedFuncs.js" defer></script>
   </head>
   
   <body>
-    <div id="div-SomethingWentWrong"></div>
+       <div id="div-top">
+        <button id="btn-goBack" onclick="goBack()">
+                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+
+        </button>
+        <button id="btn-fullscreen" onclick="fullscreenClicked()"><img src="../cache/icons/fullscreen.png" id="img-fullscreen"</img></button>
+      </div>
+     <div id="div-SomethingWentWrong"></div>
     <div id="img-movieMedias-LoadingGif" class="loader">
         <div class="dot dot1"></div>
         <div class="dot dot2"></div>

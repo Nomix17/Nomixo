@@ -56,6 +56,10 @@ function SubObj(startTime, endTime, content){
   this.content = content;
 }
 
-function goBack(){
-  window.electronAPI.goBack();
-}
+setupKeyPressesHandler();
+
+window.addEventListener("dblclick",()=>{
+  fullscreenClicked();
+});
+
+

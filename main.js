@@ -69,8 +69,10 @@ initializeDataFiles();
 
 // ======================= GLOBALS =======================
 let mpv;
+let dontPlay = false; 
 let mainzoomFactor = 1;
 let subsPaths;
+let torrentInit;
 nativeTheme.themeSource = "dark";
 
 // WebTorrent client
@@ -156,8 +158,12 @@ ipcMain.on("apply-sub-config", (event,SubConfig) => {
 ipcMain.handle("go-back", (event) => {
   const webContents = event.sender;
   if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
+  // dontPlay = true;
+  console.log("Go Back was Pressed");
+  client.remove(torrentInit);
+
   if (mpv) mpv.kill();
-  if (win) win.show();
+  if (win && !win.isVisible()) win.show();
 });
 
 ipcMain.handle("change-page", (event, page) => {
@@ -181,7 +187,7 @@ ipcMain.handle("get-api-key", () => process.env.API_KEY);
 // ======================= PLAY TORRENT =======================
 ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
   return new Promise((resolve, reject) => {
-    client.add(magnet, (torrent) => {
+    torrentInit = client.add(magnet, (torrent) => {
       const file = torrent.files.find(f =>
         /\.(mp4|webm|ogv|avi|mkv)$/i.test(f.name) && f.length > 0.5 * 1e9
       );
@@ -232,6 +238,13 @@ ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
          
           let childProcessArguments = [url, `--config-dir=${mpvConfigDiv}`,...subsArgument];
           if(win.isFullScreen()) childProcessArguments = ["--fullscreen",...childProcessArguments];
+ 
+          // console.log(dontPlay);
+          // if(dontPlay){
+          //   dontPlay = false;
+          //   console.log("############################# don't Play: ",dontPlay,"#############################");
+          //   return;
+          // }
 
           mpv = spawn('mpv', childProcessArguments);
           mpv.on('close', () => {
@@ -246,6 +259,7 @@ ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
             const webContents = event.sender;
             if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
             if (win) win.show();
+            mpv = "";
           });
           mpv.stdout.on('data', hideMainWindow);
           mpv.stderr.on('data', hideMainWindow);
