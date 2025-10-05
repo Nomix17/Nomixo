@@ -26,7 +26,17 @@ function initializeDataFiles(){
     fs.mkdirSync(__configs, { recursive: true });
   }
   if(!fs.existsSync(SettingsFilePath)){
-    let defaultFileData = JSON.stringify({"PageZoomFactor": 1});
+    let defaultFileData = JSON.stringify(
+      {
+        "PageZoomFactor": 1,
+        "TurnOnSubsByDefault": true,
+        "SubFontSize": 16,
+        "SubFontFamily": "Montserrat",
+        "SubColor": "#ffffff",
+        "SubBackgroundColor": "#000000",
+        "SubBackgroundOpacityLevel": 0
+      }
+    );
     fs.writeFileSync(SettingsFilePath,defaultFileData);
   }
   if(!fs.existsSync(ThemeFilePath)){
@@ -54,7 +64,7 @@ function initializeDataFiles(){
 initializeDataFiles();
 
 let win;
-
+let server;
 var mainzoomFactor = 1;
 
 nativeTheme.themeSource = "dark";
@@ -285,15 +295,16 @@ function insertNewInfoToLibrary(newData){
 function loadSettings() {
   try {
     const data = fs.readFileSync(SettingsFilePath, 'utf-8');
+    if(data.trim() == "") throw new Error("empty Sub File");
     return JSON.parse(data);
   } catch (err) {
     return {
       PageZoomFactor: 1,
-      TurnOnSubsByDefault: false,
-      SubFontSize: 100,
-      SubFontFamilly: "monospace",
-      SubColor: "white",
-      SubBackgroundColor: "black",
+      TurnOnSubsByDefault: true,
+      SubFontSize: 16,
+      SubFontFamily: "Montserrat",
+      SubColor: "#ffffff",
+      SubBackgroundColor: "#000000",
       SubBackgroundOpacityLevel: 0
     };
   }
