@@ -21,6 +21,8 @@ let ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOth
 
 let ApplyButton = document.getElementById("btn-applySettings");
 
+let somethingChanged = false;
+
 let ZoomFactorValue=1;
 let SubtitlesOnByDefault = false;
 let FontSize = 100;
@@ -31,6 +33,17 @@ let Opacity = 0;
 let choosenTheme;
 
 RightmiddleDiv.style.opacity = 1;
+
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.querySelectorAll("input").forEach(inputElement=>{
+    inputElement.addEventListener("change", ()=>{
+      if(!supressInputEventListener){
+        somethingChanged = true;
+      }
+    });
+  });
+});
 
 ZoomFactorInput.addEventListener("input",(event)=>{
   ZoomFactorValue = ZoomFactorInput.value/50;
@@ -54,26 +67,31 @@ toggleButton.addEventListener("change",()=>{
 increaseFontSizeButton.addEventListener("click",()=>{
   if(FontSize < 100) FontSize += 1;
   FontSizeInput.value = FontSize+"px";
+  somethingChanged = true;
 });
 
 decreaseFontSizeButton.addEventListener("click",()=>{
   if(FontSize > 0) FontSize -= 1;
   FontSizeInput.value = FontSize+"px";
+  somethingChanged = true;
 });
 
 increaseBackgroundOpacityButton.addEventListener("click",()=>{
   if(Opacity < 100) Opacity += 5;
   backgroundOpacityInput.value = Opacity+"%";
+  somethingChanged = true;
 });
 
 decreaseBackgroundOpacityButton.addEventListener("click",()=>{
   if(Opacity > 0) Opacity -= 5;
   backgroundOpacityInput.value = Opacity+"%";
+  somethingChanged = true;
 });
 
 DropDownFontMenu.addEventListener("mousedown",(event)=>{
   FontFamily = event.target.innerText;
   CurrentFont.innerText = FontFamily;
+  somethingChanged = true;
 });
 
 inputTextColor.addEventListener("input",(event)=>{
@@ -109,10 +127,15 @@ ApplyButton.addEventListener("click",()=>{
   }
 
   let ThemeObj = getThemeSettings();
-  window.electronAPI.applySettings(SettingsObj);
-  window.electronAPI.applyTheme(ThemeObj);
-  window.location.reload()
-  setFloatingZoomFactorDiv(ZoomFactorInput.value);
+  
+  if(somethingChanged){
+    window.electronAPI.applySettings(SettingsObj);
+    window.electronAPI.applyTheme(ThemeObj);
+    document.getElementById('test').href = 'theme://theme.css?' + Date.now();
+    displayMessage("new settings were saved.");
+    somethingChanged = false;
+
+  }
 });
 
 async function loadTheme(){
@@ -122,10 +145,14 @@ async function loadTheme(){
     let elementValue = obj[Object.keys(obj)[0]];
 
     if(elementId == "dont-Smooth-transition-between-pages"){
+      supressInputEventListener = true;
       if(!parseInt(elementValue)) document.getElementById(elementId).click();
+      supressInputEventListener = false;
     }
     else if(elementId == "display-scroll-bar"){
+      supressInputEventListener = true;
       if(elementValue == "block") document.getElementById(elementId).click();
+      supressInputEventListener = false;
     }
     else if(elementId == "background-gradient-value"){
       document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100); // I want the max value to be 25%
@@ -153,12 +180,12 @@ async function loadTheme(){
 
 function commitFontSize(){
   let formatedValue = Number(FontSizeInput.value.toString().replaceAll("px",""));
-  console.log(FontSize);
   if(!isNaN(formatedValue)){
     FontSize = Math.max(0,Math.min(formatedValue,100)); 
   }
   FontSizeInput.value = FontSize+"px";
   FontSizeInput.blur();
+  somethingChanged = true;
 }
 
 function commitBgOpacity(){
@@ -168,6 +195,7 @@ function commitBgOpacity(){
   }
   backgroundOpacityInput.value = Opacity+"%";
   backgroundOpacityInput.blur();
+  somethingChanged = true;
 }
 
 function rgbToHex(rgb){
@@ -177,6 +205,7 @@ function rgbToHex(rgb){
 
 async function loadSettings(){
   SettingsObj = await window.electronAPI.loadSettings();
+  oldSettings = SettingsObj;
 
   ZoomFactorValue = SettingsObj.PageZoomFactor;
   choosenTheme = SettingsObj.Theme;
@@ -189,8 +218,10 @@ async function loadSettings(){
 
   ZoomFactorInput.value =   ZoomFactorValue*50;
   setFloatingZoomFactorDiv(ZoomFactorValue);
-
+  
+  supressInputEventListener = true;
   if(SubtitlesOnByDefault) toggleButton.click();
+  supressInputEventListener = false;
   FontSizeInput.value = FontSize+"px";
   backgroundOpacityInput.value = Opacity+"%";
   CurrentFont.innerText = FontFamily;

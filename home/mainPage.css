@@ -466,3 +466,26 @@ input::selection {
   transform:scale(0.999) translateY(21%);
 }
 
+#messageDiv{
+  opacity:0;
+  position:fixed;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:150px;
+  min-height:80px;
+  padding: 20px 30px;
+  background-color:rgba(var(--primary-color));
+  top:20px;
+  right:-120%;
+  z-index:100;
+  border:2px solid white;
+  border-radius:12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+#messageDiv p{
+  font-size:16px;
+  font-weight:500;
+  margin: 0;
+  line-height: 1.5;
+}

@@ -25,6 +25,7 @@ function initializeDataFiles(){
   if(!fs.existsSync(__configs)){
     fs.mkdirSync(__configs, { recursive: true });
   }
+
   if(!fs.existsSync(SettingsFilePath)){
     let defaultFileData = JSON.stringify(
       {
@@ -39,6 +40,7 @@ function initializeDataFiles(){
     );
     fs.writeFileSync(SettingsFilePath,defaultFileData);
   }
+
   if(!fs.existsSync(ThemeFilePath)){
     let defaultFileData = `
       :root{
@@ -94,7 +96,7 @@ var closeWindow = true;
 app.on("ready", () =>{
   protocol.handle('theme', async () => {
     const css = await fs.promises.readFile(ThemeFilePath, 'utf8');
-    return new Response(css, { headers: { 'content-type': 'text/css' } });
+    return new Response(css, { headers: { 'content-type': 'text/css' ,'cache-control': 'no-store'} });
   });
   createWindow()
 });
@@ -132,7 +134,7 @@ ipcMain.handle("apply-settings",(event, SettingsObj) => {
   SettingsObj.PageZoomFactor = Math.max(0.1,SettingsObj.PageZoomFactor);
   mainzoomFactor = SettingsObj.PageZoomFactor;
   webContents.setZoomFactor(SettingsObj.PageZoomFactor);
-  fs.writeFile(SettingsFilePath, JSON.stringify(SettingsObj, null, 2), (err) => {console.log(err)});
+  fs.writeFile(SettingsFilePath, JSON.stringify(SettingsObj, null, 2), (err) => {console.error(err)});
 });
 
 ipcMain.on("apply-theme",(event, ThemeObj) =>{
@@ -143,7 +145,7 @@ ipcMain.on("apply-theme",(event, ThemeObj) =>{
   ;}`;
 
   fs.writeFile(ThemeFilePath,themeFileContent, (err)=>{
-    console.log(err)
+    console.error(err)
   });
 });
 
@@ -295,7 +297,7 @@ function insertNewInfoToLibrary(newData){
 function loadSettings() {
   try {
     const data = fs.readFileSync(SettingsFilePath, 'utf-8');
-    if(data.trim() == "") throw new Error("empty Sub File");
+    if(data.trim() == "" || !("TurnOnSubsByDefault" in JSON.parse(data))) throw new Error("empty Sub File");
     return JSON.parse(data);
   } catch (err) {
     return {
