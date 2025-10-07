@@ -3,8 +3,8 @@ window.addSmoothTransition = function(){
     document.body.style.opacity = "1";
   },81);
 }
-window.handlingMiddleRightDivResizing = ()=>{
 
+window.handlingMiddleRightDivResizing = ()=>{
   let rightMiddleDiv = document.getElementById("div-middle-right");
   resizingRightMiddleDiv(rightMiddleDiv);
   window.addEventListener("resize",() => {
@@ -152,8 +152,9 @@ window.ToggleInLibrary = (mediaId,mediaType,parentDiv) => {
 
 async function loadLibraryInfo(){
   try{
-    const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
+    const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch((err)=>console.error(err.message));
     if(wholeLibraryInformation == undefined){
+      console.log("No matches in the library");
       return [];
     }
     return wholeLibraryInformation;
@@ -315,7 +316,7 @@ async function fullscreenClicked(){
   fullscreenImageElement.src = isFullScreen ? "../cache/icons/unfullscreen.png" : "../cache/icons/fullscreen.png";
 }
 
-function displayMessage(messageContent="hello"){
+window.displayMessage = (messageContent="hello")=>{
   let messageDiv = document.getElementById("messageDiv");
   messageDiv.style.right = 20;
   messageDiv.style.transition = "opacity 100ms";
@@ -325,11 +326,11 @@ function displayMessage(messageContent="hello"){
   setTimeout(()=>{
     messageDiv.style.transition = "opacity 1000ms";
     messageDiv.style.opacity = 0;
-  },500);
+  },2000);
   
   setTimeout(()=>{
-    messageDiv.style.right = 0;
-  },1500);
+    messageDiv.style.right = "-120%";
+  },2500);
 }
 
 window.MOST_POPULAR_LANGUAGES = [

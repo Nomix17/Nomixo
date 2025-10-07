@@ -96,7 +96,7 @@ MediaSuggestions.innerHTML ="";
 
 setupKeyPressesHandler();
 loadIconsDynamically();
-
+handlingMiddleRightDivResizing();
 let searchInput = document.getElementById("input-searchForMovie");
 searchInput.addEventListener("keypress",(event)=>{
   if(event.key == "Enter") openSearchPage();

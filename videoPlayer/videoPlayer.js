@@ -312,10 +312,6 @@ function displaySub(){
   }
 }
 
-function fullscreenClicked(){
-  window.electronAPI.toggleFullscreen();
-}
-
 function goBack(){
   window.electronAPI.goBack();
 }

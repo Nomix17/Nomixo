@@ -286,7 +286,7 @@ function insertTorrentInfoElement(data){
       let fileName = element?.behaviorHints?.filename || "";
       let MagnetLink = `magnet:?xt=urn:btih:${Hash}`
 
-      if(parseInt(SeedersNumber)){
+      if(parseInt(SeedersNumber) && !fileName.endsWith('.mkv')){
         let TorrentElement = document.createElement("div");
         TorrentElement.id = "div-TorrentMedia";
         if(fileName.endsWith('.mkv')) TorrentElement.style.borderColor = "#FFA500";
