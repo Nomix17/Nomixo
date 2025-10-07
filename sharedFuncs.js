@@ -3,10 +3,12 @@ window.addSmoothTransition = function(){
     document.body.style.opacity = "1";
   },81);
 }
+
 window.handlingMiddleRightDivResizing = ()=>{
-  resizingRightMiddleDiv();
+  let rightMiddleDiv = document.getElementById("div-middle-right");
+  resizingRightMiddleDiv(rightMiddleDiv);
   window.addEventListener("resize",() => {
-    resizingRightMiddleDiv();
+    resizingRightMiddleDiv(rightMiddleDiv);
   });
 }
 
@@ -28,8 +30,7 @@ function CalculateMoviePostersContainer(divsToResize){
   });
 }
 
-function resizingRightMiddleDiv(){
-  let rightMiddleDiv =  document.getElementById("div-middle-right")
+function resizingRightMiddleDiv(rightMiddleDiv){
   if(rightMiddleDiv){
     let rightMiddleDivPosition = rightMiddleDiv.getBoundingClientRect().top;
     rightMiddleDiv.style.height = window.innerHeight - rightMiddleDivPosition  ;
@@ -313,6 +314,23 @@ async function fullscreenClicked(){
   let fullscreenImageElement = document.getElementById("img-fullscreen");
   if(isFullScreen  == undefined) return;
   fullscreenImageElement.src = isFullScreen ? "../cache/icons/unfullscreen.png" : "../cache/icons/fullscreen.png";
+}
+
+window.displayMessage = (messageContent="hello")=>{
+  let messageDiv = document.getElementById("messageDiv");
+  messageDiv.style.right = 20;
+  messageDiv.style.transition = "opacity 100ms";
+  messageDiv.style.opacity = 1;
+
+  messageDiv.querySelector("p").innerHTML = messageContent;
+  setTimeout(()=>{
+    messageDiv.style.transition = "opacity 1000ms";
+    messageDiv.style.opacity = 0;
+  },2000);
+  
+  setTimeout(()=>{
+    messageDiv.style.right = "-120%";
+  },2500);
 }
 
 window.MOST_POPULAR_LANGUAGES = [

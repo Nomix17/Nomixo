@@ -84,21 +84,24 @@ const createWindow = async () => {
   win = new BrowserWindow({
     width: 1100,
     height: 650,
+    backgroundColor:"black",
+    show:false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
   });
-
-  win.maximize();
+ 
   win.setMenuBarVisibility(false);
   win.loadFile("./home/mainPage.html");
 
   mainzoomFactor = loadSettings().PageZoomFactor;
 
-  win.webContents.on('did-finish-load', () => {
+  win.webContents.on('ready-to-show', () => {
     win.webContents.setZoomFactor(mainzoomFactor);
+    win.maximize();
+    win.show();
   });
 };
 

@@ -9,7 +9,6 @@ let continueWatchingArray = [];
 let LibraryInformation ;
 let SelectedMediaDivIndex = -1;
 
-addSmoothTransition();
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
 if(continueWatchingArray.length === 0) document.querySelector(".div-categories-description").remove();

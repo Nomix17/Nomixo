@@ -46,17 +46,15 @@ input, button, textarea, :focus {
   user-drag: none;
   user-select: none;
   cursor: default;
-  transition: fill 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
 }
 
 button{
   cursor:pointer;
-  transition: opacity 0.3s ease;
+  transition: fill 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
   background-color: transparent;
 }
 
 body{
-  opacity: var(--dont-Smooth-transition-between-pages);
   background: linear-gradient(45deg, rgba(255,255,255,0),rgba(255,255,255,var(--background-gradient-value)));
 }
 
@@ -122,14 +120,13 @@ body, html {
   display:flex;
   flex-direction: column;
   justify-content:flex-start;
-/* justify-content:center; */
   width: 80px;
   align-items: center;
   height:100%;
   background-color: transparent;
   box-sizing: border-box;
   padding: 20px 15px 20px 20px;
-  gap:30px;
+  gap:79px;
   z-index:5;
 }
 
@@ -147,6 +144,7 @@ body, html {
   background-color:transparent;
   width:93%;
   cursor:pointer;
+  transition: fill 0.3s ease;
 }
 
 .btn-middle-left:hover .icon {
@@ -165,6 +163,8 @@ body, html {
   padding-top:0;
   opacity:0;
   overflow-y:scroll;
+  opacity: var(--dont-Smooth-transition-between-pages);
+  transition: opacity 0.3s ease;
 }
 
 #div-middle-right-continueWatching,
@@ -199,6 +199,7 @@ body, html {
   border: 3px solid rgba(255,255,255,0%);
   position: static; 
   object-fit: cover;
+  transition: border-color 0.3s ease;
 }
 
 .parag-MovieTitle {
@@ -245,6 +246,7 @@ body, html {
   border-radius:400px 0 0 400px;
   border-right:none;
   cursor:text;
+  transition: border-color 0.3s ease;
 }
 
 #input-searchForMovie:focus{
@@ -466,3 +468,26 @@ input::selection {
   transform:scale(0.999) translateY(21%);
 }
 
+#messageDiv{
+  opacity:0;
+  position:fixed;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:150px;
+  min-height:80px;
+  padding: 20px 30px;
+  background-color:rgba(var(--primary-color));
+  top:20px;
+  right:-120%;
+  z-index:100;
+  border:2px solid white;
+  border-radius:12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+#messageDiv p{
+  font-size:16px;
+  font-weight:500;
+  margin: 0;
+  line-height: 1.5;
+}

@@ -15,6 +15,9 @@ let ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOth
 
 let ApplyButton = document.getElementById("btn-applySettings");
 
+let somethingChanged = false;
+let supressInputEventListener = false;
+
 let ZoomFactorValue=1;
 let SubtitlesOnByDefault = false;
 let FontSize = 24;
@@ -26,6 +29,16 @@ RightmiddleDiv.style.opacity = 1;
 let SettingsObj;
 let ThemeObj;
 let subConfigObj;
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.querySelectorAll("input").forEach(inputElement=>{
+    inputElement.addEventListener("change", ()=>{
+      if(!supressInputEventListener){
+        somethingChanged = true;
+      }
+    });
+  });
+});
 
 ZoomFactorInput.addEventListener("input",(event)=>{
   ZoomFactorValue = ZoomFactorInput.value/50;
@@ -50,16 +63,19 @@ increaseFontSizeButton.addEventListener("click",()=>{
   if(FontSize < 100) FontSize += 1;
   console.log(FontSize);
   FontSizeInput.value = FontSize+"px";
+  somethingChanged = true;
 });
 
 decreaseFontSizeButton.addEventListener("click",()=>{
   if(FontSize > 0) FontSize -= 1;
   FontSizeInput.value = FontSize+"px";
+  somethingChanged = true;
 });
 
 DropDownFontMenu.addEventListener("mousedown",(event)=>{
   FontFamily = event.target.innerText;
   CurrentFont.innerText = FontFamily;
+  somethingChanged = true;
 });
 
 inputTextColor.addEventListener("input",(event)=>{
@@ -76,13 +92,14 @@ ApplyButton.addEventListener("click",()=>{
   SettingsObj = getSettings();
   ThemeObj = getThemeConfig();
   SubConfigObj = getSubConfig();
-
-  window.electronAPI.applySettings(SettingsObj);
-  window.electronAPI.applyTheme(ThemeObj);
-  window.electronAPI.applySubConfig(SubConfigObj);
-
-  window.location.reload()
-  setFloatingZoomFactorDiv(ZoomFactorInput.value);
+  if(somethingChanged){
+    window.electronAPI.applySettings(SettingsObj);
+    window.electronAPI.applyTheme(ThemeObj);
+    window.electronAPI.applySubConfig(SubConfigObj);
+    document.getElementById('test').href = 'theme://theme.css?' + Date.now();
+    displayMessage("new settings were saved.</br> restart Application to Apply");
+    somethingChanged = false;
+  }
 });
 
 async function loadTheme(){
@@ -92,10 +109,14 @@ async function loadTheme(){
     let elementValue = obj[Object.keys(obj)[0]];
 
     if(elementId == "dont-Smooth-transition-between-pages"){
+      supressInputEventListener = true;
       if(!parseInt(elementValue)) document.getElementById(elementId).click();
+      supressInputEventListener = false;
     }
     else if(elementId == "display-scroll-bar"){
+      supressInputEventListener = true;
       if(elementValue == "block") document.getElementById(elementId).click();
+      supressInputEventListener = false;
     }
     else if(elementId == "background-gradient-value"){
       document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100);
@@ -128,6 +149,7 @@ function commitFontSize(){
   }
   FontSizeInput.value = FontSize+"px";
   FontSizeInput.blur();
+  somethingChanged = true;
 }
 
 function rgbToHex(rgb){
@@ -152,7 +174,10 @@ async function loadSubConfigs(){
   FontFamily = subConfigObj["sub-font"].replaceAll('"',"");
   TextColor = subConfigObj["sub-color"].replaceAll('"',"");;
 
+  supressInputEventListener = true;
   if(SubtitlesOnByDefault) toggleButton.click();
+  supressInputEventListener = false;
+
   FontSizeInput.value = FontSize+"px";
   CurrentFont.innerText = FontFamily;
   inputTextColor.value = TextColor;
