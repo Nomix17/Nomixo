@@ -134,7 +134,6 @@ ApplyButton.addEventListener("click",()=>{
     document.getElementById('test').href = 'theme://theme.css?' + Date.now();
     displayMessage("new settings were saved.");
     somethingChanged = false;
-
   }
 });
 

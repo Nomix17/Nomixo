@@ -85,7 +85,7 @@ async function loadData(){
   const apiKey = await window.electronAPI.getAPIKEY();
   const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
   RightmiddleDiv.style.opacity = 1;
-  if(wholeLibraryInformation == undefined){
+  if(wholeLibraryInformation == undefined || wholeLibraryInformation.length == 0 ){
     let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
     RightmiddleDiv.appendChild(WarningElement);
     globalLoadingGif.remove();
