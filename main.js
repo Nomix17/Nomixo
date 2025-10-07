@@ -92,13 +92,12 @@ const createWindow = async () => {
       nodeIntegration: false
     }
   });
- 
   win.setMenuBarVisibility(false);
   win.loadFile("./home/mainPage.html");
 
   mainzoomFactor = loadSettings().PageZoomFactor;
 
-  win.webContents.on('ready-to-show', () => {
+  win.webContents.on('did-finish-load', () => {
     win.webContents.setZoomFactor(mainzoomFactor);
     win.maximize();
     win.show();
@@ -110,7 +109,7 @@ let closeWindow = true;
 app.on("ready", () =>{
   protocol.handle('theme', async () => {
     const css = await fs.promises.readFile(ThemeFilePath, 'utf8');
-    return new Response(css, { headers: { 'content-type': 'text/css' } });
+    return new Response(css, { headers: { 'content-type': 'text/css' ,'cache-control': 'no-store'} });
   });
   createWindow()
 });

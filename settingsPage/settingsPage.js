@@ -97,7 +97,7 @@ ApplyButton.addEventListener("click",()=>{
     window.electronAPI.applyTheme(ThemeObj);
     window.electronAPI.applySubConfig(SubConfigObj);
     document.getElementById('test').href = 'theme://theme.css?' + Date.now();
-    displayMessage("new settings were saved.</br> restart Application to Apply");
+    displayMessage("new settings were saved.");
     somethingChanged = false;
   }
 });
