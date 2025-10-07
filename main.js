@@ -17,10 +17,15 @@ const __configs = path.join(app.getPath('userData'),"configs");
 dotenv.config();
 
 // ======================= PATHS =======================
+const isDev = !app.isPackaged;
+const npmConfigAssetsDirectory = isDev
+  ? path.join(__dirname, 'mpvConfigs')
+  : path.join(process.resourcesPath, 'assets/mpvConfigs');
+
 const SettingsFilePath = path.join(__configs, 'settings.json');
 const ThemeFilePath = path.join(__configs, 'Theme.css');
-const mpvConfigDiv = path.join(__configs, 'mpvConfigs');
-const SubConfigFile = path.join(__configs, 'mpvConfigs/mpv.conf');
+const npmConfigDirectory = path.join(__configs, 'mpvConfigs');
+const SubConfigFile = path.join(npmConfigDirectory, 'mpv.conf');
 const libraryFilePath = path.join(__configs, "library.json");
 const subDirectory="/tmp/tempSubs";
 
@@ -52,6 +57,11 @@ function initializeDataFiles(){
     `;
     fs.writeFileSync(ThemeFilePath,defaultFileData);
   }
+  
+  if(!fs.existsSync(npmConfigDirectory)){
+    fs.cpSync(npmConfigAssetsDirectory,npmConfigDirectory,{ recursive: true });
+  }
+
   if(!fs.existsSync(SubConfigFile)){
     let defaultFileData = `
       osc=yes 
@@ -236,9 +246,9 @@ ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
           let downloadResponce = await downloadMultiple(subDirectory,subsObjects);
           subsPaths = downloadResponce.filter(responce => responce.status == "success").map(responce => responce.file);
           let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
-          console.log(`--config-dir=${mpvConfigDiv}`);
+          console.log(`--config-dir=${npmConfigDirectory}`);
          
-          let childProcessArguments = [url, `--config-dir=${mpvConfigDiv}`,...subsArgument];
+          let childProcessArguments = [url, `--config-dir=${npmConfigDirectory}`,...subsArgument];
           if(win.isFullScreen()) childProcessArguments = ["--fullscreen",...childProcessArguments];
  
           // console.log(dontPlay);
