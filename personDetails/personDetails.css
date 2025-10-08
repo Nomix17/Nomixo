@@ -1,7 +1,8 @@
 #div-MediaSuggestions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
+  padding:6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
 }
 
 #div-Person-description {

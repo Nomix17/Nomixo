@@ -129,8 +129,7 @@ p{
   justify-content: center;
   flex-direction: column;
   height: 100%; 
-  background-color: rgba(var(--primary-color), calc(0.9 - var(--background-gradient-value)));
-;
+  background-color: rgba(var(--primary-color),0.9);
   border-radius: 20px 0px 0px 0px;
   gap: 10px;
   padding-top: 15px;
