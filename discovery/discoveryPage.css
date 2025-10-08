@@ -2,9 +2,10 @@
   transition:opacity 0.1s ease;
 }
 #div-MediaSuggestions{
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around; /* or space-evenly */
+  padding:6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
 }
 
 #select-Genres,

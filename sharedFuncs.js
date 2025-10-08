@@ -55,6 +55,7 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
     let Adult = "Unknown";
     let PosterImage = "Unknown";
     let NewMediaType = MediaType;
+    let typeOfSave = "Watch Later";
 
     if(obj.hasOwnProperty("id")) Id = obj["id"];
     
@@ -93,7 +94,7 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
       if(NewMediaType.toLowerCase() != "person") mediaDomElement.appendChild(toggleInLibraryBtn);
       mediaDomElement.appendChild(movieNameElement);
 
-      toggleInLibraryBtn.addEventListener("click",function() {ToggleInLibrary(Id,NewMediaType,toggleInLibraryBtn)});
+      toggleInLibraryBtn.addEventListener("click",function() {ToggleInLibrary(Id,NewMediaType,toggleInLibraryBtn,typeOfSave)});
       mediaDomElement.addEventListener("click",function() {
         openDetailPage(Id,NewMediaType);
       });
@@ -127,7 +128,7 @@ window.setAddToLibraryButtonToPressed = (toggleInLibrary) => {
   toggleInLibrary.setAttribute("pressed"," ");
 }
 
-window.ToggleInLibrary = (mediaId,mediaType,parentDiv) => {
+window.ToggleInLibrary = (mediaId,mediaType,parentDiv,typeOfSave) => {
   let toggleInLibraryElement = event.target;
   if(toggleInLibraryElement.hasAttribute("pressed")){
     setAddToLibraryButtonToNormal(toggleInLibraryElement);
@@ -140,6 +141,7 @@ window.ToggleInLibrary = (mediaId,mediaType,parentDiv) => {
     setAddToLibraryButtonToPressed(toggleInLibraryElement);
     let MediaLibraryObject = {
       MediaId:mediaId,
+      TypeOfSave:typeOfSave,
       MediaType:mediaType,
       episodesWatched:[],
       lastPlaybackPosition:0,
