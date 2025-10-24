@@ -131,3 +131,5 @@ setupKeyPressesHandler();
 setLeftButtonStyle("btn-library");
 
 loadIconsDynamically();
+
+handlingMiddleRightDivResizing();
