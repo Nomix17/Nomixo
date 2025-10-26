@@ -276,6 +276,10 @@ function insertCastElements(data){
        newCastElement.innerText = castObject.name;
        divCastElement.append(newCastElement);
     });
+
+    if(!MainCastObjects.length) divCastElement.innerHTML += '<p class="infoText">No Cast information were Found</p>';
+    if(!DirectorsObjects.length) divDirectoryElement.innerHTML += '<p class="infoText">No Directors information were Found</p>';
+
     if(divDirectoryElement.innerHTML.trim() == "<h2>Director</h2>") divDirectoryElement.remove();
 }
 
