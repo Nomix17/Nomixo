@@ -14,6 +14,9 @@ let selectElement = document.getElementById("select-Seasons");
 let serieEpisodeloadingDiv = document.getElementById("div-serieEpisodes-LoadingGif");
 let movieMediaLoadingDiv = document.getElementById("div-movieMedias-LoadingGif");
 
+let divCastElement = document.getElementById("div-castInfos");
+let divDirectoryElement = document.getElementById("div-directorInfos");
+
 let addToLibraryButton = document.getElementById("bookmarkbtn");
 
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
@@ -48,8 +51,14 @@ function loadCastInformation(apiKey){
     .then(res => res.json())
     .then(data => insertCastElements(data))
     .catch(err =>{
+      noInfoFounded();
       console.error(err);
   });
+}
+
+function noInfoFounded(){
+  divCastElement.innerHTML += '<p class="infoText">No Cast information were Found</p>';
+  divDirectoryElement.innerHTML += '<p class="infoText">No Directors information were Found</p>';
 }
 
 function loadEpisodes(apiKey,series_id,season_number,title){
@@ -251,9 +260,6 @@ function insertCastElements(data){
     }
 
     if(Cast[0].hasOwnProperty("name")) MainCastObjects = Cast.slice(0,5);
-
-    let divCastElement = document.getElementById("div-castInfos");
-    let divDirectoryElement = document.getElementById("div-directorInfos");
 
     DirectorsObjects.forEach(directorObject=>{
        let newDirectorElement = document.createElement("button");
