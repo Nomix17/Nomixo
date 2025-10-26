@@ -319,13 +319,17 @@ ipcMain.on("remove-from-lib", (event, mediaInfo) => {
 });
 
 ipcMain.handle("load-from-lib", (event, targetIdentification) => {
-  const LibraryInfo = getLibraryInfo();
-  if (!targetIdentification) return LibraryInfo.media;
-
-  const targetLibraryInfo = LibraryInfo.media.filter(e => e.MediaId === targetIdentification.MediaId && e.MediaType === targetIdentification.MediaType);
-  if (targetLibraryInfo.length) return targetLibraryInfo;
-  return [];
+    let LibraryInfo = getLibraryInfo();
+    if(LibraryInfo.media.length){
+      if(targetIdentification == undefined) return LibraryInfo.media;
+      let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId == targetIdentification.MediaId && element.MediaType == targetIdentification.MediaType);
+      if(targetLibraryInfo.length) return targetLibraryInfo; 
+      throw new Error("Target Not Found");
+    }else{
+      throw new Error("Target Not Found");
+    }
 });
+
 
 // ======================= SETTINGS & THEME =======================
 function getLibraryInfo() {
