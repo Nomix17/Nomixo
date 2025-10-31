@@ -312,7 +312,7 @@ function insertTorrentInfoElement(data){
           </div>
         `;
         TorrentElement.addEventListener("click",()=>{
-          openMediaVideo(movieId,MagnetLink)
+          openMediaVideo(movieId,MediaType,MagnetLink)
         });
         // if(!fileName.endsWith('.mkv')) TorrentContainer.append(TorrentElement);
         TorrentContainer.append(TorrentElement);
@@ -357,9 +357,9 @@ function openProfilePage(personId){
   window.electronAPI.navigateTo(path);
 }
 
-function openMediaVideo(movieId,MagnetLink){
+function openMediaVideo(MediaId,MediaType,MagnetLink){
   let b64MagnetLink = btoa(MagnetLink);
-  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&id=${IMDB_ID}&bgPath=${backgroundImage}`;
+  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&id=${IMDB_ID}&MediaId=${MediaId}&MediaType=${MediaType}&bgPath=${backgroundImage}`;
   window.electronAPI.navigateTo(path); 
 }
 
@@ -382,7 +382,7 @@ function formatMediaLibraryObject(){
     MediaType:MediaType,
     episodesWatched:[],
     lastPlaybackPosition:0,
-    timeWatched:0
+    typeOfSave:"WatchLater"
   }
   return MediaLibraryObject;
 }
@@ -393,7 +393,7 @@ async function loadMediaEntryPointLibraryInfo(){
       console.error(err);
       return null;
     });
-  if(MediaLibraryInfo){
+  if(MediaLibraryInfo && MediaLibraryInfo[0]["typeOfSave"] != "CurrentlyWatching"){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";
   }

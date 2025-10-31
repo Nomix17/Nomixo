@@ -497,3 +497,14 @@ input::selection {
   margin: 0;
   line-height: 1.5;
 }
+
+#div-middle-right-continueWatching span{
+  position:fixed;
+  left:50.0%;
+  top:40%;
+  transform: translate(-50%, 50%);
+  font-size:30px;
+  font-weight: 700;
+  background-color:rgba(0,0,0,0);
+  color: rgba(255,255,255,0.6);
+}

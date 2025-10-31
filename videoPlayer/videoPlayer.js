@@ -2,11 +2,15 @@ const data = new URLSearchParams(window.location.search);
 let Magnet = atob(data.get("MagnetLink"));
 let bgImagePath = data.get("bgPath");
 let mediaImdbId = data.get("id");
+let MediaId = data.get("MediaId");
+let MediaType = data.get("MediaType");
+
 console.log("Video Magnet:",Magnet);
 
 let loadingGif = document.getElementById("img-movieMedias-LoadingGif");
 
-loadVideo(Magnet);
+loadVideo(Magnet,MediaId,MediaType,mediaImdbId);
+
 setBackgroundImage();
 
 let timeout;
@@ -45,9 +49,9 @@ function gettingformatedTime(time){
   return results;
 }
 
-async function loadVideo(Magnet){
+async function loadVideo(Magnet,MediaId,MediaType,mediaImdbId){
   let subsObjects = await loadingAllSubs(mediaImdbId);
-  window.electronAPI.StreamVideo(Magnet,subsObjects);
+  window.electronAPI.StreamVideo(Magnet,MediaId,MediaType,subsObjects);
 }
 
 function SubObj(startTime, endTime, content){

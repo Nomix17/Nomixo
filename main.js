@@ -197,7 +197,7 @@ ipcMain.handle("request-fullscreen", () => {
 ipcMain.handle("get-api-key", () => process.env.API_KEY);
 
 // ======================= PLAY TORRENT =======================
-ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
+ipcMain.handle('play-torrent', async (event, magnet,MediaId, MediaType, subsObjects) => {
   return new Promise((resolve, reject) => {
     torrentInit = client.add(magnet, (torrent) => {
       const file = torrent.files.find(f =>
@@ -247,8 +247,13 @@ ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
           subsPaths = downloadResponce.filter(responce => responce.status == "success").map(responce => responce.file);
           let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
           console.log(`--config-dir=${npmConfigDirectory}`);
-         
-          let childProcessArguments = [url, `--config-dir=${npmConfigDirectory}`,...subsArgument];
+        
+          let currentMediaFromLibrary = await loadFromLibrary({MediaId:MediaId,MediaType:MediaType});
+          let startFromTime;
+          if(currentMediaFromLibrary == undefined) startFromTime = 0;
+          else startFromTime = currentMediaFromLibrary[0].lastPlaybackPosition;
+
+          let childProcessArguments = [url, `--config-dir=${npmConfigDirectory}`,`--start=${startFromTime}`,...subsArgument];
           if(win.isFullScreen()) childProcessArguments = ["--fullscreen",...childProcessArguments];
  
           // console.log(dontPlay);
@@ -263,7 +268,7 @@ ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
             console.log('Playback finished');
             server.close();
             torrent.destroy();
-
+            updateLastSecondBeforeQuit(lastSecondBeforeQuit,MediaId,MediaType)
             mpv.stdout.off('data', hideMainWindow);
             mpv.stderr.off('data', hideMainWindow);
 
@@ -281,11 +286,39 @@ ipcMain.handle('play-torrent', async (event, magnet, subsObjects) => {
     });
   });
 });
-
+let lastSecondBeforeQuit=0;
 const hideMainWindow = (data)=>{
   if(win && win.isVisible()) win.hide();
-  process.stdout.write(data.toString());
+  let line = data.toString();
+  process.stdout.write(line);
+  if(line.includes("AV:")){
+    let lastTimeBeforeQuit = line.split("AV:")[1].split("/")[0].trim();
+    const [hours, minutes, seconds] = lastTimeBeforeQuit.split(":").map(item => parseInt(item));
+    lastSecondBeforeQuit = (hours*60+minutes)*60+seconds;
+  }
 };
+
+function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType){
+  const LibraryInfo = getLibraryInfo();
+  let found = false;
+  for(let [index,item] of Object.entries(LibraryInfo.media)){
+    if(item["MediaId"] == MediaId && item["MediaType"] == MediaType){
+      LibraryInfo.media[index]["lastPlaybackPosition"] = lastPbPosition;
+      found = true;
+    }
+  }
+  if(!found){
+    let MediaLibraryObject = {
+      MediaId:MediaId,
+      MediaType:MediaType,
+      episodesWatched:[],
+      lastPlaybackPosition:lastPbPosition,
+      typeOfSave:"CurrentlyWatching"
+    }
+    LibraryInfo.media.push(MediaLibraryObject);
+  }
+  insertNewInfoToLibrary(LibraryInfo);
+}
 
 // ======================= LIBRARY & SAVE VIDEO =======================
 // ipcMain.on("save-video", () => {
@@ -314,22 +347,26 @@ ipcMain.on("add-to-lib", (event, mediaInfo) => {
 
 ipcMain.on("remove-from-lib", (event, mediaInfo) => {
   const LibraryInfo = getLibraryInfo();
-  LibraryInfo.media = LibraryInfo.media.filter(e => !(e.MediaId === mediaInfo.MediaId && e.MediaType === mediaInfo.MediaType));
+  LibraryInfo.media = LibraryInfo.media.filter(e => !(e.MediaId.toString() === mediaInfo.MediaId.toString() && e.MediaType === mediaInfo.MediaType));
   insertNewInfoToLibrary(LibraryInfo);
 });
 
 ipcMain.handle("load-from-lib", (event, targetIdentification) => {
+  return loadFromLibrary(targetIdentification);
+});
+
+function loadFromLibrary(targetIdentification){
     let LibraryInfo = getLibraryInfo();
     if(LibraryInfo.media.length){
       if(targetIdentification == undefined) return LibraryInfo.media;
       let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId == targetIdentification.MediaId && element.MediaType == targetIdentification.MediaType);
       if(targetLibraryInfo.length) return targetLibraryInfo; 
-      throw new Error("Target Not Found");
+      return undefined
     }else{
-      throw new Error("Target Not Found");
+      return undefined
     }
-});
 
+}
 
 // ======================= SETTINGS & THEME =======================
 function getLibraryInfo() {
