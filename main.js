@@ -18,14 +18,14 @@ dotenv.config();
 
 // ======================= PATHS =======================
 const isDev = !app.isPackaged;
-const npmConfigAssetsDirectory = isDev
+const mpvConfigAssetsDirectory = isDev
   ? path.join(__dirname, 'mpvConfigs')
   : path.join(process.resourcesPath, 'assets/mpvConfigs');
 
 const SettingsFilePath = path.join(__configs, 'settings.json');
 const ThemeFilePath = path.join(__configs, 'Theme.css');
-const npmConfigDirectory = path.join(__configs, 'mpvConfigs');
-const SubConfigFile = path.join(npmConfigDirectory, 'mpv.conf');
+const mpvConfigDirectory = path.join(__configs, 'mpvConfigs');
+const SubConfigFile = path.join(mpvConfigDirectory, 'mpv.conf');
 const libraryFilePath = path.join(__configs, "library.json");
 const subDirectory="/tmp/tempSubs";
 
@@ -58,8 +58,8 @@ function initializeDataFiles(){
     fs.writeFileSync(ThemeFilePath,defaultFileData);
   }
   
-  if(!fs.existsSync(npmConfigDirectory)){
-    fs.cpSync(npmConfigAssetsDirectory,npmConfigDirectory,{ recursive: true });
+  if(!fs.existsSync(mpvConfigDirectory)){
+    fs.cpSync(mpvConfigAssetsDirectory,mpvConfigDirectory,{ recursive: true });
   }
 
   if(!fs.existsSync(SubConfigFile)){
@@ -197,7 +197,7 @@ ipcMain.handle("request-fullscreen", () => {
 ipcMain.handle("get-api-key", () => process.env.API_KEY);
 
 // ======================= PLAY TORRENT =======================
-ipcMain.handle('play-torrent', async (event, magnet,MediaId, MediaType, subsObjects) => {
+ipcMain.handle('play-torrent', async (event, magnet,MediaId, MediaType, subsObjects,metaData) => {
   return new Promise((resolve, reject) => {
     torrentInit = client.add(magnet, (torrent) => {
       const file = torrent.files.find(f =>
@@ -246,29 +246,27 @@ ipcMain.handle('play-torrent', async (event, magnet,MediaId, MediaType, subsObje
           let downloadResponce = await downloadMultiple(subDirectory,subsObjects);
           subsPaths = downloadResponce.filter(responce => responce.status == "success").map(responce => responce.file);
           let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
-          console.log(`--config-dir=${npmConfigDirectory}`);
+          console.log(`--config-dir=${mpvConfigDirectory}`);
         
           let currentMediaFromLibrary = await loadFromLibrary({MediaId:MediaId,MediaType:MediaType});
           let startFromTime;
-          if(currentMediaFromLibrary == undefined) startFromTime = 0;
+
+          if(currentMediaFromLibrary == undefined || 
+            currentMediaFromLibrary[0].episodeNumber != metaData.episodeNumber ||
+            currentMediaFromLibrary[0].seasonNumber != metaData.seasonNumber)
+              startFromTime = 0;
+
           else startFromTime = currentMediaFromLibrary[0].lastPlaybackPosition;
 
-          let childProcessArguments = [url, `--config-dir=${npmConfigDirectory}`,`--start=${startFromTime}`,...subsArgument];
+          let childProcessArguments = [url, `--config-dir=${mpvConfigDirectory}`,`--start=${startFromTime}`,...subsArgument];
           if(win.isFullScreen()) childProcessArguments = ["--fullscreen",...childProcessArguments];
- 
-          // console.log(dontPlay);
-          // if(dontPlay){
-          //   dontPlay = false;
-          //   console.log("############################# don't Play: ",dontPlay,"#############################");
-          //   return;
-          // }
 
           mpv = spawn('mpv', childProcessArguments);
           mpv.on('close', () => {
             console.log('Playback finished');
             server.close();
             torrent.destroy();
-            updateLastSecondBeforeQuit(lastSecondBeforeQuit,MediaId,MediaType)
+            updateLastSecondBeforeQuit(lastSecondBeforeQuit,MediaId,MediaType,metaData)
             mpv.stdout.off('data', hideMainWindow);
             mpv.stderr.off('data', hideMainWindow);
 
@@ -298,12 +296,24 @@ const hideMainWindow = (data)=>{
   }
 };
 
-function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType){
+function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData){
   const LibraryInfo = getLibraryInfo();
   let found = false;
+
+  LibraryInfo.media ??= [];
+
   for(let [index,item] of Object.entries(LibraryInfo.media)){
     if(item["MediaId"] == MediaId && item["MediaType"] == MediaType){
       LibraryInfo.media[index]["lastPlaybackPosition"] = lastPbPosition;
+      LibraryInfo.media[index]["seasonNumber"] = metaData.seasonNumber;
+      LibraryInfo.media[index]["episodeNumber"] = metaData.episodeNumber;
+
+      if(!LibraryInfo.media[index]["typeOfSave"].includes("Currently Watching")){
+        LibraryInfo.media[index]["typeOfSave"].push("Currently Watching")
+        LibraryInfo.media[index]["Magnet"] ??= metaData?.Magnet;
+        LibraryInfo.media[index]["bgImagePath"] ??= metaData?.bgImagePath;
+        LibraryInfo.media[index]["mediaImdbId"] ??= metaData?.mediaImdbId;
+      }
       found = true;
     }
   }
@@ -311,9 +321,14 @@ function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType){
     let MediaLibraryObject = {
       MediaId:MediaId,
       MediaType:MediaType,
-      episodesWatched:[],
+      Magnet:metaData?.Magnet,
+      bgImagePath:metaData?.bgImagePath,
+      mediaImdbId:metaData?.mediaImdbId,
+
       lastPlaybackPosition:lastPbPosition,
-      typeOfSave:"CurrentlyWatching"
+      seasonNumber:metaData.seasonNumber,
+      episodeNumber:metaData.episodeNumber,
+      typeOfSave:["Currently Watching"]
     }
     LibraryInfo.media.push(MediaLibraryObject);
   }
@@ -341,6 +356,11 @@ function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType){
 
 ipcMain.on("add-to-lib", (event, mediaInfo) => {
   const LibraryInfo = getLibraryInfo();
+  let SearchedMediaElement = LibraryInfo.media.filter(item => (mediaInfo.MediaId.toString() == item.MediaId.toString() && mediaInfo.MediaType == item.MediaType));
+  let MediaIsDoesExist = SearchedMediaElement.length > 0;
+  if(MediaIsDoesExist){
+    LibraryInfo.media = LibraryInfo.media.filter(e => !(e.MediaId.toString() === mediaInfo.MediaId.toString() && e.MediaType === mediaInfo.MediaType));
+  }
   LibraryInfo.media.push(mediaInfo);
   insertNewInfoToLibrary(LibraryInfo);
 });

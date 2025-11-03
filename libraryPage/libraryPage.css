@@ -4,8 +4,13 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 10px;
 }
-
-#select-type{
+#div-MediaSuggestions{
+  padding:6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.Selects {
   margin-left:6px; 
   margin-bottom:7px; 
   font-size:15px;
@@ -14,11 +19,11 @@
   border:2px solid rgba(255,255,255,0%);
   border-radius:10px;
 }
-#select-type:hover{
+.Selects:hover{
  background-color:  rgba(255,255,255,30%);
 }
 
-#select-type:active{
+.Selects:active{
  border:2px solid rgba(255,255,255,100%);
  background-color:  rgba(255,255,255,30%);
 }
@@ -40,4 +45,3 @@
 .div-MovieElement{
   transition: opacity 0.05s linear;
 }
-

@@ -134,7 +134,9 @@ output{
 }
 
 .ElementsTopOfEachOther{
+  display:flex;
   position:relative;
+  flex-direction:column;
 }
 
 .alphaRangeValue{

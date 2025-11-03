@@ -1,15 +1,20 @@
 const data = new URLSearchParams(window.location.search);
 let Magnet = atob(data.get("MagnetLink"));
-let bgImagePath = data.get("bgPath");
-let mediaImdbId = data.get("id");
+
 let MediaId = data.get("MediaId");
 let MediaType = data.get("MediaType");
+
+let bgImagePath = data.get("bgPath");
+let mediaImdbId = data.get("id");
+
+let seasonNumber = data.get("seasonNumber");
+let episodeNumber = data.get("episodeNumber");
 
 console.log("Video Magnet:",Magnet);
 
 let loadingGif = document.getElementById("img-movieMedias-LoadingGif");
 
-loadVideo(Magnet,MediaId,MediaType,mediaImdbId);
+loadVideo(Magnet,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber);
 
 setBackgroundImage();
 
@@ -49,9 +54,10 @@ function gettingformatedTime(time){
   return results;
 }
 
-async function loadVideo(Magnet,MediaId,MediaType,mediaImdbId){
+async function loadVideo(Magnet,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber){
   let subsObjects = await loadingAllSubs(mediaImdbId);
-  window.electronAPI.StreamVideo(Magnet,MediaId,MediaType,subsObjects);
+  let metaData = {"Magnet":Magnet,"bgImagePath":bgImagePath, "mediaImdbId":mediaImdbId,"seasonNumber":seasonNumber,"episodeNumber":episodeNumber};
+  window.electronAPI.StreamVideo(Magnet,MediaId,MediaType,subsObjects,metaData);
 }
 
 function SubObj(startTime, endTime, content){

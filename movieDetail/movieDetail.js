@@ -1,6 +1,7 @@
 const data = new URLSearchParams(window.location.search);
 let movieId = data.get("MovieId");
 let MediaType = data.get("MediaType");
+
 var backgroundImage;
 let IMDB_ID;
 
@@ -152,7 +153,7 @@ function fetchTorrent(apiKey,MediaType,episodeInfo={}){
 
       fetch(fetchUrl)
         .then(res=>res.json())  
-        .then(data => insertTorrentInfoElement(data))
+        .then(data => insertTorrentInfoElement(data,episodeInfo))
 
         .catch(error =>{
           TorrentContainer.innerHTML = "";
@@ -283,7 +284,7 @@ function insertCastElements(data){
     if(divDirectoryElement.innerHTML.trim() == "<h2>Director</h2>") divDirectoryElement.remove();
 }
 
-function insertTorrentInfoElement(data){
+function insertTorrentInfoElement(data,episodeInfo={}){
     TorrentContainer.innerHTML = "";
     let TorrentResutls = data.streams;
     TorrentResutls.forEach(element => {
@@ -299,8 +300,6 @@ function insertTorrentInfoElement(data){
       if(parseInt(SeedersNumber)){
         let TorrentElement = document.createElement("div");
         TorrentElement.id = "div-TorrentMedia";
-        // if(fileName.endsWith('.mkv')) TorrentElement.style.borderColor = "#FFA500";
-        // TorrentElement.style.marginBottom = "5px";
         TorrentElement.innerHTML = `
           <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Quality}</p></div>
           <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">
@@ -312,9 +311,8 @@ function insertTorrentInfoElement(data){
           </div>
         `;
         TorrentElement.addEventListener("click",()=>{
-          openMediaVideo(movieId,MediaType,MagnetLink)
+          openMediaVideo(movieId,MediaType,MagnetLink,IMDB_ID,backgroundImage,episodeInfo)
         });
-        // if(!fileName.endsWith('.mkv')) TorrentContainer.append(TorrentElement);
         TorrentContainer.append(TorrentElement);
       }
     });
@@ -357,20 +355,13 @@ function openProfilePage(personId){
   window.electronAPI.navigateTo(path);
 }
 
-function openMediaVideo(MediaId,MediaType,MagnetLink){
-  let b64MagnetLink = btoa(MagnetLink);
-  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&id=${IMDB_ID}&MediaId=${MediaId}&MediaType=${MediaType}&bgPath=${backgroundImage}`;
-  window.electronAPI.navigateTo(path); 
-}
-
 function addMediaToLibrary(){
-  let mediaLibraryEntryPointObject = formatMediaLibraryObject()
-  if(!addToLibraryButton.hasAttribute("pressed")){
-    window.electronAPI.addMediaToLibrary(mediaLibraryEntryPointObject);
+  ToggleInLibrary(movieId,MediaType,"Watch Later");
+  console.log(!addToLibraryButton.hasAttribute("pressed"));
+  if(addToLibraryButton.hasAttribute("pressed")){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";
   }else{
-    window.electronAPI.removeMediaFromLibrary(mediaLibraryEntryPointObject);
     setAddToLibraryButtonToNormal(addToLibraryButton);
     addToLibraryButton.innerHTML+="Save To Library";
   }
@@ -393,7 +384,7 @@ async function loadMediaEntryPointLibraryInfo(){
       console.error(err);
       return null;
     });
-  if(MediaLibraryInfo && MediaLibraryInfo[0]["typeOfSave"] != "CurrentlyWatching"){
+  if(MediaLibraryInfo && MediaLibraryInfo[0]["typeOfSave"].includes("Watch Later")){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";
   }
