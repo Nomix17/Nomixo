@@ -69,11 +69,11 @@ window.addEventListener("mousemove",()=>{
 });
 
 VideoElement.addEventListener("playing", async (event)=>{
-  VideoElement.currentTime = await getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonNumber);
+  let oldPlayBackPosition  = await getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonNumber);
+  VideoElement.currentTime = oldPlayBackPosition;
 
   setInterval(()=>{
     let lastPbPosition = parseInt(VideoElement.currentTime);
-    console.log("hello");
     let metaData = {seasonNumber:seasonNumber,episodeNumber:episodeNumber,Magnet:Magnet,bgImagePath:bgImagePath,mediaImdbId:mediaImdbId};
     updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData);
     console.log(lastPbPosition);
@@ -413,9 +413,10 @@ async function loadSubSettings(){
 
 async function getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonNumber){
   let targetIdentification = {MediaId:MediaId,MediaType:MediaType};
-  const MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
+  let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
 
   if(MediaLibraryObject == undefined) return 0;
+  MediaLibraryObject = MediaLibraryObject[0];
 
   let mediaIsAnEpisode = (MediaLibraryObject.hasOwnProperty("episodeNumber") && MediaLibraryObject.hasOwnProperty("seasonNumber"));
   let isRequestedEpisode = mediaIsAnEpisode ? (MediaLibraryObject["episodeNumber"] == episodeNumber && MediaLibraryObject["seasonNumber"] == seasonNumber) : true;
@@ -438,13 +439,13 @@ async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaD
   if(MediaLibraryObject != undefined){
     MediaLibraryObject = MediaLibraryObject[0]; 
     MediaLibraryObject["lastPlaybackPosition"] = lastPbPosition;
-    MediaLibraryObject["seasonNumber"] = metaData.seasonNumber;
-    MediaLibraryObject["episodeNumber"] = metaData.episodeNumber;
+    MediaLibraryObject["seasonNumber"] = metaData?.seasonNumber;
+    MediaLibraryObject["episodeNumber"] = metaData?.episodeNumber;
+    MediaLibraryObject["Magnet"] = metaData?.Magnet;
+    MediaLibraryObject["bgImagePath"] = metaData?.bgImagePath;
 
     if(!MediaLibraryObject["typeOfSave"].includes("Currently Watching")){
       MediaLibraryObject["typeOfSave"].push("Currently Watching")
-      MediaLibraryObject["Magnet"] ??= metaData?.Magnet;
-      MediaLibraryObject["bgImagePath"] ??= metaData?.bgImagePath;
       MediaLibraryObject["mediaImdbId"] ??= metaData?.mediaImdbId;
     }
     await window.electronAPI.removeMediaFromLibrary(targetIdentification);
