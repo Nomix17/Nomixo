@@ -305,13 +305,13 @@ function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData){
   for(let [index,item] of Object.entries(LibraryInfo.media)){
     if(item["MediaId"] == MediaId && item["MediaType"] == MediaType){
       LibraryInfo.media[index]["lastPlaybackPosition"] = lastPbPosition;
-      LibraryInfo.media[index]["seasonNumber"] = metaData.seasonNumber;
-      LibraryInfo.media[index]["episodeNumber"] = metaData.episodeNumber;
+      LibraryInfo.media[index]["seasonNumber"] = metaData?.seasonNumber;
+      LibraryInfo.media[index]["episodeNumber"] = metaData?.episodeNumber;
+      LibraryInfo.media[index]["Magnet"] = metaData?.Magnet;
+      LibraryInfo.media[index]["bgImagePath"] = metaData?.bgImagePath;
 
       if(!LibraryInfo.media[index]["typeOfSave"].includes("Currently Watching")){
         LibraryInfo.media[index]["typeOfSave"].push("Currently Watching")
-        LibraryInfo.media[index]["Magnet"] ??= metaData?.Magnet;
-        LibraryInfo.media[index]["bgImagePath"] ??= metaData?.bgImagePath;
         LibraryInfo.media[index]["mediaImdbId"] ??= metaData?.mediaImdbId;
       }
       found = true;
