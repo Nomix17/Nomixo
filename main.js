@@ -3,7 +3,7 @@ import torrentStream from 'torrent-stream';
 import dotenv from "dotenv";
 import http from 'http';
 import path from "path";
-import fs from "fs";
+import fs from 'fs';
 import https from "https";
 import os from "os";
 import { fileURLToPath} from "url";
@@ -254,16 +254,18 @@ ipcMain.on("save-video",() => {
   });
 });
 
-ipcMain.on("add-to-lib", (event,mediaInfo)=>{
+ipcMain.on("add-to-lib", async (event,mediaInfo)=>{
   let LibraryInfo = getLibraryInfo() 
   LibraryInfo.media.push(mediaInfo); 
-  insertNewInfoToLibrary(LibraryInfo);
+  await insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
+  return "";
 });
 
-ipcMain.on("remove-from-lib", (event,mediaInfo) => {
+ipcMain.on("remove-from-lib", async (event,mediaInfo) => {
   let LibraryInfo = getLibraryInfo();
-  LibraryInfo.media = LibraryInfo.media.filter(element => !(element.MediaId == mediaInfo.MediaId && element.MediaType == mediaInfo.MediaType));
-  insertNewInfoToLibrary(LibraryInfo);
+  LibraryInfo.media = LibraryInfo.media.filter(element => !(parseInt(element.MediaId) == parseInt(mediaInfo.MediaId) && element.MediaType == mediaInfo.MediaType));
+  await insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
+  return "";
 });
 
 ipcMain.handle("load-from-lib", (event, targetIdentification)=>{
@@ -272,29 +274,25 @@ ipcMain.handle("load-from-lib", (event, targetIdentification)=>{
     if(targetIdentification == undefined) return LibraryInfo.media;
       let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId == targetIdentification.MediaId && element.MediaType == targetIdentification.MediaType);
       if(targetLibraryInfo.length) return targetLibraryInfo; 
-      throw new Error("Target Not Found");
+      return undefined;
     }else{
-      throw new Error("Target Not Found");
+      return undefined;
     }
 });
 
-function getLibraryInfo(){
-  try{
-    const LibraryData = fs.readFileSync(libraryFilePath,"utf-8");
-    return JSON.parse(LibraryData);
-  }catch(err){
-    return {media:[]};
+
+function getLibraryInfo() {
+  try { return JSON.parse(fs.readFileSync(libraryFilePath, "utf-8")); }
+  catch { return { media: [] }; }
+}
+
+function insertNewInfoToLibrary(libraryFilePath, newData) {
+  try {
+    fs.writeFileSync(libraryFilePath, JSON.stringify(newData, null, 2));
+  } catch (err) {
+    console.error(err);
   }
 }
-
-function insertNewInfoToLibrary(newData){
-  fs.writeFile(libraryFilePath,JSON.stringify(newData,null,2), err=>{
-     if(err){
-       console.error(err);
-     }
-  });
-}
-
 
 function loadSettings() {
   try {

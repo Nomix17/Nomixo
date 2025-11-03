@@ -5,25 +5,26 @@ let popularSeriesDiv = document.getElementById("div-middle-right-popularSeries")
 let searchInput = document.getElementById("input-searchForMovie");
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
-let continueWatchingArray = [];
 let LibraryInformation ;
 let SelectedMediaDivIndex = -1;
 
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
-
-if(continueWatchingArray.length === 0) document.querySelector(".div-categories-description").remove();
 
 async function loadMovies(){
 
   const apiKey = await window.electronAPI.getAPIKEY().then();
 
   LibraryInformation = await loadLibraryInfo();
+  let continueWatchingMediaFromLibrary = LibraryInformation.filter(item => item?.typeOfSave.includes("Currently Watching"));
+  if(continueWatchingMediaFromLibrary.length)
+    fetchMediaDataFromLibrary(apiKey,continueWatchingMediaFromLibrary,continueWatchingDiv,globalLoadingGif,RightmiddleDiv);
+  else
+    document.getElementById("continue-watching-categorie").style.display = "none";
 
   Promise.all([
     fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&page=1`).then(res=>res.json()),
     fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${apiKey}&page=1`).then(res=>res.json())
   ]).then(([MovieData,TVShowData])=>{
-      continueWatchingDiv.innerHTML = "";
       popularMoviesDiv.innerHTML = "";
       popularSeriesDiv.innerHTML = "";
       if(MovieData.status_code == 7 && TVShowData.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");

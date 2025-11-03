@@ -153,6 +153,11 @@ async function loadTheme(){
       if(elementValue == "block") document.getElementById(elementId).click();
       supressInputEventListener = false;
     }
+    else if(elementId == "show-continue-watching-on-home"){
+      supressInputEventListener = true;
+      if(elementValue == "flex") document.getElementById(elementId).click();
+      supressInputEventListener = false;
+    }
     else if(elementId == "background-gradient-value"){
       document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100); // I want the max value to be 25%
     }else{
@@ -259,10 +264,12 @@ function getThemeSettings(){
   let ThemeSettingsInputElements = document.querySelectorAll('#themeTable input[type="color"]');
   let SmoothTransition =  document.getElementById("dont-Smooth-transition-between-pages");
   let DisplayScrollBar = document.getElementById("display-scroll-bar");
+  let ShowContinueWatchingOnHome = document.getElementById("show-continue-watching-on-home");
   let backgroundGradientValue = document.getElementById("background-gradient-value");
 
   ThemeObjs.theme.push({"--dont-Smooth-transition-between-pages":SmoothTransition.checked?0:1});
   ThemeObjs.theme.push({"--display-scroll-bar":DisplayScrollBar.checked?"block":"none"});
+  ThemeObjs.theme.push({"--show-continue-watching-on-home":ShowContinueWatchingOnHome.checked?"flex":"none"});
   ThemeObjs.theme.push({"--background-gradient-value":(100-backgroundGradientValue.value)/100});
 
   ThemeSettingsInputElements.forEach(input => {

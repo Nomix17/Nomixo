@@ -1,7 +1,15 @@
 const data = new URLSearchParams(window.location.search);
 let Magnet = atob(data.get("MagnetLink"));
+
+let MediaId = data.get("MediaId");
+let MediaType = data.get("MediaType");
+
 let bgImagePath = data.get("bgPath");
-let mediaId = data.get("id");
+let mediaImdbId = data.get("ImdbId");
+
+let seasonNumber = data.get("seasonNumber");
+let episodeNumber = data.get("episodeNumber");
+
 let defaultFontSize = 30;
 
 let TopButtonsContainer = document.getElementById("div-topButtonsContainer");
@@ -35,7 +43,7 @@ document.documentElement.style.backgroundAttachment = `fixed`;
 loadSubSettings();
 loadVideo(Magnet);
 
-loadingAllSubs(mediaId);
+loadingAllSubs(mediaImdbId);
 
 TopButtonsContainer.addEventListener("mouseenter", ()=>{ mouseHoveringOnControlDiv = true });
 TopButtonsContainer.addEventListener("mouseleave", ()=>{ mouseHoveringOnControlDiv = false });
@@ -59,6 +67,18 @@ window.addEventListener("mousemove",()=>{
   },1000);
 
 });
+
+VideoElement.addEventListener("playing", async (event)=>{
+  VideoElement.currentTime = await getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonNumber);
+
+  setInterval(()=>{
+    let lastPbPosition = parseInt(VideoElement.currentTime);
+    console.log("hello");
+    let metaData = {seasonNumber:seasonNumber,episodeNumber:episodeNumber,Magnet:Magnet,bgImagePath:bgImagePath,mediaImdbId:mediaImdbId};
+    updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData);
+    console.log(lastPbPosition);
+  },10000);
+},{ once:true });
 
 VideoElement.addEventListener("playing", (event)=>{
   loadingGif.setAttribute("style","display:none");
@@ -86,7 +106,7 @@ VideoElement.addEventListener('progress', function() {
   for (let i = 0; i < buffered.length; i++) {
     let start = buffered.start(i);
     let end = buffered.end(i);
-    console.clear();
+
     start = gettingformatedTime(start);
     end = gettingformatedTime(end);
     console.log(`Buffered range ${i}: ${start} - ${end}`);
@@ -107,14 +127,7 @@ VideoSlider.addEventListener("input", ()=>{
 
 window.addEventListener("dblclick",(event)=>{
   let ElementsThatWerePressed = document.elementsFromPoint(event.clientX,event.clientY);
-  let dontFullScreen = false;
-  for(let i=0;i<ElementsThatWerePressed.length;i++){
-    if(ElementsThatWerePressed[i].tagName == "BUTTON" || ElementsThatWerePressed[i].tagName == "INPUT"){
-      dontFullScreen = true;
-      break;
-    }
-  }
-  if(!dontFullScreen) window.electronAPI.toggleFullscreen();
+  fullscreenClicked();
 });
 
 window.addEventListener("keydown",(event)=>{
@@ -124,6 +137,7 @@ window.addEventListener("keydown",(event)=>{
   else if(event.key == "ArrowRight") VideoElement.currentTime += 10;
   else if(event.key == "ArrowLeft") VideoElement.currentTime -= 10;
   else if(event.key == " ") TogglePauseUnpause();
+  else if(event.key == "f") fullscreenClicked();
   if (event.key == "Tab" ||
       event.key == "Super" ||
       event.key == "Alt" ) event.preventDefault();
@@ -395,4 +409,60 @@ async function loadSubSettings(){
     switchToggle.checked = true;
     bottomSubElement.classList.toggle("hideElement");
   }
+}
+
+async function getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonNumber){
+  let targetIdentification = {MediaId:MediaId,MediaType:MediaType};
+  const MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
+
+  if(MediaLibraryObject == undefined) return 0;
+
+  let mediaIsAnEpisode = (MediaLibraryObject.hasOwnProperty("episodeNumber") && MediaLibraryObject.hasOwnProperty("seasonNumber"));
+  let isRequestedEpisode = mediaIsAnEpisode ? (MediaLibraryObject["episodeNumber"] == episodeNumber && MediaLibraryObject["seasonNumber"] == seasonNumber) : true;
+
+
+  if(MediaLibraryObject.hasOwnProperty("typeOfSave") &&
+    MediaLibraryObject["typeOfSave"].includes("Currently Watching") &&
+    MediaLibraryObject.hasOwnProperty("lastPlaybackPosition")&& 
+    isRequestedEpisode){
+
+      return MediaLibraryObject["lastPlaybackPosition"];
+  }
+  return 0;
+}
+
+async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData){
+  let targetIdentification = {MediaId:MediaId,MediaType:MediaType};
+  let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
+
+  if(MediaLibraryObject != undefined){
+    MediaLibraryObject = MediaLibraryObject[0]; 
+    MediaLibraryObject["lastPlaybackPosition"] = lastPbPosition;
+    MediaLibraryObject["seasonNumber"] = metaData.seasonNumber;
+    MediaLibraryObject["episodeNumber"] = metaData.episodeNumber;
+
+    if(!MediaLibraryObject["typeOfSave"].includes("Currently Watching")){
+      MediaLibraryObject["typeOfSave"].push("Currently Watching")
+      MediaLibraryObject["Magnet"] ??= metaData?.Magnet;
+      MediaLibraryObject["bgImagePath"] ??= metaData?.bgImagePath;
+      MediaLibraryObject["mediaImdbId"] ??= metaData?.mediaImdbId;
+    }
+    await window.electronAPI.removeMediaFromLibrary(targetIdentification);
+
+  }else{
+    
+    MediaLibraryObject = {
+      MediaId:MediaId,
+      MediaType:MediaType,
+      Magnet:metaData?.Magnet,
+      bgImagePath:metaData?.bgImagePath,
+      mediaImdbId:metaData?.mediaImdbId,
+
+      lastPlaybackPosition:lastPbPosition,
+      seasonNumber:metaData.seasonNumber,
+      episodeNumber:metaData.episodeNumber,
+      typeOfSave:["Currently Watching"]
+    }
+  }
+  window.electronAPI.addMediaToLibrary(MediaLibraryObject);
 }

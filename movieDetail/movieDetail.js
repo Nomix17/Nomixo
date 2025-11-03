@@ -1,6 +1,7 @@
 const data = new URLSearchParams(window.location.search);
 let movieId = data.get("MovieId");
 let MediaType = data.get("MediaType");
+
 var backgroundImage;
 let IMDB_ID;
 
@@ -39,7 +40,7 @@ function loadMovieInformation(apiKey){
     .then(data =>{
       insertMovieElements(data,apiKey);
       if(MediaType == "movie")
-        return fetchTorrent(apiKey,MediaType); 
+        return fetchTorrent(apiKey,movieId,MediaType); 
     })
     .catch(error => console.error(error));
 }
@@ -118,7 +119,7 @@ function insertEpisodesElements(apiKey,data,title){
 
       let episodeInfo = {seasonNumber:seasonNumber,episodeNumber:episodeNumber}
       try{
-        fetchTorrent(apiKey,MediaType,episodeInfo);
+        fetchTorrent(apiKey,movieId,MediaType,episodeInfo);
         TorrentContainer.style.display = "flex";
         TorrentContainer.style.borderRadius = "0px";
         TorrentContainer.innerHTML = `
@@ -138,7 +139,7 @@ function insertEpisodesElements(apiKey,data,title){
   return "";
 }
 
-function fetchTorrent(apiKey,MediaType,episodeInfo={}){
+function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}){
   let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
   fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`)
     .then(res => res.json())
@@ -152,7 +153,7 @@ function fetchTorrent(apiKey,MediaType,episodeInfo={}){
 
       fetch(fetchUrl)
         .then(res=>res.json())  
-        .then(data => insertTorrentInfoElement(data))
+        .then(data => insertTorrentInfoElement(data,MediaId,MediaTypeForSearch,episodeInfo))
 
         .catch(error =>{
           TorrentContainer.innerHTML = "";
@@ -283,7 +284,7 @@ function insertCastElements(data){
     if(divDirectoryElement.innerHTML.trim() == "<h2>Director</h2>") divDirectoryElement.remove();
 }
 
-function insertTorrentInfoElement(data){
+function insertTorrentInfoElement(data,MediaId,MediaType,episodeInfo={}){
     TorrentContainer.innerHTML = "";
     let TorrentResutls = data.streams;
     TorrentResutls.forEach(element => {
@@ -312,9 +313,8 @@ function insertTorrentInfoElement(data){
           </div>
         `;
         TorrentElement.addEventListener("click",()=>{
-          openMediaVideo(movieId,MagnetLink)
+          openMediaVideo(MediaId,MediaType,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
         });
-        // if(!fileName.endsWith('.mkv')) TorrentContainer.append(TorrentElement);
         TorrentContainer.append(TorrentElement);
       }
     });
@@ -357,20 +357,13 @@ function openProfilePage(personId){
   window.electronAPI.navigateTo(path);
 }
 
-function openMediaVideo(movieId,MagnetLink){
-  let b64MagnetLink = btoa(MagnetLink);
-  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&id=${IMDB_ID}&bgPath=${backgroundImage}`;
-  window.electronAPI.navigateTo(path); 
-}
-
 function addMediaToLibrary(){
-  let mediaLibraryEntryPointObject = formatMediaLibraryObject()
-  if(!addToLibraryButton.hasAttribute("pressed")){
-    window.electronAPI.addMediaToLibrary(mediaLibraryEntryPointObject);
+  ToggleInLibrary(movieId,MediaType,"Watch Later");
+  console.log(!addToLibraryButton.hasAttribute("pressed"));
+  if(addToLibraryButton.hasAttribute("pressed")){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";
   }else{
-    window.electronAPI.removeMediaFromLibrary(mediaLibraryEntryPointObject);
     setAddToLibraryButtonToNormal(addToLibraryButton);
     addToLibraryButton.innerHTML+="Save To Library";
   }
@@ -382,7 +375,7 @@ function formatMediaLibraryObject(){
     MediaType:MediaType,
     episodesWatched:[],
     lastPlaybackPosition:0,
-    timeWatched:0
+    typeOfSave:"WatchLater"
   }
   return MediaLibraryObject;
 }
@@ -393,7 +386,7 @@ async function loadMediaEntryPointLibraryInfo(){
       console.error(err);
       return null;
     });
-  if(MediaLibraryInfo){
+  if(MediaLibraryInfo && MediaLibraryInfo[0]["typeOfSave"].includes("Watch Later")){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";
   }

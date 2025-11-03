@@ -181,10 +181,12 @@ body, html {
   display: flex;
   justify-content: flex-start;
   overflow-x: auto;
-  /* width: 1700px; */
   box-sizing: border-box;
 }
 
+#continue-watching-categorie{
+  display:var(--show-continue-watching-on-home);
+}
 
 .div-MovieElement {
   position: relative;
@@ -360,14 +362,13 @@ input::selection {
   background: rgba(100,100,100,40%);
 }
 
+.continue-video-button,
 .btn-toggle-in-library,
 .btn-remove-from-library{
   display:flex;
   justify-content:center;
   align-items:center;
   position:absolute;
-  top:7%;
-  right:4%;
   width:30px;
   height:30px;
   border-radius:100%;
@@ -376,10 +377,18 @@ input::selection {
   z-index:0;
   cursor:pointer;
 }
+
+.btn-toggle-in-library,
+.btn-remove-from-library{
+  right:4%;
+  top:7%;
+}
+
 .btn-toggle-in-library[pressed=" "] .toggleButtonIcon{
   fill: rgba(255,255,255,0.3);
 }
 
+.continue-video-icon,
 .toggleButtonIcon,
 .closeButtonIcon{
   width:25px;
@@ -389,6 +398,48 @@ input::selection {
   flex-shrink: 0;
   cursor:pointer;
 }
+
+
+.continue-video-button {
+  bottom: 54%;
+  right: 50%;
+  width: 75px;
+  height: 75px;
+  opacity: 0;
+  background-color:white;
+  transform: translate(70%, 70%) scale(1);
+  transform-origin: center center;
+  transition: opacity 0.3s ease, transform 0.3s ease, filter 0.4s ease, fill 0.3s ease;
+  will-change: transform, opacity;
+  z-index: 1000;
+}
+
+.continue-video-icon {
+  display: inline-block;
+  width: 160%;
+  height: 160%;
+  fill: rgba(var(--icon-hover-color));
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+}
+
+.div-MovieElement:hover .continue-video-button {
+  opacity: 1;
+  transform: translate(50%, 50%);
+  filter: drop-shadow(2px 2px 6px rgba(0, 0, 0, 0.6));
+}
+
+.continue-video-button:hover .continue-video-icon{
+  transform: scale(1.09);
+}
+.continue-video-icon:hover{
+  transform: translate(0, 0) scale(1.07);
+}
+
+.continue-video-button:active .continue-video-icon{
+  transition: transform 0.1s ease;
+  transform:  scale(0.99);
+}
+
 .toggleButtonIcon{
   width:20px;
   height:20px;
@@ -404,7 +455,7 @@ input::selection {
   fill:white;
   transform: scale(1.07);
 }
-
+.btn-toggle-in-library:active .continue-video-icon
 .btn-toggle-in-library:active .toggleButtonIcon,
 .btn-remove-from-library:active .closeButtonIcon{
   fill:rgba(255,255,255,0.3);
@@ -429,13 +480,12 @@ input::selection {
   opacity: 1;
 }
 
-.moveMovieElementsToTheRightBtn,
-.moveMovieElementsToTheLeftBtn{
+.movingArrowButton{
   position:absolute;
   opacity:0;
   display:flex;
   justify-content:center;
-  aling-items:center;
+  align-items:center;
   background-color:transparent;
   border:none;
   border-radius:100%;
@@ -443,9 +493,21 @@ input::selection {
   height:70px;
   padding:0;
   bottom:50%;
-  transform: translateY(21%);
+  transform:translateY(30%);
   cursor:pointer;
   margin:0;
+  z-index:1000;
+  transform-origin:center;
+  transition:transform 0.3s ease, opacity 0.3s ease;
+}
+
+.movingArrowButton:hover{
+  opacity:1;
+  transform:translateY(30%) scale(1.1);
+}
+
+.movingArrowButton:active{
+  transform:translateY(30%) scale(0.999);
 }
 
 .moveMovieElementsToTheLeftBtn{
@@ -455,23 +517,30 @@ input::selection {
   right:1.9%;
 }
 
+#btn-goBack{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:50px;
+  height:50px;
+  background-color:  rgba(0,0,0,0%);
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+#img-goBack {
+  background-color:  rgba(0,0,0,0%);
+  width:30px;
+  height:30px;
+  cursor:pointer;
+}
+
 .goRightIcon,
 .goLeftIcon{
   border-radius:100%;
   background-color:transparent;
   width:100%;
   height:100%;
-}
-
-.moveMovieElementsToTheRightBtn:hover,
-.moveMovieElementsToTheLeftBtn:hover{
-  opacity: 1;
-  transform:scale(1.1) translateY(21%);
-}
-
-.moveMovieElementsToTheRightBtn:active,
-.moveMovieElementsToTheLeftBtn:active{
-  transform:scale(0.999) translateY(21%);
 }
 
 #messageDiv{
@@ -496,4 +565,15 @@ input::selection {
   font-weight:500;
   margin: 0;
   line-height: 1.5;
+}
+
+#div-middle-right-continueWatching span{
+  position:fixed;
+  left:50.0%;
+  top:40%;
+  transform: translate(-50%, 50%);
+  font-size:30px;
+  font-weight: 700;
+  background-color:rgba(0,0,0,0);
+  color: rgba(255,255,255,0.6);
 }
