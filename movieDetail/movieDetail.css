@@ -161,8 +161,13 @@ p{
   box-sizing: border-box;
   gap: 10px;
   margin:0px 10px 0px 10px;
+  position:relative;
+  cursor: pointer;
+}
 
-
+.div-episodes-Element *,
+#div-TorrentMedia * {
+  cursor: pointer;
 }
 
 #div-TorrentMedia:hover{
@@ -175,11 +180,6 @@ p{
 }
 .div-episodes-Element{
   z-index:100;
-}
-.div-episodes-Element,
-.div-episodes-Element img:hover,
-#div-TorrentMedia img:hover{
-  cursor: pointer;
 }
 
 .div-MediaQuality{
@@ -328,6 +328,7 @@ h1{
 .div-episodes-Element *{
   margin:0px 10px 0px 10px;
   background-color:rgba(0,0,0,0);
+  cursor:pointer;
 }
 
 .div-episodes-element img{
@@ -357,9 +358,9 @@ option{
   padding:10;
   max-width:25%;
   border-radius:13px;
-  margin:5px 0px 15px 15px;
+  margin:5px 0px 15px 35px;
   border:2px solid rgba(255,255,255,0.5);
-  background-color:rbga(var(--primary-color),1);
+  background-color:rgba(var(--primary-color),1);
 }
 
 #select-Seasons option {
@@ -402,3 +403,28 @@ option{
   background-color:transparent;
   width:19px;
 }
+
+.continue-video-button {
+  opacity:1;
+  transform: translate(50%,50%);
+  width: 70px;
+  height: 70px;
+  bottom:50%;
+  right:10%;
+}
+
+.continue-video-icon {
+  display: inline-block;
+  width: 160%;
+  height: 160%;
+  fill: rgba(var(--icon-hover-color));
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  transition: transform 0.1s ease;
+}
+.div-episodes-Element:hover .continue-video-button,
+#div-TorrentMedia:hover .continue-video-button {
+  opacity: 1;
+  transform: translate(40%, 50%);
+  filter: drop-shadow(2px 2px 6px rgba(0, 0, 0, 0.6));
+}
+

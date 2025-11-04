@@ -62,10 +62,11 @@ function noInfoFounded(){
   divDirectoryElement.innerHTML += '<p class="infoText">No Directors information were Found</p>';
 }
 
-function loadEpisodes(apiKey,series_id,season_number,title){
+async function loadEpisodes(apiKey,series_id,season_number,title){
+  let libraryInfo = await loadMediaEntryPointLibraryInfo();
   fetch(`https://api.themoviedb.org/3/tv/${series_id}/season/${season_number}?api_key=${apiKey}`)
     .then(res => res.json())
-    .then(data => insertEpisodesElements(apiKey,data,title))
+    .then(data => insertEpisodesElements(apiKey,data,title,libraryInfo?.[0]))
     .then(() =>{displayEpisodes(1)})
     .catch(err =>{
       SerieEpisode.innerHTML = "";
@@ -76,7 +77,7 @@ function loadEpisodes(apiKey,series_id,season_number,title){
     });
 }
 
-function insertEpisodesElements(apiKey,data,title){
+function insertEpisodesElements(apiKey,data,title,libraryInfo){
   let SeasonDiv = document.createElement("div");
   SeasonDiv.style.backgroundColor = "rgba(0,0,0,0)";
   let episodes = data.episodes;
@@ -91,16 +92,29 @@ function insertEpisodesElements(apiKey,data,title){
          <p style="font-size:15px;">${episode.name}</p>
          <p style="font-weight:bold;font-size:11px;margin-top:20px;">${episode.air_date}</p>
        </div>
-     `
+     `;
+
+
+    let continueWatchingEpisode = (libraryInfo?.typeOfSave?.includes("Currently Watching") &&
+      episode.season_number == libraryInfo["seasonNumber"] &&
+      episode.episode_number == libraryInfo["episodeNumber"]);
+
+    if(continueWatchingEpisode){
+      EpisodeElement.style.backgroundColor = "rgba(255, 255, 255, 10%)";
+      insertContinueWatchingButton(EpisodeElement,libraryInfo);
+    }
+
     EpisodeElement.addEventListener("mouseenter",()=>{
       EpisodeElement.style.backgroundColor = "rgba(255, 255, 255, 10%)";
     });
 
     EpisodeElement.addEventListener("mouseleave",()=>{
-      if(EpisodeElement.style.borderColor != "rgba(var(--MovieElement-hover-BorderColor), 100%)")
+      if(EpisodeElement.style.borderColor != "rgba(var(--MovieElement-hover-BorderColor), 100%)" && (!continueWatchingEpisode))
         EpisodeElement.style.backgroundColor = "rgba(0,0,0,0)";
     });
+
     EpisodeElement.addEventListener("click",() => {
+      continueWatchingEpisode=false;
       let EpisodeElements = SeasonDiv.querySelectorAll('div[class="div-episodes-Element"]');
       EpisodeElements.forEach(element =>{
         if(element != EpisodeElement){
@@ -139,8 +153,9 @@ function insertEpisodesElements(apiKey,data,title){
   return "";
 }
 
-function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}){
+async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}){
   let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
+  let libraryInfo = await loadMediaEntryPointLibraryInfo();
   fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`)
     .then(res => res.json())
     .then(data => {
@@ -153,7 +168,7 @@ function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}){
 
       fetch(fetchUrl)
         .then(res=>res.json())  
-        .then(data => insertTorrentInfoElement(data,MediaId,MediaTypeForSearch,episodeInfo))
+        .then(data => insertTorrentInfoElement(data,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo))
 
         .catch(error =>{
           TorrentContainer.innerHTML = "";
@@ -284,7 +299,7 @@ function insertCastElements(data){
     if(divDirectoryElement.innerHTML.trim() == "<h2>Director</h2>") divDirectoryElement.remove();
 }
 
-function insertTorrentInfoElement(data,MediaId,MediaType,episodeInfo={}){
+function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episodeInfo={}){
     TorrentContainer.innerHTML = "";
     let TorrentResutls = data.streams;
     TorrentResutls.forEach(element => {
@@ -300,7 +315,6 @@ function insertTorrentInfoElement(data,MediaId,MediaType,episodeInfo={}){
       if(parseInt(SeedersNumber) && !fileName.endsWith('.mkv')){
         let TorrentElement = document.createElement("div");
         TorrentElement.id = "div-TorrentMedia";
-        if(fileName.endsWith('.mkv')) TorrentElement.style.borderColor = "#FFA500";
         TorrentElement.style.marginBottom = "5px";
         TorrentElement.innerHTML = `
           <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Quality}</p></div>
@@ -312,9 +326,17 @@ function insertTorrentInfoElement(data,MediaId,MediaType,episodeInfo={}){
             </div>
           </div>
         `;
+        
         TorrentElement.addEventListener("click",()=>{
           openMediaVideo(MediaId,MediaType,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
         });
+        
+        if(MediaLibraryInfo?.typeOfSave?.includes("Currently Watching") &&
+          String(MagnetLink) == String(MediaLibraryInfo["Magnet"]) &&
+          String(episodeInfo.seasonNumber) == String(MediaLibraryInfo["seasonNumber"]) &&
+          String(episodeInfo.episodeNumber) == String(MediaLibraryInfo["episodeNumber"]))
+            insertContinueWatchingButton(TorrentElement,MediaLibraryInfo)
+
         TorrentContainer.append(TorrentElement);
       }
     });
@@ -323,6 +345,33 @@ function insertTorrentInfoElement(data,MediaId,MediaType,episodeInfo={}){
     TorrentContainer.style.display = "block";
     loadIconsDynamically();
 }
+
+function insertContinueWatchingButton(container,MediaLibraryInfo){
+  let continueVideoButton = document.createElement("button");
+  continueVideoButton.classList.add("continue-video-button");
+
+  fetch('../cache/icons/playVideo.svg')
+    .then(response => response.text())
+    .then(svgText => {
+      continueVideoButton.innerHTML = svgText;
+      addContrastForPlayIcon();
+    })
+  .catch(err=>{
+    console.error(err.message);
+  });
+
+  let episodeInfo = {"seasonNumber":MediaLibraryInfo.seasonNumber, "episodeNumber":MediaLibraryInfo.episodeNumber}
+
+  continueVideoButton.addEventListener("click",()=>{
+    openMediaVideo(MediaLibraryInfo.MediaId, MediaLibraryInfo.MediaType, MediaLibraryInfo.Magnet,MediaLibraryInfo.mediaImdbId,MediaLibraryInfo.bgImagePath,episodeInfo);
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  container.appendChild(continueVideoButton);
+  container.style.backgroundColor ="rgba(255, 255, 255, 10%)";
+}
+
 
 function displayEpisodes(seasonNumber){
   selectElement.style.display = "flex";
@@ -336,7 +385,7 @@ function displayEpisodes(seasonNumber){
 }
 
 setupKeyPressesHandler();
-loadMediaEntryPointLibraryInfo();
+handleLibraryButton()
 fetchInformation();
 
 resizeTorrentAndEpisodeElement(0.3);
@@ -359,7 +408,6 @@ function openProfilePage(personId){
 
 function addMediaToLibrary(){
   ToggleInLibrary(movieId,MediaType,"Watch Later");
-  console.log(!addToLibraryButton.hasAttribute("pressed"));
   if(addToLibraryButton.hasAttribute("pressed")){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";
@@ -384,9 +432,14 @@ async function loadMediaEntryPointLibraryInfo(){
   let MediaLibraryInfo = await window.electronAPI.loadMediaLibraryInfo({MediaId:movieId, MediaType:MediaType})
     .catch((err)=>{
       console.error(err);
-      return null;
+      return [];
     });
-  if(MediaLibraryInfo && MediaLibraryInfo[0]["typeOfSave"].includes("Watch Later")){
+  return MediaLibraryInfo;
+}
+
+async function handleLibraryButton(){
+  let MediaLibraryInfo = await loadMediaEntryPointLibraryInfo();
+  if(MediaLibraryInfo?.[0]["typeOfSave"]?.includes("Watch Later")){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";
   }
