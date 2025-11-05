@@ -163,6 +163,7 @@ p{
   margin:0px 10px 0px 10px;
   position:relative;
   cursor: pointer;
+  overflow:hidden;
 }
 
 .div-episodes-Element *,
@@ -421,6 +422,7 @@ option{
   filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
   transition: transform 0.1s ease;
 }
+
 .div-episodes-Element:hover .continue-video-button,
 #div-TorrentMedia:hover .continue-video-button {
   opacity: 1;

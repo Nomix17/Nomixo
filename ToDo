@@ -1,5 +1,3 @@
 - making torrent list and episode list resizable by draging the mouse 
 - add the ability to store the essential information about the user position, the season that was opened ..., in movie Detail page
-- add a continue watching button in the torrent elements of the movie details page
 - adding the ability to toggle the display of the torrent list and the episode list in movie Detail page 
-- make it that when hovering the title of a media the whole title shows
