@@ -108,6 +108,7 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
         else if(NewMediaType.toLowerCase() == "person") MediaContainer[2].append(mediaDomElement);
         else MediaContainer[3].append(mediaDomElement);
       } 
+      addFloatingDiv(mediaDomElement);
     }
   });
 }
@@ -465,7 +466,7 @@ function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoin
       });
     checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
     }
-
+    addFloatingDiv(movieDomElement);
     return movieDomElement;
 }
 
@@ -512,3 +513,40 @@ window.xRemoveIcon = `
         <path d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"/>
       </svg>`
 
+
+window.addFloatingDiv = (MediaElement)=>{
+  const paragraph = MediaElement?.querySelector('p');
+
+  if (paragraph) {
+    const floatingDiv = document.createElement('div');
+    floatingDiv.className = 'floating-tooltip';
+    floatingDiv.textContent = paragraph.textContent;
+    floatingDiv.className = "floatingDiv";
+    document.body.appendChild(floatingDiv);
+
+    let displayFloatingDiv = true;
+
+    paragraph.addEventListener('mouseenter', (e) => {
+      displayFloatingDiv=true;
+      const isOverflowing = paragraph.scrollWidth > paragraph.clientWidth || paragraph.scrollHeight > paragraph.clientHeight;
+      setTimeout(()=>{
+        if(displayFloatingDiv){
+          floatingDiv.style.opacity = '1';
+        }
+      },500);
+    });
+
+    paragraph.addEventListener('mousemove', (e) => {
+      const rect = paragraph.getBoundingClientRect();
+      const tooltipRect = floatingDiv.getBoundingClientRect();
+
+      floatingDiv.style.left = rect.left + (rect.width / 2) - (tooltipRect.width / 2) + window.scrollX + 'px';
+      floatingDiv.style.top = rect.top + tooltipRect.height - 8 + window.scrollY + 'px';
+    });
+
+    paragraph.addEventListener('mouseleave', () => {
+      displayFloatingDiv = false;
+      floatingDiv.style.opacity = '0';
+    });
+  }
+}
