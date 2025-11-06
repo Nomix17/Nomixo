@@ -1,1 +1,4 @@
 - add the ability to store the essential information about the user position, the season that was opened ..., in movie Detail page
+- fix the fullscreen Icon, it's always go back to default when changing page
+- fixing the overflow on the torrent elements in the movie Detail page, when it's a serie (it's because of the dummy div)
+- move the continue watching button on Media Element to slightly to the top, it's off center
