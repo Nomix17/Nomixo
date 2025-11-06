@@ -569,4 +569,4 @@ setupKeyPressesHandler();
 handleLibraryButton()
 fetchInformation();
 handleDivsResize();
-
+handleFullScreenIcon();

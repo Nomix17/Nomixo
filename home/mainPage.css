@@ -75,7 +75,7 @@ body, html {
   padding: 0;
   height: 100%;
   max-width:100%;
-  overflow:hidden;
+  overflow: hidden;
 }
 
 .div-categories {
@@ -168,7 +168,6 @@ body, html {
   box-sizing: border-box;
   padding-left: 5px;
   padding-top:0;
-  opacity:0;
   overflow-y:scroll;
   opacity: var(--dont-Smooth-transition-between-pages);
   transition: opacity 0.3s ease;
@@ -220,6 +219,7 @@ body, html {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size:17px;
+  cursor:pointer;
 }
 
 .div-MovieElement:hover .img-MoviePoster{
@@ -313,7 +313,7 @@ body, html {
 }
 #img-fullscreen{
   background-color:  rgba(0,0,0,0%);
-  width:79%;
+  width:68%;
 }
 
 #btn-fullscreen:hover{
@@ -532,8 +532,7 @@ input::selection {
 }
 #img-goBack {
   background-color:  rgba(0,0,0,0%);
-  width:30px;
-  height:30px;
+  width:68%;
   cursor:pointer;
 }
 
@@ -579,7 +578,6 @@ input::selection {
   background-color:rgba(0,0,0,0);
   color: rgba(255,255,255,0.6);
 }
-
 
 .parag-MovieTitle {
   overflow: hidden;

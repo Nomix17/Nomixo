@@ -73,8 +73,8 @@ p{
   display:flex;
   justify-content:center;
   align-items:center;
-  width:50px;
-  height:50px;
+  width:55px;
+  height:55px;
   background-color:  rgba(0,0,0,0%);
   border:none;
   border-radius:10px;
@@ -84,8 +84,7 @@ p{
 #img-goBack,
 #img-fullscreen{
   background-color:  rgba(0,0,0,0%);
-  width:30px;
-  height:30px;
+  width:68%;
   cursor:pointer;
 }
 #btn-fullscreen:hover,
