@@ -556,10 +556,13 @@ function addSpaceToTopOfTorrentContainer(){
   let selectSeasonContainerHeight = selectSeasonContainer.offsetHeight;
   console.log(selectSeasonContainerHeight);
 
-  if(selectSeasonContainerHeight > 0)
+  if(selectSeasonContainerHeight > 0){
     dummyDiv.style.height = selectSeasonContainerHeight+"px";
-  else 
+    TorrentContainer.style.paddingBottom = selectSeasonContainerHeight+"px";
+  }else{
     dummyDiv.style.height = "15px";
+    TorrentContainer.style.paddingBottom = "15px";
+  }
 }
 
 setupKeyPressesHandler();
