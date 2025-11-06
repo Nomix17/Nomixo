@@ -263,6 +263,7 @@ window.DisplayWarningOrErrorForUser = (warningMessage) => {
 }
 
 window.loadIconsDynamically = ()=>{
+  handleFullScreenIcon();
   fetch('../cache/icons/storage.svg')
     .then(response => response.text())
     .then(svgText => {
@@ -549,4 +550,17 @@ window.addFloatingDiv = (MediaElement)=>{
       floatingDiv.style.opacity = '0';
     });
   }
+}
+
+window.handleFullScreenIcon = ()=>{
+  let FullScreenIcon = "../cache/icons/fullscreen.png";
+  let UnFullScreenIcon = "../cache/icons/unfullscreen.png";
+
+  let fullscreenButton = document.getElementById("img-fullscreen");
+  console.log(fullscreenButton);
+  if (!window.screenTop && !window.screenY) 
+    fullscreenButton?.setAttribute("src",UnFullScreenIcon);
+  else
+    fullscreenButton?.setAttribute("src",FullScreenIcon);
+  
 }

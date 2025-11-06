@@ -313,7 +313,7 @@ body, html {
 }
 #img-fullscreen{
   background-color:  rgba(0,0,0,0%);
-  width:79%;
+  width:68%;
 }
 
 #btn-fullscreen:hover{
@@ -532,8 +532,7 @@ input::selection {
 }
 #img-goBack {
   background-color:  rgba(0,0,0,0%);
-  width:30px;
-  height:30px;
+  width:68%;
   cursor:pointer;
 }
 

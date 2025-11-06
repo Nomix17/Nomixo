@@ -467,3 +467,5 @@ async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaD
   }
   window.electronAPI.addMediaToLibrary(MediaLibraryObject);
 }
+
+loadIconsDynamically();
