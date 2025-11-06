@@ -13,8 +13,14 @@ import os from "os";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const __configs = path.join(app.getPath('userData'),"configs");
+let __envfile = path.join(__configs,".env");
 
-dotenv.config();
+dotenv.config({path:__envfile});
+
+if (!process.env.API_KEY) {
+  console.error(`Missing TMDB API key. Please set API_KEY in your environment. or Add it to the file ${__envfile}`);
+  process.exit(1);
+}
 
 // ======================= PATHS =======================
 const isDev = !app.isPackaged;
