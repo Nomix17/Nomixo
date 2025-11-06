@@ -5,6 +5,7 @@
 }
 ::-webkit-scrollbar{
    background: rgba(0,0,0,0%);
+   cursor: default;
  } 
 body::-webkit-scrollbar{
   width:0px
@@ -122,22 +123,84 @@ p{
   background-color:rgba(0,0,0,0%);
 }
 
-#div-serieEpisodes,
-#div-movieMedias {
+#div-serieEpisodes{
+  display:flex;
+  flex-direction:column;
+  background-color: rgba(var(--primary-color),0.9);
+  border-radius:20px 0 0 0 ;
+}
+
+.selectSeason-container{
+  display:flex;
+  flex-direction:row;
+  justify-content:start;
+  align-items:center;
+  padding: 20px 10px 20px 10px;
+  border-left:1px solid transparent;
+}
+
+.toggleButton{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:40px;
+  height:40px;
+  background-color:  rgba(0,0,0,0%);
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  opacity:0;
+  pointer-events: none;
+  transition: transform 0.0s ease;
+}
+
+.toggleButton img{
+  width:100%;
+}
+
+.toggleButton:hover{
+  background-color:rgba(255,255,255,0.3);
+}
+
+#EpisodesContainer,
+#div-TorrentContainer {
   display: flex;
   align-items: center; 
   justify-content: center;
   flex-direction: column;
   height: 100%; 
-  background-color: rgba(var(--primary-color),0.9);
-  border-radius: 20px 0px 0px 0px;
+  background-color: transparent;
   gap: 10px;
-  padding-top: 15px;
   padding-bottom: 10px;
   overflow-y: auto; 
   box-sizing: border-box;
+  border-left:5px solid transparent;
+  cursor:ew-resize;
 }
 
+#div-TorrentContainer{
+  background-color: rgba(var(--primary-color),0.9);
+  border-radius:20px 0 0 0;
+  overflow:hidden;
+}
+
+#dummyDiv{
+  height:15px;
+  padding:0;
+  margin:0;
+}
+
+#div-movieMedias{
+  height: 100%; 
+  background-color: transparent;
+  gap: 10px;
+  padding-bottom: 10px;
+  overflow-y: auto; 
+  box-sizing: border-box;
+  border-radius:20px 0 0 0;
+}
+
+#SeasonsContainer span,
 #div-serieEpisodes span,
 #div-movieMedias span{
   font-size:20px;
@@ -145,6 +208,8 @@ p{
   background-color:rgba(0,0,0,0);
   color: rgba(255,255,255,0.6);
 }
+
+#SeasonsContainer h4
 #div-serieEpisodes h4{
   margin:0;
 }
@@ -160,7 +225,7 @@ p{
   padding: 20px 0 20px 20px ;
   box-sizing: border-box;
   gap: 10px;
-  margin:0px 10px 0px 10px;
+  margin:0px 10px 10px 10px;
   position:relative;
   cursor: pointer;
   overflow:hidden;
@@ -353,13 +418,14 @@ option{
   background-color:rgba(var(--primary-color));
   color:white;
 }
+
 #select-Seasons{
   font-size:15px;
   font-weight: bold;
   padding:10;
   max-width:25%;
   border-radius:13px;
-  margin:5px 0px 15px 35px;
+  margin-left:15px;
   border:2px solid rgba(255,255,255,0.5);
   background-color:rgba(var(--primary-color),1);
 }
