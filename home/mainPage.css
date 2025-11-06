@@ -403,7 +403,7 @@ input::selection {
 
 
 .continue-video-button {
-  bottom: 54%;
+  bottom: 55%;
   right: 50%;
   width: 75px;
   height: 75px;
@@ -494,7 +494,7 @@ input::selection {
   width:70px;
   height:70px;
   padding:0;
-  bottom:50%;
+  bottom:51%;
   transform:translateY(30%);
   cursor:pointer;
   margin:0;
