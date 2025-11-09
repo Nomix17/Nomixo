@@ -1,6 +1,6 @@
 @font-face{
   font-family: Montserrat;
-  src: url("../cache/fonts/Montserrat-VariableFont_wght.ttf");
+  src: url("../assets/fonts/Montserrat-VariableFont_wght.ttf");
 }
 *{
   -webkit-user-drag: none;

@@ -25,7 +25,7 @@ if (!process.env.API_KEY) {
 // ======================= PATHS =======================
 const isDev = !app.isPackaged;
 const mpvConfigAssetsDirectory = isDev
-  ? path.join(__dirname, 'mpvConfigs')
+  ? path.join(__dirname, 'assets/mpvConfigs')
   : path.join(process.resourcesPath, 'assets/mpvConfigs');
 
 const SettingsFilePath = path.join(__configs, 'settings.json');

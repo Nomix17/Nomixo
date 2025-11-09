@@ -50,7 +50,7 @@ function getPersonInfo(apiKey,personId){
     }
 
     personNameElement.innerText = Name;
-    personProfileElement.src = ProfilePic == null?"../cache/ProfileNotFound.png":"https://image.tmdb.org/t/p/w500/"+ProfilePic;
+    personProfileElement.src = ProfilePic == null?"../assets/ProfileNotFound.png":"https://image.tmdb.org/t/p/w500/"+ProfilePic;
     personDepartmentElement.innerText = "Department : "+Department;
     personBioElement.prepend(Biography+" ");
     fetchData(apiKey,personId,Department); 
