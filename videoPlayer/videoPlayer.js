@@ -334,10 +334,10 @@ function TogglePauseUnpause(){
   let PauseButtonImageElement = document.getElementById("img-PauseButton");
   if(VideoElement.paused){
     VideoElement.play();
-    PauseButtonImageElement.src="../cache/icons/BPause.png"
+    PauseButtonImageElement.src="../assets/icons/BPause.png"
   }else{
     VideoElement.pause();
-    PauseButtonImageElement.src="../cache/icons/BPlay.png"
+    PauseButtonImageElement.src="../assets/icons/BPlay.png"
   }
 }
 
@@ -347,10 +347,10 @@ function toggleVolume(){
 }
 
 function updateVolumeIcons(){
-  if(VideoElement.volume <= 0.0 || VideoElement.muted) VolumeButton.children[0].src = "../cache/icons/BMute.png";
-  else if(VideoElement.volume <= 0.25) VolumeButton.children[0].src = "../cache/icons/BVolumeLow.png";
-  else if(VideoElement.volume <= 0.75) VolumeButton.children[0].src = "../cache/icons/BVolumeMid.png";
-  else if(VideoElement.volume > 0.75) VolumeButton.children[0].src = "../cache/icons/BVolumeControl.png";
+  if(VideoElement.volume <= 0.0 || VideoElement.muted) VolumeButton.children[0].src = "../assets/icons/BMute.png";
+  else if(VideoElement.volume <= 0.25) VolumeButton.children[0].src = "../assets/icons/BVolumeLow.png";
+  else if(VideoElement.volume <= 0.75) VolumeButton.children[0].src = "../assets/icons/BVolumeMid.png";
+  else if(VideoElement.volume > 0.75) VolumeButton.children[0].src = "../assets/icons/BVolumeControl.png";
 } 
 
 function hideSubDiv(event){

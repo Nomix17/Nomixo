@@ -296,7 +296,7 @@ function changeColorOfInputElement(input){
   let rgbaColor = hexToRgb(input.value);
   let startingColor = `rgba(${rgbaColor[0]},${rgbaColor[1]},${rgbaColor[2]},0)`;
   let endingColor = `rgba(${rgbaColor[0]},${rgbaColor[1]},${rgbaColor[2]},1)`;
-  ouputElement.style.background = `linear-gradient(to right, ${startingColor}, ${endingColor}), url("../cache/transparentBg.png")`;
+  ouputElement.style.background = `linear-gradient(to right, ${startingColor}, ${endingColor}), url("../assets/transparentBg.png")`;
 }
 
 function applySelectedColor(inputElements){

@@ -373,7 +373,7 @@ function insertContinueWatchingButton(container,MediaLibraryInfo){
   let continueVideoButton = document.createElement("button");
   continueVideoButton.classList.add("continue-video-button");
 
-  fetch('../cache/icons/playVideo.svg')
+  fetch('../assets/icons/playVideo.svg')
     .then(response => response.text())
     .then(svgText => {
       continueVideoButton.innerHTML = svgText;

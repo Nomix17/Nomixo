@@ -70,8 +70,8 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
 
       if(obj.hasOwnProperty("poster_path") && obj["poster_path"] != null) PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["poster_path"];
       else if(obj.hasOwnProperty("profile_path") && obj["profile_path"] != null)  PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["profile_path"];
-      else if(NewMediaType == "person") PosterImage = "../cache/ProfileNotFound.png"
-      else PosterImage = "../cache/PosterNotFound.png"
+      else if(NewMediaType == "person") PosterImage = "../assets/ProfileNotFound.png"
+      else PosterImage = "../assets/PosterNotFound.png"
       
       let mediaDomElement = document.createElement("div");
       let moviePosterElement = document.createElement("img");
@@ -264,7 +264,7 @@ window.DisplayWarningOrErrorForUser = (warningMessage) => {
 
 window.loadIconsDynamically = ()=>{
   handleFullScreenIcon();
-  fetch('../cache/icons/storage.svg')
+  fetch('../assets/icons/storage.svg')
     .then(response => response.text())
     .then(svgText => {
       document.querySelectorAll('#div-storageImage').forEach(element=>element.innerHTML = svgText);
@@ -272,7 +272,7 @@ window.loadIconsDynamically = ()=>{
     .catch(err=>{
       console.error(err.message);
     });
-  fetch('../cache/icons/seeds.svg')
+  fetch('../assets/icons/seeds.svg')
     .then(response => response.text())
     .then(svgText => {
       document.querySelectorAll('#div-seedImage').forEach(element=>element.innerHTML = svgText);
@@ -280,7 +280,7 @@ window.loadIconsDynamically = ()=>{
     .catch(err=>{
       console.error(err.message);
     });
-  // fetch('../cache/icons/logo.svg')
+  // fetch('../assets/icons/logo.svg')
   //   .then(response => response.text())
   //   .then(svgText => {
   //     document.getElementById('div-main-logo').innerHTML = svgText;
@@ -344,7 +344,7 @@ async function fullscreenClicked(){
   let isFullScreen = await window.electronAPI.toggleFullscreen();
   let fullscreenImageElement = document.getElementById("img-fullscreen");
   if(isFullScreen  == undefined) return;
-  fullscreenImageElement.src = isFullScreen ? "../cache/icons/unfullscreen.png" : "../cache/icons/fullscreen.png";
+  fullscreenImageElement.src = isFullScreen ? "../assets/icons/unfullscreen.png" : "../assets/icons/fullscreen.png";
 }
 
 window.displayMessage = (messageContent="hello")=>{
@@ -418,7 +418,7 @@ function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoin
     if(mediaData.hasOwnProperty("adult")) Adult = mediaData["adult"];
    
     if(mediaData.hasOwnProperty("poster_path") && mediaData["poster_path"] != null) PosterImage = "https://image.tmdb.org/t/p/w342/"+mediaData["poster_path"];
-    else PosterImage = "../cache/PosterNotFound.png"
+    else PosterImage = "../assets/PosterNotFound.png"
     if(mediaData.hasOwnProperty("media_type") && mediaData["media_type"] != null) MediaType = mediaData["media_type"];
 
     
@@ -450,7 +450,7 @@ function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoin
       continueVideoButton.classList.add("continue-video-button");
       movieDomElement.appendChild(continueVideoButton);
 
-      fetch('../cache/icons/playVideo.svg')
+      fetch('../assets/icons/playVideo.svg')
         .then(response => response.text())
         .then(svgText => {
           continueVideoButton.innerHTML = svgText;
@@ -553,8 +553,8 @@ window.addFloatingDiv = (MediaElement)=>{
 }
 
 window.handleFullScreenIcon = ()=>{
-  let FullScreenIcon = "../cache/icons/fullscreen.png";
-  let UnFullScreenIcon = "../cache/icons/unfullscreen.png";
+  let FullScreenIcon = "../assets/icons/fullscreen.png";
+  let UnFullScreenIcon = "../assets/icons/unfullscreen.png";
 
   let fullscreenButton = document.getElementById("img-fullscreen");
   console.log(fullscreenButton);

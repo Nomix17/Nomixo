@@ -1,6 +1,6 @@
 @font-face{
   font-family: Montserrat;
-  src: url("../cache/fonts/Montserrat-VariableFont_wght.ttf");
+  src: url("../assets/fonts/Montserrat-VariableFont_wght.ttf");
 }
 
 img,
@@ -94,6 +94,7 @@ body, html {
   font-size:35px;
   padding:0;
   margin-left:25px;
+  margin-top:11px;
 }
 
 #div-main {

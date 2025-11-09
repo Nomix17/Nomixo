@@ -1,30 +1,35 @@
 {
-  "name": "Nomixo",
+  "name": "nomixo",
   "version": "1.0.0",
-  "description": "Media streaming app for movies, TV shows, and animations",
+  "description": "Watch your favorite movies, shows in one smooth streaming experience.",
+  "type": "module",
   "author": {
     "name": "Nomix17",
-    "email": "https://github.com/Nomix17/Nomixo"
+    "url": "https://github.com/Nomix17/Nomixo"
   },
   "main": "main.js",
   "scripts": {
     "dev": "electron .",
-    "build": "electron-builder --linux"
+    "build": "electron-builder --linux rpm"
   },
   "dependencies": {
     "dotenv": "^17.2.0",
-    "electron": "^37.8.0",
-    "torrent-stream": "^1.2.1"
+    "express": "^5.1.0",
+    "torrent-stream": "^1.2.1",
+    "webtorrent": "^2.8.4"
   },
   "devDependencies": {
+    "electron": "^39.1.1",
     "electron-builder": "^26.0.12"
   },
   "build": {
     "appId": "com.nomixo.app",
+    "productName": "Nomixo",
     "linux": {
-      "target": "tar.gz",
-      "icon": "./cache/icons/logotype0.png",
-      "category": "Video"
+      "target": ["rpm"],
+      "category": "AudioVideo",
+      "icon": "build/icons",
+      "maintainer": "Nomix17"
     }
   }
 }
