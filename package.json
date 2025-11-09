@@ -25,6 +25,18 @@
   "build": {
     "appId": "com.nomixo.mpv",
     "productName": "NomixoMpv",
+    "files": [
+      "**/*",
+      "!dist/**/*",
+      "assets/**/*"
+    ],
+    "extraFiles": [
+      {
+        "from": "assets/mpvConfigs/",
+        "to": "assets/mpvConfigs",
+        "filter": ["**/*"]
+      }
+    ],
     "linux": {
       "target": ["rpm"],
       "category": "AudioVideo",
