@@ -52,6 +52,7 @@ function initializeDataFiles(){
       :root{
       --dont-Smooth-transition-between-pages:0;
       --display-scroll-bar:none;
+      --show-continue-watching-on-home:flex;
       --background-gradient-value:0.1;
       --primary-color:0,0,0;
       --secondary-color:64,64,64,0.5;
