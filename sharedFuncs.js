@@ -557,7 +557,6 @@ window.handleFullScreenIcon = ()=>{
   let UnFullScreenIcon = "../assets/icons/unfullscreen.png";
 
   let fullscreenButton = document.getElementById("img-fullscreen");
-  console.log(fullscreenButton);
   if (!window.screenTop && !window.screenY) 
     fullscreenButton?.setAttribute("src",UnFullScreenIcon);
   else
