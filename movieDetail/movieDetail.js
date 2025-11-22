@@ -112,7 +112,7 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
       insertContinueWatchingButton(EpisodeElement,libraryInfo);
     }
 
-   EpisodeElement.addEventListener("mouseenter",()=>{
+    EpisodeElement.addEventListener("mouseenter",()=>{
       EpisodeElement.style.backgroundColor = "rgba(255, 255, 255, 10%)";
     });
 
@@ -125,17 +125,19 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
       continueWatchingEpisode=false;
       handleEpisodeElementColoring(SeasonDiv,EpisodeElement)
 
-
       let seasonNumber = String(episode.season_number).padStart(2,"0");
       let episodeNumber = String(episode.episode_number).padStart(2,"0");
       let episodeName = episode.name;
 
       let episodeInfo = {seasonNumber:seasonNumber,episodeNumber:episodeNumber}
       try{
-        fetchTorrent(apiKey,movieId,MediaType,episodeInfo);
+        TorrentContainer.style.display = "flex";
+        TorrentContainer.style.borderRadius = "0px";
+
         TorrentMagnetContainer.style.display = "flex";
         TorrentMagnetContainer.style.borderRadius = "0px";
-        TorrentContainer.style.borderRadius = "0px";
+        TorrentMagnetContainer.style.width = "100px";
+
         toggleTorrentContainer.style.opacity = "1"
         toggleTorrentContainer.style.pointerEvents = "auto"
 
@@ -146,6 +148,8 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
               <div class="dot dot3"></div>
               <div class="dot dot4"></div>
           </div>`
+
+        fetchTorrent(apiKey,movieId,MediaType,episodeInfo);
       }catch(error){
         console.error(error)
       }
@@ -159,7 +163,6 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
 function handleEpisodeElementColoring(DivContainer,currentEpisodeElement){
   let EpisodeElements = DivContainer.querySelectorAll('div[class="div-episodes-Element"]');
 
-  console.log(EpisodeElements);
   EpisodeElements.forEach(element =>{
     if(element != currentEpisodeElement){
       element.style.borderColor = "rgba(0,0,0,0)";
@@ -554,7 +557,6 @@ function addSpaceToTopOfTorrentContainer(){
   let selectSeasonContainer = document.querySelector(".selectSeason-container");
   let dummyDiv = document.getElementById("dummyDiv");
   let selectSeasonContainerHeight = selectSeasonContainer.offsetHeight;
-  console.log(selectSeasonContainerHeight);
 
   if(selectSeasonContainerHeight > 0){
     dummyDiv.style.height = selectSeasonContainerHeight+"px";
