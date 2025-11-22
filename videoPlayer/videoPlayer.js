@@ -72,4 +72,4 @@ window.addEventListener("dblclick",()=>{
   fullscreenClicked();
 });
 
-
+loadIconsDynamically();

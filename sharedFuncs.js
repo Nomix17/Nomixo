@@ -263,7 +263,7 @@ window.DisplayWarningOrErrorForUser = (warningMessage) => {
 }
 
 window.loadIconsDynamically = ()=>{
-  handleFullScreenIcon();
+  document.addEventListener("DOMContentLoaded", handleFullScreenIcon);
   fetch('../assets/icons/storage.svg')
     .then(response => response.text())
     .then(svgText => {
