@@ -447,6 +447,18 @@ option{
   position:relative;
   margin-left:20px;
 }
+#bottomButtonsDiv{
+  display:flex;
+  justify-content:flex-start;
+  align-items:center;
+  flex-direction:row;
+  padding-top:10px;
+  position:absolute;
+  bottom:0px;
+  width:50%;
+  margin-bottom:2%;
+  gap:10px;
+}
 
 #bookmarkbtn{
   display:flex;
@@ -457,12 +469,7 @@ option{
   border:1px solid white;
   border-radius:26px;
   padding-top:10px;
-  position:absolute;
-  bottom:0px;
-  width:50%;
-  margin-bottom:2%;
 }
-
 
 .toggleButtonIcon{
   margin:0px 10px 5px 0px;

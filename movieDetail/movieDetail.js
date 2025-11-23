@@ -30,6 +30,8 @@ setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.erro
 
 EpisodesContainer.style.cursor = 'default';
 
+if(MediaType == "movie") TorrentContainer.style.display = "flex"
+
 let seasonsDivArray = [];
 
 async function fetchInformation(){
