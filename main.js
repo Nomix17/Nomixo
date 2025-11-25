@@ -25,6 +25,7 @@ if (!process.env.API_KEY) {
 const SettingsFilePath = path.join(__configs, 'settings.json');
 const ThemeFilePath = path.join(__configs, 'Theme.css');
 const libraryFilePath = path.join(__configs, "library.json");
+let defaultDownloadDir = path.join(__configs,"Downloads");
 const subDirectory="/tmp/tempSubs";
 
 function initializeDataFiles(){
@@ -52,7 +53,6 @@ function initializeDataFiles(){
       :root{
       --dont-Smooth-transition-between-pages:0;
       --display-scroll-bar:none;
-      --show-continue-watching-on-home:flex;
       --background-gradient-value:0.1;
       --primary-color:0,0,0;
       --secondary-color:64,64,64,0.5;
@@ -90,8 +90,13 @@ const createWindow = async () => {
   });
   win.setMenuBarVisibility(false);
   win.loadFile("./home/mainPage.html");
+  
+  let defaultSettings = loadSettings();
+  mainzoomFactor = defaultSettings.PageZoomFactor;
+  let settingDefaultDownloadingPath = defaultSettings?.defaultDownloadPath;
+  if(settingDefaultDownloadingPath !== undefined)
+    defaultDownloadDir = settingDefaultDownloadingPath;
 
-  mainzoomFactor = loadSettings().PageZoomFactor;
   win.webContents.on('did-finish-load', () => {
     win.webContents.setZoomFactor(mainzoomFactor);
     win.maximize();
@@ -240,6 +245,49 @@ ipcMain.handle('get-video-url', async (event,magnet) => {
   })
 });
 
+ipcMain.handle("download-torrent", (event, torrentInformation) => {
+  // DownloadTargetInfo = Title,MagnetLink,fileName,MediaId,MediaType
+
+  const engine = torrentStream(torrentInformation.MagnetLink);
+  engine.on("ready", () => {
+    engine.files.forEach((file) => {
+
+      let userDownloadPath = torrentInformation?.userDownloadPath;
+      if(userDownloadPath !== undefined)
+        defaultDownloadDir = userDownloadPath;
+
+      fs.mkdirSync(defaultDownloadDir, { recursive: true });
+      const filepath = path.join(defaultDownloadDir, torrentInformation.fileName);
+      
+      const stream = file.createReadStream();
+      stream.pipe(fs.createWriteStream(filepath));
+
+      const totalSize = engine.torrent.length;
+      let startTime = 0;
+      let intervale = 1000; // ms
+      engine.on("download",()=>{
+        let now = Date.now();
+        if(now - startTime >= intervale){
+          const downloaded = engine.swarm.downloaded;
+          let jsonMessage = `{
+            "IMDB_ID": "${torrentInformation.IMDB_ID}",
+            "MediaId": "${torrentInformation.MediaId}",
+            "MediaType": "${torrentInformation.MediaType}",
+            "seasonNumber": ${torrentInformation.seasonNumber},
+            "episodeNumber": ${torrentInformation.episodeNumber},
+            "Downloaded": ${downloaded},
+            "Total": ${totalSize},
+            "DownloadPath": "${filepath}"
+          }`;
+
+          win.webContents.send("download-progress-stream", jsonMessage);
+          console.log("Downloading "+torrentInformation.fileName+": "+(downloaded/totalSize)*100+"%");
+          startTime = now;
+        }
+      });
+    });
+  });
+});
 
 ipcMain.on("save-video",() => {
   closewindow = false;
@@ -336,3 +384,4 @@ function loadTheme(){
     return loadTheme();
   }
 }
+

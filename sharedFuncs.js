@@ -123,7 +123,7 @@ window.setAddToLibraryButtonToNormal = (toggleInLibrary) => {
 
 window.setAddToLibraryButtonToPressed = (toggleInLibrary) => {
   toggleInLibrary.innerHTML = `            
-   <svg class="toggleButtonIcon" style="margin-left:3px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+   <svg class="toggleButtonIcon" style="margin-left:7px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
     <path d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z"/>
   </svg> `;
   toggleInLibrary.setAttribute("pressed"," ");
@@ -199,7 +199,13 @@ window.setupKeyPressesForInputElement = (searchInput)=>{
 
 window.setupKeyPressesHandler = () =>{
   window.addEventListener("keydown",(event)=>{
-    if(event.key == "Escape") window.electronAPI.goBack();
+    if(event.key == "Escape"){
+      let contextMenu = document.querySelector("#contextMenu");
+      if(contextMenu && contextMenu.style.display != "none")
+        contextMenu.style.display = "none";
+      else
+        window.electronAPI.goBack();
+    }
     if (event.key == "Tab" ||
         event.key == "Super" ||
         event.key == "Alt" ) event.preventDefault();
@@ -306,6 +312,11 @@ function openDiscoveryPage(genreId, MediaType){
 
 function OpenLibaryPage(typeOfSave = "Watch Later"){
   path = `./libraryPage/libraryPage.html?typeOfSave=${typeOfSave}`;
+  window.electronAPI.navigateTo(path);
+}
+
+function OpenDownloadPage(){
+  path = `./downloadPage/downloadPage.html`;
   window.electronAPI.navigateTo(path);
 }
 

@@ -25,6 +25,8 @@ let divDirectoryElement = document.getElementById("div-directorInfos");
 
 let addToLibraryButton = document.getElementById("bookmarkbtn");
 
+let contextMenu = document.querySelector("#contextMenu");
+
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.error(err)}},100);
 
@@ -353,11 +355,18 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
             </div>
           </div>
         `;
-        
+
         TorrentElement.addEventListener("click",()=>{
           openMediaVideo(MediaId,MediaType,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
         });
         
+        TorrentElement.addEventListener("mousedown",(event)=>{
+          if (event.button === 2) {
+            let DownloadTargetInfo = {IMDB_ID:IMDB_ID,Title:Title,Quality:Quality,MagnetLink:MagnetLink,fileName:fileName,MediaId:MediaId,MediaType:MediaType};
+            handleRightClicksForTorrentElement(DownloadTargetInfo);
+          }
+        });
+
         if(MediaLibraryInfo?.typeOfSave?.includes("Currently Watching") &&
           String(MagnetLink) == String(MediaLibraryInfo["Magnet"]) &&
           String(episodeInfo.seasonNumber) == String(MediaLibraryInfo["seasonNumber"]) &&
@@ -372,7 +381,7 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
     if(TorrentMagnetContainer.style.display != "none"){
       TorrentContainer.style.display = "block";
       TorrentMagnetContainer.style.display = "block";
-  }
+    }
     loadIconsDynamically();
 }
 
@@ -489,6 +498,9 @@ async function handleLibraryButton(){
   if(MediaLibraryInfo?.[0]["typeOfSave"]?.includes("Watch Later")){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";
+  }else{
+    setAddToLibraryButtonToNormal(addToLibraryButton);
+    addToLibraryButton.innerHTML+="Save To Library";
   }
 }
 
@@ -571,8 +583,42 @@ function addSpaceToTopOfTorrentContainer(){
   }
 }
 
+function handleRightClicksForTorrentElement(DownloadTargetInfo){
+  let DownloadOption = contextMenu.querySelector("#DownloadOption");
+
+  DownloadOption.addEventListener("mousedown",()=>DownloadTorrent(event,DownloadTargetInfo),{once:true});
+
+  contextMenu.style.top = event.pageY + "px";
+  contextMenu.style.left = event.pageX + "px";
+  contextMenu.style.display = "flex";
+
+  event.stopImmediatePropagation();
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+document.addEventListener("mousedown", event => {
+  contextMenu.style.display = "none";
+});
+
+function DownloadTorrent(event,DownloadTargetInfo){
+  // DownloadTargetInfo = Title,Quality,MagnetLink,fileName,MediaId,MediaType
+
+  window.electronAPI.downloadTorrent(DownloadTargetInfo);
+  window.electronAPI.getDownloadProgress((data) => {
+    console.log(data);
+  });
+  contextMenu.style.display = "none";
+  event.stopImmediatePropagation();
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+
 setupKeyPressesHandler();
 handleLibraryButton()
 fetchInformation();
 handleDivsResize();
 handleFullScreenIcon();
+
+

@@ -1,0 +1,3 @@
+setLeftButtonStyle("btn-download");
+loadIconsDynamically();
+

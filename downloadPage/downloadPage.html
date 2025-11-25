@@ -1,43 +1,26 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Discovery</title>
-    <link id="test" rel="stylesheet" href="theme://theme.css">
+    <title>Nomixo</title>
     <link rel="icon" href="../assets/icons/logo.png" type="image/x-icon">
-    <script src="discoveryPage.js" defer></script>
-    <script src="../sharedFuncs.js"></script>
-    <link rel="stylesheet" href="discoveryPage.css">
+    <script src="../sharedFuncs.js" defer></script>
+    <script src="downloadPage.js" defer></script>
     <link rel="stylesheet" href="../home/mainPage.css">
-    <link rel="stylesheet" href="../home/WarningMessage.css">
-    <link rel="stylesheet" href="../home/loadingDiv.css">
+    <link id="test" rel="stylesheet" href="theme://theme.css">
+    <link rel="stylesheet" href="downloadPage.css">
 
   </head>
   
   <body>
     <div id="div-main">
-      <div id="messageDiv"><p></p></div>
-      <div id="div-globlaLoadingGif" class="loader">
-        <div class="dot dot1"></div>
-        <div class="dot dot2"></div>
-        <div class="dot dot3"></div>
-        <div class="dot dot4"></div>
-      </div>
-
       <div id="div-top">
         <div id="div-main-logo"></div>
-        <div id="div-input-container">
-          <input placeholder="Search movies, shows & people" id="input-searchForMovie"></input >
-          <button id="btn-input-button" onclick="openSearchPage()">
-            <svg class="icon" id="searchIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-             <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
-            </svg>
-          </button>
-        </div>
         <button id="btn-fullscreen" onclick="fullscreenClicked()"><img id="img-fullscreen"</img></button>
       </div>
-      
+
       <!-- middle div --> 
       <div id="div-middle">
+
         <!-- left div -->
         <div id="div-middle-left">
           <button class="btn-middle-left" id="btn-home" onclick="backToHome()" aria-label="Home">
@@ -47,7 +30,7 @@
             </svg>
           </button>
 
-          <button class="btn-middle-left" id="btn-discover" aria-label="Discover">
+          <button class="btn-middle-left" id="btn-discover" onclick="openDiscoveryPage('All','All')" aria-label="Discover">
             <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
               <path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM370.7 389.1L226.4 444.6C207 452.1 187.9 433 195.4 413.6L250.9 269.3C254.2 260.8 260.8 254.2 269.3 250.9L413.6 195.4C433 187.9 452.1 207 444.6 226.4L389.1 370.7C385.9 379.2 379.2 385.8 370.7 389.1zM352 320C352 302.3 337.7 288 320 288C302.3 288 288 302.3 288 320C288 337.7 302.3 352 320 352C337.7 352 352 337.7 352 320z"/>
             </svg>
@@ -71,26 +54,36 @@
             </svg>
           </button>
         </div>
-    
+
         <!-- right div -->
         <div id="div-middle-right">
-          <div id="div-OptionsContainer">
-            <select name="Type" id="select-type">
-              <option value="movie">Movie</option>
-              <option value="tv">Tv Show</option>
-            </select>
-            <select name="Genres" id="select-Genres">
-              <option value="All">All</option>
-            </select>
-          </div>
+          <h1>Downloads</h1> 
+          <div class="downloaded-movie-div-container">
 
-          <div class="div-categories-description">
-            <h1>All</h1>
+            <div class="downloaded-movie-div">
+              <img class="poster-img"/>
+              <div class="download-movie-right-div">
+                <p class="movie-title-p">Movie Title 1</p>
+                <div class="progress-div">
+                  <div class="progress-bar-div"></div>
+                  <p class="percentage">10%</p>
+                </div>
+                <div class="movie-size-div">
+                  <p class="downloaded-size">0.4 GB</p>
+                  <p class="total-size">1.30 GB</p>
+                </div>
+                <div class="download-buttons-div">
+                  <button class="toggle-pause-button">⏸</button>
+                  <button class="cancel-button">✖</button>
+                </div>
+              </div>
+            </div>
+
+
           </div>
-         <div id="div-MediaSuggestions"> </div>
-         </div>
+        </div>
       </div>
     </div>
   </body>
-
 </html>
+
