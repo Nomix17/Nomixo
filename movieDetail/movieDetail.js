@@ -2,7 +2,7 @@ const data = new URLSearchParams(window.location.search);
 let movieId = data.get("MovieId");
 let MediaType = data.get("MediaType");
 
-var backgroundImage;
+let backgroundImage;
 let IMDB_ID;
 
 let TorrentContainer = document.getElementById("div-TorrentContainer");
@@ -26,13 +26,14 @@ let divDirectoryElement = document.getElementById("div-directorInfos");
 let addToLibraryButton = document.getElementById("bookmarkbtn");
 
 let contextMenu = document.querySelector("#contextMenu");
+let DownloadOverlay = document.getElementById('downloadOverlay');
 
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.error(err)}},100);
 
 EpisodesContainer.style.cursor = 'default';
 
-if(MediaType == "movie") TorrentContainer.style.display = "flex"
+if(MediaType == "movie") TorrentContainer.style.display = "flex";
 
 let seasonsDivArray = [];
 
@@ -332,12 +333,12 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
     addSpaceToTopOfTorrentContainer();
     let TorrentResutls = data.streams;
     TorrentResutls.forEach(element => {
-      let FullTitle = element.title;
-      let Title = FullTitle.split("👤")[0].split("\n")[0];
-      let Quality = element.name.split("Torrentio")[1];
+      let FullTitle = element.title.replace(/\n+/g, "");
+      let Title = FullTitle.split("👤")[0].split("\n")[0].replace(/\n+/g, "");
+      let Quality = element.name.split("Torrentio")[1].replace(/\n+/g, "");
       let Hash = element.infoHash;
-      let SeedersNumber = FullTitle.split("👤")[1].split("💾")[0];
-      let Size = FullTitle.split("💾")[1].split("⚙️")[0];
+      let SeedersNumber = FullTitle.split("👤")[1].split("💾")[0].replace(/\n+/g, "");
+      let Size = FullTitle.split("💾")[1].split("⚙️")[0].replace(/\n+/g, "");
       let fileName = element?.behaviorHints?.filename || "";
       let MagnetLink = `magnet:?xt=urn:btih:${Hash}`
 
@@ -362,7 +363,15 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
         
         TorrentElement.addEventListener("mousedown",(event)=>{
           if (event.button === 2) {
-            let DownloadTargetInfo = {IMDB_ID:IMDB_ID,Title:Title,Quality:Quality,MagnetLink:MagnetLink,fileName:fileName,MediaId:MediaId,MediaType:MediaType};
+            let mediaTitle = document.getElementById("h1-MovieTitle").innerText;
+            let mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
+            let DownloadTargetInfo = {
+              IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
+              Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
+              dirName:Title, MediaId:MediaId, MediaType:MediaType,
+              seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
+            };
+            setupDownloadDivEvents(DownloadTargetInfo);
             handleRightClicksForTorrentElement(DownloadTargetInfo);
           }
         });
@@ -586,11 +595,12 @@ function addSpaceToTopOfTorrentContainer(){
 function handleRightClicksForTorrentElement(DownloadTargetInfo){
   let DownloadOption = contextMenu.querySelector("#DownloadOption");
 
-  DownloadOption.addEventListener("mousedown",()=>DownloadTorrent(event,DownloadTargetInfo),{once:true});
+  DownloadOption.addEventListener("mousedown",()=>showDownloadInfoInputDiv(DownloadTargetInfo),{once:true});
 
   contextMenu.style.top = event.pageY + "px";
   contextMenu.style.left = event.pageX + "px";
   contextMenu.style.display = "flex";
+  dontGoBack = true;
 
   event.stopImmediatePropagation();
   event.preventDefault();
@@ -599,20 +609,63 @@ function handleRightClicksForTorrentElement(DownloadTargetInfo){
 
 document.addEventListener("mousedown", event => {
   contextMenu.style.display = "none";
+  dontGoBack = false;
 });
 
-function DownloadTorrent(event,DownloadTargetInfo){
-  // DownloadTargetInfo = Title,Quality,MagnetLink,fileName,MediaId,MediaType
+async function showDownloadInfoInputDiv(DownloadTargetInfo){
+  const apiKey = await window.electronAPI.getAPIKEY();
 
-  window.electronAPI.downloadTorrent(DownloadTargetInfo);
-  window.electronAPI.getDownloadProgress((data) => {
-    console.log(data);
-  });
-  contextMenu.style.display = "none";
-  event.stopImmediatePropagation();
-  event.preventDefault();
-  event.stopPropagation();
+
+  let MediaPosterElement = DownloadOverlay.querySelector("#mediaPosterImg");
+  let MediaTitleElement = DownloadOverlay.querySelector("#mediaTitle");
+  let MediaYearTextElement = DownloadOverlay.querySelector("#mediaYear");
+  let MediaSizeAResolutionTextElement = DownloadOverlay.querySelector("#mediaSize");
+
+  MediaTitleElement.innerText = DownloadTargetInfo.Title;
+  MediaYearTextElement.innerText = DownloadTargetInfo.Year;
+  MediaSizeAResolutionTextElement.innerText = DownloadTargetInfo.Size +" • "+DownloadTargetInfo.Quality;
+
+  DownloadOverlay.classList.add('active');
+  dontGoBack = true;
+  let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
+  MediaPosterElement.src = `https://image.tmdb.org/t/p/w185${posterPath}`;
 }
+
+function setupDownloadDivEvents(DownloadTargetInfo){
+  // IMDB_ID,Title,Size,Quality,MagnetLink,fileName,MediaId,MediaType,seasonNumber,episodeNumber
+
+  let cancelButton = DownloadOverlay.querySelector("#cancelBtn");
+  let closeBtn = DownloadOverlay.querySelector("#closeBtn");
+  let downloadButton = DownloadOverlay.querySelector("#downloadBtn");
+  let browseButton = DownloadOverlay.querySelector("#browseBtn");
+
+  // handle closing and canceling buttons event listener
+  [cancelButton,closeBtn].forEach((btn)=>{btn.addEventListener("click",()=>{
+    DownloadOverlay.classList.remove('active');
+  })});
+
+  // handle the download button event listener
+  downloadButton.addEventListener("click",()=>{
+    DownloadTorrent(DownloadTargetInfo);
+    DownloadOverlay.classList.remove('active');
+  });
+}
+
+async function DownloadTorrent(DownloadTargetInfo){
+  const apiKey = await window.electronAPI.getAPIKEY();
+  let userDownloadPath = document.getElementById("downloadPath")?.value;
+  let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
+  DownloadTargetInfo["posterUrl"] = `https://image.tmdb.org/t/p/w500${posterPath}`;
+  DownloadTargetInfo["userDownloadPath"] = userDownloadPath;
+  window.electronAPI.downloadTorrent([DownloadTargetInfo]);
+}
+
+window.addEventListener("keydown",(event)=>{
+  if(event.key == "Escape"){
+    contextMenu.style.display = "none";
+    DownloadOverlay.classList.remove('active');
+  }
+});
 
 
 setupKeyPressesHandler();

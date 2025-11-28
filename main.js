@@ -1,5 +1,5 @@
 import {BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain, protocol} from "electron";
-import torrentStream from 'torrent-stream';
+import WebTorrent from 'webtorrent';
 import dotenv from "dotenv";
 import http from 'http';
 import path from "path";
@@ -166,6 +166,7 @@ ipcMain.on("apply-theme",(event, ThemeObj) =>{
 ipcMain.handle("go-back",(event)=>{
   const webContents = event.sender;
   if(webContents.navigationHistory.canGoBack()){
+    StreamClient.destroy();
     webContents.navigationHistory.goBack();
   }
 });
@@ -191,123 +192,113 @@ ipcMain.handle("get-api-key",()=>{
   return process.env.API_KEY;
 });
 
-ipcMain.handle('get-video-url', async (event,magnet) => {
-  return new Promise((resolve, reject) => {
-    const engine = torrentStream(magnet)
 
-    engine.on('ready', () => {
-      const file = engine.files.find(f =>
+let StreamClient;
+
+ipcMain.handle('get-video-url', async (event, magnet) => {
+  return new Promise((resolve, reject) => {
+    const client = new WebTorrent();
+    const torrent = client.add(magnet);
+    StreamClient = torrent;
+    torrent.on('ready', () => {
+      const file = torrent.files.find(f =>
         (f.name.endsWith('.mp4') ||
          f.name.endsWith('.webm') ||
-         f.name.endsWith('.mkv')) && f.length/(10**9) > 0.5 
-      )
-      if (!file) {
-        reject('No video file found in torrent')
-        return null;
-      }
-      let mimeType = file.name.endsWith('.mkv') ? "video/x-matroska" :
-           file.name.endsWith('.mp4') ? "video/mp4" :
-           file.name.endsWith('.webm') ? "video/webm" :
-           "application/octet-stream";
+         f.name.endsWith('.mkv')) && f.length / (10 ** 9) > 0.5
+      );
 
-      server = http.createServer((req, res) => {
-        const range = req.headers.range
+      if (!file) {
+        reject('No video file found in torrent');
+        return;
+      }
+
+      const mimeType = file.name.endsWith('.mkv') ? "video/x-matroska" :
+                       file.name.endsWith('.mp4') ? "video/mp4" :
+                       file.name.endsWith('.webm') ? "video/webm" :
+                       "application/octet-stream";
+
+      const server = http.createServer((req, res) => {
+        const range = req.headers.range;
         if (!range) {
-          res.statusCode = 416
-          return res.end()
+          res.statusCode = 416;
+          return res.end();
         }
 
-        const positions = range.replace(/bytes=/, '').split('-')
-        const start = parseInt(positions[0], 10)
-        const fileSize = file.length
-        const end = positions[1] ? parseInt(positions[1], 10) : fileSize - 1
-        const chunkSize = (end - start) + 1
-
+        const positions = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(positions[0], 10);
+        const fileSize = file.length;
+        const end = positions[1] ? parseInt(positions[1], 10) : fileSize - 1;
+        const chunkSize = (end - start) + 1;
 
         res.writeHead(206, {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunkSize,
           'Content-Type': mimeType,
-        })
+        });
 
-        const stream = file.createReadStream({ start, end })
-        stream.pipe(res)
-      })
+        const stream = file.createReadStream({ start, end });
+        stream.pipe(res);
+      });
 
       server.listen(0, () => {
-        const port = server.address().port
-        resolve([`http://localhost:${port}`,mimeType])
-      })
-    })
+        const port = server.address().port;
+        resolve([`http://localhst:${port}`, mimeType]);
+      });
+    });
 
-    engine.on('error', reject)
-  })
+    torrent.on('error', reject);
+  });
 });
 
+const DownloadClient = new WebTorrent();
 ipcMain.handle("download-torrent", (event, torrentInformation) => {
-  // DownloadTargetInfo = Title,MagnetLink,fileName,MediaId,MediaType
+  const torrent = DownloadClient.add(torrentInformation.MagnetLink);
 
-  const engine = torrentStream(torrentInformation.MagnetLink);
-  engine.on("ready", () => {
-    engine.files.forEach((file) => {
+  torrent.on("ready", () => {
+    let userDownloadPath = torrentInformation?.userDownloadPath;
+    const defaultDownloadDir = userDownloadPath ?? "./downloads";
+    fs.mkdirSync(defaultDownloadDir, { recursive: true });
 
-      let userDownloadPath = torrentInformation?.userDownloadPath;
-      if(userDownloadPath !== undefined)
-        defaultDownloadDir = userDownloadPath;
-
-      fs.mkdirSync(defaultDownloadDir, { recursive: true });
-      const filepath = path.join(defaultDownloadDir, torrentInformation.fileName);
-      
+    torrent.files.forEach((file) => {
+      const filepath = path.join(defaultDownloadDir, torrentInformation.fileName ?? file.name);
       const stream = file.createReadStream();
       stream.pipe(fs.createWriteStream(filepath));
 
-      const totalSize = engine.torrent.length;
+      const totalSize = torrent.length;
       let startTime = 0;
-      let intervale = 1000; // ms
-      engine.on("download",()=>{
-        let now = Date.now();
-        if(now - startTime >= intervale){
-          const downloaded = engine.swarm.downloaded;
-          let jsonMessage = `{
-            "IMDB_ID": "${torrentInformation.IMDB_ID}",
-            "MediaId": "${torrentInformation.MediaId}",
-            "MediaType": "${torrentInformation.MediaType}",
-            "seasonNumber": ${torrentInformation.seasonNumber},
-            "episodeNumber": ${torrentInformation.episodeNumber},
-            "Downloaded": ${downloaded},
-            "Total": ${totalSize},
-            "DownloadPath": "${filepath}"
-          }`;
+      const intervale = 1000;
+
+      torrent.on("download", () => {
+        const now = Date.now();
+        if (now - startTime >= intervale) {
+          const downloaded = torrent.downloaded;
+
+          const jsonMessage = {
+            Title: torrentInformation.Title,
+            IMDB_ID: torrentInformation.IMDB_ID,
+            MediaId: torrentInformation.MediaId,
+            MediaType: torrentInformation.MediaType,
+            seasonNumber: torrentInformation.seasonNumber ?? "undefined",
+            episodeNumber: torrentInformation.episodeNumber ?? "undefined",
+            Downloaded: downloaded ?? 0,
+            Total: totalSize ?? 0,
+            DownloadPath: filepath ?? ""
+          };
 
           win.webContents.send("download-progress-stream", jsonMessage);
-          console.log("Downloading "+torrentInformation.fileName+": "+(downloaded/totalSize)*100+"%");
+          console.log(`Downloading ${torrentInformation.fileName}: ${(downloaded / totalSize) * 100}%`);
           startTime = now;
         }
       });
     });
   });
-});
 
-ipcMain.on("save-video",() => {
-  closewindow = false;
-  const tmpDir = os.tmpdir()+"/torrent-stream";
-  const tmpDirContent = fs.readdir(tmpDir);
-  tmpDirContent.forEach(element => {
-    let sourcePath = tmpDir+"/"+element;
-    let distinationPath =  __dirname+"/Downloads/"+element;
-
-    fs.stat(sourcePath, (err,stats) =>{
-      if(stats.isDirectory() || stats.size/(10**9) > 0.5){
-        fs.rename(sourcePath,distinationPath,(err) => {
-          if(err) throw err;
-          closeWindow = true;
-          console.log("Media Was Moved");
-        });
-      }
-    });
+  torrent.on("error", (err) => {
+    console.error("Torrent error:", err);
   });
 });
+
 
 ipcMain.on("add-to-lib", async (event,mediaInfo)=>{
   let LibraryInfo = getLibraryInfo() 

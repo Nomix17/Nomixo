@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeMediaFromLibrary: (mediaEntryPoint) => ipcRenderer.send("remove-from-lib",mediaEntryPoint),
   loadMediaLibraryInfo: (targetIdentification) => ipcRenderer.invoke("load-from-lib",targetIdentification),
   downloadTorrent: (torrentInformation) => ipcRenderer.invoke("download-torrent",torrentInformation),
-  getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data))
+  getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
+  cancelDownload: (mediaInfo) => ipcRenderer.invoke("cancel-torrent-download", mediaInfo),
+  toggleTorrentDownload: (torrentId) => ipcRenderer.invoke("toggle-torrent-download", torrentId)
 });
 

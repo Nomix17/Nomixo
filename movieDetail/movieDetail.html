@@ -97,6 +97,50 @@
     <ul id="contextMenu" class="context-menu">
       <li id="DownloadOption">Download</li>
     </ul>
+
+
+    <div class="overlay" id="downloadOverlay">
+      <div class="download-container">
+        <button class="close-btn" id="closeBtn" aria-label="Close">×</button>
+        
+        <div class="media-info">
+          <div class="media-poster" id="mediaPoster">
+            <img alt="Movie Poster" id="mediaPosterImg">
+          </div>
+          <div class="media-details">
+            <h2 id="mediaTitle"></h2>
+            <p class="media-year" id="mediaYear"></p>
+            <p class="media-size" id="mediaSize"></p>
+          </div>
+        </div>
+
+        <div class="message" id="message"></div>
+        
+        <label for="downloadPath">Download location:</label>
+        <div class="path-input-group">
+          <input type="text" id="downloadPath" value="/home/pcuser/Downloads/Videos/">
+          <button id="browseBtn">Browse</button>
+        </div>
+        
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rememberPath">
+            Remember this location
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="addSubtitles" checked>
+            Download subtitles
+          </label>
+        </div>
+        
+        <div class="button-group">
+          <button id="cancelBtn" class="secondary-btn">Cancel</button>
+          <button id="downloadBtn" class="primary-btn">Download</button>
+        </div>
+      </div>
+    </div>
+
+
   </body>
 
 </html>

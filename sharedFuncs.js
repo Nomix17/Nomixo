@@ -197,12 +197,12 @@ window.setupKeyPressesForInputElement = (searchInput)=>{
   });
 }
 
+let dontGoBack = false;
 window.setupKeyPressesHandler = () =>{
   window.addEventListener("keydown",(event)=>{
     if(event.key == "Escape"){
-      let contextMenu = document.querySelector("#contextMenu");
-      if(contextMenu && contextMenu.style.display != "none")
-        contextMenu.style.display = "none";
+      if(dontGoBack)
+        dontGoBack = false;
       else
         window.electronAPI.goBack();
     }
@@ -522,9 +522,27 @@ function removeMediaFromLibrary(mediaId,mediaType,parentDiv){
 
 
 window.xRemoveIcon = `            
-      <svg class="closeButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" preserveAspectRatio="none">
-        <path d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"/>
-      </svg>`
+  <svg class="closeButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" preserveAspectRatio="none">
+    <path d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"/>
+  </svg>`;
+
+window.playIcon = `
+  <svg class="playIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+    <path d="M91.2 36.9c-12.4-6.8-27.4-6.5-39.6 .7S32 57.9 32 72l0 368c0 14.1 7.5 27.2 19.6 34.4s27.2 7.5 39.6 .7l336-184c12.8-7 20.8-20.5 20.8-35.1s-8-28.1-20.8-35.1l-336-184z"/>
+  </svg>
+`;
+
+window.pauseIcon = `
+  <svg class="pauseIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+    <path d="M48 32C21.5 32 0 53.5 0 80L0 432c0 26.5 21.5 48 48 48l64 0c26.5 0 48-21.5 48-48l0-352c0-26.5-21.5-48-48-48L48 32zm224 0c-26.5 0-48 21.5-48 48l0 352c0 26.5 21.5 48 48 48l64 0c26.5 0 48-21.5 48-48l0-352c0-26.5-21.5-48-48-48l-64 0z"/>
+  </svg>
+`;
+
+window.trashIcon = `
+  <svg class="trashIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+    <path d="M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1zM32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z"/>
+  </svg>
+`;
 
 window.addFloatingDiv = (MediaElement)=>{
   const paragraph = MediaElement?.querySelector('p');
@@ -563,6 +581,19 @@ window.addFloatingDiv = (MediaElement)=>{
   }
 }
 
+
+async function getPosterPath(imdbId, apiKey) {
+  const response = await fetch(`https://api.themoviedb.org/3/find/${imdbId}?api_key=${apiKey}&external_source=imdb_id`);
+  const jsonResponse = await response.json();
+  const poster =
+    jsonResponse.movie_results[0]?.poster_path ||
+    jsonResponse.tv_results[0]?.poster_path ||
+    jsonResponse.tv_episode_results[0]?.still_path ||
+    null;
+
+  return poster ?? null;
+}
+
 window.handleFullScreenIcon = ()=>{
   let FullScreenIcon = "../assets/icons/fullscreen.png";
   let UnFullScreenIcon = "../assets/icons/unfullscreen.png";
@@ -574,3 +605,18 @@ window.handleFullScreenIcon = ()=>{
     fullscreenButton?.setAttribute("src",FullScreenIcon);
   
 }
+
+
+function putTextIntoDiv(Div,textContent){
+  let textDiv = document.createElement("div");
+  let text = document.createElement("span");
+
+  textDiv.id = "div-text";
+  text.id = "span-text";
+  text.innerText = textContent;
+
+  textDiv.append(text); 
+  Div.append(textDiv);
+}
+
+

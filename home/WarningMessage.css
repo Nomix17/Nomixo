@@ -9,6 +9,10 @@
   flex-direction:column;
   text-align:center;
   height:80%;
+  top:50vh;
+  left:50%;
+  transform: translate(-50%, -50%);
+  position:absolute;
 }
 
 .span-WarningMessage{

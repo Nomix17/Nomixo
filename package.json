@@ -26,7 +26,9 @@
     "appId": "com.nomixo.app",
     "productName": "Nomixo",
     "linux": {
-      "target": ["rpm"],
+      "target": [
+        "rpm"
+      ],
       "category": "AudioVideo",
       "icon": "build/icons",
       "maintainer": "Nomix17"
