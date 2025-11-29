@@ -1,8 +1,9 @@
 async function loadDownloadMediaFromLib(){
-  let library = await window.electronAPI.loadMediaLibraryInfo();
+  let library = await window.electronAPI.loadDownloadLibraryInfo();
   let counter=0;
+  console.log(library);
   if(library !== undefined){
-    for(let mediaLibEntryPoint of library){
+    for(let mediaLibEntryPoint of library.downloads){
       if(mediaLibEntryPoint?.typeOfSave?.includes("Download")){
         createDownloadElement(mediaLibEntryPoint);
         counter++;
@@ -27,7 +28,7 @@ function createDownloadElement(mediaLibEntryPoint){
   MediaDownloadElement.id = ElementIdentifier;
 
   MediaDownloadElement.innerHTML = `
-    <img src=${mediaLibEntryPoint?.poster} class="poster-img"/>
+    <img src=${mediaLibEntryPoint?.posterPath} class="poster-img"/>
     <div class="download-movie-right-div">
       <p class="movie-title-p">${mediaLibEntryPoint?.Title}</p>
       <div class="progress-div">

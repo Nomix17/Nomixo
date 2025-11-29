@@ -1,13 +1,11 @@
-import {BrowserWindow , BaseWindow, BrowserView , app, nativeTheme, ipcMain, protocol} from "electron";
+import {BrowserWindow, app, nativeTheme, ipcMain, protocol} from "electron";
 import WebTorrent from 'webtorrent';
+import crypto from "crypto";
 import dotenv from "dotenv";
 import http from 'http';
 import path from "path";
 import fs from 'fs';
-import https from "https";
-import os from "os";
 import { fileURLToPath} from "url";
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,8 +23,14 @@ if (!process.env.API_KEY) {
 const SettingsFilePath = path.join(__configs, 'settings.json');
 const ThemeFilePath = path.join(__configs, 'Theme.css');
 const libraryFilePath = path.join(__configs, "library.json");
+const downloadLibraryFilePath = path.join(__configs, "downloads.json");
+const postersDirPath = path.join(__configs,"posters");
 let defaultDownloadDir = path.join(__configs,"Downloads");
 const subDirectory="/tmp/tempSubs";
+
+// ======================= TORRENT TRACKING =======================
+const DownloadingTorrents = {};
+const DownloadClient = new WebTorrent();
 
 function initializeDataFiles(){
   if(!fs.existsSync(__configs)){
@@ -68,6 +72,10 @@ function initializeDataFiles(){
     `;
     fs.writeFileSync(ThemeFilePath,defaultFileData);
   }
+
+  if(!fs.existsSync(defaultDownloadDir)){
+    fs.mkdirSync(defaultDownloadDir, { recursive: true });
+  }
 }
 
 initializeDataFiles();
@@ -102,7 +110,6 @@ const createWindow = async () => {
     win.maximize();
     win.show();
   });
-
 }
 
 var closeWindow = true;
@@ -120,6 +127,8 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
+
+// ======================= SETTINGS & THEME =======================
 
 ipcMain.handle("load-settings",() => {
   return new Promise((resolve, reject) => {
@@ -148,7 +157,9 @@ ipcMain.handle("apply-settings",(event, SettingsObj) => {
   SettingsObj.PageZoomFactor = Math.max(0.1,SettingsObj.PageZoomFactor);
   mainzoomFactor = SettingsObj.PageZoomFactor;
   webContents.setZoomFactor(SettingsObj.PageZoomFactor);
-  fs.writeFile(SettingsFilePath, JSON.stringify(SettingsObj, null, 2), (err) => {console.error(err)});
+  fs.writeFile(SettingsFilePath, JSON.stringify(SettingsObj, null, 2), (err) => {
+    if(err) console.error(err)
+  });
 });
 
 ipcMain.on("apply-theme",(event, ThemeObj) =>{
@@ -159,14 +170,52 @@ ipcMain.on("apply-theme",(event, ThemeObj) =>{
   ;}`;
 
   fs.writeFile(ThemeFilePath,themeFileContent, (err)=>{
-    console.error(err)
+    if(err) console.error(err)
   });
 });
+
+function loadSettings() {
+  try {
+    const data = fs.readFileSync(SettingsFilePath, 'utf-8');
+    if(data.trim() == "" || !("TurnOnSubsByDefault" in JSON.parse(data))) throw new Error("empty Sub File");
+    return JSON.parse(data);
+  } catch (err) {
+    return {
+      PageZoomFactor: 1,
+      TurnOnSubsByDefault: true,
+      SubFontSize: 16,
+      SubFontFamily: "Montserrat",
+      SubColor: "#ffffff",
+      SubBackgroundColor: "#000000",
+      SubBackgroundOpacityLevel: 0
+    };
+  }
+}
+
+function loadTheme(){
+  try{
+    let ThemeObj = {theme:[]};
+    let savedTheme = fs.readFileSync(ThemeFilePath, "utf-8");
+    savedTheme = savedTheme.replaceAll(":root{","").replaceAll("}","").replaceAll("--","").replaceAll(";","").replaceAll(" ","");
+    let linesArray = savedTheme.split("\n").filter(line => line != "");
+    ThemeObj.theme = linesArray.map(obj => {
+      const [key, value] = obj.split(":");
+      return {[key]:value};
+    });
+    return ThemeObj;
+  }catch(err){
+    console.error("Failed to Load Theme File");
+    initializeDataFiles();
+    return loadTheme();
+  }
+}
+
+// ======================= NAVIGATION =======================
 
 ipcMain.handle("go-back",(event)=>{
   const webContents = event.sender;
   if(webContents.navigationHistory.canGoBack()){
-    StreamClient.destroy();
+    if(StreamClient) StreamClient.destroy();
     webContents.navigationHistory.goBack();
   }
 });
@@ -192,6 +241,7 @@ ipcMain.handle("get-api-key",()=>{
   return process.env.API_KEY;
 });
 
+// ======================= VIDEO STREAMING =======================
 
 let StreamClient;
 
@@ -243,7 +293,7 @@ ipcMain.handle('get-video-url', async (event, magnet) => {
 
       server.listen(0, () => {
         const port = server.address().port;
-        resolve([`http://localhst:${port}`, mimeType]);
+        resolve([`http://localhost:${port}`, mimeType]);
       });
     });
 
@@ -251,57 +301,212 @@ ipcMain.handle('get-video-url', async (event, magnet) => {
   });
 });
 
-const DownloadClient = new WebTorrent();
-ipcMain.handle("download-torrent", (event, torrentInformation) => {
-  const torrent = DownloadClient.add(torrentInformation.MagnetLink);
+// ======================= TORRENT DOWNLOADING =======================
 
-  torrent.on("ready", () => {
-    let userDownloadPath = torrentInformation?.userDownloadPath;
-    const defaultDownloadDir = userDownloadPath ?? "./downloads";
-    fs.mkdirSync(defaultDownloadDir, { recursive: true });
+function generateUniqueId(seed) {
+  const hash = crypto.createHash('sha256');
+  hash.update(seed);
+  return hash.digest('hex');
+}
 
-    torrent.files.forEach((file) => {
-      const filepath = path.join(defaultDownloadDir, torrentInformation.fileName ?? file.name);
-      const stream = file.createReadStream();
-      stream.pipe(fs.createWriteStream(filepath));
+ipcMain.handle("download-torrent", (event, torrentsInformation) => {
+  torrentsInformation.forEach((torrentInfo) => {
+    
+    // Determine download path before generating torrentId
+    let userDownloadPath = torrentInfo?.userDownloadPath;
+    if (userDownloadPath) {
+      defaultDownloadDir = userDownloadPath;
+    }
+    
+    const TorrentDownloadDir = path.join(defaultDownloadDir, torrentInfo.dirName);
+    fs.mkdirSync(TorrentDownloadDir, { recursive: true });
+    
+    // Include download path in hash to handle same content to different locations
+    const torrentId = generateUniqueId(`${torrentInfo.IMDB_ID}-${torrentInfo.episodeNumber ?? "undefined"}-${torrentInfo.seasonNumber ?? "undefined"}-${TorrentDownloadDir}`);
+    
+    // Add torrent with custom download path to avoid /tmp
+    const torrent = DownloadClient.add(torrentInfo.MagnetLink, {
+      path: TorrentDownloadDir
+    });
 
+    DownloadingTorrents[torrentId] = torrent;
+
+    torrent.on("ready", () => {
       const totalSize = torrent.length;
-      let startTime = 0;
-      const intervale = 1000;
+      let LibraryStartTime = 0;
+      let PipingStartTime = 0;
+      const DelayBeforeLibrarySave = 1000; // ms
+      const DelayBeforePiping = 400; // ms
 
       torrent.on("download", () => {
         const now = Date.now();
-        if (now - startTime >= intervale) {
-          const downloaded = torrent.downloaded;
+        const downloadedDataLength = torrent.downloaded;
 
+        torrentInfo["torrentId"] = torrentId;
+        torrentInfo["downloadPath"] = TorrentDownloadDir;
+        torrentInfo["Total"] = totalSize;
+        torrentInfo["Downloaded"] = downloadedDataLength;
+        torrentInfo["poster"] = torrentInfo.posterUrl;
+
+        // Check if download is complete
+        if (totalSize <= downloadedDataLength) {
           const jsonMessage = {
-            Title: torrentInformation.Title,
-            IMDB_ID: torrentInformation.IMDB_ID,
-            MediaId: torrentInformation.MediaId,
-            MediaType: torrentInformation.MediaType,
-            seasonNumber: torrentInformation.seasonNumber ?? "undefined",
-            episodeNumber: torrentInformation.episodeNumber ?? "undefined",
-            Downloaded: downloaded ?? 0,
-            Total: totalSize ?? 0,
-            DownloadPath: filepath ?? ""
+            TorrentId: torrentId,
+            Downloaded: downloadedDataLength,
+            Total: totalSize,
+            DownloadPath: TorrentDownloadDir,
+            Status: "done"
+          };
+          
+          torrentInfo["Status"] = "done";
+          updateElementDownloadLibrary(torrentInfo, downloadedDataLength);
+          
+          win.webContents.send("download-progress-stream", jsonMessage);
+          
+          torrent.destroy(() => {
+            delete DownloadingTorrents[torrentId];
+            console.log(`Torrent cleaned up: ${torrentId}`);
+          });
+          
+          return;
+        }
+
+        // Add changes to the library every x ms
+        if (now - LibraryStartTime >= DelayBeforeLibrarySave) {
+          updateElementDownloadLibrary(torrentInfo, downloadedDataLength);
+          LibraryStartTime = now;
+        }
+
+        if (now - PipingStartTime >= DelayBeforePiping) {
+          const jsonMessage = {
+            TorrentId: torrentId,
+            Downloaded: downloadedDataLength,
+            Total: totalSize,
+            DownloadPath: TorrentDownloadDir,
+            Status: "downloading"
           };
 
           win.webContents.send("download-progress-stream", jsonMessage);
-          console.log(`Downloading ${torrentInformation.fileName}: ${(downloaded / totalSize) * 100}%`);
-          startTime = now;
+          PipingStartTime = now;
+
+          console.log(`Downloading ${torrentInfo.dirName}: ${((downloadedDataLength / totalSize) * 100).toFixed(2)}%`);
         }
       });
     });
-  });
 
-  torrent.on("error", (err) => {
-    console.error("Torrent error:", err);
+    torrent.on("error", (err) => {
+      console.error(`Torrent error: ${torrentId}, ${err}`);
+      
+      win.webContents.send("download-progress-stream", {
+        TorrentId: torrentId,
+        Status: "error",
+        Error: err.message
+      });
+    });
   });
 });
 
+ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
+  const torrentId = mediaInfo.torrentId;
+  const targetTorrent = DownloadingTorrents?.[torrentId];
+  
+  if (targetTorrent) {
+    await new Promise((resolve) => {
+      targetTorrent.destroy(() => {
+        delete DownloadingTorrents[torrentId];
+        console.log(`Torrent cancelled: ${torrentId}`);
+        resolve();
+      });
+    });
+  }
+  
+  // Remove the download directory
+  const downloadPath = mediaInfo.downloadPath;
+  if (downloadPath && fs.existsSync(downloadPath)) {
+    await fs.promises.rm(downloadPath, { recursive: true, force: true });
+    console.log(`Removed directory: ${downloadPath}`);
+  }
+  
+  await removeFromDownloadLibrary(torrentId);
+  
+  return { success: true, torrentId };
+});
+
+ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
+  const torrent = DownloadingTorrents?.[torrentId];
+  
+  if (torrent) {
+    if (torrent.paused) {
+      torrent.resume();
+      return { status: "resumed", torrentId };
+    } else {
+      torrent.pause();
+      return { status: "paused", torrentId };
+    }
+  }
+  
+  return { status: "not-found", torrentId };
+});
+
+async function removeFromDownloadLibrary(torrentId){
+  let downloadLib = await loadDownloadLibrary();
+  downloadLib.downloads = downloadLib.downloads.filter(element => (element.torrentId !== torrentId));
+  insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
+}
+
+function loadDownloadLibrary(){
+  try { 
+    return JSON.parse(fs.readFileSync(downloadLibraryFilePath, "utf-8")); 
+  } catch { 
+    return { downloads: [] }; 
+  }
+}
+
+async function downloadPoster(posterUrl){
+  if(!posterUrl) return "undefined";
+  const res = await fetch(posterUrl);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  if(!fs.existsSync(postersDirPath))
+    fs.mkdirSync(postersDirPath,{recursive:true});
+  const file = path.join(postersDirPath, path.basename(posterUrl));
+  fs.writeFileSync(file, buffer);
+  return file;
+}
+
+async function updateElementDownloadLibrary(torrentInfo, downloadedBytes) {
+  let downloadLib = await loadDownloadLibrary();
+
+  // Find existing entry or create new one
+  const existingIndex = downloadLib.downloads.findIndex(
+    item => item.torrentId === torrentInfo.torrentId
+  );
+  
+  
+  if (existingIndex !== -1) {
+    downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
+    downloadLib.downloads[existingIndex]["typeOfSave"] = torrentInfo.Status === "done" ? "Download-Complete" : "Download"
+
+  } else {
+    let posterPath = await downloadPoster(torrentInfo?.posterUrl);
+    let newEntry = {...torrentInfo,posterPath: posterPath ?? "undefined"};
+    downloadLib.downloads.push(newEntry);
+  }
+
+  insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
+}
+
+async function removeFromLibrary(mediaInfo) {
+  let LibraryInfo = getLibraryInfo();
+  LibraryInfo.media = LibraryInfo.media.filter(
+    element => element.torrentId !== mediaInfo.torrentId
+  );
+  insertNewInfoToLibrary(libraryFilePath, LibraryInfo);
+}
+
+// ======================= LIBRARY MANAGEMENT =======================
 
 ipcMain.on("add-to-lib", async (event,mediaInfo)=>{
-  let LibraryInfo = getLibraryInfo() 
+  let LibraryInfo = getLibraryInfo(); 
   LibraryInfo.media.push(mediaInfo); 
   await insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
   return "";
@@ -317,7 +522,7 @@ ipcMain.on("remove-from-lib", async (event,mediaInfo) => {
 ipcMain.handle("load-from-lib", (event, targetIdentification)=>{
     let LibraryInfo = getLibraryInfo();
     if(LibraryInfo.media.length){
-    if(targetIdentification == undefined) return LibraryInfo.media;
+      if(targetIdentification == undefined) return LibraryInfo.media;
       let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId == targetIdentification.MediaId && element.MediaType == targetIdentification.MediaType);
       if(targetLibraryInfo.length) return targetLibraryInfo; 
       return undefined;
@@ -326,10 +531,17 @@ ipcMain.handle("load-from-lib", (event, targetIdentification)=>{
     }
 });
 
+ipcMain.handle("load-from-download-lib",async(event,targetIdentification)=>{
+  let wholeDownloadLibrary = await loadDownloadLibrary();
+  return wholeDownloadLibrary;
+});
 
 function getLibraryInfo() {
-  try { return JSON.parse(fs.readFileSync(libraryFilePath, "utf-8")); }
-  catch { return { media: [] }; }
+  try { 
+    return JSON.parse(fs.readFileSync(libraryFilePath, "utf-8")); 
+  } catch { 
+    return { media: [] }; 
+  }
 }
 
 function insertNewInfoToLibrary(libraryFilePath, newData) {
@@ -339,40 +551,3 @@ function insertNewInfoToLibrary(libraryFilePath, newData) {
     console.error(err);
   }
 }
-
-function loadSettings() {
-  try {
-    const data = fs.readFileSync(SettingsFilePath, 'utf-8');
-    if(data.trim() == "" || !("TurnOnSubsByDefault" in JSON.parse(data))) throw new Error("empty Sub File");
-    return JSON.parse(data);
-  } catch (err) {
-    return {
-      PageZoomFactor: 1,
-      TurnOnSubsByDefault: true,
-      SubFontSize: 16,
-      SubFontFamily: "Montserrat",
-      SubColor: "#ffffff",
-      SubBackgroundColor: "#000000",
-      SubBackgroundOpacityLevel: 0
-    };
-  }
-}
-
-function loadTheme(){
-  try{
-    let ThemeObj = {theme:[]};
-    let savedTheme = fs.readFileSync(ThemeFilePath, "utf-8");
-    savedTheme = savedTheme.replaceAll(":root{","").replaceAll("}","").replaceAll("--","").replaceAll(";","").replaceAll(" ","");
-    let linesArray = savedTheme.split("\n").filter(line => line != "");
-    ThemeObj.theme = linesArray.map(obj => {
-      const [key, value] = obj.split(":");
-      return {[key]:value};
-    });
-    return ThemeObj;
-  }catch(err){
-    console.error("Failed to Load Theme File");
-    initializeDataFiles();
-    return loadTheme();
-  }
-}
-
