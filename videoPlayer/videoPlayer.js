@@ -1,5 +1,7 @@
 const data = new URLSearchParams(window.location.search);
 let Magnet = atob(data.get("MagnetLink"));
+let downloadPath = data.get("downloadPath");
+let fileName = data.get("fileName");
 
 let MediaId = data.get("MediaId");
 let MediaType = data.get("MediaType");
@@ -41,7 +43,7 @@ document.documentElement.style.backgroundSize = `cover`;
 document.documentElement.style.backgroundAttachment = `fixed`;
 
 loadSubSettings();
-loadVideo(Magnet);
+loadVideo(Magnet,downloadPath,fileName);
 
 loadingAllSubs(mediaImdbId);
 
@@ -75,8 +77,7 @@ VideoElement.addEventListener("playing", async (event)=>{
   setInterval(()=>{
     let lastPbPosition = parseInt(VideoElement.currentTime);
     let metaData = {seasonNumber:seasonNumber,episodeNumber:episodeNumber,Magnet:Magnet,bgImagePath:bgImagePath,mediaImdbId:mediaImdbId};
-    updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData);
-    console.log(lastPbPosition);
+    updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData,downloadPath,fileName);
   },10000);
 },{ once:true });
 
@@ -239,25 +240,41 @@ function gettingformatedTime(time){
   return results;
 }
 
-function loadVideo(Magnet){
-  window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
-    console.log(`Video Format: ${mimeType}`);
-    if(mimeType == "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
+async function loadVideo(Magnet,downloadPath,fileName){
+  if(downloadPath && fileName){
+    let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
     VideoElement.id = "video-MediaPlayer";
-    VideoElement.innerHTML = `<source src=${url} type='${mimeType}'>`;
+    VideoElement.innerHTML = `<source src='${videoPath}'>`;
     VideoElement.load();
     VideoElement.play();
     VideoElement.removeAttribute("style");
     document.documentElement.removeAttribute("style");
     document.documentElement.style.backgroundColor = "black";
-  }).catch(err=>{
-    console.error(err);
-    let getElementById = document.getElementById("div-SomethingWentWrong");
-    getElementById.innerHTML = err.message;
-    loadingGif.remove();
-    getElementById.style.display = "flex";
-  });
+  }else{
+    window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
+      console.log(`Video Format: ${mimeType}`);
+      if(mimeType == "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
+      VideoElement.id = "video-MediaPlayer";
+      VideoElement.innerHTML = `<source src=${url} type='${mimeType}'>`;
+      VideoElement.load();
+      VideoElement.play();
+      VideoElement.removeAttribute("style");
+      document.documentElement.removeAttribute("style");
+      document.documentElement.style.backgroundColor = "black";
+    }).catch(err=>{
+      console.error(err);
+      let getElementById = document.getElementById("div-SomethingWentWrong");
+      getElementById.innerHTML = err.message;
+      loadingGif.remove();
+      getElementById.style.display = "flex";
+    });
+  }
 }
+
+function getVideoPath(downloadPath,fileName){
+  return downloadPath + "/" + fileName;
+}
+
 function loadLanguageSub(button){
   Array.from(button.parentElement.children).forEach(element => element.removeAttribute("style"));
   button.style.backgroundColor = "rgba(255,255,255,0.1)";
@@ -432,7 +449,7 @@ async function getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonN
   return 0;
 }
 
-async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData){
+async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData,downloadPath,fileName){
   let targetIdentification = {MediaId:MediaId,MediaType:MediaType};
   let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
 
@@ -443,6 +460,8 @@ async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaD
     MediaLibraryObject["episodeNumber"] = metaData?.episodeNumber;
     MediaLibraryObject["Magnet"] = metaData?.Magnet;
     MediaLibraryObject["bgImagePath"] = metaData?.bgImagePath;
+    MediaLibraryObject["downloadPath"] = downloadPath;
+    MediaLibraryObject["fileName"] = fileName;
 
     if(!MediaLibraryObject["typeOfSave"].includes("Currently Watching")){
       MediaLibraryObject["typeOfSave"].push("Currently Watching")
@@ -451,13 +470,14 @@ async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaD
     await window.electronAPI.removeMediaFromLibrary(targetIdentification);
 
   }else{
-    
     MediaLibraryObject = {
       MediaId:MediaId,
       MediaType:MediaType,
       Magnet:metaData?.Magnet,
       bgImagePath:metaData?.bgImagePath,
       mediaImdbId:metaData?.mediaImdbId,
+      downloadPath:downloadPath,
+      fileName:fileName,
 
       lastPlaybackPosition:lastPbPosition,
       seasonNumber:metaData.seasonNumber,

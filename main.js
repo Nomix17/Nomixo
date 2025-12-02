@@ -433,19 +433,22 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
 });
 
 ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
-  const torrent = DownloadingTorrents?.[torrentId];
-  
-  if (torrent) {
-    if (torrent.paused) {
-      torrent.resume();
-      return { status: "resumed", torrentId };
-    } else {
-      torrent.pause();
-      return { status: "paused", torrentId };
-    }
+  const torrent = DownloadingTorrents[torrentId];
+  if (!torrent || !torrent.files) return { status: "not found", torrentId };
+
+  torrent._paused = torrent._paused || false;
+
+  if (torrent._paused) {
+    torrent.files.forEach(file => file.select()); // resume downloading
+    torrent._paused = false;
+    console.log("Resume");
+    return { status: "resumed", torrentId };
+  } else {
+    torrent.files.forEach(file => file.deselect()); // pause downloading
+    torrent._paused = true;
+    console.log("Pause");
+    return { status: "paused", torrentId };
   }
-  
-  return { status: "not-found", torrentId };
 });
 
 async function removeFromDownloadLibrary(torrentId){
@@ -501,6 +504,25 @@ async function removeFromLibrary(mediaInfo) {
     element => element.torrentId !== mediaInfo.torrentId
   );
   insertNewInfoToLibrary(libraryFilePath, LibraryInfo);
+}
+
+ipcMain.handle("get-full-video-path",async(event,dirPath,fileName)=>{
+  return await findFile(dirPath,fileName);
+});
+
+function findFile(dir, filename) {
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      const result = findFile(fullPath, filename);
+      if (result) return result;
+    } else if (file === filename) {
+      return fullPath;
+    }
+  }
+  return null;
 }
 
 // ======================= LIBRARY MANAGEMENT =======================

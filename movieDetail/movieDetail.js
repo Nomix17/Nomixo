@@ -368,7 +368,7 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
             let DownloadTargetInfo = {
               IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
               Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
-              dirName:Title, MediaId:MediaId, MediaType:MediaType,
+              fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
               seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
             };
             setupDownloadDivEvents(DownloadTargetInfo);

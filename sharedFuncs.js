@@ -342,12 +342,12 @@ function openSearchPage(){
   }
 }
 
-function openMediaVideo(MediaId,MediaType,MagnetLink,IMDB_ID,backgroundImage,episodeInfo){
+function openMediaVideo(MediaId,MediaType,downloadPath,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo){
   let b64MagnetLink = btoa(MagnetLink);
-  let episodeNumber=episodeInfo.episodeNumber
-  let seasonNumber=episodeInfo.seasonNumber;
+  let episodeNumber=episodeInfo?.episodeNumber
+  let seasonNumber=episodeInfo?.seasonNumber;
 
-  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&MediaId=${MediaId}&MediaType=${MediaType}&ImdbId=${IMDB_ID}&bgPath=${backgroundImage}&episodeNumber=${episodeNumber}&seasonNumber=${seasonNumber}`;
+  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&downloadPath=${downloadPath}&fileName=${fileName}&MediaId=${MediaId}&MediaType=${MediaType}&ImdbId=${IMDB_ID}&bgPath=${backgroundImage}&episodeNumber=${episodeNumber}&seasonNumber=${seasonNumber}`;
   window.electronAPI.navigateTo(path); 
 }
 
@@ -474,12 +474,13 @@ function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoin
       let episodeInfo = {"seasonNumber":mediaEntryPoint.seasonNumber, "episodeNumber":mediaEntryPoint.episodeNumber}
 
       continueVideoButton.addEventListener("click",()=>{
-        openMediaVideo(mediaEntryPoint.MediaId, mediaEntryPoint.MediaType, mediaEntryPoint.Magnet,mediaEntryPoint.mediaImdbId,mediaEntryPoint.bgImagePath,episodeInfo);
+        openMediaVideo(mediaEntryPoint.MediaId, mediaEntryPoint.MediaType, mediaEntryPoint.downloadPath, mediaEntryPoint.fileName, mediaEntryPoint.Magnet,mediaEntryPoint.mediaImdbId,mediaEntryPoint.bgImagePath,episodeInfo);
         event.preventDefault();
         event.stopPropagation();
       });
-    checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
     }
+
+    checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
     addFloatingDiv(movieDomElement);
     return movieDomElement;
 }
@@ -538,7 +539,7 @@ window.pauseIcon = `
   </svg>
 `;
 
-window.trashIcon = `
+window.closedTrashIcon = `
   <svg class="trashIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
     <path d="M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1zM32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z"/>
   </svg>

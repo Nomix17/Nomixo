@@ -1,3 +1,8 @@
+:root {
+  --checkmark-icon: url("../assets/icons/movie.svg");
+
+}
+
 #div-middle-right {
   display: flex;
   flex-direction: column;
@@ -33,7 +38,12 @@
   box-sizing: border-box;
   flex-shrink: 0;
 }
+.poster-div{
+  position: relative;
+}
+
 .poster-img {
+  position: relative;
   width: 146px;
   height: 220px;
   border-radius: 10px;
@@ -82,14 +92,12 @@
   margin: 0;
   white-space: nowrap;
   flex-shrink: 0;
-  width: 60px;
-  margin-right:10px;
-  text-align: right;
+  min-width: 90px;
+  text-align: center;
 }
 .movie-size-div{
   display:flex;
   justify-content:space-between;
-  padding-right: 80px;
 }
 .downloaded-size,
 .total-size{
@@ -101,9 +109,7 @@
   color: white;
   margin: 0;
 }
-.total-size{
-  margin-right:13px;
-}
+
 .download-buttons-div {
   display: flex;
   gap: 12px;
@@ -122,6 +128,100 @@
   transition: opacity 0.2s;
   background-color:rgb(var(--icon-color));
 }
+
+/* Completed download button styles */
+.toggle-pause-button.completed {
+  background-color: rgba(76, 175, 80, 0.9);
+  cursor: pointer;
+  pointer-events: auto;
+  width: 40px;
+  border-radius: 20px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              background-color 0.3s ease,
+              border-radius 0.4s ease;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+
+.toggle-pause-button.completed::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  background-color: white;
+  mask-image: var(--checkmark-icon);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: var(--checkmark-icon);
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.15s;
+  pointer-events: none;
+}
+
+.toggle-pause-button.completed::after {
+  content: 'Watch Now';
+  position: absolute;
+  left: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.15s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.toggle-pause-button.completed .playIcon,
+.toggle-pause-button.completed .checkIcon {
+  transition: opacity 0.2s ease;
+}
+
+.toggle-pause-button.completed:hover {
+  width: 130px;
+  background-color: rgba(76, 175, 80, 1);
+  border-radius: 20px;
+}
+
+.toggle-pause-button.completed:hover::before {
+  opacity: 1;
+}
+
+.toggle-pause-button.completed:hover::after {
+  opacity: 1;
+}
+
+.toggle-pause-button.completed:hover .playIcon,
+.toggle-pause-button.completed:hover .checkIcon {
+  opacity: 0;
+}
+
+.toggle-pause-button.completed:active {
+  transform: scale(0.95);
+}
+
+@keyframes completePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.toggle-pause-button.completed.just-finished {
+  animation: completePulse 0.6s ease-in-out;
+}
+
 .cancel-button {
   background-color:rgb(160,11,6);
 }
@@ -171,4 +271,57 @@ h1 {
   color: rgba(255,255,255,0.6);
   margin-bottom:10px;
 
+}
+
+.continue-video-button{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  bottom: 50%;
+  right: 50%;
+  width: 75px;
+  height: 75px;
+  border-radius: 100%;
+  border: 3px solid rgba(255,255,255,0.0);
+  background-color: rgba(255,255,255,1);
+  cursor: pointer;
+  opacity: 0;
+  transform: translate(70%, 70%) scale(0.8);
+  transform-origin: center center;
+  transition: opacity 0.3s ease, transform 0.3s ease, filter 0.4s ease, fill 0.3s ease;
+  will-change: transform, opacity;
+  z-index: 1000;
+}
+
+.poster-container:hover .continue-video-button {
+  opacity: 1;
+  pointer-events: auto; 
+  transform: translate(70%, 70%) scale(1);
+}
+
+.continue-video-icon {
+  display: inline-block;
+  width: 160%;
+  height: 160%;
+  fill: rgba(var(--icon-hover-color));
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+}
+
+.continue-video-button:hover .continue-video-icon{
+  transform: scale(1.09);
+}
+
+.continue-video-icon:hover{
+  transform: translate(0, 0) scale(1.07);
+}
+
+.continue-video-button:active .continue-video-icon{
+  transform: scale(0.99);
+}
+
+.poster-div:hover .continue-video-button {
+  opacity: 1;
+  transform: translate(50%, 50%);
+  filter: drop-shadow(2px 2px 6px rgba(0, 0, 0, 0.6));
 }

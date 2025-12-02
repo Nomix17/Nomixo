@@ -1,16 +1,13 @@
 async function loadDownloadMediaFromLib(){
   let library = await window.electronAPI.loadDownloadLibraryInfo();
-  let counter=0;
-  console.log(library);
+
   if(library !== undefined){
     for(let mediaLibEntryPoint of library.downloads){
-      if(mediaLibEntryPoint?.typeOfSave?.includes("Download")){
         createDownloadElement(mediaLibEntryPoint);
-        counter++;
-      }
     }
   }
-  if(counter === 0){
+
+  if(library.downloads.length === 0){
     let MediaDownloadElementContainer = document.querySelector(".downloaded-movie-div-container");
     putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
   }
@@ -28,11 +25,15 @@ function createDownloadElement(mediaLibEntryPoint){
   MediaDownloadElement.id = ElementIdentifier;
 
   MediaDownloadElement.innerHTML = `
-    <img src=${mediaLibEntryPoint?.posterPath} class="poster-img"/>
+    <div class="poster-div">
+      <img src="${mediaLibEntryPoint?.posterPath}" class="poster-img"/>
+    </div>
     <div class="download-movie-right-div">
       <p class="movie-title-p">${mediaLibEntryPoint?.Title}</p>
       <div class="progress-div">
-        <div class="progress-bar-div"><div style="width:${progress}" class="inside"></div></div>
+        <div class="progress-bar-div">
+          <div class="inside" style="width:${progress}%;"></div>
+        </div>
         <p class="percentage">${progress}%</p>
       </div>
       <div class="movie-size-div">
@@ -46,21 +47,52 @@ function createDownloadElement(mediaLibEntryPoint){
     </div>
   `;
 
-
   let insiderProgressBar = MediaDownloadElement.querySelector(".progress-bar-div .inside");
   insiderProgressBar.style.width = progress + "%";
 
   let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
+  let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
+  let PosterDiv = MediaDownloadElement.querySelector(".poster-div");
+  let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
+
   if(mediaLibEntryPoint?.Status === "done"){
     console.log(`${mediaLibEntryPoint?.Title} is done downloading in ${mediaLibEntryPoint?.downloadPath}`);
-    CancelButton.innerHTML = trashIcon
+    PercentageTextElement.innerText = "✓ Completed";
+    CancelButton.innerHTML = closedTrashIcon;
+    
+    PausePlayButton.classList.add("completed", "just-finished");
+    
+    setTimeout(() => {
+      PausePlayButton.classList.remove("just-finished");
+    }, 600);
+    
+    PausePlayButton.addEventListener("click", () => {
+      let episodeInfo = {
+        "seasonNumber": mediaLibEntryPoint.seasonNumber, 
+        "episodeNumber": mediaLibEntryPoint.episodeNumber
+      };
+      openMediaVideo(
+        mediaLibEntryPoint.MediaId, 
+        mediaLibEntryPoint.MediaType, 
+        mediaLibEntryPoint.downloadPath,
+        mediaLibEntryPoint.fileName,
+        mediaLibEntryPoint.Magnet,
+        mediaLibEntryPoint.mediaImdbId,
+        mediaLibEntryPoint.bgImagePath,
+        episodeInfo
+      );
+    });
   }
 
   let MediaDownloadElementContainer = document.querySelector(".downloaded-movie-div-container");
   MediaDownloadElementContainer.append(MediaDownloadElement);
 
   handleCancelButton(mediaLibEntryPoint,MediaDownloadElement);
-  handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
+  if(mediaLibEntryPoint?.typeOfSave !== "Download-Complete"){
+    handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
+  }
+  alignSizeDiv();
+  
 }
 
 function monitorDownloads(){
@@ -73,11 +105,11 @@ function monitorDownloads(){
     let TotalSizeTextElement = TargetDownloadElement.querySelector(".total-size");
     let DownloadedSizeTextElement = TargetDownloadElement.querySelector(".downloaded-size");
     let PercentageTextElement = TargetDownloadElement.querySelector(".percentage");
+    let ProgressBar = TargetDownloadElement.querySelector(".progress-bar-div");
     let insiderProgressBar = TargetDownloadElement.querySelector(".progress-bar-div .inside");
     let PausePlaybutton = TargetDownloadElement.querySelector(".toggle-pause-button");
     let CancelButton = TargetDownloadElement.querySelector(".cancel-button");
 
-    // data = "Title" "IMDB_ID" "MediaId" "MediaType" "seasonNumber" "episodeNumber" "Downloaded" "Total" "DownloadPath"
     let calculatedProgress = ((JsonData.Downloaded / JsonData.Total) * 100).toFixed(2);
     let calculatedDownloadedSize = (JsonData.Downloaded / (1024 * 1024 * 1024)).toFixed(2);
     let calculatedTotalSize = (JsonData.Total / (1024 * 1024 * 1024)).toFixed(2);
@@ -89,6 +121,36 @@ function monitorDownloads(){
     PausePlaybutton.innerHTML = pauseIcon;
     CancelButton.innerHTML = xRemoveIcon;
 
+    if(JsonData?.Status === "done"){
+      console.log(`${JsonData?.Title} is done downloading in ${JsonData?.downloadPath}`);
+      PercentageTextElement.innerText= "✓ Completed";
+      CancelButton.innerHTML = trashIcon;
+      PausePlaybutton.innerHTML = playIcon;
+      
+      PausePlaybutton.classList.add("completed", "just-finished");
+      
+      setTimeout(() => {
+        PausePlaybutton.classList.remove("just-finished");
+      }, 600);
+      
+      let newButton = PausePlaybutton.cloneNode(true);
+      PausePlaybutton.parentNode.replaceChild(newButton, PausePlaybutton);
+      
+      newButton.addEventListener("click", () => {
+        let episodeInfo = {
+          "seasonNumber": JsonData.seasonNumber, 
+          "episodeNumber": JsonData.episodeNumber
+        };
+        openMediaVideo(
+          JsonData.MediaId, 
+          JsonData.MediaType, 
+          JsonData.Magnet,
+          JsonData.mediaImdbId,
+          JsonData.bgImagePath,
+          episodeInfo
+        );
+      });
+    }
   });
 }
 
@@ -99,20 +161,30 @@ function handleCancelButton(mediaInfo,MediaDownloadElement){
     let TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
     TargetDownloadElement.remove();
     let MediaDownloadElementContainer = document.querySelector(".downloaded-movie-div-container");
-    if(MediaDownloadElementContainer.innerHTML)
+    if(MediaDownloadElementContainer.innerHTML.trim() === "")
       putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
   });
 }
 
 function handleTogglingPauseButton(torrentId,MediaDownloadElement){
   let PausePlaybutton = MediaDownloadElement.querySelector(".toggle-pause-button");
-  PausePlaybutton.addEventListener("click",()=>{
     window.electronAPI.toggleTorrentDownload(torrentId);
+}
+
+function alignSizeDiv(){
+  let downloadTorrent = document.querySelectorAll(".downloaded-movie-div");
+  downloadTorrent.forEach(element=>{
+    let ProgressBar = element.querySelector(".progress-bar-div");
+    let sizeDiv = element.querySelector(".movie-size-div");
+    sizeDiv.style.maxWidth = ProgressBar.offsetWidth;
   });
 }
+
+window.addEventListener("resize",()=>{
+  alignSizeDiv();
+});
 
 monitorDownloads();
 loadDownloadMediaFromLib();
 setLeftButtonStyle("btn-download");
 loadIconsDynamically();
-

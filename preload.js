@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   downloadTorrent: (torrentInformation) => ipcRenderer.invoke("download-torrent",torrentInformation),
   getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
   cancelDownload: (mediaInfo) => ipcRenderer.invoke("cancel-torrent-download", mediaInfo),
-  toggleTorrentDownload: (torrentId) => ipcRenderer.invoke("toggle-torrent-download", torrentId)
+  toggleTorrentDownload: (torrentId) => ipcRenderer.invoke("toggle-torrent-download", torrentId),
+  getFullVideoPath: (dirPath,fileName) => ipcRenderer.invoke("get-full-video-path",dirPath,fileName)
 });
 
