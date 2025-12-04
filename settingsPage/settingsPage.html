@@ -6,7 +6,7 @@
     <script src="../sharedFuncs.js" defer></script>
     <script src="settingsPage.js" defer></script>
     <link rel="stylesheet" href="../home/mainPage.css">
-    <link id="test" rel="stylesheet" href="theme://theme.css">
+    <link id="cssThemeStylesheet" rel="stylesheet" href="theme://theme.css">
     <link rel="stylesheet" href="settingsPage.css">
     <link rel="stylesheet" href="toggleSwitch.css">
     <link rel="stylesheet" href="dropDown.css">
@@ -171,13 +171,14 @@
                   </div>
                 </td>
               </tr>
+              <tr>
                 <td>Icon Color</td>
                 <td class="toCenter">
                   <input type="color" id="icon-color"/>
                 </td>
               </tr>
               <tr>
-                <td>Hoved Icon Color</td>
+                <td>Hovered Icon Color</td>
                 <td class="toCenter">
                   <div class="ElementsTopOfEachOther">
                     <input type="color" id="icon-hover-color"/>
@@ -195,14 +196,16 @@
             </table>
           </div>
           <div class="border"></div>
-          <h1>Subtitles</h1>
-          <div id="div-PlayerSubtitles">
+
+          <h1>Internal Player</h1>
+          <div id="div-PlayerSubtitlesInternal">
+            <h2>Subtitles</h2>
             <table>
               <tr>
                 <td>Enable Subtitles By Default</td>
                 <td class="toCenter">
                   <label class="custom-toggle">
-                    <input id="toggleDefaultSubtitles" type="checkbox" />
+                    <input id="toggleDefaultSubtitlesInternal" type="checkbox" />
                     <span class="toggle-track">
                       <span class="toggle-thumb"></span>
                     </span>
@@ -212,16 +215,77 @@
               <tr>
                 <td>Font Size</td>
                 <td class="toCenter">
-                  <button class="btn-changeNum" id="btn-decreaseFontSize">-</button>
-                  <input id="p-fontSize"/>
-                  <button class="btn-changeNum" id="btn-increaseFontSize">+</button>
+                  <button class="btn-changeNum" id="btn-decreaseFontSizeInternal">-</button>
+                  <input id="p-fontSizeInternal"/>
+                  <button class="btn-changeNum" id="btn-increaseFontSizeInternal">+</button>
                 </td>
               </tr>
               <tr>
                 <td>Font Family</td>
                 <td class="toCenter">
                   <div class="dropdown">
-                    <div id="currrectFont" class="dropdown-toggle">Menu</div>
+                    <div id="currrectFontInternal" class="dropdown-toggle">Menu</div>
+                    <div id="dropDownMenu-Font-Internal" class="dropdown-menu">
+                      <div style="font-family: 'Arial'">Arial</div>
+                      <div style="font-family: 'Montserrat'">Montserrat</div>
+                      <div style="font-family: 'monospace'">monospace</div>
+                      <div style="font-family: 'Times New Roman'">Times New Roman</div>
+                      <div style="font-family: 'Courier New'">Courier New</div>
+                      <div style="font-family: 'Georgia'">Georgia</div>
+                      <div style="font-family: 'Comic Sans MS'">Comic Sans MS</div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Text Color</td>
+                <td class="toCenter"><input id="input-TextColorInternal" type="color"></input> </td>
+              </tr>
+              <tr>
+                <td>Background Color</td>
+                <td class="toCenter"><input id="input-BackgroundColorInternal" type="color"></input> </td>
+              </tr>
+              <tr>
+                <td>Background Opacity</td>
+                <td class="toCenter">
+                  <button class="btn-changeNum" id="btn-decreaseOpacityInternal">-</button>
+                  <input id="p-OpacityInternal"/>
+                  <button class="btn-changeNum" id="btn-increaseOpacityInternal">+</button>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="border"></div>
+
+          <h1>External Player</h1>
+          <div id="div-PlayerSubtitlesExternal">
+            <h2>Subtitles</h2>
+            <table>
+              <tr>
+                <td>Enable Subtitles By Default</td>
+                <td class="toCenter">
+                  <label class="custom-toggle">
+                    <input id="toggleDefaultSubtitlesExternal" type="checkbox" />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                  </label>
+                </td>
+              </tr>
+              <tr>
+                <td>Font Size</td>
+                <td class="toCenter">
+                  <button class="btn-changeNum" id="btn-decreaseFontSizeExternal">-</button>
+                  <input id="p-fontSizeExternal"/>
+                  <button class="btn-changeNum" id="btn-increaseFontSizeExternal">+</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Font Family</td>
+                <td class="toCenter">
+                  <div class="dropdown">
+                    <div id="currrectFontExternal" class="dropdown-toggle">Menu</div>
                     <div id="dropDownMenu-Font" class="dropdown-menu">
                       <div style="font-family: 'Arial'">Arial</div>
                       <div style="font-family: 'Montserrat'">Montserrat</div>
@@ -230,27 +294,17 @@
                       <div style="font-family: 'Courier New'">Courier New</div>
                       <div style="font-family: 'Georgia'">Georgia</div>
                       <div style="font-family: 'Comic Sans MS'">Comic Sans MS</div>
+                    </div>
                   </div>
                 </td>
               </tr>
               <tr>
                 <td>Text Color</td>
-                <td class="toCenter"><input id="input-TextColor" type="color"></input> </td>
-              </tr>
-              <tr>
-                <td>Background Color</td>
-                <td class="toCenter"><input id="input-BackgroundColor" type="color"></input> </td>
-              </tr>
-              <tr>
-                <td>Background Opacity</td>
-                <td class="toCenter">
-                  <button class="btn-changeNum" id="btn-decreaseOpacity">-</button>
-                  <input id="p-Opacity"/>
-                  <button class="btn-changeNum" id="btn-increaseOpacity">+</button>
-                </td>
+                <td class="toCenter"><input id="input-TextColorExternal" type="color"></input> </td>
               </tr>
             </table>
           </div>
+
           <div id="div-ApplyButton">
             <button id="btn-applySettings">Apply</button>
           </div>
@@ -260,4 +314,3 @@
     </div>
   </body>
 </html>
-

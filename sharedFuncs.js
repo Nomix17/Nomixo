@@ -342,12 +342,12 @@ function openSearchPage(){
   }
 }
 
-function openMediaVideo(MediaId,MediaType,downloadPath,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo){
+function openMediaVideo(TorrentIdentification,MediaId,MediaType,downloadPath,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo){
   let b64MagnetLink = btoa(MagnetLink);
   let episodeNumber=episodeInfo?.episodeNumber
   let seasonNumber=episodeInfo?.seasonNumber;
 
-  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&downloadPath=${downloadPath}&fileName=${fileName}&MediaId=${MediaId}&MediaType=${MediaType}&ImdbId=${IMDB_ID}&bgPath=${backgroundImage}&episodeNumber=${episodeNumber}&seasonNumber=${seasonNumber}`;
+  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&downloadPath=${downloadPath}&fileName=${fileName}&TorrentIdentification=${TorrentIdentification}&MediaId=${MediaId}&MediaType=${MediaType}&ImdbId=${IMDB_ID}&bgPath=${backgroundImage}&episodeNumber=${episodeNumber}&seasonNumber=${seasonNumber}`;
   window.electronAPI.navigateTo(path); 
 }
 
@@ -474,7 +474,7 @@ function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoin
       let episodeInfo = {"seasonNumber":mediaEntryPoint.seasonNumber, "episodeNumber":mediaEntryPoint.episodeNumber}
 
       continueVideoButton.addEventListener("click",()=>{
-        openMediaVideo(mediaEntryPoint.MediaId, mediaEntryPoint.MediaType, mediaEntryPoint.downloadPath, mediaEntryPoint.fileName, mediaEntryPoint.Magnet,mediaEntryPoint.mediaImdbId,mediaEntryPoint.bgImagePath,episodeInfo);
+        openMediaVideo(mediaEntryPoint.TorrentIdentification,mediaEntryPoint.MediaId, mediaEntryPoint.MediaType, mediaEntryPoint.downloadPath, mediaEntryPoint.fileName, mediaEntryPoint.Magnet,mediaEntryPoint.mediaImdbId,mediaEntryPoint.bgImagePath,episodeInfo);
         event.preventDefault();
         event.stopPropagation();
       });
@@ -620,4 +620,19 @@ function putTextIntoDiv(Div,textContent){
   Div.append(textDiv);
 }
 
+async function loadingAllSubs(id){
+  try{
+    const res = await fetch(`https://sub.wyzie.ru/search?id=${id}`);
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const data = await res.json();
+    return data;
+
+  }catch(err){
+    console.error(err);
+    return [];
+  }
+}
 

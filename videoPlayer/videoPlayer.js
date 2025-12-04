@@ -3,6 +3,8 @@ let Magnet = atob(data.get("MagnetLink"));
 let downloadPath = data.get("downloadPath");
 let fileName = data.get("fileName");
 
+let TorrentIdentification = data.get("TorrentIdentification");
+
 let MediaId = data.get("MediaId");
 let MediaType = data.get("MediaType");
 
@@ -36,14 +38,11 @@ var SubsStruct = [];
 let subtitlesArray = [];
 
 VideoElement.volume = 0.5;
-document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${bgImagePath}')`;
-document.documentElement.style.backgroundRepeat = `no-repeat`;
-document.documentElement.style.backgroundPosition = `center center`;
-document.documentElement.style.backgroundSize = `cover`;
-document.documentElement.style.backgroundAttachment = `fixed`;
 
+setBackgroundImage();
 loadSubSettings();
-loadVideo(Magnet,downloadPath,fileName);
+
+loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber)
 
 loadingAllSubs(mediaImdbId);
 
@@ -162,39 +161,48 @@ window.addEventListener("resize",()=>{
   resizeSubMainDiv();
 });
 
-async function loadingAllSubs(id){
-  try{
-    const res = await fetch(`https://sub.wyzie.ru/search?id=${id}`);
-    
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
+
+// ##################### MANAGING SUBS #####################
+function insertLanguageButton(subs) {
+
+  // Priority languages in order
+  let langArray = [];
+  langArray.push({ display:"English", language:"en" });
+  langArray.push({ display:"Arabic",  language:"ar" });
+  langArray.push({ display:"French",  language:"fr" });
+
+  // Add remaining, avoiding duplicates
+  subs.forEach(sub => {
+    if (!langArray.some(langObj =>
+      langObj.language.toLowerCase() === sub.language.toLowerCase()
+    )) {
+      langArray.push({
+        display: sub.display,
+        language: sub.language
+      });
     }
-    
-    const data = await res.json();
-    subtitlesArray = data;
-    getSubsViaLanguage("en");
-    let languages = [];
-    languages.push({display:"English",language:"en"});
-    languages.push({display:"Arabic",language:"ar"});
-    subtitlesArray.forEach(sub => {
-      if(!languages.some(langObj => langObj.display === sub.display && langObj.language === sub.language))
-        languages.push({display:sub.display,language:sub.language});
-    });
-    insertLanguageButton(languages); 
-  }catch(err){
-    console.error(err);
-  }
-}
-function insertLanguageButton(langArray){
-  let subBtnDiv = document.getElementById("div-LeftSubContainer");
-  langArray.forEach((lang,index) => {
-    let buttonElement = document.createElement("button");
-    if(index == 0) buttonElement.style.backgroundColor = "rgba(255,255,255,0.1)";
-    buttonElement.setAttribute("onclick","loadLanguageSub(this)");
-    buttonElement.value = lang.language;
-    buttonElement.innerText = lang.display;
-    subBtnDiv.append(buttonElement);
   });
+
+  // Create UI buttons
+  let subBtnDiv = document.getElementById("div-LeftSubContainer");
+  if (subBtnDiv) {
+    langArray.forEach((lang, index) => {
+      let buttonElement = document.createElement("button");
+
+      // Highlight first button
+      if (index == 0)
+        buttonElement.style.backgroundColor = "rgba(255,255,255,0.1)";
+
+      buttonElement.addEventListener("click", (event) => {
+        loadLanguageSub(event.target);
+      });
+
+      buttonElement.value = lang.language;
+      buttonElement.innerText = lang.display;
+
+      subBtnDiv.append(buttonElement);
+    });
+  }
 }
 
 function getSubsViaLanguage(language){
@@ -240,39 +248,69 @@ function gettingformatedTime(time){
   return results;
 }
 
-async function loadVideo(Magnet,downloadPath,fileName){
-  if(downloadPath && fileName){
-    let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
-    VideoElement.id = "video-MediaPlayer";
-    VideoElement.innerHTML = `<source src='${videoPath}'>`;
-    VideoElement.load();
-    VideoElement.play();
-    VideoElement.removeAttribute("style");
-    document.documentElement.removeAttribute("style");
-    document.documentElement.style.backgroundColor = "black";
+async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber){
+  let usingMagnet = (downloadPath === "undefined");
+  let fileIsMkv = (fileName.endsWith("mkv"));
+
+  if(usingMagnet){
+    let subs = await loadingAllSubs(mediaImdbId);
+    subtitlesArray = subs;
+    if(fileIsMkv){
+      playVideoInMpv(true,Magnet,undefined,undefined,undefined,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs);
+      // pass to externel Player
+      
+    }else{
+      insertLanguageButton(subs); 
+      window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
+        console.log(`Video Format: ${mimeType}`);
+        if(mimeType == "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
+        VideoElement.id = "video-MediaPlayer";
+        VideoElement.innerHTML = `<source src=${url} type='${mimeType}'>`;
+        VideoElement.load();
+        VideoElement.play();
+        VideoElement.removeAttribute("style");
+        document.documentElement.removeAttribute("style");
+        document.documentElement.style.backgroundColor = "black";
+      }).catch(err=>{
+        console.error(err);
+        let getElementById = document.getElementById("div-SomethingWentWrong");
+        getElementById.innerHTML = err.message;
+        loadingGif.remove();
+        getElementById.style.display = "flex";
+      });
+    }
+
   }else{
-    window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
-      console.log(`Video Format: ${mimeType}`);
-      if(mimeType == "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
+    let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
+
+    if(fileIsMkv){
+      playVideoInMpv(false,undefined,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,undefined);
+      // pass to externel Player
+
+    }else{
       VideoElement.id = "video-MediaPlayer";
-      VideoElement.innerHTML = `<source src=${url} type='${mimeType}'>`;
+      VideoElement.innerHTML = `<source src='${videoPath}'>`;
       VideoElement.load();
       VideoElement.play();
       VideoElement.removeAttribute("style");
       document.documentElement.removeAttribute("style");
       document.documentElement.style.backgroundColor = "black";
-    }).catch(err=>{
-      console.error(err);
-      let getElementById = document.getElementById("div-SomethingWentWrong");
-      getElementById.innerHTML = err.message;
-      loadingGif.remove();
-      getElementById.style.display = "flex";
-    });
+    }
   }
 }
 
-function getVideoPath(downloadPath,fileName){
-  return downloadPath + "/" + fileName;
+async function playVideoInMpv(PlayMagnet,Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs){
+  let metaData = {"Magnet":Magnet, "downloadPath":downloadPath,
+        "fileName":fileName, "bgImagePath":bgImagePath,
+        "TorrentId":TorrentIdentification, "mediaImdbId":mediaImdbId,
+        "seasonNumber":seasonNumber, "episodeNumber":episodeNumber
+  };
+
+  if(PlayMagnet){
+    window.electronAPI.StreamTorrentOverMpv(metaData,subs);
+  }else{
+    window.electronAPI.PlayVideoOverMpv(metaData);
+  }
 }
 
 function loadLanguageSub(button){
@@ -297,7 +335,6 @@ function getTimeInSecFromString(text){
   
   return Time;
 }
-
 
 function scrapSubs(SubsText){
   SubsStruct = [];
@@ -414,14 +451,14 @@ function SubSize(operation){
 async function loadSubSettings(){
   let Settings = await window.electronAPI.loadSettings(); 
 
-  SubDivDisplay.style.fontSize = (defaultFontSize*Settings.SubFontSize)/100
-  SubDivDisplay.style.fontFamily = Settings.SubFontFamily
-  SubDivDisplay.style.color = Settings.SubColor;
-  let numberInHex = parseInt(Settings.SubBackgroundColor.split("#")[1],16);
+  SubDivDisplay.style.fontSize = (defaultFontSize*Settings.SubFontSizeInternal)/100
+  SubDivDisplay.style.fontFamily = Settings.SubFontFamilyInternal
+  SubDivDisplay.style.color = Settings.SubColorInternal;
+  let numberInHex = parseInt(Settings.SubBackgroundColorInternal.split("#")[1],16);
   let r = (numberInHex >> 16) & 255;
   let g = (numberInHex >> 8) & 255;
   let b = (numberInHex) & 255;
-  SubDivDisplay.style.backgroundColor = `rgba(${r},${g},${b},${Settings.SubBackgroundOpacityLevel/100}`;
+  SubDivDisplay.style.backgroundColor = `rgba(${r},${g},${b},${Settings.SubBackgroundOpacityLevelInternal/100}`;
   if(Settings.TurnOnSubsByDefault){
     switchToggle.checked = true;
     bottomSubElement.classList.toggle("hideElement");
@@ -486,6 +523,14 @@ async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaD
     }
   }
   window.electronAPI.addMediaToLibrary(MediaLibraryObject);
+}
+
+function setBackgroundImage(){
+  document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${bgImagePath}')`;
+  document.documentElement.style.backgroundRepeat = `no-repeat`;
+  document.documentElement.style.backgroundPosition = `center center`;
+  document.documentElement.style.backgroundSize = `cover`;
+  document.documentElement.style.backgroundAttachment = `fixed`;
 }
 
 loadIconsDynamically();

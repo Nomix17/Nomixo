@@ -342,7 +342,7 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
       let fileName = element?.behaviorHints?.filename || "";
       let MagnetLink = `magnet:?xt=urn:btih:${Hash}`
 
-      if(parseInt(SeedersNumber) && !fileName.endsWith('.mkv')){
+      if(parseInt(SeedersNumber)){
         let TorrentElement = document.createElement("div");
         TorrentElement.id = "div-TorrentMedia";
         TorrentElement.style.marginBottom = "5px";
@@ -358,7 +358,7 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
         `;
 
         TorrentElement.addEventListener("click",()=>{
-          openMediaVideo(MediaId,MediaType,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
+          openMediaVideo(undefined,MediaId,MediaType,undefined,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
         });
         
         TorrentElement.addEventListener("mousedown",(event)=>{
@@ -411,7 +411,7 @@ function insertContinueWatchingButton(container,MediaLibraryInfo){
   let episodeInfo = {"seasonNumber":MediaLibraryInfo.seasonNumber, "episodeNumber":MediaLibraryInfo.episodeNumber}
 
   continueVideoButton.addEventListener("click",()=>{
-    openMediaVideo(MediaLibraryInfo.MediaId, MediaLibraryInfo.MediaType, MediaLibraryInfo.Magnet,MediaLibraryInfo.mediaImdbId,MediaLibraryInfo.bgImagePath,episodeInfo);
+    openMediaVideo(MediaLibraryInfo.TorrentIdentification,MediaLibraryInfo.MediaId, MediaLibraryInfo.MediaType, MediaLibraryInfo.Magnet,MediaLibraryInfo.mediaImdbId,MediaLibraryInfo.bgImagePath,episodeInfo);
     event.preventDefault();
     event.stopPropagation();
   });
@@ -614,21 +614,30 @@ document.addEventListener("mousedown", event => {
 
 async function showDownloadInfoInputDiv(DownloadTargetInfo){
   const apiKey = await window.electronAPI.getAPIKEY();
-
+  let [defaultPath, rememberDownloadLocation, DownloadSubtitles] = await loadDownloadSettings();
 
   let MediaPosterElement = DownloadOverlay.querySelector("#mediaPosterImg");
   let MediaTitleElement = DownloadOverlay.querySelector("#mediaTitle");
   let MediaYearTextElement = DownloadOverlay.querySelector("#mediaYear");
   let MediaSizeAResolutionTextElement = DownloadOverlay.querySelector("#mediaSize");
+  let downloadPathInput = DownloadOverlay.querySelector("#downloadPath");
+  let rememberPathCheckbox = DownloadOverlay.querySelector("#rememberPath");
+  let addSubtitlesCheckbox = DownloadOverlay.querySelector("#addSubtitles");
+
 
   MediaTitleElement.innerText = DownloadTargetInfo.Title;
   MediaYearTextElement.innerText = DownloadTargetInfo.Year;
   MediaSizeAResolutionTextElement.innerText = DownloadTargetInfo.Size +" • "+DownloadTargetInfo.Quality;
+  downloadPathInput.value = defaultPath;
+  rememberPathCheckbox.checked = rememberDownloadLocation;
+  addSubtitlesCheckbox.checked = DownloadSubtitles;
+
 
   DownloadOverlay.classList.add('active');
   dontGoBack = true;
   let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   MediaPosterElement.src = `https://image.tmdb.org/t/p/w185${posterPath}`;
+
 }
 
 function setupDownloadDivEvents(DownloadTargetInfo){
@@ -638,6 +647,9 @@ function setupDownloadDivEvents(DownloadTargetInfo){
   let closeBtn = DownloadOverlay.querySelector("#closeBtn");
   let downloadButton = DownloadOverlay.querySelector("#downloadBtn");
   let browseButton = DownloadOverlay.querySelector("#browseBtn");
+  let downloadPathInput = DownloadOverlay.querySelector("#downloadPath");
+  let rememberPathCheckbox = DownloadOverlay.querySelector("#rememberPath");
+  let addSubtitlesCheckbox = DownloadOverlay.querySelector("#addSubtitles");
 
   // handle closing and canceling buttons event listener
   [cancelButton,closeBtn].forEach((btn)=>{btn.addEventListener("click",()=>{
@@ -645,19 +657,43 @@ function setupDownloadDivEvents(DownloadTargetInfo){
   })});
 
   // handle the download button event listener
-  downloadButton.addEventListener("click",()=>{
-    DownloadTorrent(DownloadTargetInfo);
+  downloadButton.addEventListener("click",async (event)=>{
+    DownloadTorrent(DownloadTargetInfo,addSubtitlesCheckbox.checked);
+    await saveDownloadSettings(downloadPathInput.value, addSubtitlesCheckbox.checked, rememberPathCheckbox.checked);
     DownloadOverlay.classList.remove('active');
+    event.stopPropagation();
+    event.preventDefault();
   });
 }
 
-async function DownloadTorrent(DownloadTargetInfo){
+async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles){
   const apiKey = await window.electronAPI.getAPIKEY();
   let userDownloadPath = document.getElementById("downloadPath")?.value;
   let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   DownloadTargetInfo["posterUrl"] = `https://image.tmdb.org/t/p/w500${posterPath}`;
   DownloadTargetInfo["userDownloadPath"] = userDownloadPath;
-  window.electronAPI.downloadTorrent([DownloadTargetInfo]);
+  let subsObjects = [];
+  if(downloadSubtitles){
+    console.log("hello");
+     subsObjects = await loadingAllSubs(DownloadTargetInfo.IMDB_ID);
+  }
+
+  window.electronAPI.downloadTorrent([DownloadTargetInfo],subsObjects);
+}
+
+async function loadDownloadSettings(){
+  const Settings = await window.electronAPI.loadSettings();
+  return [Settings?.["DefaultDownloadPath"],Settings?.["rememberDownloadLocationByDefault"],Settings?.["DownloadSubtitlesByDefault"]];
+}
+
+async function saveDownloadSettings(DefaultDownloadPath, DownloadSubtitlesByDefault, rememberDownloadLocationByDefault){
+  let Settings = await window.electronAPI.loadSettings();
+  Settings["rememberDownloadLocationByDefault"] = rememberDownloadLocationByDefault;
+  Settings["DownloadSubtitlesByDefault"] = DownloadSubtitlesByDefault;
+  if(rememberDownloadLocationByDefault)
+    Settings["DefaultDownloadPath"] = DefaultDownloadPath;
+
+  window.electronAPI.applySettings(Settings);
 }
 
 window.addEventListener("keydown",(event)=>{
@@ -674,4 +710,8 @@ fetchInformation();
 handleDivsResize();
 handleFullScreenIcon();
 
+// async function ok(){
+//   await loadingAllSubs("tt0078748").then(data=>{console.log(data)});
+// }
 
+// ok();

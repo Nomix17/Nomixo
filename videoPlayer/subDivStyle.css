@@ -1,152 +1,318 @@
 html{
   background-color:rgba(var(--primary-color));
 }
+
 :-webkit-scrollbar{
   background-color: rgba(0,0,0,0%);
-  width:5px;
-  height:5px;
+  width: 6px;
+  height: 6px;
 }
+
 ::-webkit-scrollbar-thumb{
-  background-color: rgba(255,255,255,10%);
-  border-radius:20px;
+  background-color: rgba(255,255,255,15%);
+  border-radius: 20px;
+  transition: background-color 0.2s ease;
 }
+
+::-webkit-scrollbar-thumb:hover{
+  background-color: rgba(255,255,255,25%);
+}
+
 ::-webkit-scrollbar-button {
-    display: none;
+  display: none;
 }
 
 p{
-  color:white;
+  color: white;
   font-weight: bold;
 }
+
 button{
-  color:white;
-  font-weight:bold;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
+/* Main Subtitle Container */
 #div-MainSubtitleContainer{
-  position:absolute;
+  position: absolute;
   display: flex;
-  flex-direction:column;
+  flex-direction: column;
   justify-content: space-around;
-  padding:10px 0px 10px 0px;
-  left:50%;
+  padding: 0;
+  left: 50%;
   transform: translateX(-50%);
-  border-radius:20px;
-  background-color: rgba(var(--primary-color),1);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(var(--primary-color), 0.95), rgba(var(--primary-color), 0.98));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   bottom: 11%;
-  z-index:2;
-  width:25%;
+  z-index: 2;
+  width: 28%;
+  min-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
 }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 #div-MainSubtitleContainer p{
-  margin:0;
-}
-#div-subSize button{ 
-  background-color:rgba(255,255,255,0.05);
-  height:35px;
-  width:50px;
-  margin:5px;
-  border-radius:5px;
-  border:none;
-  font-size:15px;
-} 
-#div-subsList button{ 
-  background-color:rgba(0,0,0,0);
-  border:none;
-  border-radius:3px;
-  margin: 0px 5px 2px 5px;
-  padding:10px;
-  height:96%;
-  width:30px;
-  font-size:15px;
+  margin: 0;
 }
 
-#div-subsList button:hover{
-  background-color:rgba(255,255,255,0.05);
-  border-bottom:4px solid rgba(var(--secondary-color));
-  cursor:pointer;
-}
-
+/* Top Container */
 #div-TopSubContainer{
-  display:flex;
-  justify-content: space-around;
-  align-items :center;
-  height:20%;
-  padding:10px 0px 10px 0px;
-  width:350px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
+#div-TopSubContainer p{
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Bottom Container */
 #div-BottomSubContainer{
   display: flex;
   flex-direction: row;
-  margin:0;
+  margin: 0;
   justify-content: center;
-  height:200px;
-  border-top: 1px solid rgba(255,255,255,0.3);
+  height: 220px;
 }
+
+/* Left Container - Language Selection */
 #div-LeftSubContainer{
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  width:30%;
-  overflow: scroll;
-  border-right: 1px solid rgba(255,255,255,0.3);
-  padding-top:10px;
-
+  align-items: stretch;
+  width: 35%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 8px;
+  gap: 4px;
 }
 
+#div-LeftSubContainer button,
+#div-leftsubcontainer button{
+  width: 100%;
+  text-align: left;
+  background-color: transparent;
+  padding: 12px 16px;
+  margin: 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+#div-LeftSubContainer button::before,
+#div-leftsubcontainer button::before{
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: rgba(var(--secondary-color));
+  border-radius: 0 2px 2px 0;
+  transition: height 0.2s ease;
+}
+
+#div-LeftSubContainer button:hover,
+#div-leftsubcontainer button:hover{
+  background-color: rgba(255, 255, 255, 0.1);
+  padding-left: 20px;
+}
+
+#div-LeftSubContainer button:hover::before,
+#div-leftsubcontainer button:hover::before{
+  height: 60%;
+}
+
+/* Right Container */
 #div-RightSubContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 70%;
-  padding-top:10px;
-
+  width: 65%;
+  padding: 16px 12px;
+  gap: 8px;
 }
 
+#div-RightSubContainer p{
+  padding: 0;
+  margin: 8px 0 4px 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Subtitles List */
+#div-subsList{
+  overflow-y: hidden;
+  overflow-x: auto;
+  color: rgba(255, 255, 255, 60%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 70px;
+  padding: 8px 4px;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+#div-subsList button{ 
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  margin: 0;
+  padding: 0;
+  min-width: 48px;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 600;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+#div-subsList button::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--secondary-color), 0.1);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#div-subsList button:hover{
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(var(--secondary-color), 0.3);
+  transform: translateY(-2px);
+}
+
+#div-subsList button:hover::after{
+  opacity: 1;
+}
+
+/* Size Controls */
 #div-subSize{
   display: flex;
   flex-direction: row;
-  align-items:center;
-  justify-content:center;
-  height:55%;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+#div-subSize button{ 
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
+  height: 42px;
+  width: 42px;
+  border-radius: 8px;
+  border: none;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+#div-subSize button::before{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--secondary-color), 0.2);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#div-subSize button:hover{
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+  transform: scale(1.05);
+}
+
+#div-subSize button:hover::before{
+  opacity: 1;
+}
+
+#div-subSize button:active{
+  transform: scale(0.95);
 }
 
 #div-subSize p{
-  font-size:20px;
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 70px;
+  text-align: center;
+  color: rgba(var(--secondary-color));
+  background: rgba(var(--secondary-color), 0.1);
+  padding: 8px 16px;
+  border-radius: 8px;
 }
 
-#div-TopSubContainer p{
-  font-size:15px;
-}
-#div-subsList{
-  overflow-y: hidden;
-  color:rgba(255,255,255,60%);
-  display:flex;
-  flex-direction: row;
-  overflow:scroll;
-  align-items:center;
-  width:90%;
-  height: 26%;
-  margin: 0px 10px 10px 0px ;
-  border-bottom: 1px solid rgba(255,255,255,0.3);
-}
-#div-RightSubContainer p{
-  padding:0;
-  margin:5px 0px 5px 0px ;
-}
-#div-leftsubcontainer{
-  overflow-x:hidden;
-}
-#div-leftsubcontainer button{
-  width:90%;
-  text-align:start;
-  background-color: rgba(0,0,0,0.0);
-  padding:10px;
-  margin: 0px 5px 5px 5px;
-  border:none;
-  border-radius:5px;
+/* Utility Classes */
+.hideElement{
+  display: none !important;
 }
 
-#div-leftsubcontainer button:hover{
-  background-color: rgba(255,255,255,0.1);
+/* Responsive Design */
+@media (max-width: 1200px) {
+  #div-MainSubtitleContainer{
+    width: 35%;
+    min-width: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  #div-MainSubtitleContainer{
+    width: 90%;
+    min-width: unset;
+  }
+  
+  #div-BottomSubContainer{
+    flex-direction: column;
+    height: auto;
+    max-height: 300px;
+  }
+  
+  #div-LeftSubContainer,
+  #div-RightSubContainer{
+    width: 100%;
+    border: none;
+  }
+  
+  #div-LeftSubContainer{
+    border-bottom: none;
+    max-height: 120px;
+  }
 }

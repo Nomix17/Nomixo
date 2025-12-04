@@ -72,6 +72,7 @@ function createDownloadElement(mediaLibEntryPoint){
         "episodeNumber": mediaLibEntryPoint.episodeNumber
       };
       openMediaVideo(
+        mediaLibEntryPoint.torrentId,
         mediaLibEntryPoint.MediaId, 
         mediaLibEntryPoint.MediaType, 
         mediaLibEntryPoint.downloadPath,
