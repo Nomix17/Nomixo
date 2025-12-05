@@ -143,13 +143,26 @@ function monitorDownloads(){
           "episodeNumber": JsonData.episodeNumber
         };
         openMediaVideo(
-          JsonData.MediaId, 
-          JsonData.MediaType, 
+          JsonData.TorrentIdentification,
+          JsonData.MediaId,
+          JsonData.MediaType,
+          JsonData.downloadPath,
+          JsonData.fileName,
           JsonData.Magnet,
           JsonData.mediaImdbId,
           JsonData.bgImagePath,
           episodeInfo
         );
+
+
+        // openMediaVideo(
+        //   JsonData.MediaId, 
+        //   JsonData.MediaType, 
+        //   JsonData.Magnet,
+        //   JsonData.mediaImdbId,
+        //   JsonData.bgImagePath,
+        //   episodeInfo
+        // );
       });
     }
   });
@@ -185,7 +198,6 @@ window.addEventListener("resize",()=>{
   alignSizeDiv();
 });
 
-monitorDownloads();
 loadDownloadMediaFromLib();
 setLeftButtonStyle("btn-download");
 loadIconsDynamically();

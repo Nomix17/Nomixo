@@ -373,12 +373,14 @@ function applySelectedColor(inputElements){
   alphaInputs.forEach(inputelement => {
     let ouputElement = inputelement.parentElement.querySelector("output[class='alphaValueFloatingDiv']");
     inputelement.addEventListener("input", () => {
-      ouputElement.style.left = 20+inputelement.offsetWidth*(inputelement.value/100);
+      let position = inputelement.offsetWidth * (inputelement.value / 100);
+      ouputElement.style.left = position + "px";
       ouputElement.innerHTML = `<span style="font-size:13px;white-space:nowrap;background-color:rgba(0,0,0,0)">alpha: ${inputelement.value}%</span>`;
       ouputElement.style.opacity = 1;
     });
     inputelement.addEventListener("mouseenter", () => {
-      ouputElement.style.left = 20+inputelement.offsetWidth*(inputelement.value/100);
+      let position = inputelement.offsetWidth * (inputelement.value / 100);
+      ouputElement.style.left = position + "px";
       ouputElement.innerHTML = `<span style="font-size:13px;white-space:nowrap;background-color:rgba(0,0,0,0)">alpha: ${inputelement.value}%</span>`;
       ouputElement.style.opacity = 1;
     });
@@ -387,7 +389,6 @@ function applySelectedColor(inputElements){
     });
   });
 })();
-
 
 // Internal Player related functions
 

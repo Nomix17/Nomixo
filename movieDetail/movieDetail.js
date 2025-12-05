@@ -671,6 +671,7 @@ async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles){
   let userDownloadPath = document.getElementById("downloadPath")?.value;
   let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   DownloadTargetInfo["posterUrl"] = `https://image.tmdb.org/t/p/w500${posterPath}`;
+  DownloadTargetInfo["bgImagePath"] = backgroundImage;
   DownloadTargetInfo["userDownloadPath"] = userDownloadPath;
   let subsObjects = [];
   if(downloadSubtitles){

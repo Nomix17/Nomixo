@@ -138,11 +138,15 @@ ipcMain.handle("load-sub", ()=>{
   catch { throw new Error("Failed to load sub configs");}
 });
 
-ipcMain.handle("apply-settings",(event, SettingsObj) => {
+ipcMain.handle("apply-settings",async(event, SettingsObj) => {
+  let oldSettings = await loadSettings();
+  let FullSettings = {...oldSettings,...SettingsObj};
+
   const webContents = event.sender;
-  SettingsObj.PageZoomFactor = Math.max(0.1,SettingsObj.PageZoomFactor);
-  webContents.setZoomFactor(SettingsObj.PageZoomFactor);
-  fs.writeFileSync(SettingsFilePath, JSON.stringify(SettingsObj, null, 2), (err) => {
+  FullSettings.PageZoomFactor = Math.max(0.1,FullSettings.PageZoomFactor);
+  webContents.setZoomFactor(FullSettings.PageZoomFactor);
+  mainzoomFactor = FullSettings.PageZoomFactor;
+  fs.writeFileSync(SettingsFilePath, JSON.stringify(FullSettings, null, 2), (err) => {
     if(err) console.error(err)
     return err;
   });
@@ -181,9 +185,9 @@ ipcMain.handle("go-back",(event)=>{
 ipcMain.handle("change-page", (event,page) => {
   if (win) {
     const webContents = event.sender;
-    webContents.setZoomFactor(mainzoomFactor);
     const [filePath, query] = page.split('?');
     const fullPath = path.join(__dirname, filePath);
+    webContents.setZoomFactor(mainzoomFactor);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
     win.loadURL(url);
   }
@@ -330,7 +334,8 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
             console.log('Playback finished');
             server.close();
             torrent.destroy();
-            updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData.MediaId,metaData.MediaType,metaData)
+            console.log(metaData);
+            updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
             mpv.stdout.off('data', hideMainWindow);
             mpv.stderr.off('data', hideMainWindow);
 
@@ -369,7 +374,7 @@ ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
 
     else startFromTime = currentMediaFromLibrary[0].lastPlaybackPosition;
 
-    let subsPaths = await loadSubsFromSubDir(downloadPath,metaData.TorrentId);
+    let subsPaths = await loadSubsFromSubDir(metaData.downloadPath,metaData.TorrentId);
     let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
 
     let childProcessArguments = [videoFullPath, `--config-dir=${mpvConfigDirectory}`,`--start=${startFromTime}`,...subsArgument];
@@ -377,7 +382,7 @@ ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
     mpv = spawn('mpv', childProcessArguments);
     mpv.on('close', () => {
       console.log('Playback finished');
-      updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData.MediaId,metaData.MediaType,metaData)
+      updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
       mpv.stdout.off('data', hideMainWindow);
       mpv.stderr.off('data', hideMainWindow);
 
@@ -413,7 +418,7 @@ ipcMain.handle("download-torrent", (event, torrentsInformation,subsObjects) => {
     
     if(subsObjects.length){
       try{
-        let subDownloadDir = path.join(TorrentDownloadDir, `Subs_${torrentId}`);
+        let subDownloadDir = path.join(TorrentDownloadDir, `SUBS_${torrentId}`);
         fs.mkdirSync(subDownloadDir,{recursive:true});
         downloadMultiple(subDownloadDir,subsObjects);
       }catch(err){
@@ -782,13 +787,13 @@ function generateUniqueId(seed) {
   return hash.digest('hex');
 }
 
-async function downloadPoster(posterUrl){
+async function downloadImage(downloadDir,posterUrl){
   if(!posterUrl) return "undefined";
   const res = await fetch(posterUrl);
   const buffer = Buffer.from(await res.arrayBuffer());
-  if(!fs.existsSync(postersDirPath))
-    fs.mkdirSync(postersDirPath,{recursive:true});
-  const file = path.join(postersDirPath, path.basename(posterUrl));
+  if(!fs.existsSync(downloadDir))
+    fs.mkdirSync(downloadDir,{recursive:true});
+  const file = path.join(downloadDir, path.basename(posterUrl));
   fs.writeFileSync(file, buffer);
   return file;
 }
@@ -808,8 +813,9 @@ async function updateElementDownloadLibrary(torrentInfo, downloadedBytes) {
     if(torrentInfo.Status === "done")
       downloadLib.downloads[existingIndex]["Status"] = "done";
   }else{
-    let posterPath = await downloadPoster(torrentInfo?.posterUrl);
-    let newEntry = {...torrentInfo,posterPath: posterPath ?? "undefined"};
+    let bgImagePath = await downloadImage(postersDirPath,torrentInfo?.bgImagePath)
+    let posterPath = await downloadImage(postersDirPath,torrentInfo?.posterUrl);
+    let newEntry = {...torrentInfo,posterPath: posterPath ?? "undefined",bgImagePath: bgImagePath ?? "undefined"};
     downloadLib.downloads.push(newEntry);
   }
 
@@ -852,19 +858,22 @@ const hideMainWindow = (data)=>{
   }
 };
 
-function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData){
+function updateLastSecondBeforeQuit(lastPbPosition,metaData){
   const LibraryInfo = getLibraryInfo();
   let found = false;
 
   LibraryInfo.media ??= [];
 
   for(let [index,item] of Object.entries(LibraryInfo.media)){
-    if(item["MediaId"] == MediaId && item["MediaType"] == MediaType){
+    if(item["MediaId"] == metaData.MediaId && item["MediaType"] == metaData.MediaType){
       LibraryInfo.media[index]["lastPlaybackPosition"] = lastPbPosition;
       LibraryInfo.media[index]["seasonNumber"] = metaData?.seasonNumber;
       LibraryInfo.media[index]["episodeNumber"] = metaData?.episodeNumber;
       LibraryInfo.media[index]["Magnet"] = metaData?.Magnet;
       LibraryInfo.media[index]["bgImagePath"] = metaData?.bgImagePath;
+      LibraryInfo.media[index]["downloadPath"] = metaData?.downloadPath;
+      LibraryInfo.media[index]["fileName"] = metaData?.fileName;
+
 
       if(!LibraryInfo.media[index]["typeOfSave"].includes("Currently Watching")){
         LibraryInfo.media[index]["typeOfSave"].push("Currently Watching")
@@ -875,11 +884,13 @@ function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData){
   }
   if(!found){
     let MediaLibraryObject = {
-      MediaId:MediaId,
-      MediaType:MediaType,
+      MediaId:metaData?.MediaId,
+      MediaType:metaData?.MediaType,
       Magnet:metaData?.Magnet,
       bgImagePath:metaData?.bgImagePath,
       mediaImdbId:metaData?.mediaImdbId,
+      downloadPath:metaData?.downloadPath,
+      fileName:metaData?.fileName,
 
       lastPlaybackPosition:lastPbPosition,
       seasonNumber:metaData.seasonNumber,
@@ -894,9 +905,9 @@ function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData){
 function loadSubsFromSubDir(downloadPath,TorrentId){
   try{
     let subFolder = path.join(downloadPath,`SUBS_${TorrentId}`);
-    return fs.readdirSync(subFolder);
+    return fs.readdirSync(subFolder).map(fileName => path.join(subFolder,fileName));
   }catch(err){
-    console.err(message.err);
+    console.error(err.message);
     return [];
   }
 }

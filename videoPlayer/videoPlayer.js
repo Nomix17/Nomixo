@@ -70,6 +70,7 @@ window.addEventListener("mousemove",()=>{
 });
 
 VideoElement.addEventListener("playing", async (event)=>{
+  loadingGif.setAttribute("style","display:none");
   let oldPlayBackPosition  = await getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonNumber);
   VideoElement.currentTime = oldPlayBackPosition;
 
@@ -80,16 +81,8 @@ VideoElement.addEventListener("playing", async (event)=>{
   },10000);
 },{ once:true });
 
-VideoElement.addEventListener("playing", (event)=>{
-  loadingGif.setAttribute("style","display:none");
-});
-
 VideoElement.addEventListener("waiting", ()=>{
   loadingGif.setAttribute("style","");
-});
-
-VideoElement.addEventListener("ended", ()=>{
-  window.electronAPI.saveVideo();
 });
 
 VideoElement.addEventListener("timeupdate",()=>{
@@ -302,6 +295,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
 async function playVideoInMpv(PlayMagnet,Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs){
   let metaData = {"Magnet":Magnet, "downloadPath":downloadPath,
         "fileName":fileName, "bgImagePath":bgImagePath,
+        "MediaId":MediaId,"MediaType":MediaType,
         "TorrentId":TorrentIdentification, "mediaImdbId":mediaImdbId,
         "seasonNumber":seasonNumber, "episodeNumber":episodeNumber
   };

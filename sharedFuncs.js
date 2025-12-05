@@ -474,7 +474,18 @@ function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoin
       let episodeInfo = {"seasonNumber":mediaEntryPoint.seasonNumber, "episodeNumber":mediaEntryPoint.episodeNumber}
 
       continueVideoButton.addEventListener("click",()=>{
-        openMediaVideo(mediaEntryPoint.TorrentIdentification,mediaEntryPoint.MediaId, mediaEntryPoint.MediaType, mediaEntryPoint.downloadPath, mediaEntryPoint.fileName, mediaEntryPoint.Magnet,mediaEntryPoint.mediaImdbId,mediaEntryPoint.bgImagePath,episodeInfo);
+        openMediaVideo(
+          mediaEntryPoint.TorrentIdentification,
+          mediaEntryPoint.MediaId,
+          mediaEntryPoint.MediaType,
+          mediaEntryPoint.downloadPath,
+          mediaEntryPoint.fileName,
+          mediaEntryPoint.Magnet,
+          mediaEntryPoint.mediaImdbId,
+          mediaEntryPoint.bgImagePath,
+          episodeInfo
+        );
+
         event.preventDefault();
         event.stopPropagation();
       });
