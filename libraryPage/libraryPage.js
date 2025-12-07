@@ -31,13 +31,13 @@ async function loadData(){
   [SelectMediaType,SelectSaveType].forEach(selectElement => {
     selectElement.addEventListener("change",()=>{
       typeOfSave = SelectSaveType.value;
-      categoriDescription.querySelector("h1").innerText = `${SelectSaveType.value} - ${getCategorieFullName(SelectMediaType.value)}`;
+      categoriDescription.querySelector("h1").innerText = `${SelectSaveType.value}`;
       filterMedia(SelectMediaType.value,SelectSaveType.value);
     });
   });
  
  
-  categoriDescription.querySelector("h1").innerText = `${SelectSaveType.value} - ${getCategorieFullName(SelectMediaType.value)}`;
+  categoriDescription.querySelector("h1").innerText = `${SelectSaveType.value}`;
 }
 
 const getCategorieFullName = (value) => {
@@ -46,14 +46,32 @@ const getCategorieFullName = (value) => {
 }
 
 function filterMedia(MediaTypeFilter,SaveTypeFilter){
+  let displayedNumber = 0;
   for(item of SavedMedia.querySelectorAll(".div-MovieElement")){
     if((MediaTypeFilter == "all" || item.getAttribute("mediaType") == MediaTypeFilter) &&
       (item.getAttribute("saveType").includes(SaveTypeFilter) || SaveTypeFilter.toLowerCase() == "all")){
+      displayedNumber++;
       item.style.display = "flex";
     }else{
       item.style.display = "none";
     }
   }
+
+  if(displayedNumber == 0){
+    let existingWarning = RightmiddleDiv.querySelector(".div-WarningMessage");
+    if(!existingWarning){
+      let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
+      RightmiddleDiv.appendChild(WarningElement);
+    }else{
+      existingWarning.style.display = "flex";
+    }
+  }else{
+    let WarningElement = RightmiddleDiv.querySelector(".div-WarningMessage");
+    if(WarningElement){
+      WarningElement.style.display = "none";
+    }
+  }
+
 }
 
 loadData();
