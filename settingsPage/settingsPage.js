@@ -43,8 +43,6 @@ let FontSizeExternalExternal = 24;
 let FontFamilyExternal = "monospace";
 let TextColorExternal = "white";
 
-RightmiddleDiv.style.opacity = 1;
-
 
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll("input").forEach(inputElement=>{
@@ -259,6 +257,8 @@ async function loadSettings(){
   inputTextColorInternal.value = TextColorInternal;
   inputBackgroundColorInternal.value = BackgroundColorInternal;
   applySelectedColor(ColorInputsWithAlphaValue)
+
+  RightmiddleDiv.style.opacity = 1;
 }
 
 async function loadExternelSubConfigs(){

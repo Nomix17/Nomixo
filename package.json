@@ -15,7 +15,6 @@
   "dependencies": {
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
-    "torrent-stream": "^1.2.1",
     "webtorrent": "^2.8.4"
   },
   "devDependencies": {

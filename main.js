@@ -334,7 +334,7 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
             console.log('Playback finished');
             server.close();
             torrent.destroy();
-            console.log(metaData);
+
             updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
             mpv.stdout.off('data', hideMainWindow);
             mpv.stderr.off('data', hideMainWindow);
@@ -401,48 +401,66 @@ ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
 
 // ======================= TORRENT DOWNLOADING =======================
 
-ipcMain.handle("download-torrent", (event, torrentsInformation,subsObjects) => {
-  torrentsInformation.forEach((torrentInfo) => {
-    
-    // Determine download path before generating torrentId
-    let userDownloadPath = torrentInfo?.userDownloadPath;
-    if (userDownloadPath) {
-      defaultDownloadDir = userDownloadPath;
+function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
+  // Download subtitles
+  if (subsObjects.length) {
+    try {
+      let subDownloadDir = path.join(TorrentDownloadDir, `SUBS_${torrentId}`);
+      fs.mkdirSync(subDownloadDir, { recursive: true });
+      downloadMultiple(subDownloadDir, subsObjects);
+    } catch (err) {
+      console.error("Subtitle download error:", err);
     }
-    
-    const TorrentDownloadDir = path.join(defaultDownloadDir, torrentInfo.dirName);
-    fs.mkdirSync(TorrentDownloadDir, { recursive: true });
-    
-    // Include download path in hash to handle same content to different locations
-    const torrentId = generateUniqueId(`${torrentInfo.IMDB_ID}-${torrentInfo.episodeNumber ?? "undefined"}-${torrentInfo.seasonNumber ?? "undefined"}-${TorrentDownloadDir}`);
-    
-    if(subsObjects.length){
-      try{
-        let subDownloadDir = path.join(TorrentDownloadDir, `SUBS_${torrentId}`);
-        fs.mkdirSync(subDownloadDir,{recursive:true});
-        downloadMultiple(subDownloadDir,subsObjects);
-      }catch(err){
-        console.error(err);
-      }
-    }
+  }
+}
 
-    // Add torrent with custom download path to avoid /tmp
-    const torrent = DownloadClient.add(torrentInfo.MagnetLink, {
-      path: TorrentDownloadDir
-    });
+async function downloadTorrent(torrentInfo, torrentId, TorrentDownloadDir) {
+  // Add torrent
+  const torrent = DownloadClient.add(torrentInfo.MagnetLink, {
+    path: TorrentDownloadDir
+  });
 
-    DownloadingTorrents[torrentId] = torrent;
+  DownloadingTorrents[torrentId] = torrent;
 
+  // Wait for torrent to be ready before accessing files
+  return new Promise((resolve, reject) => {
+    console.log("Loading Torrent:", torrentId);
     torrent.on("ready", () => {
-      const totalSize = torrent.length;
+      const subtitlesExt = ['.srt', '.ass', '.sub', '.vtt'];
+     
+      console.log("\nDownload Target: " + torrentInfo?.fileName);
+
+      console.log("\nTorrent Files:-----------------------------------------------------");
+      torrent.files.forEach(f => { console.log(f.name) });
+      console.log("-------------------------------------------------------------------\n");
+
+      const files = torrent.files.filter(f =>
+        f.name.toLowerCase().trim() === torrentInfo?.fileName.toLowerCase().trim() ||
+        subtitlesExt.some(ext => f.name.toLowerCase().endsWith(ext))
+      );
+
+      if (!files.length) {
+        reject(new Error('No suitable video file found'));
+        return;
+      }
+
+      // Deselect all files first
+      torrent.files.forEach(file => { file.deselect() });
+      
+      // Select only the files that match our criteria
+      files.forEach(file => { file.select() });
+
+      // Calculate total size of only selected files
+      const totalSize = files.reduce((sum, file) => sum + file.length, 0);
       let LibraryStartTime = 0;
       let PipingStartTime = 0;
-      const DelayBeforeLibrarySave = 1000; // ms
-      const DelayBeforePiping = 400; // ms
+      const DelayBeforeLibrarySave = 1000;
+      const DelayBeforePiping = 400;
 
       torrent.on("download", () => {
         const now = Date.now();
-        const downloadedDataLength = torrent.downloaded;
+        // Calculate downloaded bytes for selected files only
+        const downloadedDataLength = files.reduce((sum, file) => sum + file.downloaded, 0);
 
         torrentInfo["torrentId"] = torrentId;
         torrentInfo["downloadPath"] = TorrentDownloadDir;
@@ -470,28 +488,33 @@ ipcMain.handle("download-torrent", (event, torrentsInformation,subsObjects) => {
             console.log(`Torrent cleaned up: ${torrentId}`);
           });
           
+          resolve();
           return;
         }
 
-        // Add changes to the library every x ms
+        // Update library periodically
         if (now - LibraryStartTime >= DelayBeforeLibrarySave) {
           updateElementDownloadLibrary(torrentInfo, downloadedDataLength);
           LibraryStartTime = now;
         }
 
+        // Send progress updates
         if (now - PipingStartTime >= DelayBeforePiping) {
+          const downloadSpeed = torrent.downloadSpeed; // b/s
+
           const jsonMessage = {
             TorrentId: torrentId,
             Downloaded: downloadedDataLength,
             Total: totalSize,
             DownloadPath: TorrentDownloadDir,
+            DownloadSpeed:downloadSpeed,
             Status: "downloading"
           };
 
           win.webContents.send("download-progress-stream", jsonMessage);
           PipingStartTime = now;
 
-          console.log(`Downloading ${torrentInfo.dirName}: ${((downloadedDataLength / totalSize) * 100).toFixed(2)}%`);
+          console.log(`Downloading ${torrentInfo.dirName}: ${((downloadedDataLength / totalSize) * 100).toFixed(2)}%, ${(downloadSpeed / (1024)).toFixed(2)} Kb/s`);
         }
       });
     });
@@ -504,8 +527,50 @@ ipcMain.handle("download-torrent", (event, torrentsInformation,subsObjects) => {
         Status: "error",
         Error: err.message
       });
+      
+      reject(err);
     });
   });
+}
+
+ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObjects) => {
+  const results = [];
+  
+  for (const torrentInfo of torrentsInformation) {
+    try {
+      // Determine download path
+      let userDownloadPath = torrentInfo?.userDownloadPath;
+      if (userDownloadPath) {
+        defaultDownloadDir = userDownloadPath;
+      }
+      
+      const TorrentDownloadDir = path.join(defaultDownloadDir, torrentInfo.dirName);
+      fs.mkdirSync(TorrentDownloadDir, { recursive: true });
+      
+      const torrentId = generateUniqueId(
+        `${torrentInfo.IMDB_ID}-${torrentInfo.episodeNumber ?? "undefined"}-${torrentInfo.seasonNumber ?? "undefined"}-${TorrentDownloadDir}`
+      );
+
+      try {
+        downloadSubs(subsObjects, torrentId, TorrentDownloadDir);
+      } catch (error) {
+        console.error(error);
+      }
+
+      try {
+        await downloadTorrent(torrentInfo, torrentId, TorrentDownloadDir);
+        results.push({ success: true, torrentId });
+      } catch (error) {
+        console.error(error);
+        results.push({ success: false, error: error.message, torrentId });
+      }
+
+    } catch (err) {
+      console.error(`Error processing torrent:`, err);
+      results.push({ success: false, error: err.message });
+    }
+  }
+  return results;
 });
 
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
@@ -536,21 +601,33 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
 
 ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
   const torrent = DownloadingTorrents[torrentId];
-  if (!torrent || !torrent.files) return { status: "not found", torrentId };
+  if (!torrent){
+    let wholeDownloadLibrary = await loadDownloadLibrary();
 
-  torrent._paused = torrent._paused || false;
+    if(wholeDownloadLibrary.downloads.length){
+      let torrentInfo = wholeDownloadLibrary.downloads.find(element => element.torrentId === torrentId);
+      let TorrentDownloadDir = torrentInfo.downloadPath;
+      downloadTorrent(torrentInfo, torrentId, TorrentDownloadDir);
 
-  if (torrent._paused) {
-    torrent.files.forEach(file => file.select()); // resume downloading
-    torrent._paused = false;
-    console.log("Resume");
-    return { status: "resumed", torrentId };
-  } else {
-    torrent.files.forEach(file => file.deselect()); // pause downloading
-    torrent._paused = true;
-    console.log("Pause");
+      return { status: "continued", torrentId };
+
+    }else{
+      console.error("Empty download library, cannot continue download for",torrentId);
+      return { status: "empty download library",torrentId };
+    }
+
+  }else{
+    await new Promise((resolve) => {
+      torrent.destroy(() => {
+        delete DownloadingTorrents[torrentId];
+        console.log(`Torrent Paused: ${torrentId}`);
+        resolve();
+      });
+    });
+
     return { status: "paused", torrentId };
   }
+
 });
 
 
@@ -813,7 +890,10 @@ async function updateElementDownloadLibrary(torrentInfo, downloadedBytes) {
     if(torrentInfo.Status === "done")
       downloadLib.downloads[existingIndex]["Status"] = "done";
   }else{
-    let bgImagePath = await downloadImage(postersDirPath,torrentInfo?.bgImagePath)
+    console.log("Creating Download Library Entry Point for: "+torrentInfo.torrentId);
+    // let bgImagePath = "";
+    // let posterPath = "";
+    let bgImagePath = await downloadImage(postersDirPath,torrentInfo?.bgImageUrl)
     let posterPath = await downloadImage(postersDirPath,torrentInfo?.posterUrl);
     let newEntry = {...torrentInfo,posterPath: posterPath ?? "undefined",bgImagePath: bgImagePath ?? "undefined"};
     downloadLib.downloads.push(newEntry);

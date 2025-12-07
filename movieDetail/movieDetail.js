@@ -342,7 +342,7 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
       let fileName = element?.behaviorHints?.filename || "";
       let MagnetLink = `magnet:?xt=urn:btih:${Hash}`
 
-      if(parseInt(SeedersNumber)){
+      if(parseInt(SeedersNumber) && fileName.trim() !== ""){
         let TorrentElement = document.createElement("div");
         TorrentElement.id = "div-TorrentMedia";
         TorrentElement.style.marginBottom = "5px";
@@ -671,11 +671,10 @@ async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles){
   let userDownloadPath = document.getElementById("downloadPath")?.value;
   let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   DownloadTargetInfo["posterUrl"] = `https://image.tmdb.org/t/p/w500${posterPath}`;
-  DownloadTargetInfo["bgImagePath"] = backgroundImage;
+  DownloadTargetInfo["bgImageUrl"] = backgroundImage;
   DownloadTargetInfo["userDownloadPath"] = userDownloadPath;
   let subsObjects = [];
   if(downloadSubtitles){
-    console.log("hello");
      subsObjects = await loadingAllSubs(DownloadTargetInfo.IMDB_ID);
   }
 
@@ -711,8 +710,3 @@ fetchInformation();
 handleDivsResize();
 handleFullScreenIcon();
 
-// async function ok(){
-//   await loadingAllSubs("tt0078748").then(data=>{console.log(data)});
-// }
-
-// ok();

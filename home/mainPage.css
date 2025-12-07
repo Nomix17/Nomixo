@@ -175,7 +175,7 @@ body, html {
   padding-top:0;
   overflow-y:scroll;
   opacity: var(--dont-Smooth-transition-between-pages);
-  transition: opacity 0.3s ease;
+  transition: opacity 0.5s ease;
   padding-bottom:1%;
 }
 
