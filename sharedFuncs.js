@@ -647,3 +647,108 @@ async function loadingAllSubs(id){
   }
 }
 
+function manageDropDowns(){
+  const customSelects = document.querySelectorAll('.custom-select');
+
+  customSelects.forEach(select => {
+    const trigger = select.querySelector('.select-trigger');
+    const dropdown = select.querySelector('.select-dropdown');
+    const options = select.querySelectorAll('.select-option');
+
+    // Toggle dropdown
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = select.classList.contains('is-open');
+      
+      customSelects.forEach(s => s.classList.remove('is-open'));
+      
+      if (!isOpen) {
+        select.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    // Handle option selection
+    options.forEach(option => {
+      option.addEventListener('click', () => {
+        trigger.textContent = option.textContent;
+        select.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', () => {
+      select.classList.remove('is-open');
+      trigger.setAttribute('aria-expanded', 'false');
+    });
+
+    // Keyboard navigation
+    trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        trigger.click();
+      }
+    });
+  });
+}
+
+function manageDropDowns() {
+  const customSelects = document.querySelectorAll('.custom-select');
+  
+  customSelects.forEach(select => {
+    const trigger = select.querySelector('.select-trigger');
+    const dropdown = select.querySelector('.select-dropdown');
+    const options = select.querySelectorAll('.select-option');
+    
+    const newTrigger = trigger.cloneNode(true);
+    trigger.parentNode.replaceChild(newTrigger, trigger);
+    
+    newTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = select.classList.contains('is-open');
+      
+      customSelects.forEach(s => s.classList.remove('is-open'));
+      
+      if (!isOpen) {
+        select.classList.add('is-open');
+        newTrigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+    
+    options.forEach(option => {
+      option.addEventListener('click', () => {
+        const value = option.getAttribute('value');
+        const text = option.textContent;
+        
+        newTrigger.textContent = text;
+        
+        options.forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+        
+        dropdown.setAttribute('data-value', value);
+        
+        select.classList.remove('is-open');
+        newTrigger.setAttribute('aria-expanded', 'false');
+        
+        const changeEvent = new CustomEvent('dropdownChange', { detail: { value, text } });
+        dropdown.dispatchEvent(changeEvent);
+      });
+    });
+    
+    newTrigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        newTrigger.click();
+      }
+    });
+  });
+  
+  document.addEventListener('click', () => {
+    customSelects.forEach(select => {
+      select.classList.remove('is-open');
+      const trigger = select.querySelector('.select-trigger');
+      trigger.setAttribute('aria-expanded', 'false');
+    });
+  });
+}

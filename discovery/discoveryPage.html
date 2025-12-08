@@ -8,6 +8,7 @@
     <script src="../sharedFuncs.js"></script>
     <link rel="stylesheet" href="discoveryPage.css">
     <link rel="stylesheet" href="../home/mainPage.css">
+    <link rel="stylesheet" href="../home/dropDown.css">
     <link rel="stylesheet" href="../home/WarningMessage.css">
     <link rel="stylesheet" href="../home/loadingDiv.css">
 
@@ -76,13 +77,26 @@
         <!-- right div -->
         <div id="div-middle-right">
           <div id="div-OptionsContainer">
-            <select name="Type" id="select-type">
-              <option value="movie">Movie</option>
-              <option value="tv">Tv Show</option>
-            </select>
-            <select name="Genres" id="select-Genres">
-              <option value="All">All</option>
-            </select>
+
+            <div class="custom-select">
+              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                Select an option
+              </button>
+              <div class="select-dropdown" role="listbox" id="select-type">
+                <div class="select-option" role="option" value="movie">Movie</div>
+                <div class="select-option" role="option" value="tv">Tv Show</div>
+              </div>
+            </div>
+
+            <div class="custom-select">
+              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                Select an option
+              </button>
+              <div class="select-dropdown" role="listbox" id="select-Genres" value="All">
+                <div class="select-option" role="option" value="All">All</div>
+              </div>
+            </div>
+
           </div>
 
           <div class="div-categories-description">
