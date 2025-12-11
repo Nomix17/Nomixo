@@ -4,6 +4,7 @@ let MediaType = data.get("MediaType") == "All" ? "movie" : data.get("MediaType")
 
 let RightmiddleDiv = document.getElementById("div-middle-right");
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
+let loadingGif = document.getElementById("lds-dual-ring-container");
 let searchInput = document.getElementById("input-searchForMovie");
 let SelectMediaType = document.getElementById("select-type");
 let SelectGenre = document.getElementById("select-Genres");
@@ -68,9 +69,10 @@ async function fetchData(apiKey, genreId, ThisMediaType, page) {
   Promise.all([fetch(url).then(res => res.json())])
     .then(GenreData => {
       insertMediaElements(GenreData[0].results, MediaSuggestions, ThisMediaType, LibraryInformation);
+      MediaSuggestions.appendChild(globalLoadingGif);
       globalLoadingGif.remove();
-    }
-    );
+      loadingGif.style.display = "none";
+    });
 }
 
 function loadGenres(apiKey) {
@@ -145,6 +147,7 @@ async function loadData() {
   RightmiddleDiv.addEventListener('scroll', function () {
     let middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
     if (RightmiddleDiv.scrollTop + middleRightDivHeight + 30 >= RightmiddleDiv.scrollHeight) {
+      loadingGif.style.display = "flex";
       pageLoaded += 2;
       fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, pageLoaded + 1);
       fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, pageLoaded);
