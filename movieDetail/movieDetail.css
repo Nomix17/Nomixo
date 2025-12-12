@@ -43,7 +43,9 @@ body{
   overflow: hidden;
   opacity:1;
 }
-
+.fetchingFailed{
+  background-color: rgba(var(--primary-color),0.9);
+}
 
 h1,
 h2,
@@ -437,7 +439,7 @@ option{
 
 #div-globlaLoadingGif{
   position:fixed;
-  left:50.1%;
+  left:50%;
   top:50%;
   transform: translate(-50%, 50%);
   opacity:0;

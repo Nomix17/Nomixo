@@ -39,32 +39,50 @@ let seasonsDivArray = [];
 
 async function fetchInformation(){
   const apiKey = await window.electronAPI.getAPIKEY();
-  loadMovieInformation(apiKey);
-  loadCastInformation(apiKey);
+  const results = await Promise.all([
+    loadMovieInformation(apiKey),
+    loadCastInformation(apiKey)
+  ])
+    .catch(()=>{
+      let middleDiv = document.getElementById("div-middle");
+      document.documentElement.classList.add("fetchingFailed");
+      middleDiv.innerHTML = "";
+      document.getElementById("div-main").style.opacity = "1";
+      setTimeout(() => {
+        let WarningElement = DisplayWarningOrErrorForUser("We're having trouble loading data.</br>Please Check your connection and retry!");
+        middleDiv.appendChild(WarningElement);
+        globalLoadingGif.remove();
+        middleDiv.style.opacity = 1;
+      }, 800);
+    })
 }
 
 function loadMovieInformation(apiKey){
   //load Movie information
   let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
-  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}?api_key=${apiKey}`)
+  return fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}?api_key=${apiKey}`)
     .then(res=>res.json())  
     .then(data =>{
       insertMovieElements(data,apiKey);
       if(MediaType == "movie")
         return fetchTorrent(apiKey,movieId,MediaType); 
     })
-    .catch(error => console.error(error));
+    .catch(error => {
+      console.error(error);
+      throw error;
+    });
 }
 
 function loadCastInformation(apiKey){
   // load Cast and Crew information
   let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
-  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/credits?api_key=${apiKey}`)
+  return  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/credits?api_key=${apiKey}`)
     .then(res => res.json())
     .then(data => insertCastElements(data))
     .catch(err =>{
       noInfoFounded();
       console.error(err.message);
+      throw error
   });
 }
 
