@@ -12,6 +12,9 @@ async function loadDownloadMediaFromLib(){
     let MediaDownloadElementContainer = document.querySelector(".downloaded-movie-div-container");
     putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
     RightmiddleDiv.style.opacity = 1;
+  }else{
+    if(!monitoringProgress)
+      monitorDownloads();
   }
 }
 
@@ -20,7 +23,8 @@ function createDownloadElement(mediaLibEntryPoint){
   let totalSize = (mediaLibEntryPoint?.Total / (1024 * 1024 * 1024)).toFixed(2);
   let progress = (currentSize/totalSize * 100).toFixed(2);
 
-  let  ElementIdentifier = mediaLibEntryPoint?.torrentId;
+  let ElementIdentifier = mediaLibEntryPoint?.torrentId;
+  if(document.getElementById(ElementIdentifier)) return
 
   let MediaDownloadElement = document.createElement("div");
   MediaDownloadElement.className = "downloaded-movie-div";
@@ -78,7 +82,6 @@ function createDownloadElement(mediaLibEntryPoint){
 
   let RightmiddleDiv = document.getElementById("div-middle-right");
   RightmiddleDiv.style.opacity = 1;
-  monitorDownloads();
 }
 
 function monitorDownloads(){
@@ -120,6 +123,19 @@ function monitorDownloads(){
       let library = await window.electronAPI.loadDownloadLibraryInfo();
       let libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
       MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);
+    }
+  });
+  monitoringProgress = true;
+}
+
+function refreshEnties(){
+  window.electronAPI.getDownloadProgress(async (data) => {
+    let JsonData = data;
+    if(JsonData?.Status === "NewDownload"){
+      let MediaDownloadElementContainer = document.querySelector(".downloaded-movie-div-container");
+      let emptyLibText = MediaDownloadElementContainer.querySelector("#div-text");
+      if(emptyLibText) emptyLibText.remove()
+      loadDownloadMediaFromLib();
     }
   });
 }
@@ -210,6 +226,8 @@ window.addEventListener("resize",()=>{
   alignSizeDiv();
 });
 
+let monitoringProgress = false;
 loadDownloadMediaFromLib();
+refreshEnties();
 setLeftButtonStyle("btn-download");
 loadIconsDynamically();

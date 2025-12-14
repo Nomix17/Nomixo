@@ -39,7 +39,7 @@ function resizingRightMiddleDiv(rightMiddleDiv){
 
 window.checkIfDivShouldHaveMoveToRightOrLeftButton = (MediaDivs) => {
   MediaDivs.forEach(MediaDiv => {
-    if(MediaDiv.scrollWidth == MediaDiv.clientWidth)
+    if(MediaDiv.scrollWidth === MediaDiv.clientWidth)
        MediaDiv.parentElement.querySelectorAll(".movingArrowButton").forEach(btn => btn.style.display = "none");
     else
       MediaDiv.parentElement.querySelectorAll(".movingArrowButton").forEach(btn => btn.style.display = "flex");
@@ -48,7 +48,7 @@ window.checkIfDivShouldHaveMoveToRightOrLeftButton = (MediaDivs) => {
 
 window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaType,LibraryInformation){
   let tempArray = [];
-  if(MediaSearchResults == undefined || MediaSearchResults.length == 0) throw new Error("No data was Fetched");
+  if(MediaSearchResults == undefined || MediaSearchResults.length === 0) throw new Error("No data was Fetched");
   MediaSearchResults.forEach(obj => {
     let Id = "Unknown";
     let Title = "Unknown";
@@ -70,7 +70,7 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
 
       if(obj.hasOwnProperty("poster_path") && obj["poster_path"] != null) PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["poster_path"];
       else if(obj.hasOwnProperty("profile_path") && obj["profile_path"] != null)  PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["profile_path"];
-      else if(NewMediaType == "person") PosterImage = "../assets/ProfileNotFound.png"
+      else if(NewMediaType === "person") PosterImage = "../assets/ProfileNotFound.png"
       else PosterImage = "../assets/PosterNotFound.png"
       
       let mediaDomElement = document.createElement("div");
@@ -86,12 +86,12 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
       toggleInLibraryBtn.classList.add("btn-toggle-in-library");
       movieNameElement.classList.add("parag-MovieTitle");
 
-      let mediaIsInLibrary = LibraryInformation.filter(libraryEntryPoint => libraryEntryPoint.MediaId == Id && libraryEntryPoint.MediaType == NewMediaType).length?2:0;
+      let mediaIsInLibrary = LibraryInformation.filter(libraryEntryPoint => libraryEntryPoint.MediaId === Id && libraryEntryPoint.MediaType === NewMediaType).length?2:0;
       if(mediaIsInLibrary) setAddToLibraryButtonToPressed(toggleInLibraryBtn);
       else setAddToLibraryButtonToNormal(toggleInLibraryBtn)
 
       mediaDomElement.appendChild(moviePosterElement);
-      if(NewMediaType.toLowerCase() != "person") mediaDomElement.appendChild(toggleInLibraryBtn);
+      if(NewMediaType.toLowerCase() !== "person") mediaDomElement.appendChild(toggleInLibraryBtn);
       mediaDomElement.appendChild(movieNameElement);
 
       toggleInLibraryBtn.addEventListener("click",function() {ToggleInLibrary(Id,NewMediaType,typeOfSave)});
@@ -103,9 +103,9 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
         if(!Array.from(MediaContainer.querySelectorAll(".div-MovieElement")).map(element => element.innerHTML).includes(mediaDomElement.innerHTML))
           MediaContainer.appendChild(mediaDomElement);
       }else{
-        if(NewMediaType.toLowerCase() == "movie") MediaContainer[0].append(mediaDomElement);
-        else if(NewMediaType.toLowerCase() == "tv" || NewMediaType.toLowerCase() == "anime" ) MediaContainer[1].append(mediaDomElement);
-        else if(NewMediaType.toLowerCase() == "person") MediaContainer[2].append(mediaDomElement);
+        if(NewMediaType.toLowerCase() === "movie") MediaContainer[0].append(mediaDomElement);
+        else if(NewMediaType.toLowerCase() === "tv" || NewMediaType.toLowerCase() === "anime" ) MediaContainer[1].append(mediaDomElement);
+        else if(NewMediaType.toLowerCase() === "person") MediaContainer[2].append(mediaDomElement);
         else MediaContainer[3].append(mediaDomElement);
       } 
       addFloatingDiv(mediaDomElement);
@@ -148,7 +148,7 @@ window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
     setAddToLibraryButtonToPressed(toggleInLibraryElement);
   
     let libInfo = await loadLibraryInfo();
-    let SearchedMediaElement = libInfo.filter(item => (item.MediaId == mediaId && item.MediaType == mediaType));
+    let SearchedMediaElement = libInfo.filter(item => (item.MediaId === mediaId && item.MediaType === mediaType));
     let MediaElementDoesExist = SearchedMediaElement.length > 0;
     let MediaLibraryObject;
 
@@ -193,22 +193,22 @@ window.setLeftButtonStyle = (buttonId) => {
 
 window.setupKeyPressesForInputElement = (searchInput)=>{
   searchInput.addEventListener("keypress",(event)=>{
-    if(event.key == "Enter") openSearchPage();
+    if(event.key === "Enter") openSearchPage();
   });
 }
 
 let dontGoBack = false;
 window.setupKeyPressesHandler = () =>{
   window.addEventListener("keydown",(event)=>{
-    if(event.key == "Escape"){
+    if(event.key === "Escape"){
       if(dontGoBack)
         dontGoBack = false;
       else
         window.electronAPI.goBack();
     }
-    if (event.key == "Tab" ||
-        event.key == "Super" ||
-        event.key == "Alt" ) event.preventDefault();
+    if (event.key === "Tab" ||
+        event.key === "Super" ||
+        event.key === "Alt" ) event.preventDefault();
   });
 }
 
@@ -286,14 +286,6 @@ window.loadIconsDynamically = ()=>{
     .catch(err=>{
       console.error(err.message);
     });
-  // fetch('../assets/icons/logo.svg')
-  //   .then(response => response.text())
-  //   .then(svgText => {
-  //     document.getElementById('div-main-logo').innerHTML = svgText;
-  //   })
-  //   .catch(err=>{
-  //     console.error(err.message);
-  //   });
 }
 
 function goBack(){
@@ -327,7 +319,7 @@ function OpenSettingsPage(){
 
 function openDetailPage(movieId,mediaType){
   let path;
-  if(mediaType == "person")
+  if(mediaType === "person")
     path = `./personDetails/personDetails.html?personId=${movieId}`;
   else
     path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
@@ -336,7 +328,7 @@ function openDetailPage(movieId,mediaType){
 
 function openSearchPage(){
   let searchKeyword = searchInput.value;
-  if(searchKeyword.trim() !=""){
+  if(searchKeyword.trim() !==""){
     let path ="./search/searchPage.html?search="+searchKeyword;
     window.electronAPI.navigateTo(path);
   }
@@ -394,12 +386,12 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,gl
     return fetch(searchQuery)
       .then(res=>res.json())
       .then(data => {
-        if(data.status_code == 7) throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
+        if(data.status_code === 7) throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
         globalLoadingGif.remove();
         SavedMedia.appendChild(createMediaElement(data,MediaType,mediaEntryPoint.typeOfSave,mediaEntryPoint,SavedMedia));
       })
       .catch(err=>{
-        err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data</br>Please Check your connection and refresh!":err.message;
+        err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data</br>Please Check your connection and refresh!":err.message;
         setTimeout(()=>{
           RightmiddleDiv.innerHTML ="";
           let WarningElement = DisplayWarningOrErrorForUser(err.message);
@@ -517,7 +509,7 @@ function removeMediaFromLibrary(mediaId,mediaType,parentDiv){
 
   let MediaElementsContainer = parentDiv.parentElement;
   parentDiv.remove();
-  if(MediaElementsContainer.innerHTML.trim() == ""){
+  if(MediaElementsContainer.innerHTML.trim() === ""){
     let continueWatchingElement = document.getElementById("continue-watching-categorie");
     if(continueWatchingElement){
       continueWatchingElement.style.display = "none";
@@ -645,52 +637,6 @@ async function loadingAllSubs(id){
     console.error(err);
     return [];
   }
-}
-
-function manageDropDowns(){
-  const customSelects = document.querySelectorAll('.custom-select');
-
-  customSelects.forEach(select => {
-    const trigger = select.querySelector('.select-trigger');
-    const dropdown = select.querySelector('.select-dropdown');
-    const options = select.querySelectorAll('.select-option');
-
-    // Toggle dropdown
-    trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = select.classList.contains('is-open');
-      
-      customSelects.forEach(s => s.classList.remove('is-open'));
-      
-      if (!isOpen) {
-        select.classList.add('is-open');
-        trigger.setAttribute('aria-expanded', 'true');
-      }
-    });
-
-    // Handle option selection
-    options.forEach(option => {
-      option.addEventListener('click', () => {
-        trigger.textContent = option.textContent;
-        select.classList.remove('is-open');
-        trigger.setAttribute('aria-expanded', 'false');
-      });
-    });
-
-    // Close on outside click
-    document.addEventListener('click', () => {
-      select.classList.remove('is-open');
-      trigger.setAttribute('aria-expanded', 'false');
-    });
-
-    // Keyboard navigation
-    trigger.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        trigger.click();
-      }
-    });
-  });
 }
 
 function manageDropDowns() {

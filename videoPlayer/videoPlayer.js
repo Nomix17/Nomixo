@@ -249,14 +249,14 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     let subs = await loadingAllSubs(mediaImdbId);
     subtitlesArray = subs;
     if(fileIsMkv){
-      playVideoInMpv(true,Magnet,undefined,undefined,undefined,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs);
       // pass to externel Player
+      playVideoInMpv(true,Magnet,undefined,fileName,undefined,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs);
       
     }else{
       insertLanguageButton(subs); 
       window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
         console.log(`Video Format: ${mimeType}`);
-        if(mimeType == "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
+        if(mimeType === "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
         VideoElement.id = "video-MediaPlayer";
         VideoElement.innerHTML = `<source src=${url} type='${mimeType}'>`;
         VideoElement.load();
@@ -277,8 +277,8 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
 
     if(fileIsMkv){
-      playVideoInMpv(false,undefined,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,undefined);
       // pass to externel Player
+      playVideoInMpv(false,undefined,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,undefined);
 
     }else{
       VideoElement.id = "video-MediaPlayer";

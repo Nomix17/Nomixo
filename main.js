@@ -279,8 +279,9 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
     const client = new WebTorrent();
     const torrent = client.add(metaData.Magnet, (torrent) => {
       StreamClient = torrent;
+      console.log(metaData?.fileName)
       const file = torrent.files.find(f =>
-        /\.(mp4|webm|ogv|avi|mkv)$/i.test(f.name) && f.length > 0.5 * 1e9
+        (metaData?.fileName ===  f.name) || (/\.(mp4|webm|ogv|avi|mkv)$/i.test(f.name) && f.length > 0.2 * 1e9)
       );
       if (!file) return reject(new Error('No suitable video file found'));
 
@@ -323,7 +324,7 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
           console.log(`Streaming URL: ${url}`);
 
           let downloadResponce = await downloadMultiple(subDirectory,subsObjects);
-          subsPaths = downloadResponce.filter(responce => responce.status == "success").map(responce => responce.file);
+          subsPaths = downloadResponce.filter(responce => responce.status === "success").map(responce => responce.file);
           let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
           console.log(`--config-dir=${mpvConfigDirectory}`);
         
@@ -331,8 +332,8 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
           let startFromTime;
 
           if(currentMediaFromLibrary == undefined || 
-            currentMediaFromLibrary[0].episodeNumber != metaData.episodeNumber ||
-            currentMediaFromLibrary[0].seasonNumber != metaData.seasonNumber)
+            currentMediaFromLibrary[0].episodeNumber !== metaData.episodeNumber ||
+            currentMediaFromLibrary[0].seasonNumber !== metaData.seasonNumber)
               startFromTime = 0;
 
           else startFromTime = currentMediaFromLibrary[0].lastPlaybackPosition;
@@ -379,8 +380,8 @@ ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
     let startFromTime;
 
     if(currentMediaFromLibrary == undefined || 
-      currentMediaFromLibrary[0].episodeNumber != metaData.episodeNumber ||
-      currentMediaFromLibrary[0].seasonNumber != metaData.seasonNumber)
+      currentMediaFromLibrary[0].episodeNumber !== metaData.episodeNumber ||
+      currentMediaFromLibrary[0].seasonNumber !== metaData.seasonNumber)
         startFromTime = 0;
 
     else startFromTime = currentMediaFromLibrary[0].lastPlaybackPosition;
@@ -551,12 +552,12 @@ ipcMain.handle("load-from-download-lib",async(event,targetIdentification)=>{
 
 // ################# functions ######################## 
 
-// ########## library related #################
+// ########## SETTINGS RELATED #################
 
 function loadSettings() {
   try {
     const data = fs.readFileSync(SettingsFilePath, 'utf-8');
-    if(data.trim() == "" || !("TurnOnSubsByDefaultInternal" in JSON.parse(data))) throw new Error("empty Settings File");
+    if(data.trim() === "" || !("TurnOnSubsByDefaultInternal" in JSON.parse(data))) throw new Error("empty Settings File");
     return JSON.parse(data);
   } catch (err) {
     return {
@@ -580,7 +581,7 @@ function loadTheme(){
       .replaceAll("--","")
       .replaceAll(";","")
       .replaceAll(" ","");
-    let linesArray = savedTheme.split("\n").filter(line => line != "");
+    let linesArray = savedTheme.split("\n").filter(line => line !== "");
     ThemeObj.theme = linesArray.map(obj => {
       const [key, value] = obj.split(":");
       return {[key]:value};
@@ -604,7 +605,7 @@ function loadSubConfigs(){
         JsonConfig["no-sub"] = true;
       }else if(line.includes("=")){
         let entitie = line.split("=");
-        let value = entitie[1] == "yes" ? true : (entitie[1] == "no" ? false : entitie[1])
+        let value = entitie[1] === "yes" ? true : (entitie[1] === "no" ? false : entitie[1])
         JsonConfig[entitie[0]] = entitie[1];
       }
     }
@@ -618,59 +619,17 @@ function applySubConfigs(jsonContent){
 
   let Entities = Object.entries(jsonContent);
   for(let entry of Entities){
-    if(entry[0] == "no-sub"){
-      if(entry[1]==true)
+    if(entry[0] === "no-sub"){
+      if(entry[1] === true)
         mpvConfig += "\nno-sub";
     }else{
       mpvConfig += "\n";
-      let value = (entry[1]==true && entry[0]!="sub-font-size") ? "yes" : (entry[1]==false && entry[0] != "sub-font-size" ? "no" : entry[1]);
+      let value = (entry[1] === true && entry[0] !== "sub-font-size") ? "yes" : (entry[1] === false && entry[0] !== "sub-font-size" ? "no" : entry[1]);
 
       mpvConfig += entry[0] + "=" + value;
     }
   }
   fs.writeFileSync(SubConfigFile,mpvConfig);
-}
-
-function getLibraryInfo() {
-  try { 
-    return JSON.parse(fs.readFileSync(libraryFilePath, "utf-8")); 
-  } catch { 
-    return { media: [] }; 
-  }
-}
-
-function insertNewInfoToLibrary(libraryFilePath, newData) {
-  try {
-    fs.writeFileSync(libraryFilePath, JSON.stringify(newData, null, 2));
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function removeFromDownloadLibrary(torrentId){
-  let downloadLib = await loadDownloadLibrary();
-  downloadLib.downloads = downloadLib.downloads.filter(element => (element.torrentId !== torrentId));
-  insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
-}
-
-function loadFromLibrary(targetIdentification){
-  let LibraryInfo = getLibraryInfo();
-  if(LibraryInfo.media.length){
-    if(targetIdentification == undefined) return LibraryInfo.media;
-    let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId == targetIdentification.MediaId && element.MediaType == targetIdentification.MediaType);
-    if(targetLibraryInfo.length) return targetLibraryInfo; 
-    return undefined
-  }else{
-    return undefined
-  }
-}
-
-function loadDownloadLibrary(){
-  try { 
-    return JSON.parse(fs.readFileSync(downloadLibraryFilePath, "utf-8")); 
-  } catch { 
-    return { downloads: [] }; 
-  }
 }
 
 function initializeDataFiles(){
@@ -735,20 +694,7 @@ function initializeDataFiles(){
   }
 }
 
-// ########## dowload related #################
-
-function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
-  // Download subtitles
-  if (subsObjects.length) {
-    try {
-      let subDownloadDir = path.join(TorrentDownloadDir, `SUBS_${torrentId}`);
-      fs.mkdirSync(subDownloadDir, { recursive: true });
-      downloadMultiple(subDownloadDir, subsObjects);
-    } catch (err) {
-      console.error("Subtitle download error:", err);
-    }
-  }
-}
+// ########## DOWLOAD RELATED #################
 
 async function downloadTorrent(torrentInfo, torrentId, TorrentDownloadDir) {
   // Add torrent
@@ -769,6 +715,8 @@ async function downloadTorrent(torrentInfo, torrentId, TorrentDownloadDir) {
       console.log("\nTorrent Files:-----------------------------------------------------");
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
+
+      insertNewDownloadEntryPoint(torrentInfo);
 
       const files = torrent.files.filter(f =>
         f.name.toLowerCase().trim() === torrentInfo?.fileName.toLowerCase().trim() ||
@@ -869,10 +817,17 @@ async function downloadTorrent(torrentInfo, torrentId, TorrentDownloadDir) {
   });
 }
 
-function generateUniqueId(seed) {
-  const hash = crypto.createHash('sha256');
-  hash.update(seed);
-  return hash.digest('hex');
+function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
+  // Download subtitles
+  if (subsObjects.length) {
+    try {
+      let subDownloadDir = path.join(TorrentDownloadDir, `SUBS_${torrentId}`);
+      fs.mkdirSync(subDownloadDir, { recursive: true });
+      downloadMultiple(subDownloadDir, subsObjects);
+    } catch (err) {
+      console.error("Subtitle download error:", err);
+    }
+  }
 }
 
 async function downloadImage(downloadDir, posterUrl) {
@@ -893,40 +848,12 @@ async function downloadImage(downloadDir, posterUrl) {
   }
 }
 
-async function updateElementDownloadLibrary(torrentInfo, downloadedBytes) {
-  let downloadLib = await loadDownloadLibrary();
+// ############################ NAVIGATION RELATED ############################
 
-  // Find existing entry or create new one
-  const existingIndex = downloadLib.downloads.findIndex(
-    item => item.torrentId === torrentInfo.torrentId
-  );
-  
-  
-  if(existingIndex !== -1){
-    downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
-    downloadLib.downloads[existingIndex]["typeOfSave"] = torrentInfo.Status === "done" ? "Download-Complete" : "Download"
-    if(torrentInfo.Status === "done")
-      downloadLib.downloads[existingIndex]["Status"] = "done";
-  }else{
-    // let bgImagePath = "";
-    // let posterPath = "";
-    let bgImagePath = await downloadImage(postersDirPath,torrentInfo?.bgImageUrl)
-    let posterPath = await downloadImage(postersDirPath,torrentInfo?.posterUrl);
-
-    console.log("Creating Download Library Entry Point for: "+torrentInfo.torrentId);
-    let newEntry = {...torrentInfo,posterPath: posterPath ?? "undefined",bgImagePath: bgImagePath ?? "undefined"};
-    downloadLib.downloads.push(newEntry);
-  }
-
-  insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
-}
-
-async function removeFromLibrary(mediaInfo) {
-  let LibraryInfo = getLibraryInfo();
-  LibraryInfo.media = LibraryInfo.media.filter(
-    element => element.torrentId !== mediaInfo.torrentId
-  );
-  insertNewInfoToLibrary(libraryFilePath, LibraryInfo);
+function generateUniqueId(seed) {
+  const hash = crypto.createHash('sha256');
+  hash.update(seed);
+  return hash.digest('hex');
 }
 
 function findFile(dir, filename) {
@@ -950,10 +877,113 @@ function sanitizeUrl(urlString) {
     return u.toString();
 }
 
-// ############ mpv Player related ############
+function loadSubsFromSubDir(downloadPath,TorrentId){
+  try{
+    let subFolder = path.join(downloadPath,`SUBS_${TorrentId}`);
+    return fs.readdirSync(subFolder).map(fileName => path.join(subFolder,fileName));
+  }catch(err){
+    console.error(err.message);
+    return [];
+  }
+}
+
+// ############################ LIBRARIES RELATED ############################
+
+function getLibraryInfo() {
+  try { 
+    return JSON.parse(fs.readFileSync(libraryFilePath, "utf-8")); 
+  } catch { 
+    return { media: [] }; 
+  }
+}
+
+function insertNewInfoToLibrary(libraryFilePath, newData) {
+  try {
+    fs.writeFileSync(libraryFilePath, JSON.stringify(newData, null, 2));
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function loadFromLibrary(targetIdentification){
+  let LibraryInfo = getLibraryInfo();
+  if(LibraryInfo.media.length){
+    if(targetIdentification == undefined) return LibraryInfo.media;
+    let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId === targetIdentification.MediaId && element.MediaType === targetIdentification.MediaType);
+    if(targetLibraryInfo.length) return targetLibraryInfo; 
+    return undefined
+  }else{
+    return undefined
+  }
+}
+
+async function removeFromLibrary(mediaInfo) {
+  let LibraryInfo = await getLibraryInfo();
+  LibraryInfo.media = LibraryInfo.media.filter(
+    element => element.torrentId !== mediaInfo.torrentId
+  );
+  insertNewInfoToLibrary(libraryFilePath, LibraryInfo);
+}
+
+async function removeFromDownloadLibrary(torrentId){
+  let downloadLib = await loadDownloadLibrary();
+  downloadLib.downloads = downloadLib.downloads.filter(element => (element.torrentId !== torrentId));
+  insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
+}
+
+function loadDownloadLibrary(){
+  try { 
+    return JSON.parse(fs.readFileSync(downloadLibraryFilePath, "utf-8")); 
+  } catch { 
+    return { downloads: [] }; 
+  }
+}
+
+async function insertNewDownloadEntryPoint(torrentInfo){
+  let downloadLib = await loadDownloadLibrary();
+
+  // Find existing entry or create new one
+  const existingIndex = downloadLib.downloads.findIndex(
+    item => item.torrentId === torrentInfo.torrentId
+  );
+
+  if(existingIndex === -1){
+    let bgImagePath = await downloadImage(postersDirPath,torrentInfo?.bgImageUrl)
+    let posterPath = await downloadImage(postersDirPath,torrentInfo?.posterUrl);
+
+    let newEntry = {...torrentInfo,posterPath: posterPath ?? "undefined",bgImagePath: bgImagePath ?? "undefined"};
+    downloadLib.downloads.push(newEntry);
+
+    const jsonMessage = { Status: "NewDownload" }
+    win.webContents.send("download-progress-stream", jsonMessage);
+    await insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
+
+    console.log("Creating Download Library Entry Point for: "+torrentInfo.torrentId);
+  }
+}
+
+async function updateElementDownloadLibrary(torrentInfo, downloadedBytes) {
+  let downloadLib = await loadDownloadLibrary();
+
+  // Find existing entry or create new one
+  const existingIndex = downloadLib.downloads.findIndex(
+    item => item.torrentId === torrentInfo.torrentId
+  );
+  
+  if(existingIndex !== -1){
+    downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
+    downloadLib.downloads[existingIndex]["typeOfSave"] = torrentInfo.Status === "done" ? "Download-Complete" : "Download"
+    if(torrentInfo.Status === "done")
+      downloadLib.downloads[existingIndex]["Status"] = "done";
+    await insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
+  }
+}
+
+// ############################ MPV pLAYER RELATED ############################
 
 const hideMainWindow = (data)=>{
-  if(win && win.isVisible()) win.hide();
+  if(data.toString().includes("Video --vid=1"))
+    if(win && win.isVisible()) win.hide();
   let line = data.toString();
   process.stdout.write(line);
   if(line.includes("AV:")){
@@ -970,7 +1000,7 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
   LibraryInfo.media ??= [];
 
   for(let [index,item] of Object.entries(LibraryInfo.media)){
-    if(item["MediaId"] == metaData.MediaId && item["MediaType"] == metaData.MediaType){
+    if(item["MediaId"] === metaData.MediaId && item["MediaType"] === metaData.MediaType){
       LibraryInfo.media[index]["lastPlaybackPosition"] = lastPbPosition;
       LibraryInfo.media[index]["seasonNumber"] = metaData?.seasonNumber;
       LibraryInfo.media[index]["episodeNumber"] = metaData?.episodeNumber;
@@ -1005,14 +1035,4 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
     LibraryInfo.media.push(MediaLibraryObject);
   }
   insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
-}
-
-function loadSubsFromSubDir(downloadPath,TorrentId){
-  try{
-    let subFolder = path.join(downloadPath,`SUBS_${TorrentId}`);
-    return fs.readdirSync(subFolder).map(fileName => path.join(subFolder,fileName));
-  }catch(err){
-    console.error(err.message);
-    return [];
-  }
 }
