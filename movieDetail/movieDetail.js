@@ -33,7 +33,7 @@ setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.erro
 
 EpisodesContainer.style.cursor = 'default';
 
-if(MediaType == "movie") TorrentContainer.style.display = "flex";
+if(MediaType === "movie") TorrentContainer.style.display = "flex";
 
 let seasonsDivArray = [];
 
@@ -60,12 +60,12 @@ async function fetchInformation(){
 
 function loadMovieInformation(apiKey){
   //load Movie information
-  let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
+  let MediaTypeForSearch = MediaType === "anime" ? "tv" :MediaType;
   return fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}?api_key=${apiKey}`)
     .then(res=>res.json())  
     .then(data =>{
       insertMovieElements(data,apiKey);
-      if(MediaType == "movie")
+      if(MediaType === "movie")
         return fetchTorrent(apiKey,movieId,MediaType); 
     })
     .catch(error => {
@@ -76,7 +76,7 @@ function loadMovieInformation(apiKey){
 
 function loadCastInformation(apiKey){
   // load Cast and Crew information
-  let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
+  let MediaTypeForSearch = MediaType === "anime" ? "tv" :MediaType;
   return  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/credits?api_key=${apiKey}`)
     .then(res => res.json())
     .then(data => insertCastElements(data))
@@ -128,8 +128,8 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
 
 
     let continueWatchingEpisode = (libraryInfo?.typeOfSave?.includes("Currently Watching") &&
-      episode.season_number == libraryInfo["seasonNumber"] &&
-      episode.episode_number == libraryInfo["episodeNumber"]);
+      episode.season_number === libraryInfo["seasonNumber"] &&
+      episode.episode_number === libraryInfo["episodeNumber"]);
 
     if(continueWatchingEpisode){
       EpisodeElement.style.backgroundColor = "rgba(255, 255, 255, 10%)";
@@ -141,7 +141,7 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
     });
 
     EpisodeElement.addEventListener("mouseleave",()=>{
-      if(EpisodeElement.style.borderColor != "rgba(var(--MovieElement-hover-BorderColor), 100%)" && (!continueWatchingEpisode))
+      if(EpisodeElement.style.borderColor !== "rgba(var(--MovieElement-hover-BorderColor), 100%)" && (!continueWatchingEpisode))
         EpisodeElement.style.backgroundColor = "rgba(0,0,0,0)";
     });
 
@@ -190,7 +190,7 @@ function handleEpisodeElementColoring(DivContainer,currentEpisodeElement){
   let EpisodeElements = DivContainer.querySelectorAll('div[class="div-episodes-Element"]');
 
   EpisodeElements.forEach(element =>{
-    if(element != currentEpisodeElement){
+    if(element !== currentEpisodeElement){
       element.style.borderColor = "rgba(0,0,0,0)";
       element.style.backgroundColor = "rgba(0,0,0,0)";
     }else{
@@ -201,14 +201,14 @@ function handleEpisodeElementColoring(DivContainer,currentEpisodeElement){
 }
 
 async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}){
-  let MediaTypeForSearch = MediaType == "anime" ? "tv" :MediaType;
+  let MediaTypeForSearch = MediaType === "anime" ? "tv" :MediaType;
   let libraryInfo = await loadMediaEntryPointLibraryInfo();
   fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`)
     .then(res => res.json())
     .then(data => {
       IMDB_ID = data.imdb_id;
       let fetchUrl;
-      if(MediaTypeForSearch == "tv")
+      if(MediaTypeForSearch === "tv")
         fetchUrl = `https://torrentio.strem.fun/stream/series/${IMDB_ID}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`;
       else
         fetchUrl = `https://torrentio.strem.fun/stream/movie/${IMDB_ID}.json`;
@@ -253,7 +253,7 @@ function insertMovieElements(data,apiKey){
   if(data.hasOwnProperty("seasons")) Seasons = data["seasons"];
 
 
-  if(backgroundImage != "https://image.tmdb.org/t/p/original/null"){
+  if(backgroundImage !== "https://image.tmdb.org/t/p/original/null"){
     document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
     document.documentElement.style.backgroundRepeat = `no-repeat`;
     document.documentElement.style.backgroundPosition = `center center`;
@@ -288,7 +288,7 @@ function insertMovieElements(data,apiKey){
   document.getElementById("p-movieRating").innerText = Rating;
   document.getElementById("p-summaryParagraph").innerText = Summary;
 
-  if(Duration == "TV Show") TorrentMagnetContainer.style.display = "none";
+  if(Duration === "TV Show") TorrentMagnetContainer.style.display = "none";
   else EpisodesContainer.style.display = "none";
 
   globalLoadingGif.remove();
@@ -307,7 +307,7 @@ function insertMovieElements(data,apiKey){
 }
 
 function insertCastElements(data){
-    if(data.success == false) throw new Error("No Information about the Crew Founded.");
+    if(data.success === false) throw new Error("No Information about the Crew Founded.");
     let Crew = data.crew;
     let Cast = data.cast;
 
@@ -315,9 +315,9 @@ function insertCastElements(data){
     let MainCastObjects = ["Unknown"];
 
     if(Crew?.[0]?.hasOwnProperty("job") || Crew?.[0]?.hasOwnProperty("known_for_department")){
-      DirectorsObjects = Crew.filter(element => element.job=="Director" && element.known_for_department=="Directing");
+      DirectorsObjects = Crew.filter(element => element.job === "Director" && element.known_for_department === "Directing");
       if(DirectorsObjects.lenght){
-        DirectorsObjects = Crew.filter(element => element.job=="Director" || element.known_for_department=="Directing");
+        DirectorsObjects = Crew.filter(element => element.job === "Director" || element.known_for_department === "Directing");
       }
     }else{
       throw new Error("No Information about the Crew Founded.");
@@ -343,8 +343,6 @@ function insertCastElements(data){
 
     if(!MainCastObjects.length) divCastElement.innerHTML += '<p class="infoText">No Cast information were Found</p>';
     if(!DirectorsObjects.length) divDirectoryElement.innerHTML += '<p class="infoText">No Directors information were Found</p>';
-
-    if(divDirectoryElement.innerHTML.trim() == "<h2>Director</h2>") divDirectoryElement.remove();
 }
 
 function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episodeInfo={}){
@@ -396,17 +394,17 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
         });
 
         if(MediaLibraryInfo?.typeOfSave?.includes("Currently Watching") &&
-          String(MagnetLink) == String(MediaLibraryInfo["Magnet"]) &&
-          String(episodeInfo.seasonNumber) == String(MediaLibraryInfo["seasonNumber"]) &&
-          String(episodeInfo.episodeNumber) == String(MediaLibraryInfo["episodeNumber"]))
+          String(MagnetLink) === String(MediaLibraryInfo["Magnet"]) &&
+          String(episodeInfo.seasonNumber) === String(MediaLibraryInfo["seasonNumber"]) &&
+          String(episodeInfo.episodeNumber) === String(MediaLibraryInfo["episodeNumber"]))
             insertContinueWatchingButton(TorrentElement,MediaLibraryInfo)
 
         TorrentMagnetContainer.append(TorrentElement);
       }
     });
     TorrentMagnetContainer.classList.remove("preloadingTorrent");
-    if(TorrentMagnetContainer.innerHTML.trim() == "") throw new Error("No Useful Results Were found !");
-    if(TorrentMagnetContainer.style.display != "none"){
+    if(TorrentMagnetContainer.innerHTML.trim() === "") throw new Error("No Useful Results Were found !");
+    if(TorrentMagnetContainer.style.display !== "none"){
       TorrentContainer.style.display = "block";
       TorrentMagnetContainer.style.display = "block";
     }
@@ -445,7 +443,7 @@ function displayEpisodes(seasonNumber){
   EpisodesContainer.style.display = "block";
   EpisodesContainer.innerHTML = "";
   let seasonIndex = seasonNumber;
-  let currentSeasonDiv = seasonsDivArray.find(div => div.getAttribute("season_number") == seasonIndex);
+  let currentSeasonDiv = seasonsDivArray.find(div => div.getAttribute("season_number") === seasonIndex);
   selectElement.value = seasonIndex;
   EpisodesContainer.append(currentSeasonDiv);
 }
