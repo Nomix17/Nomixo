@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   StreamTorrentOverMpv: (metaData,subsObjects) => ipcRenderer.invoke('play-torrent-over-mpv',metaData, subsObjects),
   PlayVideoOverMpv: (metaData) => ipcRenderer.invoke('play-video-over-mpv',metaData),
   toggleFullscreen: () => ipcRenderer.invoke("request-fullscreen"),
+  openFileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-filesystem-browser",currentPath),
   getAPIKEY: () => ipcRenderer.invoke("get-api-key"),
   applySettings: (SettingsObj) => ipcRenderer.invoke("apply-settings", SettingsObj),
   applyTheme: (ThemeObj) => ipcRenderer.send("apply-theme",ThemeObj),

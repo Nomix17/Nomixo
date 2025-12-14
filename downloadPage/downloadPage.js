@@ -26,12 +26,16 @@ function createDownloadElement(mediaLibEntryPoint){
   MediaDownloadElement.className = "downloaded-movie-div";
   MediaDownloadElement.id = ElementIdentifier;
 
+  let displayTitle = mediaLibEntryPoint?.Title;
+  if(mediaLibEntryPoint.seasonNumber && mediaLibEntryPoint.episodeNumber)
+    displayTitle = `${mediaLibEntryPoint?.Title} S${mediaLibEntryPoint.seasonNumber} E${mediaLibEntryPoint.episodeNumber}`;
+
   MediaDownloadElement.innerHTML = `
     <div class="poster-div">
       <img src="${mediaLibEntryPoint?.posterPath}" class="poster-img"/>
     </div>
     <div class="download-movie-right-div">
-      <p class="movie-title-p">${mediaLibEntryPoint?.Title}</p>
+      <p class="movie-title-p">${displayTitle}</p>
       <div class="progress-div">
         <div class="progress-bar-div">
           <div class="inside" style="width:${progress}%;"></div>
@@ -114,8 +118,8 @@ function monitorDownloads(){
 
     if(JsonData?.Status === "done"){
       let library = await window.electronAPI.loadDownloadLibraryInfo();
-      let libraryElement = library.filter(element => element.torrentId == JsonData.torrentId);
-      MarkDownloadElementAsFinished(TargetDownloadElement,JsonData);
+      let libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
+      MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);
     }
   });
 }
@@ -166,8 +170,6 @@ function alignSizeDiv(){
 }
 
 function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo){
-  console.log(`${MediaInfo?.Title} is done downloading in ${MediaInfo?.downloadPath}`);
-
   let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");

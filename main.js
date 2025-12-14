@@ -1,4 +1,4 @@
-import {BrowserWindow, app, nativeTheme, ipcMain, protocol} from "electron";
+import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog} from "electron";
 import downloadMultiple from "./downloadSubtitles.js";
 import { spawn } from "child_process";
 import WebTorrent from 'webtorrent';
@@ -201,6 +201,17 @@ ipcMain.handle("request-fullscreen",()=>{
 
 ipcMain.handle("get-full-video-path",async(event,dirPath,fileName)=>{
   return await findFile(dirPath,fileName);
+});
+
+ipcMain.handle("open-filesystem-browser",async(event,currentPath)=>{
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    defaultPath: currentPath
+  });
+  if (!canceled) {
+    return filePaths[0];
+  }
+  return null
 });
 
 ipcMain.handle("get-api-key",() => process.env.API_KEY);

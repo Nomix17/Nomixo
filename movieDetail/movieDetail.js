@@ -39,22 +39,23 @@ let seasonsDivArray = [];
 
 async function fetchInformation(){
   const apiKey = await window.electronAPI.getAPIKEY();
-  const results = await Promise.all([
+  const results = await Promise.allSettled([
     loadMovieInformation(apiKey),
     loadCastInformation(apiKey)
-  ])
-    .catch(()=>{
-      let middleDiv = document.getElementById("div-middle");
-      document.documentElement.classList.add("fetchingFailed");
-      middleDiv.innerHTML = "";
-      document.getElementById("div-main").style.opacity = "1";
-      setTimeout(() => {
-        let WarningElement = DisplayWarningOrErrorForUser("We're having trouble loading data.</br>Please Check your connection and retry!");
-        middleDiv.appendChild(WarningElement);
-        globalLoadingGif.remove();
-        middleDiv.style.opacity = 1;
-      }, 800);
-    })
+  ]);
+
+  if (results[0].status === "rejected" && results[1].status === "rejected") {
+    let middleDiv = document.getElementById("div-middle");
+    document.documentElement.classList.add("fetchingFailed");
+    middleDiv.innerHTML = "";
+    document.getElementById("div-main").style.opacity = "1";
+    setTimeout(() => {
+      let WarningElement = DisplayWarningOrErrorForUser("We're having trouble loading data.</br>Please Check your connection and retry!");
+      middleDiv.appendChild(WarningElement);
+      globalLoadingGif.remove();
+      middleDiv.style.opacity = 1;
+    }, 800);
+  }
 }
 
 function loadMovieInformation(apiKey){
@@ -636,6 +637,7 @@ async function showDownloadInfoInputDiv(DownloadTargetInfo){
 
   let MediaPosterElement = DownloadOverlay.querySelector("#mediaPosterImg");
   let MediaTitleElement = DownloadOverlay.querySelector("#mediaTitle");
+  let SeasonEpisodeElement = DownloadOverlay.querySelector("#season-episode");
   let MediaYearTextElement = DownloadOverlay.querySelector("#mediaYear");
   let MediaSizeAResolutionTextElement = DownloadOverlay.querySelector("#mediaSize");
   let downloadPathInput = DownloadOverlay.querySelector("#downloadPath");
@@ -644,6 +646,8 @@ async function showDownloadInfoInputDiv(DownloadTargetInfo){
 
 
   MediaTitleElement.innerText = DownloadTargetInfo.Title;
+  if(DownloadTargetInfo.seasonNumber && DownloadTargetInfo.episodeNumber)
+    SeasonEpisodeElement.innerText = `S${DownloadTargetInfo.seasonNumber}-E${DownloadTargetInfo.episodeNumber}`;
   MediaYearTextElement.innerText = DownloadTargetInfo.Year;
   MediaSizeAResolutionTextElement.innerText = DownloadTargetInfo.Size +" • "+DownloadTargetInfo.Quality;
   downloadPathInput.value = defaultPath;
@@ -682,6 +686,14 @@ function setupDownloadDivEvents(DownloadTargetInfo){
     event.stopPropagation();
     event.preventDefault();
   });
+  
+  // handle browsing fs button
+  browseButton.addEventListener("click",async (event)=>{
+    let pathInputElement = document.getElementById("downloadPath");
+    let dirPath = await window.electronAPI.openFileSystemBrowser(pathInputElement.value);
+    if(dirPath) pathInputElement.value = dirPath;
+  });
+
 }
 
 async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles){
@@ -715,7 +727,7 @@ async function saveDownloadSettings(DefaultDownloadPath, DownloadSubtitlesByDefa
 }
 
 window.addEventListener("keydown",(event)=>{
-  if(event.key == "Escape"){
+  if(event.key === "Escape"){
     contextMenu.style.display = "none";
     DownloadOverlay.classList.remove('active');
   }
