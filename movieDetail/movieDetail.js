@@ -82,7 +82,7 @@ function loadCastInformation(apiKey){
     .then(data => insertCastElements(data))
     .catch(err =>{
       noInfoFounded();
-      console.error(err.message);
+      console.error(err);
       throw error
   });
 }
@@ -114,18 +114,21 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
   SeasonDiv.id = "main-SeasonDiv";
   let episodes = data.episodes;
   episodes.forEach(episode =>{
+    let episodeImageUrl = "../assets/noEpisodeImageFound.png";
+    if(episode.still_path)
+      episodeImageUrl = `https://image.tmdb.org/t/p/w342/${episode.still_path}`;
+
     SeasonDiv.setAttribute("season_number",episode.season_number);
     let EpisodeElement = document.createElement("div");
     EpisodeElement.className = "div-episodes-Element";
     EpisodeElement.innerHTML += `
        <h4>${episode.episode_number}</h4>
-       <img style="height:70px;" src="https://image.tmdb.org/t/p/w342/${episode.still_path}"></img>
+       <img style="height:70px;width:124px" src="${episodeImageUrl}"></img>
        <div style="max-width:50%;width: fit-content; " class="div-episode-information">
          <p style="font-size:15px;">${episode.name}</p>
          <p style="font-weight:bold;font-size:11px;margin-top:20px;">${episode.air_date}</p>
        </div>
      `;
-
 
     let continueWatchingEpisode = (libraryInfo?.typeOfSave?.includes("Currently Watching") &&
       episode.season_number === libraryInfo["seasonNumber"] &&
@@ -183,7 +186,6 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
     SeasonDiv.appendChild(EpisodeElement);
     seasonsDivArray.push(SeasonDiv);
   });
-  return "";
 }
 
 function handleEpisodeElementColoring(DivContainer,currentEpisodeElement){
@@ -302,8 +304,7 @@ function insertMovieElements(data,apiKey){
     DivGenresContainer.append(newGenreElement);
   });
 
-    document.getElementById("div-main").style.opacity = "1";
-
+  document.getElementById("div-main").style.opacity = "1";
 }
 
 function insertCastElements(data){
@@ -311,8 +312,8 @@ function insertCastElements(data){
     let Crew = data.crew;
     let Cast = data.cast;
 
-    let DirectorsObjects = ["Unknown"];
-    let MainCastObjects = ["Unknown"];
+    let DirectorsObjects = [];
+    let MainCastObjects = [];
 
     if(Crew?.[0]?.hasOwnProperty("job") || Crew?.[0]?.hasOwnProperty("known_for_department")){
       DirectorsObjects = Crew.filter(element => element.job === "Director" && element.known_for_department === "Directing");
@@ -323,7 +324,7 @@ function insertCastElements(data){
       throw new Error("No Information about the Crew Founded.");
     }
 
-    if(Cast[0].hasOwnProperty("name")) MainCastObjects = Cast.slice(0,5);
+    if(Cast?.[0]?.hasOwnProperty("name")) MainCastObjects = Cast.slice(0,5);
 
     DirectorsObjects.forEach(directorObject=>{
        let newDirectorElement = document.createElement("button");
@@ -438,14 +439,15 @@ function insertContinueWatchingButton(container,MediaLibraryInfo){
 }
 
 
-function displayEpisodes(seasonNumber){
-  selectElement.style.display = "block";
-  EpisodesContainer.style.display = "block";
-  EpisodesContainer.innerHTML = "";
-  let seasonIndex = seasonNumber;
-  let currentSeasonDiv = seasonsDivArray.find(div => div.getAttribute("season_number") === seasonIndex);
-  selectElement.value = seasonIndex;
-  EpisodesContainer.append(currentSeasonDiv);
+function displayEpisodes(seasonIndex){
+  let currentSeasonDiv = seasonsDivArray.find(div => parseInt(div.getAttribute("season_number")) === parseInt(seasonIndex));
+  if(currentSeasonDiv){
+    selectElement.style.display = "block";
+    EpisodesContainer.style.display = "block";
+    EpisodesContainer.innerHTML = "";
+    selectElement.value = seasonIndex;
+    EpisodesContainer.appendChild(currentSeasonDiv);
+  }
 }
 
 async function handleDivsResize(){
