@@ -175,11 +175,10 @@ ipcMain.handle("go-back",(event)=>{
   const webContents = event.sender;
   if(webContents.navigationHistory.canGoBack()){
     if(StreamClient) StreamClient.destroy();
+    if(mpv) mpv.kill();
+    if(win && !win.isVisible()) win.show();
     webContents.navigationHistory.goBack();
   }
-  if(mpv) mpv.kill();
-  if(win && !win.isVisible()) win.show();
-  console.log("Go Back was Pressed");
 });
 
 ipcMain.handle("change-page", (event,page) => {
@@ -635,6 +634,9 @@ function applySubConfigs(jsonContent){
 function initializeDataFiles(){
   if(!fs.existsSync(__configs)){
     fs.mkdirSync(__configs, { recursive: true });
+  }
+  if(!fs.existsSync(postersDirPath)){
+    fs.mkdirSync(postersDirPath, { recursive: true });
   }
 
   if(!fs.existsSync(SettingsFilePath)){
