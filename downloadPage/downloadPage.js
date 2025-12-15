@@ -213,12 +213,11 @@ function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo){
       MediaInfo.downloadPath,
       MediaInfo.fileName,
       MediaInfo.Magnet,
-      MediaInfo.mediaImdbId,
+      MediaInfo.IMDB_ID,
       MediaInfo.bgImagePath,
       episodeInfo
     );
     event.stopPropagation();
-    event.proventDefault();
   });
 }
 

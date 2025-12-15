@@ -78,8 +78,18 @@ VideoElement.addEventListener("loadedmetadata", async (event)=>{
   VideoElement.currentTime = oldPlayBackPosition;
   setInterval(()=>{
     let lastPbPosition = parseInt(VideoElement.currentTime);
-    let metaData = {seasonNumber:seasonNumber,episodeNumber:episodeNumber,Magnet:Magnet,bgImagePath:bgImagePath,mediaImdbId:mediaImdbId};
-    updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData,downloadPath,fileName);
+    let metaData = {
+      seasonNumber:seasonNumber,
+      episodeNumber:episodeNumber,
+      Magnet:Magnet,
+      bgImagePath:bgImagePath,
+      mediaImdbId:mediaImdbId,
+      MediaId:MediaId,
+      MediaType:MediaType,
+      downloadPath:downloadPath,
+      fileName:fileName
+    };
+    updateLastSecondBeforeQuit(lastPbPosition,metaData);
   },10000);
 
 },{ once:true });
@@ -474,7 +484,7 @@ async function getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonN
   MediaLibraryObject = MediaLibraryObject[0];
 
   let mediaIsAnEpisode = (MediaLibraryObject.hasOwnProperty("episodeNumber") && MediaLibraryObject.hasOwnProperty("seasonNumber"));
-  let isRequestedEpisode = mediaIsAnEpisode ? (MediaLibraryObject["episodeNumber"] == episodeNumber && MediaLibraryObject["seasonNumber"] == seasonNumber) : true;
+  let isRequestedEpisode = mediaIsAnEpisode ? (MediaLibraryObject["episodeNumber"] === episodeNumber && MediaLibraryObject["seasonNumber"] === seasonNumber) : true;
 
 
   if(MediaLibraryObject.hasOwnProperty("typeOfSave") &&
@@ -487,41 +497,20 @@ async function getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonN
   return 0;
 }
 
-async function updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData,downloadPath,fileName){
-  let targetIdentification = {MediaId:MediaId,MediaType:MediaType};
+async function updateLastSecondBeforeQuit(lastPbPosition,metaData){
+  let targetIdentification = {MediaId:metaData?.MediaId,MediaType:metaData?.MediaType};
   let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
 
-  if(MediaLibraryObject != undefined){
-    MediaLibraryObject = MediaLibraryObject[0]; 
-    MediaLibraryObject["lastPlaybackPosition"] = lastPbPosition;
-    MediaLibraryObject["seasonNumber"] = metaData?.seasonNumber;
-    MediaLibraryObject["episodeNumber"] = metaData?.episodeNumber;
-    MediaLibraryObject["Magnet"] = metaData?.Magnet;
-    MediaLibraryObject["bgImagePath"] = metaData?.bgImagePath;
-    MediaLibraryObject["downloadPath"] = downloadPath;
-    MediaLibraryObject["fileName"] = fileName;
+  if(MediaLibraryObject !== undefined){
+    MediaLibraryObject = {...MediaLibraryObject[0], ...metaData,lastPlaybackPosition:lastPbPosition}; 
 
-    if(!MediaLibraryObject["typeOfSave"].includes("Currently Watching")){
+    if(!MediaLibraryObject?.["typeOfSave"].includes("Currently Watching"))
       MediaLibraryObject["typeOfSave"].push("Currently Watching")
-      MediaLibraryObject["mediaImdbId"] ??= metaData?.mediaImdbId;
-    }
+    
     await window.electronAPI.removeMediaFromLibrary(targetIdentification);
 
   }else{
-    MediaLibraryObject = {
-      MediaId:MediaId,
-      MediaType:MediaType,
-      Magnet:metaData?.Magnet,
-      bgImagePath:metaData?.bgImagePath,
-      mediaImdbId:metaData?.mediaImdbId,
-      downloadPath:downloadPath,
-      fileName:fileName,
-
-      lastPlaybackPosition:lastPbPosition,
-      seasonNumber:metaData.seasonNumber,
-      episodeNumber:metaData.episodeNumber,
-      typeOfSave:["Currently Watching"]
-    }
+    MediaLibraryObject = {...metaData,lastPlaybackPosition:lastPbPosition,typeOfSave:["Currently Watching"]}
   }
   window.electronAPI.addMediaToLibrary(MediaLibraryObject);
 }
