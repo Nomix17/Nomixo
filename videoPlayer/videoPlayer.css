@@ -122,7 +122,7 @@ video{
   height:100%;
 }
 #div-SomethingWentWrong,
-#img-movieMedias-LoadingGif{
+#LoadingGif{
   position: absolute;
   background-color: rgba(0, 0, 0, 0);
   box-sizing: border-box;

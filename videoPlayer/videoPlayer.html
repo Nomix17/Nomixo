@@ -34,9 +34,9 @@
           </div>
           <p>Subtitles Size</p><br>
           <div id="div-subSize">
-            <button onclick="SubSize('-')">-</button>
+            <button onclick="SubSize(event,'-')">-</button>
             <p>+0%</p>
-            <button onclick="SubSize('+')">+</button>
+            <button onclick="SubSize(event,'+')">+</button>
           </div>
         </div>
       </div>
@@ -55,7 +55,7 @@
       <!-- middle div --> 
         <div id="div-videoContainer">
           <div id="div-SomethingWentWrong"></div>
-          <div id="img-movieMedias-LoadingGif" class="loader">
+          <div id="LoadingGif" class="loader">
               <div class="dot dot1"></div>
               <div class="dot dot2"></div>
               <div class="dot dot3"></div>
@@ -75,11 +75,11 @@
             <p id="p-videoDuration">00:00:00</p>
           </div>
           <div id="div-bottomBottomContainer">
-            <button id="btn-PauseButton" onclick="TogglePauseUnpause()"><img src="../assets/icons/BPause.png" id="img-PauseButton"></button>
+            <button id="btn-PauseButton" onclick="TogglePauseUnpause(event)"><img src="../assets/icons/BPause.png" id="img-PauseButton"></button>
             <div id="div-rightSide">
-              <button id="btn-OpenSubtitle" onclick="OpenSubtitles()"><img src="../assets/icons/Subs.png" id="img-OpenSubtitle">
+              <button id="btn-OpenSubtitle" onclick="OpenSubtitles(event)"><img src="../assets/icons/Subs.png" id="img-OpenSubtitle">
               </button>
-              <button id="btn-VolumeButton" onclick="toggleVolume()"><img src="../assets/icons/BVolumeMid.png" id="img-VolumeButton"></button>
+              <button id="btn-VolumeButton" onclick="toggleVolume(event)"><img src="../assets/icons/BVolumeMid.png" id="img-VolumeButton"></button>
               <input id="input-volumeSlider" value="50" type="range">
             </div>
           </div>

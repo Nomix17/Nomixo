@@ -19,7 +19,7 @@ let defaultFontSize = 30;
 let TopButtonsContainer = document.getElementById("div-topButtonsContainer");
 let BottomButtonsContainer = document.getElementById("div-bottomButtonsContainer");
 let SubDivDisplay = document.getElementById("div-Subtitles");
-let loadingGif = document.getElementById("img-movieMedias-LoadingGif");
+let loadingGif = document.getElementById("LoadingGif");
 let VideoContainer = document.getElementById("div-middle");
 let VideoElement = document.getElementsByTagName("video")[0];
 let VideoSlider = document.getElementById("input-videoSlider");
@@ -69,20 +69,23 @@ window.addEventListener("mousemove",()=>{
 
 });
 
-VideoElement.addEventListener("playing", async (event)=>{
-  loadingGif.setAttribute("style","display:none");
+VideoElement.addEventListener("pause", () => ChangePauseUnpauseIcons(false));
+VideoElement.addEventListener("play", () => ChangePauseUnpauseIcons(true));
+VideoElement.addEventListener("playing", () => {loadingGif.style.display = "none"});
+
+VideoElement.addEventListener("loadedmetadata", async (event)=>{
   let oldPlayBackPosition  = await getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonNumber);
   VideoElement.currentTime = oldPlayBackPosition;
-
   setInterval(()=>{
     let lastPbPosition = parseInt(VideoElement.currentTime);
     let metaData = {seasonNumber:seasonNumber,episodeNumber:episodeNumber,Magnet:Magnet,bgImagePath:bgImagePath,mediaImdbId:mediaImdbId};
     updateLastSecondBeforeQuit(lastPbPosition,MediaId,MediaType,metaData,downloadPath,fileName);
   },10000);
+
 },{ once:true });
 
 VideoElement.addEventListener("waiting", ()=>{
-  loadingGif.setAttribute("style","");
+  loadingGif.style.display = "block";
 });
 
 VideoElement.addEventListener("timeupdate",()=>{
@@ -118,22 +121,21 @@ VideoSlider.addEventListener("input", ()=>{
   }
 });
 
-window.addEventListener("dblclick",(event)=>{
-  let ElementsThatWerePressed = document.elementsFromPoint(event.clientX,event.clientY);
+VideoElement.addEventListener("dblclick",(event)=>{
   fullscreenClicked();
 });
 
 window.addEventListener("keydown",(event)=>{
-  if(event.key == "Escape") window.electronAPI.goBack();
-  else if(event.key == "ArrowUp") VideoElement.volume = Math.min(1, VideoElement.volume + 0.1);
-  else if(event.key == "ArrowDown") VideoElement.volume = Math.max(0, VideoElement.volume - 0.1);
-  else if(event.key == "ArrowRight") VideoElement.currentTime += 10;
-  else if(event.key == "ArrowLeft") VideoElement.currentTime -= 10;
-  else if(event.key == " ") TogglePauseUnpause();
-  else if(event.key == "f") fullscreenClicked();
-  if (event.key == "Tab" ||
-      event.key == "Super" ||
-      event.key == "Alt" ) event.preventDefault();
+  if(event.key === "Escape") window.electronAPI.goBack();
+  else if(event.key === "ArrowUp") VideoElement.volume = Math.min(1, VideoElement.volume + 0.1);
+  else if(event.key === "ArrowDown") VideoElement.volume = Math.max(0, VideoElement.volume - 0.1);
+  else if(event.key === "ArrowRight") VideoElement.currentTime += 10;
+  else if(event.key === "ArrowLeft") VideoElement.currentTime -= 10;
+  else if(event.key === " ") TogglePauseUnpause();
+  else if(event.key === "f") fullscreenClicked();
+  if (event.key === "Tab" ||
+      event.key === "Super" ||
+      event.key === "Alt" ) event.preventDefault();
 
   VolumeSliderElement.value = VideoElement.volume * 100;
   updateVolumeIcons();
@@ -183,7 +185,7 @@ function insertLanguageButton(subs) {
       let buttonElement = document.createElement("button");
 
       // Highlight first button
-      if (index == 0)
+      if (index === 0)
         buttonElement.style.backgroundColor = "rgba(255,255,255,0.1)";
 
       buttonElement.addEventListener("click", (event) => {
@@ -379,14 +381,19 @@ function goBack(){
 }
 
 function TogglePauseUnpause(){
-  let PauseButtonImageElement = document.getElementById("img-PauseButton");
-  if(VideoElement.paused){
+  let videoPaused = VideoElement.paused;
+  if(videoPaused)
     VideoElement.play();
-    PauseButtonImageElement.src="../assets/icons/BPause.png"
-  }else{
+  else
     VideoElement.pause();
+}
+
+function ChangePauseUnpauseIcons(paused){
+  let PauseButtonImageElement = document.getElementById("img-PauseButton");
+  if(paused)
+    PauseButtonImageElement.src="../assets/icons/BPause.png"
+  else
     PauseButtonImageElement.src="../assets/icons/BPlay.png"
-  }
 }
 
 function toggleVolume(){
