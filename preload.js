@@ -3,7 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   navigateTo: (page) => ipcRenderer.invoke('change-page', page),
   goBack: () => ipcRenderer.invoke('go-back'),
-  getVideoUrl: (magnet) => ipcRenderer.invoke('get-video-url', magnet),
+  getVideoUrl: (magnet,fileName) => ipcRenderer.invoke('get-video-url', magnet,fileName),
   StreamTorrentOverMpv: (metaData,subsObjects) => ipcRenderer.invoke('play-torrent-over-mpv',metaData, subsObjects),
   PlayVideoOverMpv: (metaData) => ipcRenderer.invoke('play-video-over-mpv',metaData),
   toggleFullscreen: () => ipcRenderer.invoke("request-fullscreen"),

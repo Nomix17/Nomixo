@@ -35,6 +35,7 @@ const libraryFilePath = path.join(__configs, "library.json");
 const downloadLibraryFilePath = path.join(__configs, "downloads.json");
 
 const subDirectory="/tmp/tempSubs";
+const videoCachePath = path.join(__configs,"video_cache");
 const postersDirPath = path.join(__configs,"posters");
 let defaultDownloadDir = path.join(__configs,"Downloads");
 
@@ -217,22 +218,30 @@ ipcMain.handle("get-api-key",() => process.env.API_KEY);
 
 // ======================= VIDEO STREAMING =======================
 
-ipcMain.handle('get-video-url', async (event, magnet) => {
+ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
   return new Promise((resolve, reject) => {
+    if (!fs.existsSync(videoCachePath)) {
+      fs.mkdirSync(videoCachePath, { recursive: true });
+    }
     const client = new WebTorrent();
-    const torrent = client.add(magnet);
+    const torrent = client.add(magnet,{path: videoCachePath});
     StreamClient = torrent;
     torrent.on('ready', () => {
-      const file = torrent.files.find(f =>
-        (f.name.endsWith('.mp4') ||
-         f.name.endsWith('.webm') ||
-         f.name.endsWith('.mkv')) && f.length / (10 ** 9) > 0.5
-      );
+      torrent.deselect(0, torrent.pieces.length - 1, false);
+
+      console.log("\nTarget Torrent:",fileName);
+      console.log("\nTorrent Files:-----------------------------------------------------");
+      torrent.files.forEach(f => { console.log(f.name) });
+      console.log("-------------------------------------------------------------------\n");
+
+      const file = torrent.files.find(f => f.name.toLowerCase().trim() === fileName.toLowerCase().trim());
 
       if (!file) {
         reject('No video file found in torrent');
         return;
       }
+
+      file.select();
 
       const mimeType = file.name.endsWith('.mkv') ? "video/x-matroska" :
                        file.name.endsWith('.mp4') ? "video/mp4" :
@@ -278,9 +287,14 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
     const client = new WebTorrent();
     const torrent = client.add(metaData.Magnet, (torrent) => {
       StreamClient = torrent;
-      console.log(metaData?.fileName)
+
+      console.log("\nTarget Torrent:",metaData?.fileName)
+      console.log("\nTorrent Files:-----------------------------------------------------");
+      torrent.files.forEach(f => { console.log(f.name) });
+      console.log("-------------------------------------------------------------------\n");
+
       const file = torrent.files.find(f =>
-        (metaData?.fileName ===  f.name) || (/\.(mp4|webm|ogv|avi|mkv)$/i.test(f.name) && f.length > 0.2 * 1e9)
+        (metaData?.fileName ===  f.name)
       );
       if (!file) return reject(new Error('No suitable video file found'));
 
@@ -638,7 +652,9 @@ function initializeDataFiles(){
   if(!fs.existsSync(postersDirPath)){
     fs.mkdirSync(postersDirPath, { recursive: true });
   }
-
+  if (!fs.existsSync(videoCachePath)) {
+    fs.mkdirSync(videoCachePath, { recursive: true });
+  }
   if(!fs.existsSync(SettingsFilePath)){
     let defaultFileData = JSON.stringify(
       {
@@ -713,7 +729,6 @@ async function downloadTorrent(torrentInfo, torrentId, TorrentDownloadDir) {
       const subtitlesExt = ['.srt', '.ass', '.sub', '.vtt'];
      
       console.log("\nDownload Target: " + torrentInfo?.fileName);
-
       console.log("\nTorrent Files:-----------------------------------------------------");
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");

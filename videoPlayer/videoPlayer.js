@@ -109,15 +109,11 @@ VideoElement.addEventListener("timeupdate",()=>{
 
 
 VideoElement.addEventListener('progress', function() {
-  const buffered = VideoElement.buffered;
-  for (let i = 0; i < buffered.length; i++) {
-    let start = buffered.start(i);
-    let end = buffered.end(i);
-
-    start = gettingformatedTime(start);
-    end = gettingformatedTime(end);
-    console.log(`Buffered range ${i}: ${start} - ${end}`);
- }
+  if (video.buffered.length > 0) {
+    const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+    const bufferedPercent = (bufferedEnd / video.duration) * 100;
+    console.log(bufferedPercent);
+  }
 });
 
 VolumeSliderElement.addEventListener("input", ()=>{
@@ -281,7 +277,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     }else{
       insertLanguageButton(subs); 
       getSubsViaLanguage("en");
-      window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
+      window.electronAPI.getVideoUrl(Magnet,fileName).then( ([url,mimeType]) => {
         console.log(`Video Format: ${mimeType}`);
         if(mimeType === "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
         VideoElement.id = "video-MediaPlayer";

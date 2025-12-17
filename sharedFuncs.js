@@ -302,7 +302,7 @@ function openDiscoveryPage(genreId, MediaType){
   window.electronAPI.navigateTo(path);
 }
 
-function OpenLibaryPage(typeOfSave = "Watch Later"){
+function OpenLibaryPage(typeOfSave = "All"){
   path = `./libraryPage/libraryPage.html?typeOfSave=${typeOfSave}`;
   window.electronAPI.navigateTo(path);
 }
