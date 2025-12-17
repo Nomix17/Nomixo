@@ -400,7 +400,7 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
           String(episodeInfo.episodeNumber) === String(MediaLibraryInfo["episodeNumber"]))
             insertContinueWatchingButton(TorrentElement,MediaLibraryInfo)
 
-        if(!fileName.endsWith("mkv")) TorrentMagnetContainer.append(TorrentElement);
+        TorrentMagnetContainer.append(TorrentElement);
       }
     });
     TorrentMagnetContainer.classList.remove("preloadingTorrent");
