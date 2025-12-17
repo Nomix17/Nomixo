@@ -34,25 +34,22 @@ button{
   transition: all 0.2s ease;
 }
 
-/* Main Subtitle Container */
 #div-MainSubtitleContainer{
   position: absolute;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   padding: 0;
   left: 50%;
   transform: translateX(-50%);
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(var(--primary-color), 0.95), rgba(var(--primary-color), 0.98));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  background-color: rgba(var(--primary-color), 0.98);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   bottom: 11%;
-  z-index: 2;
-  width: 28%;
-  min-width: 400px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10000;
+  width: 520px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
   animation: slideUp 0.3s ease;
 }
@@ -77,35 +74,36 @@ button{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 20px 28px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 #div-TopSubContainer p{
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-/* Bottom Container */
 #div-BottomSubContainer{
   display: flex;
   flex-direction: row;
   margin: 0;
   justify-content: center;
-  height: 220px;
+  height: 280px;
+  padding: 20px 0;
 }
 
-/* Left Container - Language Selection */
 #div-LeftSubContainer{
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: 35%;
+  width: 30%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px 8px;
-  gap: 4px;
+  padding: 0 20px;
+  gap: 6px;
 }
 
 #div-LeftSubContainer button,
@@ -113,14 +111,15 @@ button{
   width: 100%;
   text-align: left;
   background-color: transparent;
-  padding: 12px 16px;
+  padding: 14px 16px;
   margin: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s ease;
   position: relative;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 #div-LeftSubContainer button::before,
@@ -130,135 +129,161 @@ button{
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 3px;
+  width: 0;
   height: 0;
   background: rgba(var(--secondary-color));
   border-radius: 0 2px 2px 0;
-  transition: height 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 #div-LeftSubContainer button:hover,
 #div-leftsubcontainer button:hover{
-  background-color: rgba(255, 255, 255, 0.1);
-  padding-left: 20px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 #div-LeftSubContainer button:hover::before,
 #div-leftsubcontainer button:hover::before{
+  width: 3px;
   height: 60%;
 }
 
-/* Right Container */
+
+#div-LeftSubContainer button.active{
+  color: rgba(255, 255, 255, 1);
+}
+
 #div-RightSubContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 65%;
-  padding: 16px 12px;
-  gap: 8px;
+  width: 70%;
+  padding: 0 20px;
+  gap: 20px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-#div-RightSubContainer p{
+#div-RightSubContainer > p{
   padding: 0;
-  margin: 8px 0 4px 0;
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  text-transform: none;
+  letter-spacing: 0.3px;
   color: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  text-align: left;
 }
 
-/* Subtitles List */
 #div-subsList{
   overflow-y: hidden;
   overflow-x: auto;
-  color: rgba(255, 255, 255, 60%);
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   width: 100%;
-  height: 70px;
-  padding: 8px 4px;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  height: auto;
+  gap: 8px;
+  background: transparent;
+  border:1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  padding:5px;
 }
 
 #div-subsList button{ 
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 2px solid transparent;
-  border-radius: 8px;
-  margin: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
   padding: 0;
-  min-width: 48px;
-  height: 48px;
-  font-size: 15px;
+  margin: 0;
+  min-width: 40px;
+  height: 46px;
+  font-size: 16px;
   font-weight: 600;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+  color: rgba(255, 255, 255, 0.6);
 }
 
-#div-subsList button::after{
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(var(--secondary-color), 0.1);
-  opacity: 0;
-  transition: opacity 0.2s ease;
+#div-subsList button.active{
+  background-color: rgba(255,255,255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
 }
 
 #div-subsList button:hover{
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(var(--secondary-color), 0.3);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 #div-subsList button:hover::after{
   opacity: 1;
 }
 
-/* Size Controls */
+/* Timing adjustment section */
+.timing-section{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timing-section > p{
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  margin: 0;
+  text-align: center;
+}
+
+/* Size Controls (also used for timing) */
 #div-subSize{
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 16px;
   width: 100%;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  height: 56px;
 }
 
 #div-subSize button{ 
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
-  height: 42px;
-  width: 42px;
+  background: transparent;
+  height: 40px;
+  width: 40px;
   border-radius: 8px;
   border: none;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 #div-subSize button::before{
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(var(--secondary-color), 0.2);
+  background: rgba(255, 255, 255, 0.1);
   opacity: 0;
   transition: opacity 0.2s ease;
+  border-radius: 8px;
 }
 
 #div-subSize button:hover{
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
-  transform: scale(1.05);
+  color: white;
+  transform: scale(1.1);
 }
 
 #div-subSize button:hover::before{
@@ -270,49 +295,17 @@ button{
 }
 
 #div-subSize p{
-  font-size: 18px;
-  font-weight: 700;
-  min-width: 70px;
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 80px;
   text-align: center;
-  color: rgba(var(--secondary-color));
-  background: rgba(var(--secondary-color), 0.1);
-  padding: 8px 16px;
-  border-radius: 8px;
+  color: white;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
 }
 
 /* Utility Classes */
 .hideElement{
   display: none !important;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-  #div-MainSubtitleContainer{
-    width: 35%;
-    min-width: 350px;
-  }
-}
-
-@media (max-width: 768px) {
-  #div-MainSubtitleContainer{
-    width: 90%;
-    min-width: unset;
-  }
-  
-  #div-BottomSubContainer{
-    flex-direction: column;
-    height: auto;
-    max-height: 300px;
-  }
-  
-  #div-LeftSubContainer,
-  #div-RightSubContainer{
-    width: 100%;
-    border: none;
-  }
-  
-  #div-LeftSubContainer{
-    border-bottom: none;
-    max-height: 120px;
-  }
 }

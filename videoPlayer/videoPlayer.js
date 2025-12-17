@@ -17,6 +17,7 @@ let episodeNumber = data.get("episodeNumber");
 let defaultFontSize = 30;
 
 let TopButtonsContainer = document.getElementById("div-topButtonsContainer");
+let MiddleContainer = document.getElementById("div-videoContainer");
 let BottomButtonsContainer = document.getElementById("div-bottomButtonsContainer");
 let SubDivDisplay = document.getElementById("div-Subtitles");
 let loadingGif = document.getElementById("LoadingGif");
@@ -32,7 +33,7 @@ let SubButton = document.getElementById("btn-OpenSubtitle");
 let SubDiv = document.getElementById("div-MainSubtitleContainer");
 let bottomSubElement = document.getElementById("div-BottomSubContainer");
 
-var oldVolume = 0;
+let oldVolume = null;
 let mouseHoveringOnControlDiv;
 var SubsStruct = [];
 let subtitlesArray = [];
@@ -121,6 +122,7 @@ VideoElement.addEventListener('progress', function() {
 
 VolumeSliderElement.addEventListener("input", ()=>{
   VideoElement.muted = false;
+  if(parseInt(VolumeSliderElement.value) === 0) oldVolume = 1;
   VideoElement.volume = VolumeSliderElement.value / 100;
   updateVolumeIcons();
 });
@@ -131,7 +133,7 @@ VideoSlider.addEventListener("input", ()=>{
   }
 });
 
-VideoElement.addEventListener("dblclick",(event)=>{
+MiddleContainer.addEventListener("dblclick",(event)=>{
   fullscreenClicked();
 });
 
@@ -143,12 +145,24 @@ window.addEventListener("keydown",(event)=>{
   else if(event.key === "ArrowLeft") VideoElement.currentTime -= 10;
   else if(event.key === " ") TogglePauseUnpause();
   else if(event.key === "f") fullscreenClicked();
+  else if(event.key === "m"){
+    if(oldVolume !== null){
+      if( oldVolume === 0 ) oldVolume = 1;
+      VideoElement.volume = oldVolume;
+      oldVolume = null;
+    }else{
+      oldVolume = VideoElement.volume;
+      VideoElement.volume = 0;
+    }
+  }
+
   if (event.key === "Tab" ||
       event.key === "Super" ||
       event.key === "Alt" ) event.preventDefault();
-
   VolumeSliderElement.value = VideoElement.volume * 100;
   updateVolumeIcons();
+  event.preventDefault();
+  event.stopImmediatePropagation();
 });
 
 
@@ -163,7 +177,7 @@ switchToggle.addEventListener("change",(event)=>{
 });
 
 window.addEventListener("resize",()=>{
-  resizeSubMainDiv();
+  repositionSubDiv();
 });
 
 
@@ -211,7 +225,7 @@ function insertLanguageButton(subs) {
 }
 
 function getSubsViaLanguage(language){
-  let languageData = subtitlesArray.filter(sub => sub.language == language);
+  let languageData = subtitlesArray.filter(sub => sub.language === language);
   if(!languageData.length){
     document.getElementById("div-subsList").innerHTML = "Cannot Find Subtitles In This Language";
     return;
@@ -243,7 +257,7 @@ async function insertSubElements(fetchedData){
   };
 }
 
-resizeSubMainDiv()
+repositionSubDiv()
 
 function gettingformatedTime(time){
   let hours = parseInt((time / 60) / 60);
@@ -266,6 +280,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
       
     }else{
       insertLanguageButton(subs); 
+      getSubsViaLanguage("en");
       window.electronAPI.getVideoUrl(Magnet).then( ([url,mimeType]) => {
         console.log(`Video Format: ${mimeType}`);
         if(mimeType === "video/x-matroska") throw new Error(`${mimeType} Video Format is Not Supported.`)
@@ -446,34 +461,39 @@ function OpenSubtitles(){
   window.addEventListener("mousedown",hideSubDiv);
 }
 
-function resizeSubMainDiv(){
+function repositionSubDiv(){
   SubDiv.style.left = SubButton.getBoundingClientRect().left + SubButton.offsetWidth/2+"px";
 }
-let SubSizeCounter = 0;
-function SubSize(operation){
+
+let subsSizeOffsetPercent = 0;
+function SubSize(event,operation){
   let SubSizeDivP = document.getElementById("div-subSize").querySelector("p");
-  if(operation == "+" && SubSizeCounter < 200) SubSizeCounter += 10;
-  else if(operation == "-" && SubSizeCounter > -100 ) SubSizeCounter -= 10;
-  let Sign = SubSizeCounter >= 0 ?"+":"";
-  SubSizeDivP.innerText =  Sign+SubSizeCounter+ "%"
-  SubDivDisplay.style.fontSize = (defaultFontSize*(SubSizeCounter+100))/100 + "px";
+  if(operation === "+" && subsSizeOffsetPercent < 200) subsSizeOffsetPercent += 10;
+  else if(operation === "-" && subsSizeOffsetPercent > -100 ) subsSizeOffsetPercent -= 10;
+
+  let Sign = subsSizeOffsetPercent >= 0 ?"+":"";
+  SubSizeDivP.innerText = Sign+subsSizeOffsetPercent+ "%"
+  let currentFontSize = defaultFontSize + (defaultFontSize*subsSizeOffsetPercent)/100 + "px";
+  console.log(currentFontSize);
+  SubDivDisplay.style.fontSize = currentFontSize;
 }
 
 async function loadSubSettings(){
   let Settings = await window.electronAPI.loadSettings(); 
 
-  SubDivDisplay.style.fontSize = (defaultFontSize*Settings.SubFontSizeInternal)/100
-  SubDivDisplay.style.fontFamily = Settings.SubFontFamilyInternal
+  SubDivDisplay.style.fontSize = Settings.SubFontSizeInternal;
+  SubDivDisplay.style.fontFamily = Settings.SubFontFamilyInternal;
   SubDivDisplay.style.color = Settings.SubColorInternal;
   let numberInHex = parseInt(Settings.SubBackgroundColorInternal.split("#")[1],16);
   let r = (numberInHex >> 16) & 255;
   let g = (numberInHex >> 8) & 255;
   let b = (numberInHex) & 255;
   SubDivDisplay.style.backgroundColor = `rgba(${r},${g},${b},${Settings.SubBackgroundOpacityLevelInternal/100}`;
-  if(Settings.TurnOnSubsByDefault){
+  if(Settings.DownloadSubtitlesByDefault){
     switchToggle.checked = true;
     bottomSubElement.classList.toggle("hideElement");
   }
+  defaultFontSize = Settings.SubFontSizeInternal;
 }
 
 async function getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonNumber){
