@@ -86,7 +86,7 @@ const createWindow = async () => {
 
   win.webContents.on('did-finish-load', () => {
     win.webContents.setZoomFactor(mainzoomFactor);
-    win.maximize();
+    // win.maximize();
     win.show();
   });
 }
