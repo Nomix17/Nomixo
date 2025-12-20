@@ -44,11 +44,11 @@ function createDownloadElement(mediaLibEntryPoint){
         <div class="progress-bar-div">
           <div class="inside" style="width:${progress}%;"></div>
         </div>
-        <p class="percentage">${progress}%</p>
+        <p class="percentage">${isNaN(progress) ? "0%" : progress+"%"}</p>
       </div>
       <div class="movie-size-div">
-        <p class="downloaded-size">${currentSize} GB</p>
-        <p class="total-size">${totalSize} GB</p>
+        <p class="downloaded-size">${isNaN(currentSize) ? "---" : currentSize+" GB"}</p>
+        <p class="total-size">${isNaN(totalSize) ? "---" : totalSize+" GB"} </p>
       </div>
       <div class="download-buttons-div">
         <button class="toggle-pause-button">${playIcon}</button>
@@ -67,6 +67,14 @@ function createDownloadElement(mediaLibEntryPoint){
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
 
+  // let counter = 0;
+  // if(!loadingIntervals?.[mediaLibEntryPoint.torrentId]){
+  //   loadingIntervals[mediaLibEntryPoint.torrentId] = setInterval(()=>{
+  //     let dots = ["",".",". .",". . ."];
+  //     downloadSpeedElement.innerHTML = "loading "+dots[counter % dots.length];
+  //     counter ++;
+  //   },500);
+  // }
   if(mediaLibEntryPoint?.Status === "done"){
     MarkDownloadElementAsFinished(MediaDownloadElement,mediaLibEntryPoint);
   }
@@ -105,8 +113,10 @@ function monitorDownloads(){
     let calculatedTotalSize = (JsonData.Total / (1024 * 1024 * 1024)).toFixed(2);
     let calculatedDownloadSpeedInKB = (JsonData.DownloadSpeed / (1024)).toFixed(2);
     let calculatedDownloadSpeedInMB = (calculatedDownloadSpeedInKB / 1024).toFixed(2);
-
-    if(loadingInterval !== null) clearInterval(loadingInterval);
+    if(loadingIntervals?.[DownloadElementIdentifier]){
+      clearInterval(loadingIntervals[DownloadElementIdentifier]);
+      delete loadingIntervals[DownloadElementIdentifier]
+    }
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
     TotalSizeTextElement.innerText = calculatedTotalSize + " GB";
     downloadSpeedElement.innerText = calculatedDownloadSpeedInKB < 1000 ? calculatedDownloadSpeedInKB + " Kb/s": calculatedDownloadSpeedInMB + " Mb/s";
@@ -151,7 +161,7 @@ function handleCancelButton(mediaInfo,MediaDownloadElement){
       putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
   });
 }
-let loadingInterval = null;
+let loadingIntervals = {};
 function handleTogglingPauseButton(torrentId,MediaDownloadElement){
   let PausePlaybutton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
@@ -166,7 +176,7 @@ function handleTogglingPauseButton(torrentId,MediaDownloadElement){
 
       downloadSpeedElement.innerHTML = "loading"
       let counter = 1;
-      loadingInterval = setInterval(()=>{
+      loadingIntervals[torrentId] = setInterval(()=>{
         let dots = ["",".",". .",". . ."];
         downloadSpeedElement.innerHTML = "loading "+dots[counter % dots.length];
         counter ++;
