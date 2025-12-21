@@ -54,6 +54,7 @@ let mpv = null;
 let MPVWorker = null;
 let dontPlay = false; 
 let closeWindow = true;
+let InVideoPlayerPage = false;
 let mainzoomFactor = 1;
 let subsPaths;
 let torrentInit;
@@ -176,7 +177,7 @@ ipcMain.on("apply-sub-config", (event,SubConfig) => {
 // ======================= NAVIGATION =======================
 
 ipcMain.handle("go-back",(event)=>{
-  ExitVideoPlayerPage();
+  NavigateToPreviousPage();
 });
 
 ipcMain.handle("change-page", (event,page) => {
@@ -217,6 +218,9 @@ ipcMain.handle("get-api-key",() => process.env.API_KEY);
 
 ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
   return new Promise((resolve, reject) => {
+    InVideoPlayerPage = true;
+
+    console.log("\nLoading Torrent:",fileName);
     if (!fs.existsSync(videoCachePath)) {
       fs.mkdirSync(videoCachePath, { recursive: true });
     }
@@ -226,7 +230,6 @@ ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
     torrent.on('ready', () => {
       torrent.deselect(0, torrent.pieces.length - 1, false);
 
-      console.log("\nTarget Torrent:",fileName);
       console.log("\nTorrent Files:-----------------------------------------------------");
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
@@ -296,6 +299,7 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
   });
 
   handleMpvWorker(metaData);
+  InVideoPlayerPage = true;
 });
 
 ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
@@ -314,6 +318,7 @@ ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
   });
 
   handleMpvWorker(metaData);
+  InVideoPlayerPage = true;
 });
 
 // ======================= TORRENT DOWNLOADING =======================
@@ -760,7 +765,7 @@ async function downloadImage(downloadDir, posterUrl) {
 
 // ############################ NAVIGATION RELATED ############################
 
-function ExitVideoPlayerPage(){
+function NavigateToPreviousPage(){
   const webContents = WINDOW.webContents;
   if(webContents.navigationHistory.canGoBack()){
     if(StreamClient) StreamClient.destroy();
@@ -924,24 +929,35 @@ async function getLastestPlayBackPostion(metaData){
 // ############################ MPV PLAYER RELATED ############################
 
 function handleMpvWorker(metaData){
+
+  const ExitVideoPlayerPage = ()=>{
+    if(InVideoPlayerPage){
+      NavigateToPreviousPage();
+      InVideoPlayerPage = false;
+      updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
+    }
+  }
+
   MPVWorker.on('message', (msg) => {
     if(msg.type === "status"){
       if(msg.message === "Mpv output data"){
         handleMpvOutput(msg.data);
 
       } else if (msg.message === "Playback done" || msg.message === "Playback error"){
+        console.log("hello");
         ExitVideoPlayerPage();
-        updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
       }
     }
   });
 
   MPVWorker.on('error', (err) => {
     console.error('Mpv Worker error:', err);
+    ExitVideoPlayerPage();
   });
 
   MPVWorker.on('exit', (code) => {
     console.log(`Mpv Worker exited with code ${code}`);
+    ExitVideoPlayerPage();
   });
 }
 

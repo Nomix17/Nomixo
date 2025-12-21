@@ -93,6 +93,7 @@ html::-webkit-scrollbar{
 }
 #div-bottomButtonsContainer,
 #div-topButtonsContainer {
+  display:none;
   position: absolute;
   background-color: rgba(0,0,0,40%);
   box-sizing: border-box;
@@ -101,7 +102,6 @@ html::-webkit-scrollbar{
   width: 100%;
 }
 #div-topButtonsContainer {
-  display:flex;
   top:-150%;
 }
 #div-bottomButtonsContainer {
@@ -143,7 +143,6 @@ video{
 
 #div-topButtonsContainer,
 #div-bottomBottomContainer{
-  display:flex;
   justify-content:space-between;
 }
 #div-topBottomContainer{

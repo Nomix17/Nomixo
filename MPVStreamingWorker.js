@@ -64,7 +64,7 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
 
       expressServer = app.listen(0, async() => {
         try{
-          const port = expressServer.address().port; // Fixed: server -> expressServer
+          const port = expressServer.address().port;
           const url = `http://localhost:${port}/video`;
           console.log(`Streaming URL: ${url}`);
 
@@ -79,45 +79,50 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
 
           runMpvProcess(url,mpvConfigDirectory,startFromTime,subsPaths)
 
-          resolve(null);
-
         }catch(error){
           console.error(error.message);
-          reject(error); // Add reject
+          reject(error);
         }
       });
     });
   });
 }
 
-async function PlayLocalVideo(metaData,startFromTime,subsPaths,mpvConfigDirectory){ // Fixed parameter order
-  try{
-    let videoFullPath = await findFile(metaData.downloadPath, metaData.fileName);
-
-    runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths);
-
-  }catch(err){
-    console.error(err);
-  }
+async function PlayLocalVideo(metaData,startFromTime,subsPaths,mpvConfigDirectory){
+  return new Promise((resolve, reject) => {
+    try{
+      let videoFullPath = findFile(metaData.downloadPath, metaData.fileName);
+      runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,resolve,reject);
+    }catch(err){
+      console.error(err);
+      reject(err);
+    }
+  });
 }
 
-function runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths){
+function runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,onClose,onError){
   let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
   let childProcessArguments = [videoFullPath, "--fullscreen", `--config-dir=${mpvConfigDirectory}`,`--start=${startFromTime}`,...subsArgument]; 
 
   mpvProcess = spawn('mpv', childProcessArguments);
 
-  mpvProcess.on('close', () => {
+  mpvProcess.on('close', async () => {
+    console.log('MPV process closed');
     parentPort.postMessage({type:"status",message:"Playback done"});
+    await cleanup();
+    if(onClose) onClose();
   });
 
-  mpvProcess.on("error", err => {
-    console.error(err);
+  mpvProcess.on("error", async err => {
+    console.error('MPV process error:', err);
     parentPort.postMessage({type:"status",message:"Playback error"});
+    await cleanup();
+    if(onError) onError(err);
   });
 
   // share mpv output data 
-  [mpvProcess.stdout,mpvProcess.stderr].forEach(dataPipe => {dataPipe.on('data', (data)=>{
+  [mpvProcess.stdout,mpvProcess.stderr].forEach(dataPipe => {
+    dataPipe.on('data', (data)=>{
       const output = data.toString();
       parentPort.postMessage({type:"status",message:"Mpv output data",data:output});
     });

@@ -109,9 +109,9 @@ VideoElement.addEventListener("timeupdate",()=>{
 
 
 VideoElement.addEventListener('progress', function() {
-  if (video.buffered.length > 0) {
-    const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-    const bufferedPercent = (bufferedEnd / video.duration) * 100;
+  if (VideoElement.buffered.length > 0) {
+    const bufferedEnd = VideoElement.buffered.end(VideoElement.buffered.length - 1);
+    const bufferedPercent = (bufferedEnd / VideoElement.duration) * 100;
     console.log(bufferedPercent);
   }
 });
@@ -287,12 +287,14 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
         VideoElement.removeAttribute("style");
         document.documentElement.removeAttribute("style");
         document.documentElement.style.backgroundColor = "black";
+        TopButtonsContainer.style.display = "flex";
+        BottomButtonsContainer.style.display = "block";
       }).catch(err=>{
         console.error(err);
-        let getElementById = document.getElementById("div-SomethingWentWrong");
-        getElementById.innerHTML = err.message;
+        let WarningDiv = document.getElementById("div-SomethingWentWrong");
+        WarningDiv.innerHTML = err.message;
         loadingGif.remove();
-        getElementById.style.display = "flex";
+        WarningDiv.style.display = "flex";
       });
     }
 
@@ -311,6 +313,8 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
       VideoElement.removeAttribute("style");
       document.documentElement.removeAttribute("style");
       document.documentElement.style.backgroundColor = "black";
+      TopButtonsContainer.style.display = "flex";
+      BottomButtonsContainer.style.display = "block";
     }
   }
 }
