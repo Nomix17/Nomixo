@@ -494,7 +494,7 @@ function addContrastForPlayIcon(){
   const value = getComputedStyle(root).getPropertyValue('--icon-hover-color').trim();
   const [r,g,b] = value.split(",").slice(0,3).map(Number);
   const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
-  const bgColor = luminance > 180 ? "rgba(25,25,25,0.7)" : "#f9f9f9";
+  const bgColor = luminance > 180 ? "rgba(10,10,10,1)" : "#ffffff";
   document.querySelectorAll(".continue-video-button").forEach(item=>item.style.backgroundColor=bgColor);
 }
 

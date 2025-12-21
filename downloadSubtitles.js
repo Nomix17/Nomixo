@@ -2,7 +2,7 @@ import {createWriteStream,existsSync,mkdirSync,unlinkSync} from "fs";
 import {get} from "https";
 import {join} from "path";
 
-async function downloadMultiple(subDirectory,subsObjects){
+async function downloadMultipleSubs(subDirectory,subsObjects){
   console.log("----------------------------------------------------------------------------------------------------");
   let tasks = subsObjects.map(obj =>
     downloadSub(subDirectory,subsObjects,obj)
@@ -34,7 +34,8 @@ function downloadSub(downloadDirectory,subsObjects,SubObj){
       }
     }
 
-    let fileName = `${SubObj.display ?? SubObj.language}-${fileNumber}.${fileExtension}`;
+    let languageName = new Intl.DisplayNames(['en'],{type:'language'}).of(SubObj?.language) ?? SubObj.display ?? SubObj.language;
+    let fileName = `${languageName}-${fileNumber}.${fileExtension}`;
     let fileFullPath = join(downloadDirectory,fileName);
 
     if(existsSync(fileFullPath)){
@@ -75,4 +76,4 @@ function downloadSub(downloadDirectory,subsObjects,SubObj){
   });
 }
 
-export default downloadMultiple;
+export default downloadMultipleSubs;

@@ -1,6 +1,7 @@
 import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog} from "electron";
-import downloadMultiple from "./downloadSubtitles.js";
+import downloadMultipleSubs from "./downloadSubtitles.js";
 import { spawn } from "child_process";
+import { Worker } from 'worker_threads';
 import WebTorrent from 'webtorrent';
 import { fileURLToPath} from "url";
 import crypto from "crypto";
@@ -33,6 +34,7 @@ const SettingsFilePath = path.join(__configs, 'settings.json');
 const ThemeFilePath = path.join(__configs, 'Theme.css');
 const libraryFilePath = path.join(__configs, "library.json");
 const downloadLibraryFilePath = path.join(__configs, "downloads.json");
+const MPVPlayerWorkerPath = path.join(__dirname, 'MPVStreamingWorker.js');
 
 const subDirectory="/tmp/tempSubs";
 const videoCachePath = path.join(__configs,"video_cache");
@@ -46,9 +48,10 @@ initializeDataFiles();
 
 // ======================= GLOBALS =======================
 
-let win;
+let WINDOW;
 let server;
-let mpv;
+let mpv = null;
+let MPVWorker = null;
 let dontPlay = false; 
 let closeWindow = true;
 let mainzoomFactor = 1;
@@ -65,7 +68,7 @@ let lastSecondBeforeQuit=0;
 // ======================= WINDOW MANAGER =======================
 
 const createWindow = async () => {
-   win = new BrowserWindow({
+   WINDOW = new BrowserWindow({
      width: 1100,
      height: 650,
      show:false,
@@ -75,8 +78,8 @@ const createWindow = async () => {
        nodeIntegration: false
     }
   });
-  win.setMenuBarVisibility(false);
-  win.loadFile("./home/mainPage.html");
+  WINDOW.setMenuBarVisibility(false);
+  WINDOW.loadFile("./home/mainPage.html");
   
   let defaultSettings = loadSettings();
   mainzoomFactor = defaultSettings.PageZoomFactor;
@@ -84,10 +87,10 @@ const createWindow = async () => {
   if(settingDefaultDownloadingPath !== undefined)
     defaultDownloadDir = settingDefaultDownloadingPath;
 
-  win.webContents.on('did-finish-load', () => {
-    win.webContents.setZoomFactor(mainzoomFactor);
-    // win.maximize();
-    win.show();
+  WINDOW.webContents.on('did-finish-load', () => {
+    WINDOW.webContents.setZoomFactor(mainzoomFactor);
+    // WINDOW.maximize();
+    WINDOW.show();
   });
 }
 
@@ -173,30 +176,24 @@ ipcMain.on("apply-sub-config", (event,SubConfig) => {
 // ======================= NAVIGATION =======================
 
 ipcMain.handle("go-back",(event)=>{
-  const webContents = event.sender;
-  if(webContents.navigationHistory.canGoBack()){
-    if(StreamClient) StreamClient.destroy();
-    if(mpv) mpv.kill();
-    if(win && !win.isVisible()) win.show();
-    webContents.navigationHistory.goBack();
-  }
+  ExitVideoPlayerPage();
 });
 
 ipcMain.handle("change-page", (event,page) => {
-  if (win) {
+  if (WINDOW) {
     const webContents = event.sender;
     const [filePath, query] = page.split('?');
     const fullPath = path.join(__dirname, filePath);
     webContents.setZoomFactor(mainzoomFactor);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
-    win.loadURL(url);
+    WINDOW.loadURL(url);
   }
 });
 
 ipcMain.handle("request-fullscreen",()=>{
-  if (!win) return undefined;
-  win.setFullScreen(!win.isFullScreen());
-  return win.isFullScreen();
+  if (!WINDOW) return undefined;
+  WINDOW.setFullScreen(!WINDOW.isFullScreen());
+  return WINDOW.isFullScreen();
 });
 
 ipcMain.handle("get-full-video-path",async(event,dirPath,fileName)=>{
@@ -283,149 +280,40 @@ ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
 });
 
 ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
-  return new Promise((resolve, reject) => {
-    const client = new WebTorrent();
-    const torrent = client.add(metaData.Magnet, (torrent) => {
-      StreamClient = torrent;
+  let startFromTime = await getLastestPlayBackPostion(metaData);
 
-      console.log("\nTarget Torrent:",metaData?.fileName)
-      console.log("\nTorrent Files:-----------------------------------------------------");
-      torrent.files.forEach(f => { console.log(f.name) });
-      console.log("-------------------------------------------------------------------\n");
-
-      const file = torrent.files.find(f =>
-        (metaData?.fileName ===  f.name)
-      );
-      if (!file) return reject(new Error('No suitable video file found'));
-
-      const app = express();
-      app.get('/video', (req, res) => {
-        const range = req.headers.range;
-        if (!range) return res.status(416).send('Requires Range header');
-
-        const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(startStr, 10);
-        const end = endStr ? parseInt(endStr, 10) : file.length - 1;
-        const chunkSize = end - start + 1;
-
-        res.writeHead(206, {
-          'Content-Range': `bytes ${start}-${end}/${file.length}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunkSize,
-          'Content-Type': mime.getType(file.name)
-        });
-
-        const stream = file.createReadStream({ start, end });
-        let downloaded = 0;
-        stream.on("data", chunk => {
-          downloaded += chunk.length;
-          const percentage = ((downloaded / file.length) * 100).toFixed(2);
-        });
-        stream.on('error', (err) => {
-          console.error('Stream error:', err);
-        });
-        res.on('close', () => {
-          stream.destroy();
-        });
-
-        stream.pipe(res);
-      });
-      const server = app.listen(0, async() => {
-        try{
-          const port = server.address().port;
-          const url = `http://localhost:${port}/video`;
-          console.log(`Streaming URL: ${url}`);
-          
-          let subsId = generateUniqueId(
-            `${metaData.mediaImdbId}-${metaData.episodeNumber ?? "undefined"}-${metaData.seasonNumber ?? "undefined"}`
-          );
-
-          let tmpSubDir = path.join(subDirectory,`SUB_${subsId}`);
-          let downloadResponce = await downloadMultiple(tmpSubDir,subsObjects);
-          subsPaths = downloadResponce.filter(responce => responce.status === "success").map(responce => responce.file);
-          let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
-          console.log(`--config-dir=${mpvConfigDirectory}`);
-
-          let currentMediaFromLibrary = await loadFromLibrary({MediaId:metaData.MediaId,MediaType:metaData.MediaType});
-          let startFromTime;
-
-          if(currentMediaFromLibrary == undefined || 
-            currentMediaFromLibrary[0].episodeNumber !== metaData.episodeNumber ||
-            currentMediaFromLibrary[0].seasonNumber !== metaData.seasonNumber)
-              startFromTime = 0;
-
-          else startFromTime = currentMediaFromLibrary[0].lastPlaybackPosition;
-
-          let childProcessArguments = [url, `--config-dir=${mpvConfigDirectory}`,`--start=${startFromTime}`,...subsArgument];
-          if(win.isFullScreen()) childProcessArguments = ["--fullscreen",...childProcessArguments];
-
-          mpv = spawn('mpv', childProcessArguments);
-          mpv.on('close', () => {
-            console.log('Playback finished');
-            server.close();
-            torrent.destroy();
-
-            updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
-            mpv.stdout.off('data', hideMainWindow);
-            mpv.stderr.off('data', hideMainWindow);
-
-            const webContents = event.sender;
-            if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
-            if (win) win.show();
-            mpv = null;
-          });
-          mpv.stdout.on('data', hideMainWindow);
-          mpv.stderr.on('data', hideMainWindow);
-
-          mpv.on("error", err => {
-              server.close();
-              torrent.destroy();
-              reject(err);
-          });
-
-          resolve(null);
-        }catch(error){console.error(error.message)};
-      });
-    });
+  MPVWorker = new Worker(MPVPlayerWorkerPath, {
+    workerData: {
+      typeOfPlay:"StreamTorrent",
+      metaData,
+      subsObjects,
+      startFromTime,
+      videoCachePath,
+      subDirectory,
+      mpvConfigDirectory
+    },
+    type: 'module'
   });
+
+  handleMpvWorker(metaData);
 });
 
 ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
-  try{
-    let videoFullPath = await findFile(metaData.downloadPath, metaData.fileName) ;
-    let currentMediaFromLibrary = await loadFromLibrary({MediaId:metaData.MediaId,MediaType:metaData.MediaType});
-    let startFromTime;
+  let startFromTime = await getLastestPlayBackPostion(metaData);
+  let subsPaths = await loadSubsFromSubDir(metaData.downloadPath,metaData.TorrentId);
 
-    if(currentMediaFromLibrary == undefined || 
-      currentMediaFromLibrary[0].episodeNumber !== metaData.episodeNumber ||
-      currentMediaFromLibrary[0].seasonNumber !== metaData.seasonNumber)
-        startFromTime = 0;
+  MPVWorker = new Worker(MPVPlayerWorkerPath, {
+    workerData: {
+      typeOfPlay:"LocalFile",
+      metaData,
+      startFromTime,
+      subsPaths,
+      mpvConfigDirectory
+    },
+    type: 'module'
+  });
 
-    else startFromTime = currentMediaFromLibrary[0].lastPlaybackPosition;
-
-    let subsPaths = await loadSubsFromSubDir(metaData.downloadPath,metaData.TorrentId);
-    let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
-
-    let childProcessArguments = [videoFullPath, `--config-dir=${mpvConfigDirectory}`,`--start=${startFromTime}`,...subsArgument];
-
-    mpv = spawn('mpv', childProcessArguments);
-    mpv.on('close', () => {
-      console.log('Playback finished');
-      updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
-      mpv.stdout.off('data', hideMainWindow);
-      mpv.stderr.off('data', hideMainWindow);
-
-      const webContents = event.sender;
-      if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
-      if (win) win.show();
-      mpv = null;
-    });
-    mpv.stdout.on('data', hideMainWindow);
-    mpv.stderr.on('data', hideMainWindow);
-
-  }catch(err){
-    console.error(err);
-  }
+  handleMpvWorker(metaData);
 });
 
 // ======================= TORRENT DOWNLOADING =======================
@@ -787,7 +675,7 @@ async function downloadTorrent(torrentInfo) {
           torrentInfo["Status"] = "done";
           updateElementDownloadLibrary(torrentInfo, downloadedDataLength,totalSize);
           
-          win.webContents.send("download-progress-stream", jsonMessage);
+          WINDOW.webContents.send("download-progress-stream", jsonMessage);
           
           torrent.destroy(() => {
             delete DownloadingTorrents[torrentInfo.torrentId];
@@ -817,7 +705,7 @@ async function downloadTorrent(torrentInfo) {
             Status: "downloading"
           };
 
-          win.webContents.send("download-progress-stream", jsonMessage);
+          WINDOW.webContents.send("download-progress-stream", jsonMessage);
           PipingStartTime = now;
 
           console.log(`Downloading ${torrentInfo.dirName}: ${((downloadedDataLength / totalSize) * 100).toFixed(2)}%, ${(downloadSpeed / (1024)).toFixed(2)} Kb/s`);
@@ -828,7 +716,7 @@ async function downloadTorrent(torrentInfo) {
     torrent.on("error", (err) => {
       console.error(`Torrent error: ${torrentInfo.torrentId}, ${err}`);
       
-      win.webContents.send("download-progress-stream", {
+      WINDOW.webContents.send("download-progress-stream", {
         TorrentId: torrentInfo.torrentId,
         Status: "error",
         Error: err.message
@@ -845,7 +733,7 @@ function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
     try {
       let subDownloadDir = path.join(TorrentDownloadDir, `SUBS_${torrentId}`);
       fs.mkdirSync(subDownloadDir, { recursive: true });
-      downloadMultiple(subDownloadDir, subsObjects);
+      downloadMultipleSubs(subDownloadDir, subsObjects);
     } catch (err) {
       console.error("Subtitle download error:", err);
     }
@@ -871,6 +759,20 @@ async function downloadImage(downloadDir, posterUrl) {
 }
 
 // ############################ NAVIGATION RELATED ############################
+
+function ExitVideoPlayerPage(){
+  const webContents = WINDOW.webContents;
+  if(webContents.navigationHistory.canGoBack()){
+    if(StreamClient) StreamClient.destroy();
+    if(mpv) mpv.kill();
+    if(WINDOW && !WINDOW.isVisible()) WINDOW.show();
+    if(MPVWorker && MPVWorker.threadId !== -1){
+      MPVWorker.postMessage({ type: 'shutdown' });
+      MPVWorker = null;
+    }
+    webContents.navigationHistory.goBack();
+  }
+}
 
 function generateUniqueId(seed) {
   const hash = crypto.createHash('sha256');
@@ -981,7 +883,7 @@ async function insertNewDownloadEntryPoint(torrentInfo){
     downloadLib.downloads.push(newEntry);
 
     const jsonMessage = { Status: "NewDownload" }
-    win.webContents.send("download-progress-stream", jsonMessage);
+    WINDOW.webContents.send("download-progress-stream", jsonMessage);
     await insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
 
     console.log("Creating Download Library Entry Point for: "+torrentInfo.torrentId);
@@ -1007,11 +909,45 @@ async function updateElementDownloadLibrary(torrentInfo, downloadedBytes, totalS
   }
 }
 
-// ############################ MPV pLAYER RELATED ############################
+async function getLastestPlayBackPostion(metaData){
+  let CurrentMediaLibraryEntry = await loadFromLibrary({MediaId:metaData.MediaId,MediaType:metaData.MediaType});
 
-const hideMainWindow = (data)=>{
+  let startFromTime;
+  if(CurrentMediaLibraryEntry == undefined || 
+    CurrentMediaLibraryEntry[0].episodeNumber !== metaData.episodeNumber ||
+    CurrentMediaLibraryEntry[0].seasonNumber !== metaData.seasonNumber)
+      return 0;
+
+  return CurrentMediaLibraryEntry[0].lastPlaybackPosition;
+}
+
+// ############################ MPV PLAYER RELATED ############################
+
+function handleMpvWorker(metaData){
+  MPVWorker.on('message', (msg) => {
+    if(msg.type === "status"){
+      if(msg.message === "Mpv output data"){
+        handleMpvOutput(msg.data);
+
+      } else if (msg.message === "Playback done" || msg.message === "Playback error"){
+        ExitVideoPlayerPage();
+        updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
+      }
+    }
+  });
+
+  MPVWorker.on('error', (err) => {
+    console.error('Mpv Worker error:', err);
+  });
+
+  MPVWorker.on('exit', (code) => {
+    console.log(`Mpv Worker exited with code ${code}`);
+  });
+}
+
+const handleMpvOutput = (data)=>{
   if(data.toString().includes("AV:"))
-    if(win && win.isVisible()) win.hide();
+    if(WINDOW && WINDOW.isVisible()) WINDOW.hide();
   let line = data.toString();
   process.stdout.write(line);
   if(line.includes("AV:")){
