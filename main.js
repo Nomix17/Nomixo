@@ -103,8 +103,8 @@ app.on("window-all-closed", () => {
   if(closeWindow){
     app.quit();
   }
-  if(fs.existsSync(subDirectory))
-    fs.readdirSync(subDirectory).forEach(file => {fs.unlinkSync(path.join(subDirectory,file))});
+  // if(fs.existsSync(subDirectory))
+  //   fs.readdirSync(subDirectory).forEach(file => {fs.unlinkSync(path.join(subDirectory,file))});
 
 });
 
@@ -335,12 +335,17 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
           const port = server.address().port;
           const url = `http://localhost:${port}/video`;
           console.log(`Streaming URL: ${url}`);
+          
+          let subsId = generateUniqueId(
+            `${metaData.mediaImdbId}-${metaData.episodeNumber ?? "undefined"}-${metaData.seasonNumber ?? "undefined"}`
+          );
 
-          let downloadResponce = await downloadMultiple(subDirectory,subsObjects);
+          let tmpSubDir = path.join(subDirectory,`SUB_${subsId}`);
+          let downloadResponce = await downloadMultiple(tmpSubDir,subsObjects);
           subsPaths = downloadResponce.filter(responce => responce.status === "success").map(responce => responce.file);
           let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
           console.log(`--config-dir=${mpvConfigDirectory}`);
-        
+
           let currentMediaFromLibrary = await loadFromLibrary({MediaId:metaData.MediaId,MediaType:metaData.MediaType});
           let startFromTime;
 
@@ -364,7 +369,6 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
             mpv.stdout.off('data', hideMainWindow);
             mpv.stderr.off('data', hideMainWindow);
 
-            subsPaths.forEach(file => {fs.unlinkSync(file)});
             const webContents = event.sender;
             if (webContents.navigationHistory.canGoBack()) webContents.navigationHistory.goBack();
             if (win) win.show();
