@@ -944,7 +944,6 @@ function handleMpvWorker(metaData){
         handleMpvOutput(msg.data);
 
       } else if (msg.message === "Playback done" || msg.message === "Playback error"){
-        console.log("hello");
         ExitVideoPlayerPage();
       }
     }

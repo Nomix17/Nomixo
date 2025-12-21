@@ -377,7 +377,7 @@ window.MOST_POPULAR_LANGUAGES = [
   "Italian"
 ]
 
-window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,globalLoadingGif,RightmiddleDiv)=>{
+window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,globalLoadingGif,RightmiddleDiv,IsInHomePage=false)=>{
   const promises = wholeLibraryInformation.map(mediaEntryPoint =>{
     let MediaId = mediaEntryPoint.MediaId;
     let MediaType = mediaEntryPoint.MediaType;
@@ -388,7 +388,7 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,gl
       .then(data => {
         if(data.status_code === 7) throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
         globalLoadingGif.remove();
-        SavedMedia.appendChild(createMediaElement(data,MediaType,mediaEntryPoint.typeOfSave,mediaEntryPoint,SavedMedia));
+        SavedMedia.appendChild(createMediaElement(data,MediaType,mediaEntryPoint.typeOfSave,mediaEntryPoint,SavedMedia,IsInHomePage));
       })
       .catch(err=>{
         err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data</br>Please Check your connection and refresh!":err.message;
@@ -406,7 +406,7 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,gl
   return Promise.all(promises);
 }
 
-function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoint,SavedMedia){
+function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoint,SavedMedia,IsInHomePage=false){
     let Id = "Unknown";
     let Title = "Unknown";
     let Adult = "Unknown";
@@ -445,7 +445,7 @@ function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoin
     movieDomElement.appendChild(removeFromLibraryButton);
     movieDomElement.appendChild(movieNameElement); 
     
-    removeFromLibraryButton.addEventListener("click",()=>{removeMediaFromLibrary(Id,ThisMediaType,movieDomElement)});
+    removeFromLibraryButton.addEventListener("click",()=>{removeMediaFromLibrary(Id,ThisMediaType,movieDomElement,IsInHomePage)});
     movieDomElement.addEventListener("click",()=>{openDetailPage(Id,ThisMediaType)});
 
     if(ThisSaveType.includes("Currently Watching")){
@@ -499,7 +499,7 @@ function addContrastForPlayIcon(){
 }
 
 
-function removeMediaFromLibrary(mediaId,mediaType,parentDiv){
+function removeMediaFromLibrary(mediaId,mediaType,parentDiv,IsInHomePage){
   let MediaLibraryObject = {
     MediaId:mediaId,
     MediaType:mediaType
@@ -509,14 +509,16 @@ function removeMediaFromLibrary(mediaId,mediaType,parentDiv){
 
   let MediaElementsContainer = parentDiv.parentElement;
   parentDiv.remove();
-  if(MediaElementsContainer.innerHTML.trim() === ""){
+  if(MediaElementsContainer.innerHTML.trim() === "" ){
     let continueWatchingElement = document.getElementById("continue-watching-categorie");
     if(continueWatchingElement){
       continueWatchingElement.style.display = "none";
     }
-    let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
-    WarningElement.style.marginBottom = "100px";
-    RightmiddleDiv.appendChild(WarningElement);
+    if(!IsInHomePage){
+      let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
+      WarningElement.style.marginBottom = "100px";
+      RightmiddleDiv.appendChild(WarningElement);
+    }
   }
 
   window.electronAPI.removeMediaFromLibrary(MediaLibraryObject);

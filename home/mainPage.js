@@ -47,7 +47,7 @@ async function loadMovies(){
 async function manageLibraryData(apiKey,LibraryInformation){
   let continueWatchingMediaFromLibrary = LibraryInformation.filter(item => item?.typeOfSave.includes("Currently Watching"));
   if(continueWatchingMediaFromLibrary.length)
-    fetchMediaDataFromLibrary(apiKey,continueWatchingMediaFromLibrary,continueWatchingDiv,globalLoadingGif,RightmiddleDiv);
+    fetchMediaDataFromLibrary(apiKey,continueWatchingMediaFromLibrary,continueWatchingDiv,globalLoadingGif,RightmiddleDiv,true);
   else
     document.getElementById("continue-watching-categorie").style.display = "none";
 }
