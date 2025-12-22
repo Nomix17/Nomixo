@@ -64,6 +64,7 @@ function createDownloadElement(mediaLibEntryPoint){
   let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
   let PosterDiv = MediaDownloadElement.querySelector(".poster-div");
+  let PosterElement = MediaDownloadElement.querySelector(".poster-img");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
 
@@ -118,8 +119,6 @@ function monitorDownloads(){
       clearInterval(loadingIntervals[DownloadElementIdentifier]);
       delete loadingIntervals[DownloadElementIdentifier]
     }
-
-    PosterElement.src = PosterElement.src;
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
     TotalSizeTextElement.innerText = calculatedTotalSize + " GB";
     downloadSpeedElement.innerText = calculatedDownloadSpeedInKB < 1000 ? calculatedDownloadSpeedInKB + " Kb/s": calculatedDownloadSpeedInMB + " Mb/s";
