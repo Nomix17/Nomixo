@@ -400,6 +400,7 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
           String(episodeInfo.episodeNumber) === String(MediaLibraryInfo["episodeNumber"]))
             insertContinueWatchingButton(TorrentElement,MediaLibraryInfo)
 
+        // if(!fileName.includes("mkv"))
         TorrentMagnetContainer.append(TorrentElement);
       }
     });

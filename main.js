@@ -465,6 +465,23 @@ ipcMain.handle("load-from-download-lib",async(event,targetIdentification)=>{
 });
 
 
+ipcMain.handle("load-local-subs",async(event,downloadPath,torrentId)=>{
+  let subsDirectory = path.join(downloadPath,`SUBS_${torrentId}`);
+  return fs.readdirSync(subsDirectory).map(subFileName => {
+    let displayName = subFileName.split("-")[0];
+    return {
+      url:path.join(subsDirectory,subFileName),
+      display:displayName,
+      language:languageDict[displayName.toLowerCase()] ?? displayName,
+      type:"local"
+    }
+  });
+});
+
+ipcMain.handle("read-sub-file",async(event,filePath)=>{
+  return fs.readFileSync(filePath, 'utf8');
+});
+
 // ################# functions ######################## 
 
 // ########## SETTINGS RELATED #################
@@ -746,21 +763,18 @@ function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
 }
 
 async function downloadImage(downloadDir, posterUrl) {
-  try {
-    if (!posterUrl) return "undefined";
+  await fs.mkdir(downloadDir, { recursive: true });
 
-    const res = await fetch(sanitizeUrl(posterUrl));
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const res = await fetch(posterUrl);
+  if (!res.ok) return null;
 
-    const buffer = Buffer.from(await res.arrayBuffer());
-    const file = path.join(downloadDir, path.basename(posterUrl));
-    fs.writeFileSync(file, buffer);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  if (!buffer.length) return null;
 
-    return file;
-  } catch (error) {
-    console.error("Download failed:", error.message);
-    return null;
-  }
+  const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
+  await fs.writeFile(file, buffer);
+
+  return file;
 }
 
 // ############################ NAVIGATION RELATED ############################
@@ -786,6 +800,7 @@ function generateUniqueId(seed) {
 }
 
 function findFile(dir, filename) {
+  if(!fs.existsSync(dir)) return null;
   const files = fs.readdirSync(dir);
   for (const file of files) {
     const fullPath = path.join(dir, file);
@@ -877,12 +892,12 @@ async function insertNewDownloadEntryPoint(torrentInfo){
   );
 
   if(existingIndex === -1){
+    let posterDownloadPath = torrentInfo?.downloadPath ?? postersDirPath;
+    let bgImagePath = path.join(posterPath,torrentInfo?.bgImageUrl.split("/").pop());
+    let posterPath = path.join(posterPath,torrentInfo?.posterUrl.split("/").pop());
 
-    let bgImagePath = path.join(postersDirPath,torrentInfo?.bgImageUrl.split("/").pop());
-    let posterPath = path.join(postersDirPath,torrentInfo?.posterUrl.split("/").pop());
-
-    downloadImage(postersDirPath,torrentInfo?.bgImageUrl)
-    downloadImage(postersDirPath,torrentInfo?.posterUrl);
+    downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
+    downloadImage(posterDownloadPath,torrentInfo?.posterUrl);
 
     let newEntry = {...torrentInfo,posterPath: posterPath ?? "undefined",bgImagePath: bgImagePath ?? "undefined"};
     downloadLib.downloads.push(newEntry);
@@ -1015,3 +1030,30 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
   }
   insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
 }
+
+
+// ################################### maping Languages codes ###################################
+const languageDict = {
+  english: "en", afrikaans: "af", albanian: "sq", amharic: "am", arabic: "ar",
+  armenian: "hy", azerbaijani: "az", basque: "eu", belarusian: "be", bengali: "bn",
+  bosnian: "bs", bulgarian: "bg", catalan: "ca", cebuano: "ceb", chinese: "zh",
+  corsican: "co", croatian: "hr", czech: "cs", danish: "da", dutch: "nl",
+  esperanto: "eo", estonian: "et", finnish: "fi", french: "fr", frisian: "fy",
+  galician: "gl", georgian: "ka", german: "de", greek: "el", gujarati: "gu",
+  haitian_creole: "ht", hausa: "ha", hawaiian: "haw", hebrew: "he", hindi: "hi",
+  hmong: "hmn", hungarian: "hu", icelandic: "is", igbo: "ig", indonesian: "id",
+  irish: "ga", italian: "it", japanese: "ja", javanese: "jv", kannada: "kn",
+  kazakh: "kk", khmer: "km", kinyarwanda: "rw", korean: "ko", kurdish: "ku",
+  kyrgyz: "ky", lao: "lo", latin: "la", latvian: "lv", lithuanian: "lt",
+  luxembourgish: "lb", macedonian: "mk", malagasy: "mg", malay: "ms", malayalam: "ml",
+  maltese: "mt", maori: "mi", marathi: "mr", mongolian: "mn", myanmar: "my",
+  nepali: "ne", norwegian: "no", nyanja: "ny", oromo: "or", pashto: "ps",
+  persian: "fa", polish: "pl", portuguese: "pt", punjabi: "pa", romanian: "ro",
+  russian: "ru", samoan: "sm", scots_gaelic: "gd", serbian: "sr", sesotho: "st",
+  shona: "sn", sindhi: "sd", sinhala: "si", slovak: "sk", slovenian: "sl",
+  somali: "so", spanish: "es", sundanese: "su", swahili: "sw", swedish: "sv",
+  tagalog: "tl", tajik: "tg", tamil: "ta", tatar: "tt", telugu: "te",
+  thai: "th", turkish: "tr", turkmen: "tk", ukrainian: "uk", urdu: "ur",
+  uyghur: "ug", uzbek: "uz", vietnamese: "vi", welsh: "cy", xhosa: "xh",
+  yiddish: "yi", yoruba: "yo", zulu: "zu"
+};

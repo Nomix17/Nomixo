@@ -112,7 +112,6 @@ VideoElement.addEventListener('progress', function() {
   if (VideoElement.buffered.length > 0) {
     const bufferedEnd = VideoElement.buffered.end(VideoElement.buffered.length - 1);
     const bufferedPercent = (bufferedEnd / VideoElement.duration) * 100;
-    console.log(bufferedPercent);
   }
 });
 
@@ -233,21 +232,26 @@ async function insertSubElements(fetchedData){
   let subsList = document.getElementById("div-subsList");
   subsList.innerHTML = "";
   for(let i=0 ;i<fetchedData.length;i++){
-    let SubSource = fetchedData[i].url;
+    let subtitlePath = fetchedData[i].url;
     let subElement = document.createElement("button");
     subElement.innerText = i;
-    subElement.value = SubSource; 
-    subElement.addEventListener("click", () => {
+    subElement.value = subtitlePath; 
+    subElement.addEventListener("click", async() => {
       Array.from(subsList.children).forEach(element => {
         element.style.backgroundColor = "transparent";
         element.style.borderColor = "transparent";
       });
       subElement.style.backgroundColor = "rgba(255,255,255,0.05)";
       subElement.style.borderBottom = "4px solid rgba(var(--secondary-color))"
+      if(fetchedData[i]?.type === "local"){
+        let fileContent = await window.electronAPI.readSubFile(subtitlePath);
+        scrapSubs(fileContent);
+      }else{
       fetch(SubSource).then(res => res.text()
         ).then(data => {
           scrapSubs(data);
         });
+      }
     });
     subsList.append(subElement);
   };
@@ -299,6 +303,10 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     }
 
   }else{
+    let subs = await window.electronAPI.loadLocalSubs(downloadPath,TorrentIdentification);
+    console.log(subs);
+    subtitlesArray = subs;
+
     let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
 
     if(fileIsMkv){
@@ -306,6 +314,9 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
       playVideoInMpv(false,undefined,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,undefined);
 
     }else{
+      insertLanguageButton(subs); 
+      getSubsViaLanguage("en");
+
       VideoElement.id = "video-MediaPlayer";
       VideoElement.innerHTML = `<source src='${videoPath}'>`;
       VideoElement.load();
