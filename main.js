@@ -371,7 +371,7 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
   const torrentId = mediaInfo.torrentId;
   const targetTorrent = DownloadingTorrents?.[torrentId];
-  
+
   if (targetTorrent) {
     await new Promise((resolve) => {
       targetTorrent.destroy(() => {
@@ -639,6 +639,8 @@ async function downloadTorrent(torrentInfo) {
     path: torrentInfo.downloadPath
   });
 
+  DownloadingTorrents[torrentInfo.torrentId] = torrent;
+
   insertNewDownloadEntryPoint(torrentInfo);
 
   // Wait for torrent to be ready before accessing files
@@ -762,20 +764,36 @@ function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
   }
 }
 
-async function downloadImage(downloadDir, posterUrl) {
-  await fs.mkdir(downloadDir, { recursive: true });
 
-  const res = await fetch(posterUrl);
-  if (!res.ok) return null;
+async function downloadImage(downloadDir, posterUrl, retries = 3, timeout = 10000) {
+  fs.mkdirSync(downloadDir, { recursive: true });
 
-  const buffer = Buffer.from(await res.arrayBuffer());
-  if (!buffer.length) return null;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
 
-  const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
-  await fs.writeFile(file, buffer);
+      const res = await fetch(posterUrl, { signal: controller.signal });
+      clearTimeout(timer);
 
-  return file;
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+      const buffer = Buffer.from(await res.arrayBuffer());
+      if (!buffer.length) throw new Error('Empty file');
+
+      const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
+      fs.writeFileSync(file, buffer);
+
+      return file;
+    } catch (err) {
+      if (attempt === retries) {
+        console.error(`Failed to download ${posterUrl}:`, err.message);
+        return null;
+      }
+    }
+  }
 }
+
 
 // ############################ NAVIGATION RELATED ############################
 
@@ -892,9 +910,12 @@ async function insertNewDownloadEntryPoint(torrentInfo){
   );
 
   if(existingIndex === -1){
-    let posterDownloadPath = torrentInfo?.downloadPath ?? postersDirPath;
-    let bgImagePath = path.join(posterPath,torrentInfo?.bgImageUrl.split("/").pop());
-    let posterPath = path.join(posterPath,torrentInfo?.posterUrl.split("/").pop());
+    let posterDownloadPath = torrentInfo?.downloadPath 
+       ? path.join(torrentInfo.downloadPath, "POSTERS") 
+       : postersDirPath;
+
+    let bgImagePath = path.join(posterDownloadPath,torrentInfo?.bgImageUrl.split("/").pop());
+    let posterPath = path.join(posterDownloadPath,torrentInfo?.posterUrl.split("/").pop());
 
     downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
     downloadImage(posterDownloadPath,torrentInfo?.posterUrl);

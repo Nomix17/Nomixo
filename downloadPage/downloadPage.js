@@ -100,6 +100,7 @@ function monitorDownloads(){
 
     let TargetDownloadElement = document.getElementById(DownloadElementIdentifier);
     let TotalSizeTextElement = TargetDownloadElement.querySelector(".total-size");
+    let PosterElement = TargetDownloadElement.querySelector(".poster-img");
     let DownloadedSizeTextElement = TargetDownloadElement.querySelector(".downloaded-size");
     let PercentageTextElement = TargetDownloadElement.querySelector(".percentage");
     let ProgressBar = TargetDownloadElement.querySelector(".progress-bar-div");
@@ -117,6 +118,8 @@ function monitorDownloads(){
       clearInterval(loadingIntervals[DownloadElementIdentifier]);
       delete loadingIntervals[DownloadElementIdentifier]
     }
+
+    PosterElement.src = PosterElement.src;
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
     TotalSizeTextElement.innerText = calculatedTotalSize + " GB";
     downloadSpeedElement.innerText = calculatedDownloadSpeedInKB < 1000 ? calculatedDownloadSpeedInKB + " Kb/s": calculatedDownloadSpeedInMB + " Mb/s";
