@@ -303,8 +303,8 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     }
 
   }else{
-    let subs = await window.electronAPI.loadLocalSubs(downloadPath,TorrentIdentification);
-    console.log(subs);
+    let identifyingElements = {"IMDB_ID":mediaImdbId,"episodeNumber":episodeNumber,"seasonNumber":seasonNumber,"TorrentDownloadDir":downloadPath};
+    let subs = await window.electronAPI.loadLocalSubs(downloadPath,identifyingElements);
     subtitlesArray = subs;
 
     let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);

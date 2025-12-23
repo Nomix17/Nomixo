@@ -465,8 +465,13 @@ ipcMain.handle("load-from-download-lib",async(event,targetIdentification)=>{
 });
 
 
-ipcMain.handle("load-local-subs",async(event,downloadPath,torrentId)=>{
+ipcMain.handle("load-local-subs",async(event,downloadPath,identifyingElements)=>{
+  let torrentId = generateUniqueId(
+    `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.TorrentDownloadDir}`
+  );
+
   let subsDirectory = path.join(downloadPath,`SUBS_${torrentId}`);
+
   return fs.readdirSync(subsDirectory).map(subFileName => {
     let displayName = subFileName.split("-")[0];
     return {
