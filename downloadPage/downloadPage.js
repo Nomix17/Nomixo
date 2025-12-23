@@ -67,6 +67,12 @@ function createDownloadElement(mediaLibEntryPoint){
   let PosterElement = MediaDownloadElement.querySelector(".poster-img");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
+  let PosterInterval;
+  PosterInterval = setInterval(()=>{
+    PosterElement.onload = ()=>clearInterval(PosterInterval);
+    PosterElement.onerror = ()=>{};
+    PosterElement.src = PosterElement.src;
+  },500);
 
   // let counter = 0;
   // if(!loadingIntervals?.[mediaLibEntryPoint.torrentId]){
@@ -119,6 +125,7 @@ function monitorDownloads(){
       clearInterval(loadingIntervals[DownloadElementIdentifier]);
       delete loadingIntervals[DownloadElementIdentifier]
     }
+
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
     TotalSizeTextElement.innerText = calculatedTotalSize + " GB";
     downloadSpeedElement.innerText = calculatedDownloadSpeedInKB < 1000 ? calculatedDownloadSpeedInKB + " Kb/s": calculatedDownloadSpeedInMB + " Mb/s";
