@@ -13,6 +13,8 @@ addSmoothTransition();
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
 async function loadData(){
+  categoriDescription.querySelector("h1").innerText = `${typeOfSave}`;
+
   const apiKey = await window.electronAPI.getAPIKEY();
   let wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
   
@@ -43,8 +45,6 @@ async function loadData(){
     categoriDescription.querySelector("h1").innerText = `${typeOfSave}`;
     filterMedia(getDropdownValue(SelectMediaType), getDropdownValue(SelectSaveType));
   });
- 
-  categoriDescription.querySelector("h1").innerText = `${getDropdownValue(SelectSaveType)}`;
 }
 
 const getCategorieFullName = (value) => {
