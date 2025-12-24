@@ -304,7 +304,15 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
 
 ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
   let startFromTime = await getLastestPlayBackPostion(metaData);
-  let subsPaths = await loadSubsFromSubDir(metaData.downloadPath,metaData.TorrentId);
+
+  let subIdentifyingElements = {
+    IMDB_ID:metaData.mediaImdbId,
+    episodeNumber:metaData.episodeNumber,
+    seasonNumber:metaData.seasonNumber,
+    TorrentDownloadDir:metaData.downloadPath
+  };
+
+  let subsPaths = await loadSubsFromSubDir(metaData.downloadPath,subIdentifyingElements).map(sub=>sub.url);
 
   MPVWorker = new Worker(MPVPlayerWorkerPath, {
     workerData: {
@@ -466,21 +474,7 @@ ipcMain.handle("load-from-download-lib",async(event,targetIdentification)=>{
 
 
 ipcMain.handle("load-local-subs",async(event,downloadPath,identifyingElements)=>{
-  let torrentId = generateUniqueId(
-    `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.TorrentDownloadDir}`
-  );
-
-  let subsDirectory = path.join(downloadPath,`SUBS_${torrentId}`);
-
-  return fs.readdirSync(subsDirectory).map(subFileName => {
-    let displayName = subFileName.split("-")[0];
-    return {
-      url:path.join(subsDirectory,subFileName),
-      display:displayName,
-      language:languageDict[displayName.toLowerCase()] ?? displayName,
-      type:"local"
-    }
-  });
+  return loadSubsFromSubDir(downloadPath,identifyingElements);
 });
 
 ipcMain.handle("read-sub-file",async(event,filePath)=>{
@@ -844,12 +838,23 @@ function sanitizeUrl(urlString) {
     return u.toString();
 }
 
-function loadSubsFromSubDir(downloadPath,TorrentId){
+function loadSubsFromSubDir(downloadPath,identifyingElements){
+  let torrentId = generateUniqueId(
+    `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.TorrentDownloadDir}`
+  );
+
+  let subsDirectory = path.join(downloadPath,`SUBS_${torrentId}`);
   try{
-    let subFolder = path.join(downloadPath,`SUBS_${TorrentId}`);
-    return fs.readdirSync(subFolder).map(fileName => path.join(subFolder,fileName));
+    return fs.readdirSync(subsDirectory).map(subFileName => {
+      let displayName = subFileName.split("-")[0];
+      return {
+        url:path.join(subsDirectory,subFileName),
+        display:displayName,
+        language:languageDict[displayName.toLowerCase()] ?? displayName,
+        type:"local"
+      }
+    });
   }catch(err){
-    console.error(err.message);
     return [];
   }
 }
