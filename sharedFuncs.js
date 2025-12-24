@@ -207,8 +207,9 @@ window.setupKeyPressesHandler = () =>{
         window.electronAPI.goBack();
     }
     if (event.key === "Tab" ||
-        event.key === "Super" ||
-        event.key === "Alt" ) event.preventDefault();
+        event.metaKey ||
+        // event.ctrlKey ||
+        event.altKey) event.preventDefault();
   });
 }
 
