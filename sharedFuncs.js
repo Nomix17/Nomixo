@@ -46,71 +46,157 @@ window.checkIfDivShouldHaveMoveToRightOrLeftButton = (MediaDivs) => {
   });
 }
 
-window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaType,LibraryInformation){
-  let tempArray = [];
-  if(MediaSearchResults == undefined || MediaSearchResults.length === 0) throw new Error("No data was Fetched");
-  MediaSearchResults.forEach(obj => {
-    let Id = "Unknown";
-    let Title = "Unknown";
-    let Adult = "Unknown";
-    let PosterImage = "Unknown";
-    let NewMediaType = MediaType;
-    let typeOfSave = "Watch Later";
+function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType){
 
-    if(obj.hasOwnProperty("id")) Id = obj["id"];
-    
-    if(obj.hasOwnProperty("title")) Title = obj["title"];
-    else Title = obj["name"];
+  let mediaDomElement = document.createElement("div");
+  let mediaPosterElement = document.createElement("img");
+  let mediaNameElement = document.createElement("div");
+
+  mediaNameElement.innerHTML = `<p>${Title}</p>`;
+  mediaPosterElement.src = PosterImage;
+  
+  mediaDomElement.classList.add("div-MovieElement");
+  mediaPosterElement.classList.add("img-MoviePoster");
+  mediaNameElement.classList.add("parag-MovieTitle");
+  mediaDomElement.setAttribute("mediaType",ThisMediaType);
+
+  mediaDomElement.appendChild(mediaPosterElement);
+  mediaDomElement.appendChild(mediaNameElement);
+
+  mediaDomElement.addEventListener("click",function() {
+    openDetailPage(Id,ThisMediaType);
+  });
+
+  addFloatingDivToDisplayFullTitle(mediaDomElement);
+
+  return mediaDomElement;
+}
+
+window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaType,LibraryInformation){
+  if(!MediaSearchResults?.length) throw new Error("No data was Fetched");
+
+  let tempArray = [];
+  MediaSearchResults.forEach(obj => {
+    let Id = obj?.["id"] ?? "Unknown";
+    let Title = obj?.["title"] ?? obj?.["name"] ?? "Unknown";
+    let Adult = obj?.["adult"] ?? "Unknown";
+    let ThisMediaType = obj?.["media_type"] ?? MediaType;
+    let PosterImage;
 
     if(!tempArray.includes(Title)){
       tempArray.push(Title); 
-      if(obj.hasOwnProperty("adult")) Adult = obj["adult"];
       
-      if(obj.hasOwnProperty("media_type") && obj["media_type"] != null) NewMediaType = obj["media_type"];
-
-      if(obj.hasOwnProperty("poster_path") && obj["poster_path"] != null) PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["poster_path"];
-      else if(obj.hasOwnProperty("profile_path") && obj["profile_path"] != null)  PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["profile_path"];
-      else if(NewMediaType === "person") PosterImage = "../assets/ProfileNotFound.png"
+      if(obj?.["poster_path"]) PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["poster_path"];
+      else if(obj?.["profile_path"])  PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["profile_path"];
+      else if(ThisMediaType === "person") PosterImage = "../assets/ProfileNotFound.png"
       else PosterImage = "../assets/PosterNotFound.png"
-      
-      let mediaDomElement = document.createElement("div");
-      let moviePosterElement = document.createElement("img");
-      let toggleInLibraryBtn = document.createElement("button"); 
-      let movieNameElement = document.createElement("div");
 
-      movieNameElement.innerHTML = `<p>${Title}</p>`;
-      moviePosterElement.src = PosterImage;
-      
-      mediaDomElement.classList.add("div-MovieElement");
-      moviePosterElement.classList.add("img-MoviePoster");
-      toggleInLibraryBtn.classList.add("btn-toggle-in-library");
-      movieNameElement.classList.add("parag-MovieTitle");
+      let mediaDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
+      let toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType)
 
-      let mediaIsInLibrary = LibraryInformation.filter(libraryEntryPoint => libraryEntryPoint.MediaId === Id && libraryEntryPoint.MediaType === NewMediaType).length?2:0;
-      if(mediaIsInLibrary) setAddToLibraryButtonToPressed(toggleInLibraryBtn);
-      else setAddToLibraryButtonToNormal(toggleInLibraryBtn)
+      if(ThisMediaType.toLowerCase() !== "person")
+        mediaDomElement.appendChild(toggleInLibraryBtn);
 
-      mediaDomElement.appendChild(moviePosterElement);
-      if(NewMediaType.toLowerCase() !== "person") mediaDomElement.appendChild(toggleInLibraryBtn);
-      mediaDomElement.appendChild(movieNameElement);
-
-      toggleInLibraryBtn.addEventListener("click",function() {ToggleInLibrary(Id,NewMediaType,typeOfSave)});
-      mediaDomElement.addEventListener("click",function() {
-        openDetailPage(Id,NewMediaType);
-      });
-
-      if(MediaContainer.length == undefined){
-        if(!Array.from(MediaContainer.querySelectorAll(".div-MovieElement")).map(element => element.innerHTML).includes(mediaDomElement.innerHTML))
+      if(!Array.isArray(MediaContainer)){
+        const mediaElementsLoaded = Array.from(MediaContainer.querySelectorAll(".div-MovieElement"));
+        const mediaElementDoesntExistAlready = !(mediaElementsLoaded.some(element => element.innerHTML === mediaDomElement.innerHTML));
+        if(mediaElementDoesntExistAlready)
           MediaContainer.appendChild(mediaDomElement);
+
       }else{
-        if(NewMediaType.toLowerCase() === "movie") MediaContainer[0].append(mediaDomElement);
-        else if(NewMediaType.toLowerCase() === "tv" || NewMediaType.toLowerCase() === "anime" ) MediaContainer[1].append(mediaDomElement);
-        else if(NewMediaType.toLowerCase() === "person") MediaContainer[2].append(mediaDomElement);
+        if(ThisMediaType.toLowerCase() === "movie") MediaContainer[0].append(mediaDomElement);
+        else if(ThisMediaType.toLowerCase() === "tv" || ThisMediaType.toLowerCase() === "anime" ) MediaContainer[1].append(mediaDomElement);
+        else if(ThisMediaType.toLowerCase() === "person") MediaContainer[2].append(mediaDomElement);
         else MediaContainer[3].append(mediaDomElement);
+
       } 
-      addFloatingDiv(mediaDomElement);
     }
   });
+}
+
+function createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType){
+  let toggleInLibraryBtn = document.createElement("button"); 
+
+  toggleInLibraryBtn.classList.add("btn-toggle-in-library");
+
+  let mediaIsInLibrary = LibraryInformation.filter(libraryEntryPoint => (libraryEntryPoint.MediaId === Id) && (libraryEntryPoint.MediaType === ThisMediaType)).length;
+  if(mediaIsInLibrary) setAddToLibraryButtonToPressed(toggleInLibraryBtn);
+  else setAddToLibraryButtonToNormal(toggleInLibraryBtn)
+
+  toggleInLibraryBtn.addEventListener("click",function() {
+    ToggleInLibrary(Id,ThisMediaType,"Watch Later")
+  });
+  return toggleInLibraryBtn;
+}
+
+function createMediaElementForLibrary(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoint,SavedMedia,IsInHomePage=false){
+  let Id = mediaData?.["id"] ?? "Unknown";
+  let Title = mediaData?.["title"] ?? mediaData?.["name"] ?? "Unknown";
+  let Adult = mediaData?.["adult"] ?? "Unknown";
+
+  let PosterImage =  
+      mediaData?.["poster_path"] 
+      ? "https://image.tmdb.org/t/p/w342/"+mediaData["poster_path"] 
+      : "../assets/PosterNotFound.png";
+
+  let movieDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
+  let removeFromLibraryButton = createRemoveFromWatchingLaterButton(Id,ThisMediaType,movieDomElement,IsInHomePage)
+
+  movieDomElement.setAttribute("saveType",ThisSaveType);
+ 
+  movieDomElement.appendChild(removeFromLibraryButton);
+
+  if(ThisSaveType.includes("Currently Watching")){
+    let continueVideoButton = createContinueWatchingButton(mediaEntryPoint);
+    movieDomElement.appendChild(continueVideoButton);
+  }
+
+  checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
+  return movieDomElement;
+}
+
+function createContinueWatchingButton(mediaEntryPoint){
+  let continueVideoButton = document.createElement("button");
+  continueVideoButton.classList.add("continue-video-button");
+
+  fetch('../assets/icons/playVideo.svg')
+    .then(response => response.text())
+    .then(svgText => {
+      continueVideoButton.innerHTML = svgText;
+      addContrastForPlayIcon();
+    })
+  .catch(err=>{
+    console.error(err.message);
+  });
+
+  continueVideoButton.addEventListener("click",()=>{
+    openMediaVideo(
+      mediaEntryPoint.TorrentIdentification,
+      mediaEntryPoint.MediaId,
+      mediaEntryPoint.MediaType,
+      mediaEntryPoint.downloadPath,
+      mediaEntryPoint.fileName,
+      mediaEntryPoint.Magnet,
+      mediaEntryPoint.mediaImdbId,
+      mediaEntryPoint.bgImagePath,
+      {"seasonNumber":mediaEntryPoint.seasonNumber,
+      "episodeNumber":mediaEntryPoint.episodeNumber}
+    );
+
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  return continueVideoButton;
+}
+
+function createRemoveFromWatchingLaterButton(Id,ThisMediaType,movieDomElement,IsInHomePage){
+  let removeFromLibraryButton = document.createElement("button"); 
+  removeFromLibraryButton.innerHTML = xRemoveIcon;
+  removeFromLibraryButton.classList.add("btn-remove-from-library");
+  removeFromLibraryButton.addEventListener("click",()=>{
+    removeMediaFromLibrary(Id,ThisMediaType,movieDomElement,IsInHomePage);
+  });
+  return removeFromLibraryButton;
 }
 
 
@@ -139,14 +225,15 @@ window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
 
   if(toggleInLibraryElement.hasAttribute("pressed")){
     setAddToLibraryButtonToNormal(toggleInLibraryElement);
-    let MediaLibraryObject = {
+    let MediaLibraryObjectIdentifiers = {
       MediaId:mediaId,
       MediaType:mediaType
     }
-    window.electronAPI.removeMediaFromLibrary(MediaLibraryObject);
+    window.electronAPI.removeMediaFromLibrary(MediaLibraryObjectIdentifiers);
+
   }else{
     setAddToLibraryButtonToPressed(toggleInLibraryElement);
-  
+
     let libInfo = await loadLibraryInfo();
     let SearchedMediaElement = libInfo.filter(item => (item.MediaId === mediaId && item.MediaType === mediaType));
     let MediaElementDoesExist = SearchedMediaElement.length > 0;
@@ -389,7 +476,7 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,gl
       .then(data => {
         if(data.status_code === 7) throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
         globalLoadingGif.remove();
-        SavedMedia.appendChild(createMediaElement(data,MediaType,mediaEntryPoint.typeOfSave,mediaEntryPoint,SavedMedia,IsInHomePage));
+        SavedMedia.appendChild(createMediaElementForLibrary(data,MediaType,mediaEntryPoint.typeOfSave,mediaEntryPoint,SavedMedia,IsInHomePage));
       })
       .catch(err=>{
         err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data</br>Please Check your connection and refresh!":err.message;
@@ -406,89 +493,6 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,gl
 
   return Promise.all(promises);
 }
-
-function createMediaElement(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoint,SavedMedia,IsInHomePage=false){
-    let Id = "Unknown";
-    let Title = "Unknown";
-    let Adult = "Unknown";
-    let PosterImage = "Unknown";
-    let MediaType = "Unknown";
-
-    if(mediaData.hasOwnProperty("id")) Id = mediaData["id"];
-    
-    if(mediaData.hasOwnProperty("title")) Title = mediaData["title"];
-    else Title = mediaData["name"];
-
-    if(mediaData.hasOwnProperty("adult")) Adult = mediaData["adult"];
-   
-    if(mediaData.hasOwnProperty("poster_path") && mediaData["poster_path"] != null) PosterImage = "https://image.tmdb.org/t/p/w342/"+mediaData["poster_path"];
-    else PosterImage = "../assets/PosterNotFound.png"
-    if(mediaData.hasOwnProperty("media_type") && mediaData["media_type"] != null) MediaType = mediaData["media_type"];
-
-    
-    let movieDomElement = document.createElement("div");
-    let moviePosterElement = document.createElement("img");
-    let removeFromLibraryButton = document.createElement("button"); 
-    let movieNameElement = document.createElement("div");
-    movieNameElement.innerHTML = `<p>${Title}</p>`;
-    moviePosterElement.src = PosterImage;
-    
-    movieDomElement.classList.add("div-MovieElement");
-    movieDomElement.setAttribute("mediaType",ThisMediaType);
-    movieDomElement.setAttribute("saveType",ThisSaveType);
-    moviePosterElement.classList.add("img-MoviePoster");
-    removeFromLibraryButton.classList.add("btn-remove-from-library");
-    movieNameElement.classList.add("parag-MovieTitle");
-    
-    removeFromLibraryButton.innerHTML = xRemoveIcon;
-
-    movieDomElement.appendChild(moviePosterElement);
-    movieDomElement.appendChild(removeFromLibraryButton);
-    movieDomElement.appendChild(movieNameElement); 
-    
-    removeFromLibraryButton.addEventListener("click",()=>{removeMediaFromLibrary(Id,ThisMediaType,movieDomElement,IsInHomePage)});
-    movieDomElement.addEventListener("click",()=>{openDetailPage(Id,ThisMediaType)});
-
-    if(ThisSaveType.includes("Currently Watching")){
-      let continueVideoButton = document.createElement("button");
-      continueVideoButton.classList.add("continue-video-button");
-      movieDomElement.appendChild(continueVideoButton);
-
-      fetch('../assets/icons/playVideo.svg')
-        .then(response => response.text())
-        .then(svgText => {
-          continueVideoButton.innerHTML = svgText;
-          addContrastForPlayIcon();
-        })
-      .catch(err=>{
-        console.error(err.message);
-      });
-
-      let episodeInfo = {"seasonNumber":mediaEntryPoint.seasonNumber, "episodeNumber":mediaEntryPoint.episodeNumber}
-
-      continueVideoButton.addEventListener("click",()=>{
-        openMediaVideo(
-          mediaEntryPoint.TorrentIdentification,
-          mediaEntryPoint.MediaId,
-          mediaEntryPoint.MediaType,
-          mediaEntryPoint.downloadPath,
-          mediaEntryPoint.fileName,
-          mediaEntryPoint.Magnet,
-          mediaEntryPoint.mediaImdbId,
-          mediaEntryPoint.bgImagePath,
-          episodeInfo
-        );
-
-        event.preventDefault();
-        event.stopPropagation();
-      });
-    }
-
-    checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
-    addFloatingDiv(movieDomElement);
-    return movieDomElement;
-}
-
 
 function addContrastForPlayIcon(){
   const root = document.documentElement;
@@ -551,7 +555,7 @@ window.closedTrashIcon = `
   </svg>
 `;
 
-window.addFloatingDiv = (MediaElement)=>{
+window.addFloatingDivToDisplayFullTitle = (MediaElement)=>{
   const paragraph = MediaElement?.querySelector('p');
 
   if (paragraph) {
@@ -612,7 +616,6 @@ window.handleFullScreenIcon = ()=>{
     fullscreenButton?.setAttribute("src",FullScreenIcon);
   
 }
-
 
 function putTextIntoDiv(Div,textContent){
   let textDiv = document.createElement("div");
