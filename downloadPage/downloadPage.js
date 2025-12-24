@@ -245,6 +245,7 @@ window.addEventListener("resize",()=>{
 });
 
 let monitoringProgress = false;
+setupKeyPressesHandler();
 loadDownloadMediaFromLib();
 refreshEnties();
 setLeftButtonStyle("btn-download");
