@@ -1,3 +1,4 @@
+let monitoringProgress = false;
 async function loadDownloadMediaFromLib(){
   let library = await window.electronAPI.loadDownloadLibraryInfo();
 
@@ -12,13 +13,17 @@ async function loadDownloadMediaFromLib(){
     let MediaDownloadElementContainer = document.querySelector(".downloaded-movie-div-container");
     putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
     RightmiddleDiv.style.opacity = 1;
+
   }else{
     if(!monitoringProgress)
       monitorDownloads();
+
   }
 }
 
 function createDownloadElement(mediaLibEntryPoint){
+  let downloadStatus = mediaLibEntryPoint?.Status;
+  
   let currentSize = (mediaLibEntryPoint?.Downloaded / (1024 * 1024 * 1024)).toFixed(2);
   let totalSize = (mediaLibEntryPoint?.Total / (1024 * 1024 * 1024)).toFixed(2);
   let progress = (currentSize/totalSize * 100).toFixed(2);
@@ -51,7 +56,7 @@ function createDownloadElement(mediaLibEntryPoint){
         <p class="total-size">${isNaN(totalSize) ? "---" : totalSize+" GB"} </p>
       </div>
       <div class="download-buttons-div">
-        <button class="toggle-pause-button">${playIcon}</button>
+        <button class="toggle-pause-button">${downloadStatus === "Downloading" || downloadStatus === "Loading" ? pauseIcon : playIcon }</button>
         <button class="cancel-button">${xRemoveIcon}</button>
         <p class="download-speed-p"></p>
       </div>
@@ -67,6 +72,7 @@ function createDownloadElement(mediaLibEntryPoint){
   let PosterElement = MediaDownloadElement.querySelector(".poster-img");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
+
   let PosterInterval;
   PosterInterval = setInterval(()=>{
     PosterElement.onload = ()=>clearInterval(PosterInterval);
@@ -74,15 +80,12 @@ function createDownloadElement(mediaLibEntryPoint){
     PosterElement.src = PosterElement.src;
   },500);
 
-  // let counter = 0;
-  // if(!loadingIntervals?.[mediaLibEntryPoint.torrentId]){
-  //   loadingIntervals[mediaLibEntryPoint.torrentId] = setInterval(()=>{
-  //     let dots = ["",".",". .",". . ."];
-  //     downloadSpeedElement.innerHTML = "loading "+dots[counter % dots.length];
-  //     counter ++;
-  //   },500);
-  // }
-  if(mediaLibEntryPoint?.Status === "done"){
+  if(downloadStatus === "Loading"){
+    if(!loadingIntervals?.[mediaLibEntryPoint.torrentId])
+      addingLoadingAnimation(mediaLibEntryPoint.torrentId,downloadSpeedElement,PausePlayButton);
+    
+
+  }else if(downloadStatus === "Done"){
     MarkDownloadElementAsFinished(MediaDownloadElement,mediaLibEntryPoint);
   }
 
@@ -121,9 +124,9 @@ function monitorDownloads(){
     let calculatedTotalSize = (JsonData.Total / (1024 * 1024 * 1024)).toFixed(2);
     let calculatedDownloadSpeedInKB = (JsonData.DownloadSpeed / (1024)).toFixed(2);
     let calculatedDownloadSpeedInMB = (calculatedDownloadSpeedInKB / 1024).toFixed(2);
+
     if(loadingIntervals?.[DownloadElementIdentifier]){
-      clearInterval(loadingIntervals[DownloadElementIdentifier]);
-      delete loadingIntervals[DownloadElementIdentifier]
+      removeLoadingAnimation(DownloadElementIdentifier,PausePlaybutton,"Downloading")
     }
 
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
@@ -133,16 +136,14 @@ function monitorDownloads(){
     insiderProgressBar.style.width = calculatedProgress+ "%";
 
     PausePlaybutton.innerHTML = pauseIcon;
-    PausePlaybutton.setAttribute("status","playing")
-    PausePlaybutton.classList.remove("requesting-continue-download");
-
     CancelButton.innerHTML = xRemoveIcon;
 
-    if(JsonData?.Status === "done"){
+    if(JsonData?.Status === "Done"){
       let library = await window.electronAPI.loadDownloadLibraryInfo();
       let libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
       MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);
     }
+
   });
   monitoringProgress = true;
 }
@@ -170,30 +171,58 @@ function handleCancelButton(mediaInfo,MediaDownloadElement){
       putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
   });
 }
+
 let loadingIntervals = {};
 function handleTogglingPauseButton(torrentId,MediaDownloadElement){
+
   let PausePlaybutton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
-  PausePlaybutton.addEventListener("click",()=>{
-    if(PausePlaybutton.getAttribute("status") === "playing"){
-      PausePlaybutton.innerHTML = playIcon;
-      PausePlaybutton.setAttribute("status","paused")
-    }else{
-      PausePlaybutton.innerHTML = pauseIcon;
-      PausePlaybutton.setAttribute("status","playing")
-      PausePlaybutton.classList.add("requesting-continue-download");
 
+  PausePlaybutton.addEventListener("click",async ()=>{
+    let pauseResponce = await window.electronAPI.toggleTorrentDownload(torrentId);
+    if(pauseResponce?.response  === "paused"){
+      PausePlaybutton.innerHTML = playIcon;
+      downloadSpeedElement.innerHTML ="";
+      removeLoadingAnimation(torrentId,PausePlaybutton,"Paused");
+
+    }else if(pauseResponce?.response  === "continued"){
+      PausePlaybutton.innerHTML = pauseIcon;
       downloadSpeedElement.innerHTML = "loading"
-      let counter = 1;
-      loadingIntervals[torrentId] = setInterval(()=>{
-        let dots = ["",".",". .",". . ."];
-        downloadSpeedElement.innerHTML = "loading "+dots[counter % dots.length];
-        counter ++;
-      },500);
+
+      addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlaybutton);
+
+      await SaveDownloadStatus(torrentId, "Loading");
+
+    }else{
+      console.err("Cannot Find Torrent: ",pauseResponce?.torrentId);
     }
-    window.electronAPI.toggleTorrentDownload(torrentId);
+
   });
 }
+
+function addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlaybutton){
+  PausePlaybutton.classList.add("requesting-continue-download");
+
+  let counter = 1;
+  downloadSpeedElement.innerHTML = "loading ."
+  loadingIntervals[torrentId] = setInterval(()=>{
+    let dots = ["",".",". .",". . ."];
+    downloadSpeedElement.innerHTML = "loading "+dots[counter % dots.length];
+    counter ++;
+  },500);
+}
+
+async function removeLoadingAnimation(torrentId,PausePlaybutton,NewStatus){
+  PausePlaybutton.classList.remove("requesting-continue-download");
+  clearInterval(loadingIntervals[torrentId]);
+  delete loadingIntervals[torrentId];
+  await SaveDownloadStatus(torrentId, NewStatus);
+}
+
+async function SaveDownloadStatus(torrentId, Status){
+  await window.electronAPI.editElementInDownloadLibraryInfo(torrentId, "Status", Status);
+}
+
 
 function alignSizeDiv(){
   let downloadTorrent = document.querySelectorAll(".downloaded-movie-div");
@@ -244,7 +273,6 @@ window.addEventListener("resize",()=>{
   alignSizeDiv();
 });
 
-let monitoringProgress = false;
 setupKeyPressesHandler();
 loadDownloadMediaFromLib();
 refreshEnties();

@@ -103,13 +103,17 @@ app.on("ready", () =>{
   createWindow()
 });
 
-app.on("window-all-closed", () => {
+app.on("window-all-closed", async() => {
   if(closeWindow){
     app.quit();
   }
-  // if(fs.existsSync(subDirectory))
-  //   fs.readdirSync(subDirectory).forEach(file => {fs.unlinkSync(path.join(subDirectory,file))});
 
+  let wholeDownloadLibrary = await loadDownloadLibrary();
+  let torrentsIds = wholeDownloadLibrary.downloads
+    .filter(torrentElement => torrentElement?.Status === "Downloading" || torrentElement?.Status === "Loading" )
+    .map(torrent => torrent.torrentId);
+
+  await editDownloadLibraryElements(torrentsIds,"Status","Paused");
 });
 
 // ======================= IPC HANDLERS =======================
@@ -412,11 +416,11 @@ ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
       torrentInfo["torrentId"] = torrentId;
       downloadTorrent(torrentInfo);
 
-      return { status: "continued", torrentId };
+      return {response: "continued", torrentId:torrentId};
 
     }else{
       console.error("Empty download library, cannot continue download for",torrentId);
-      return { status: "empty download library",torrentId };
+      return {response: "empty download library",torrentId:torrentId};
     }
 
   }else{
@@ -428,7 +432,7 @@ ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
       });
     });
 
-    return { status: "paused", torrentId };
+    return {response: "paused", torrentId:torrentId};
   }
 
 });
@@ -467,11 +471,34 @@ ipcMain.handle("load-from-lib", (event, targetIdentification) => {
   return loadFromLibrary(targetIdentification);
 });
 
+// ############################## DOWNLOAD LIBRARY MANAGEMENT ##############################
+
+ipcMain.on("add-to-download-lib", async(event, torrentId, mediaInfo) => {
+  const downloadLibraryInfo = await loadDownloadLibrary();
+  downloadLibraryInfo.media = downloadLibraryInfo.downloads.filter(e => !(e.torrentId === torrentId));
+  downloadLibraryInfo.media.push(mediaInfo);
+  await insertNewInfoToLibrary(downloadLibraryFilePath,downloadLibraryInfo);
+  return null;
+});
+
+ipcMain.on("remove-from-download-lib", async(event, torrentId) => {
+  const downloadLibraryInfo = await loadDownloadLibrary();
+  downloadLibraryInfo.media = downloadLibraryInfo.downloads.filter(e => !(e.torrentId === torrentId));
+  await insertNewInfoToLibrary(downloadLibraryFilePath,downloadLibraryInfo);
+  return null;
+});
+
+ipcMain.handle("edit-download-lib", async(event, torrentId, key, value) => {
+  await editDownloadLibraryElements([torrentId],key,value);
+  return null;
+});
+
 ipcMain.handle("load-from-download-lib",async(event,targetIdentification)=>{
   let wholeDownloadLibrary = await loadDownloadLibrary();
   return wholeDownloadLibrary;
 });
 
+// ############################## SUBTITLES FILES MANAGEMENT ##############################
 
 ipcMain.handle("load-local-subs",async(event,downloadPath,identifyingElements)=>{
   return loadSubsFromSubDir(downloadPath,identifyingElements);
@@ -692,10 +719,10 @@ async function downloadTorrent(torrentInfo) {
             Downloaded: downloadedDataLength,
             Total: totalSize,
             DownloadPath: torrentInfo.downloadPath,
-            Status: "done"
+            Status: "Done"
           };
           
-          torrentInfo["Status"] = "done";
+          torrentInfo["Status"] = "Done";
           updateElementDownloadLibrary(torrentInfo, downloadedDataLength,totalSize);
           
           WINDOW.webContents.send("download-progress-stream", jsonMessage);
@@ -725,7 +752,7 @@ async function downloadTorrent(torrentInfo) {
             Total: totalSize,
             DownloadPath: torrentInfo.downloadPath,
             DownloadSpeed:downloadSpeed,
-            Status: "downloading"
+            Status: "Downloading"
           };
 
           WINDOW.webContents.send("download-progress-stream", jsonMessage);
@@ -930,7 +957,7 @@ async function insertNewDownloadEntryPoint(torrentInfo){
     downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
     downloadImage(posterDownloadPath,torrentInfo?.posterUrl);
 
-    let newEntry = {...torrentInfo,posterPath: posterPath ?? "undefined",bgImagePath: bgImagePath ?? "undefined"};
+    let newEntry = {...torrentInfo, posterPath: posterPath ?? "undefined", bgImagePath: bgImagePath ?? "undefined", Status:"Loading"};
     downloadLib.downloads.push(newEntry);
 
     const jsonMessage = { Status: "NewDownload" }
@@ -939,6 +966,20 @@ async function insertNewDownloadEntryPoint(torrentInfo){
 
     console.log("Creating Download Library Entry Point for: "+torrentInfo.torrentId);
   }
+}
+
+async function editDownloadLibraryElements(torrentsIds,key,value){
+  const downloadLibraryInfo = await loadDownloadLibrary();
+  for(let torrentId of torrentsIds){
+    for(let index=0 ; index < downloadLibraryInfo.downloads.length ; index++){
+      if(downloadLibraryInfo.downloads[index].torrentId === torrentId){
+        downloadLibraryInfo.downloads[index][key] = value;
+        break; 
+      }
+    }
+  }
+
+  await insertNewInfoToLibrary(downloadLibraryFilePath,downloadLibraryInfo);
 }
 
 async function updateElementDownloadLibrary(torrentInfo, downloadedBytes, totalSize) {
@@ -951,11 +992,11 @@ async function updateElementDownloadLibrary(torrentInfo, downloadedBytes, totalS
   
   if(existingIndex !== -1){
     downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
-    downloadLib.downloads[existingIndex]["typeOfSave"] = torrentInfo.Status === "done" ? "Download-Complete" : "Download"
+    downloadLib.downloads[existingIndex]["typeOfSave"] = torrentInfo.Status === "Done" ? "Download-Complete" : "Download"
     downloadLib.downloads[existingIndex]["Total"] = totalSize;
 
-    if(torrentInfo.Status === "done")
-      downloadLib.downloads[existingIndex]["Status"] = "done";
+    if(torrentInfo.Status === "Done")
+      downloadLib.downloads[existingIndex]["Status"] = "Done";
     await insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
   }
 }
