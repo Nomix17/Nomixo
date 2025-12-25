@@ -35,6 +35,7 @@ let bottomSubElement = document.getElementById("div-BottomSubContainer");
 
 let oldVolume = null;
 let mouseHoveringOnControlDiv;
+let videoIsPlaying = false;
 var SubsStruct = [];
 let subtitlesArray = [];
 
@@ -61,7 +62,7 @@ window.addEventListener("mousemove",()=>{
   SubDivDisplay.style.bottom = BottomButtonsContainer.getBoundingClientRect().height+"px";
 
   timeout = setTimeout(()=>{
-    if(!mouseHoveringOnControlDiv && SubDiv.classList.contains("hideElement")){
+    if(!mouseHoveringOnControlDiv && SubDiv.classList.contains("hideElement") && videoIsPlaying){
       TopButtonsContainer.style.top = "-150%";
       BottomButtonsContainer.style.bottom = "150%";
       SubDivDisplay.style.bottom = "5%";
@@ -293,12 +294,10 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
         document.documentElement.style.backgroundColor = "black";
         TopButtonsContainer.style.display = "flex";
         BottomButtonsContainer.style.display = "block";
+        videoIsPlaying = true;
       }).catch(err=>{
         console.error(err);
-        let WarningDiv = document.getElementById("div-SomethingWentWrong");
-        WarningDiv.innerHTML = err.message;
-        loadingGif.remove();
-        WarningDiv.style.display = "flex";
+        createWarningDiv(err.message);
       });
     }
 
@@ -384,7 +383,7 @@ function scrapSubs(SubsText){
       let chunk = "";
       for(let startPoint=index+1; startPoint < subLines.length ;startPoint++){
         if(!isNaN(subLines[startPoint]) && subLines[startPoint+1].includes(" --> ") ) break;
-        else if(subLines[startPoint].trim() != "") chunk += subLines[startPoint]+"\n";
+        else if(subLines[startPoint].trim() !== "") chunk += subLines[startPoint]+"\n";
       }
       let newSubObj = new SubObj(startTime, endTime, chunk); 
       SubsStruct.push(newSubObj);
@@ -554,4 +553,19 @@ function setBackgroundImage(){
   document.documentElement.style.backgroundAttachment = `fixed`;
 }
 
+function createWarningDiv(errMessage){
+  let WarningDiv = document.getElementById("div-SomethingWentWrong");
+  WarningDiv.innerHTML = errMessage;
+  loadingGif.style.display = "none";
+  WarningDiv.style.display = "flex";
+}
+
+function monitoringErrorsCummingFromMainProcess(){
+  window.electronAPI.getFetchingTorrentErrors((err) =>{
+    console.log(err);
+    createWarningDiv(err)
+  })
+}
+
+monitoringErrorsCummingFromMainProcess();
 loadIconsDynamically();

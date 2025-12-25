@@ -18,16 +18,30 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
 
     console.log("\nLoading Torrent:",metaData?.fileName)
     webTorrentClient = new WebTorrent();
-    const torrent = webTorrentClient.add(metaData.Magnet, {path: videoCachePath},(torrent) => {
+    const torrent = webTorrentClient.add(metaData.Magnet, {path: videoCachePath},async(torrent) => {
 
       console.log("\nTorrent Files:-----------------------------------------------------");
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
 
+      const normaliseFileName = (fileName)=>{
+        return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase()
+      }
+
       const file = torrent.files.find(f =>
-        (metaData?.fileName ===  f.name)
+        (normaliseFileName(metaData?.fileName) ===  normaliseFileName(f.name))
       );
-      if (!file) return reject(new Error('No suitable video file found'));
+
+      if (!file){
+        const errorMsg = "No suitable video file was found";
+        parentPort.postMessage({
+          type: "status",
+          message: "Torrent Fetching Error",
+          error: errorMsg
+        });
+        await cleanup();
+        return reject(new Error(errorMsg));
+      }
 
       const app = express();
       app.get('/video', (req, res) => {
@@ -85,6 +99,18 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
         }
       });
     });
+  
+    torrent.on('error', async (err) => {
+      const errorMsg = `Torrent error: ${err.message}`;
+      console.error(errorMsg);
+      parentPort.postMessage({
+        type: "status",
+        message: "Torrent Fetching Error",
+        error: errorMsg
+      });
+      await cleanup();
+      reject(err);
+    });
   });
 }
 
@@ -108,19 +134,18 @@ function runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,
 
   mpvProcess.on('close', async () => {
     console.log('MPV process closed');
-    parentPort.postMessage({type:"status",message:"Playback done"});
     await cleanup();
     if(onClose) onClose();
+    parentPort.postMessage({type:"status",message:"Playback done"});
   });
 
   mpvProcess.on("error", async err => {
     console.error('MPV process error:', err);
-    parentPort.postMessage({type:"status",message:"Playback error"});
     await cleanup();
     if(onError) onError(err);
+    parentPort.postMessage({type:"status",message:"Playback error"});
   });
 
-  // share mpv output data 
   [mpvProcess.stdout,mpvProcess.stderr].forEach(dataPipe => {
     dataPipe.on('data', (data)=>{
       const output = data.toString();
@@ -161,10 +186,13 @@ function loadSubsFromSubDir(downloadPath,TorrentId){
 }
 
 async function cleanup(){
+  console.log('Starting cleanup...');
+  
   if(mpvProcess) {
     try {
-      mpvProcess.kill();
+      mpvProcess.kill('SIGTERM');
       mpvProcess = null;
+      console.log('MPV killed');
     } catch(err) {
       console.error('Failed to kill mpv:', err);
     }
@@ -172,11 +200,15 @@ async function cleanup(){
   
   if(expressServer) {
     try {
-      await new Promise((resolve) => {
-        expressServer.close(() => {
-          resolve();
-        });
-      });
+      await Promise.race([
+        new Promise((resolve) => {
+          expressServer.close(() => {
+            console.log('Express server closed');
+            resolve();
+          });
+        }),
+        new Promise((resolve) => setTimeout(resolve, 500))
+      ]);
       expressServer = null;
     } catch(err) {
       console.error('Failed to close server:', err);
@@ -185,22 +217,15 @@ async function cleanup(){
   
   if(webTorrentClient) {
     try {
-      await new Promise((resolve) => {
-        webTorrentClient.destroy((err) => {
-          if(err) console.error('Failed to Destroy torrent client:', err);
-          resolve();
-        });
-      });
+      webTorrentClient.destroy();
+      console.log('WebTorrent client destroy initiated');
       webTorrentClient = null;
     } catch(err) {
-      console.error('Failed to Destroy torrent client:', err);
+      console.error('Failed to destroy torrent client:', err);
     }
   }
   
   console.log('Worker cleanup complete');
-  if (parentPort) {
-    parentPort.close();
-  }
 }
 
 parentPort.on('message', async (msg) => {
@@ -210,14 +235,26 @@ parentPort.on('message', async (msg) => {
   }
 });
 
-// Entry Point
 if(workerData.typeOfPlay === "StreamTorrent"){
   StreamTorrent(workerData.metaData,workerData.subsObjects, workerData.startFromTime,workerData.videoCachePath, workerData.subDirectory,workerData.mpvConfigDirectory)
-    .catch(err => {
-      console.error('StreamTorrent error:', err);
-      cleanup();
+    .catch(async (err) => {
+      parentPort.postMessage({
+        type: "status",
+        message: "Torrent Fetching Error",
+        error: err.message
+      });
+      await cleanup();
     });
 
 }else if(workerData.typeOfPlay === "LocalFile"){
-  PlayLocalVideo(workerData.metaData, workerData.startFromTime,workerData.subsPaths,workerData.mpvConfigDirectory);
+  PlayLocalVideo(workerData.metaData, workerData.startFromTime,workerData.subsPaths,workerData.mpvConfigDirectory)
+    .catch(async (err) => {
+      parentPort.postMessage({
+        type: "status",
+        message: "Playback error",
+        error: err.message
+      });
+      await cleanup();
+    });
 }
+

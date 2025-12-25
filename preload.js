@@ -38,6 +38,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   downloadTorrent: (torrentInformation,subsObjects) => ipcRenderer.invoke("download-torrent",torrentInformation,subsObjects),
   getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
   toggleTorrentDownload: (torrentId) => ipcRenderer.invoke("toggle-torrent-download", torrentId),
-  cancelDownload: (mediaInfo) => ipcRenderer.invoke("cancel-torrent-download", mediaInfo)
+  cancelDownload: (mediaInfo) => ipcRenderer.invoke("cancel-torrent-download", mediaInfo),
+
+  getFetchingTorrentErrors: (fn)=> ipcRenderer.on("torrent-fetching-error",(event,data)=>fn(data))
   });
 

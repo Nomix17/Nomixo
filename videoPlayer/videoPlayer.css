@@ -102,6 +102,8 @@ html::-webkit-scrollbar{
   width: 100%;
 }
 #div-topButtonsContainer {
+  display:flex;
+  background-color:transparent;
   top:-150%;
 }
 #div-bottomButtonsContainer {

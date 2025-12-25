@@ -238,11 +238,14 @@ ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
 
-      const file = torrent.files.find(f => f.name.toLowerCase().trim() === fileName.toLowerCase().trim());
+      const normaliseFileName = (fileName)=>{
+        return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase()
+      }
+
+      const file = torrent.files.find(f => normaliseFileName(f.name) === normaliseFileName(fileName));
 
       if (!file) {
-        reject('No video file found in torrent');
-        return;
+        return reject('No video file found in torrent');
       }
 
       file.select();
@@ -1019,10 +1022,18 @@ function handleMpvWorker(metaData){
 
   const ExitVideoPlayerPage = ()=>{
     if(InVideoPlayerPage){
-      NavigateToPreviousPage();
       InVideoPlayerPage = false;
       updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
+      NavigateToPreviousPage();
     }
+  }
+
+  const closeWorker = ()=>{
+    if(MPVWorker && MPVWorker.threadId !== -1){
+      MPVWorker.postMessage({ type: 'shutdown' });
+      MPVWorker = null;
+    }
+    if(WINDOW && !WINDOW.isVisible()) WINDOW.show();
   }
 
   MPVWorker.on('message', (msg) => {
@@ -1030,8 +1041,18 @@ function handleMpvWorker(metaData){
       if(msg.message === "Mpv output data"){
         handleMpvOutput(msg.data);
 
-      } else if (msg.message === "Playback done" || msg.message === "Playback error"){
+      } else if (msg.message === "Playback done"){
         ExitVideoPlayerPage();
+        
+      } else if (msg.message === "Playback error"){
+        console.error("Playback error:", msg.error || "Unknown error");
+        if(msg.error) WINDOW.webContents.send("torrent-fetching-error", msg.error);
+        closeWorker();       
+
+      } else if(msg.message === "Torrent Fetching Error"){
+        console.error("Torrent fetching error:", msg.error || "Unknown error");
+        if(msg.error) WINDOW.webContents.send("torrent-fetching-error", msg.error);
+        closeWorker();
       }
     }
   });
@@ -1043,7 +1064,12 @@ function handleMpvWorker(metaData){
 
   MPVWorker.on('exit', (code) => {
     console.log(`Mpv Worker exited with code ${code}`);
-    ExitVideoPlayerPage();
+    if(code !== 0) {
+      console.error(`Worker exited abnormally with code ${code}`);
+      closeWorker();
+    } else {
+      ExitVideoPlayerPage();
+    }
   });
 }
 
