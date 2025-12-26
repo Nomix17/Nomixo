@@ -635,7 +635,6 @@ input::selection {
   );
   background-size: 200% 100%;
   animation: skeleton 1.5s ease-in-out infinite;
-  border-radius: 12px;
 }
 
 @keyframes skeleton {

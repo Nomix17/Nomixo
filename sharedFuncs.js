@@ -49,18 +49,21 @@ window.checkIfDivShouldHaveMoveToRightOrLeftButton = (MediaDivs) => {
 function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType){
 
   let mediaDomElement = document.createElement("div");
+  let mediaPosterContainer = document.createElement("div");
   let mediaPosterElement = document.createElement("img");
   let mediaNameElement = document.createElement("div");
 
   mediaNameElement.innerHTML = `<p>${Title}</p>`;
-  mediaPosterElement.src = PosterImage;
-  
+  loadImageWithAnimation(mediaPosterContainer,mediaPosterElement, PosterImage);
+
   mediaDomElement.classList.add("div-MovieElement");
   mediaPosterElement.classList.add("img-MoviePoster");
+  mediaPosterContainer.classList.add("img-MoviePosterContainer");
   mediaNameElement.classList.add("parag-MovieTitle");
   mediaDomElement.setAttribute("mediaType",ThisMediaType);
 
-  mediaDomElement.appendChild(mediaPosterElement);
+  mediaPosterContainer.appendChild(mediaPosterElement)
+  mediaDomElement.appendChild(mediaPosterContainer);
   mediaDomElement.appendChild(mediaNameElement);
 
   mediaDomElement.addEventListener("click",function() {
@@ -603,6 +606,40 @@ async function getPosterPath(imdbId, apiKey) {
     null;
 
   return poster ?? null;
+}
+
+function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "./assets/PosterNotFound.png") {
+  return new Promise((resolve) => {
+    if (!imagePath) {
+      imageElement.src = alternativeImage;
+      resolve(false);
+      return;
+    }
+    
+    imageElement.style.display = 'none';
+    imageContainer.classList.add("flashing-Div");
+    
+    const img = new Image();
+    img.onload = () => {
+      imageElement.src = imagePath;
+      imageElement.style.display = 'block';
+      imageElement.style.opacity = '0';
+
+      setTimeout(() => {
+        imageElement.style.opacity = '1';
+      }, 10);
+      imageContainer.classList.remove("flashing-Div");
+      resolve(true);
+    };
+    img.onerror = () => {
+      imageElement.src = alternativeImage;
+      imageElement.style.display = 'block';
+      imageElement.style.opacity = '1';
+      imageContainer.classList.remove("flashing-Div");
+      resolve(false);
+    };
+    img.src = imagePath;
+  });
 }
 
 window.handleFullScreenIcon = ()=>{

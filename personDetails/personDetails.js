@@ -21,6 +21,7 @@ function getPersonInfo(apiKey,personId){
     document.title = Name +" - Discovery"; 
 
     let personNameElement = document.getElementById("para-personName");
+    let  personProfileElementContainer = document.getElementById("div-left-Person-description");
     let personProfileElement = document.getElementById("img-personProfilePic");
     let personDepartmentElement = document.getElementById("para-personDepartment");
     let personBioElement = document.getElementById("para-personBiography");
@@ -33,7 +34,7 @@ function getPersonInfo(apiKey,personId){
       readMoreElement.style.color = "grey";
 
       readMoreElement.addEventListener("click",()=>{
-        if(personBioElement.getAttribute("displayState") == "less"){
+        if(personBioElement.getAttribute("displayState") === "less"){
           readMoreElement.innerText = " read less"
           personBioElement.innerHTML = OldBiography;
           personBioElement.append(readMoreElement);
@@ -49,13 +50,17 @@ function getPersonInfo(apiKey,personId){
       personBioElement.append(readMoreElement);
     }
 
+    let imagePath = ProfilePic == null ? "../assets/ProfileNotFound.png" : "https://image.tmdb.org/t/p/w500/"+ProfilePic;
+
     personNameElement.innerText = Name;
-    personProfileElement.src = ProfilePic == null?"../assets/ProfileNotFound.png":"https://image.tmdb.org/t/p/w500/"+ProfilePic;
     personDepartmentElement.innerText = "Department : "+Department;
+
+    loadImageWithAnimation(personProfileElementContainer, personProfileElement, imagePath);
+
     personBioElement.prepend(Biography+" ");
     fetchData(apiKey,personId,Department); 
   }).catch((err) => {
-    err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
+    err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
     console.error(err);
     setTimeout(()=>{
       RightmiddleDiv.innerHTML ="";

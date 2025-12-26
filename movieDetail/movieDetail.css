@@ -407,6 +407,9 @@ h1{
   cursor:pointer;
 }
 
+.episode-image-container{
+  border-radius:10px;
+}
 .div-episodes-element img{
   border-radius:10px;
   background-color:rgba(0,0,0,0);
@@ -629,7 +632,6 @@ option{
 .media-poster {
   width: 100px;
   height: 150px;
-  background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;

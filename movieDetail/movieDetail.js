@@ -122,13 +122,19 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
     let EpisodeElement = document.createElement("div");
     EpisodeElement.className = "div-episodes-Element";
     EpisodeElement.innerHTML += `
-       <h4>${episode.episode_number}</h4>
-       <img style="height:70px;width:124px" src="${episodeImageUrl}"></img>
-       <div style="max-width:50%;width: fit-content; " class="div-episode-information">
-         <p style="font-size:15px;">${episode.name}</p>
-         <p style="font-weight:bold;font-size:11px;margin-top:20px;">${episode.air_date}</p>
-       </div>
-     `;
+      <h4>${episode.episode_number}</h4>
+        <div style="height:70px;width:124px" class="episode-image-container">
+          <img style="height:70px;width:124px" class="episode-image"></img>
+        </div>
+      <div style="max-width:50%;width: fit-content; " class="div-episode-information">
+        <p style="font-size:15px;">${episode.name}</p>
+        <p style="font-weight:bold;font-size:11px;margin-top:20px;">${episode.air_date}</p>
+      </div>
+    `;
+
+    let episodeImageElement = EpisodeElement.querySelector(".episode-image");
+    let episodeImageElementContainer = EpisodeElement.querySelector(".episode-image-container");
+    loadImageWithAnimation(episodeImageElementContainer, episodeImageElement, episodeImageUrl,"../assets/noEpisodeImageFound.png");
 
     let continueWatchingEpisode = (libraryInfo?.typeOfSave?.includes("Currently Watching") &&
       episode.season_number === libraryInfo["seasonNumber"] &&
@@ -635,7 +641,7 @@ document.addEventListener("mousedown", event => {
 async function showDownloadInfoInputDiv(DownloadTargetInfo){
   const apiKey = await window.electronAPI.getAPIKEY();
   let [defaultPath, rememberDownloadLocation, DownloadSubtitles] = await loadDownloadSettings();
-
+  let MediaPosterContainer = DownloadOverlay.querySelector("#mediaPoster");
   let MediaPosterElement = DownloadOverlay.querySelector("#mediaPosterImg");
   let MediaTitleElement = DownloadOverlay.querySelector("#mediaTitle");
   let SeasonEpisodeElement = DownloadOverlay.querySelector("#season-episode");
@@ -659,8 +665,7 @@ async function showDownloadInfoInputDiv(DownloadTargetInfo){
   DownloadOverlay.classList.add('active');
   dontGoBack = true;
   let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
-  MediaPosterElement.src = `https://image.tmdb.org/t/p/w185${posterPath}`;
-
+  loadImageWithAnimation(MediaPosterContainer, MediaPosterElement, `https://image.tmdb.org/t/p/w185${posterPath}`);
 }
 
 function setupDownloadDivEvents(DownloadTargetInfo){
