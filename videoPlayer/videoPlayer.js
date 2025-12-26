@@ -167,11 +167,12 @@ switchToggle.addEventListener("change",(event)=>{
   bottomSubElement.classList.toggle("hideElement");
   SubsStruct = [];
   SubDivDisplay.innerHTML = "";
-  Array.from(subsList.children).forEach(element => element.removeAttribute("style"));
+  Array.from(subsList.children).forEach(element => element.classList.remove("active"));
 
   event.stopImmediatePropagation();
 });
 
+repositionSubDiv();
 window.addEventListener("resize",()=>{
   repositionSubDiv();
 });
@@ -231,34 +232,49 @@ function getSubsViaLanguage(language){
 
 async function insertSubElements(fetchedData){
   let subsList = document.getElementById("div-subsList");
-  subsList.innerHTML = "";
+
+  let loadedSubsButtonsArray = Array.from(subsList.children);
+  loadedSubsButtonsArray.forEach(element=>{
+    element.style.display = "none";
+    element.style.margin = 0;
+  });
+
   for(let i=0 ;i<fetchedData.length;i++){
+
     let subtitlePath = fetchedData[i].url;
     let subElement = document.createElement("button");
+    subElement.id = base64Id(subtitlePath);
     subElement.innerText = i;
-    subElement.value = subtitlePath; 
-    subElement.addEventListener("click", async() => {
-      Array.from(subsList.children).forEach(element => {
-        element.style.backgroundColor = "transparent";
-        element.style.borderColor = "transparent";
+    subElement.value = subtitlePath;
+
+    let findSimilairSubElement = subsList.querySelector(`#${base64Id(subtitlePath)}`);
+    if (!findSimilairSubElement){
+      subElement.addEventListener("click", async() => {
+        
+        loadedSubsButtonsArray.forEach(element => {element.classList.remove("active")});
+
+        subElement.classList.add("active");
+
+        if(fetchedData[i]?.type === "local"){
+          let fileContent = await window.electronAPI.readSubFile(subtitlePath);
+          scrapSubs(fileContent);
+
+        }else{
+          fetch(subtitlePath).then(res => res.text())
+          .then(data => {
+            scrapSubs(data);
+          });
+        }
       });
-      subElement.style.backgroundColor = "rgba(255,255,255,0.05)";
-      subElement.style.borderBottom = "4px solid rgba(var(--secondary-color))"
-      if(fetchedData[i]?.type === "local"){
-        let fileContent = await window.electronAPI.readSubFile(subtitlePath);
-        scrapSubs(fileContent);
-      }else{
-      fetch(SubSource).then(res => res.text()
-        ).then(data => {
-          scrapSubs(data);
-        });
-      }
-    });
-    subsList.append(subElement);
+
+      subsList.append(subElement);
+
+    } else {
+      findSimilairSubElement.style.display = "block";
+    }
+
   };
 }
-
-repositionSubDiv()
 
 function gettingformatedTime(time){
   let hours = parseInt((time / 60) / 60);
@@ -467,8 +483,9 @@ function hideSubDiv(event){
 }
 
 function OpenSubtitles(){
+  repositionSubDiv();
   SubDiv.classList.toggle("hideElement");
-  window.addEventListener("mousedown",hideSubDiv);
+  window.addEventListener("mousedown",hideSubDiv,{once:true});
 }
 
 function repositionSubDiv(){

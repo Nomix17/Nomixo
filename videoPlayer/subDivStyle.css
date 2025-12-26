@@ -47,7 +47,7 @@ button{
   -webkit-backdrop-filter: blur(30px);
   bottom: 11%;
   z-index: 10000;
-  width: 520px;
+  width: 500px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -93,21 +93,23 @@ button{
   justify-content: center;
   height: 280px;
   padding: 20px 0;
+  width:98%;
 }
 
 #div-LeftSubContainer{
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: 30%;
+  max-width: 20%;
+  min-width: 20%;
+  flex: 0 0 30%;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0 20px;
   gap: 6px;
 }
 
-#div-LeftSubContainer button,
-#div-leftsubcontainer button{
+#div-LeftSubContainer button{
   width: 100%;
   text-align: left;
   background-color: transparent;
@@ -122,8 +124,7 @@ button{
   color: rgba(255, 255, 255, 0.6);
 }
 
-#div-LeftSubContainer button::before,
-#div-leftsubcontainer button::before{
+#div-LeftSubContainer button::before{
   content: '';
   position: absolute;
   left: 0;
@@ -136,14 +137,12 @@ button{
   transition: all 0.2s ease;
 }
 
-#div-LeftSubContainer button:hover,
-#div-leftsubcontainer button:hover{
+#div-LeftSubContainer button:hover{
   background-color: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.9);
 }
 
-#div-LeftSubContainer button:hover::before,
-#div-leftsubcontainer button:hover::before{
+#div-LeftSubContainer button:hover::before{
   width: 3px;
   height: 60%;
 }
@@ -157,10 +156,12 @@ button{
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 70%;
+  width: 60%;
   padding: 0 20px;
   gap: 20px;
   border-left: 1px solid rgba(255, 255, 255, 0.06);
+  flex: 0 0 65%;
+  min-width: 0;
 }
 
 #div-RightSubContainer > p{
@@ -172,6 +173,7 @@ button{
   letter-spacing: 0.3px;
   color: rgba(255, 255, 255, 0.7);
   width: 100%;
+  min-width: 0;
   text-align: left;
 }
 
@@ -180,24 +182,25 @@ button{
   overflow-x: auto;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: start;
   justify-content: flex-start;
   width: 100%;
+  max-width: 100%;
   height: auto;
   gap: 8px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.03);
   border:1px solid rgba(255, 255, 255, 0.09);
   color: rgba(255, 255, 255, 0.6);
   border-radius: 10px;
-  padding:5px;
+  padding:10px 10px;
 }
 
 #div-subsList button{ 
-  background: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   padding: 0;
-  margin: 0;
+  margin-left: 3px;
   min-width: 40px;
   height: 46px;
   font-size: 16px;
@@ -209,9 +212,7 @@ button{
 }
 
 #div-subsList button.active{
-  background-color: rgba(255,255,255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background-color: transparent;
 }
 
 #div-subsList button:hover{
@@ -222,6 +223,10 @@ button{
 
 #div-subsList button:hover::after{
   opacity: 1;
+}
+
+#div-subsList button.active:hover{
+  background-color: transparent;
 }
 
 /* Timing adjustment section */

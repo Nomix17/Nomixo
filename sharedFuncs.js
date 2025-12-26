@@ -704,3 +704,7 @@ function manageDropDowns() {
     });
   });
 }
+
+function base64Id(str) {
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
