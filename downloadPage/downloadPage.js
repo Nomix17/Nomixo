@@ -21,7 +21,7 @@ async function loadDownloadMediaFromLib(){
   }
 }
 
-function createDownloadElement(mediaLibEntryPoint){
+async function createDownloadElement(mediaLibEntryPoint){
   let downloadStatus = mediaLibEntryPoint?.Status;
   
   let currentSize = (mediaLibEntryPoint?.Downloaded / (1024 * 1024 * 1024)).toFixed(2);
@@ -41,7 +41,7 @@ function createDownloadElement(mediaLibEntryPoint){
 
   MediaDownloadElement.innerHTML = `
     <div class="poster-div">
-      <img src="${mediaLibEntryPoint?.posterPath}" class="poster-img"/>
+      <img class="poster-img"/>
     </div>
     <div class="download-movie-right-div">
       <p class="movie-title-p">${displayTitle}</p>
@@ -73,19 +73,19 @@ function createDownloadElement(mediaLibEntryPoint){
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
 
-  let PosterInterval;
-  PosterInterval = setInterval(()=>{
-    PosterElement.onload = ()=>clearInterval(PosterInterval);
-    PosterElement.onerror = ()=>{};
-    PosterElement.src = PosterElement.src;
-  },500);
+  let posterPathExist = await imagePathIsValid(mediaLibEntryPoint?.posterPath);
+  if (posterPathExist){
+    PosterElement.src = mediaLibEntryPoint?.posterPath;
+  }else{
+    makeSurePosterIsLoaded(PosterElement,mediaLibEntryPoint?.posterPath);
+  }
 
   if(downloadStatus === "Loading"){
     if(!loadingIntervals?.[mediaLibEntryPoint.torrentId])
       addingLoadingAnimation(mediaLibEntryPoint.torrentId,downloadSpeedElement,PausePlayButton);
     
 
-  }else if(downloadStatus === "Done"){
+  }else if(downloadStatus.toLowerCase() === "done"){
     MarkDownloadElementAsFinished(MediaDownloadElement,mediaLibEntryPoint);
   }
 
@@ -100,6 +100,33 @@ function createDownloadElement(mediaLibEntryPoint){
 
   let RightmiddleDiv = document.getElementById("div-middle-right");
   RightmiddleDiv.style.opacity = 1;
+}
+
+function makeSurePosterIsLoaded(PosterElement,posterImage){
+  PosterElement.classList.add("flashing-Div");
+  const tmpImg = new Image();
+
+  if(posterImage){
+    let PosterInterval = setInterval(()=>{
+      tmpImg.src = `file://${posterImage}?t=${Date.now()}`;
+    },500);
+
+    tmpImg.onload = ()=>{
+      clearInterval(PosterInterval);
+      PosterElement.classList.remove("flashing-Div");
+      PosterElement.src = posterImage;
+    }
+    tmpImg.onerror = ()=>{};
+  }
+}
+
+function imagePathIsValid(imagePath){
+  return new Promise((res)=>{
+    const tmpImg = new Image();
+    tmpImg.onload = ()=>res(true);
+    tmpImg.onerror = ()=>res(false);
+    tmpImg.src = `file://${imagePath}?t=${Date.now()}`;
+  });
 }
 
 function monitorDownloads(){
@@ -138,7 +165,7 @@ function monitorDownloads(){
     PausePlaybutton.innerHTML = pauseIcon;
     CancelButton.innerHTML = xRemoveIcon;
 
-    if(JsonData?.Status === "Done"){
+    if(JsonData?.Status.toLowerCase() === "done"){
       let library = await window.electronAPI.loadDownloadLibraryInfo();
       let libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
       MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);

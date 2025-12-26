@@ -207,6 +207,12 @@ body, html {
   width: 202px;
 }
 
+.img-MoviePosterContainer{
+  width: 202px;
+  height: 310px;
+  border-radius: 15px;
+}
+
 .img-MoviePoster {
   width: 202px;
   height: 310px;
@@ -618,4 +624,37 @@ input::selection {
   pointer-events: none;
   opacity:0;
   transition:  opacity 0.3s ease;
+}
+
+.flashing-Div {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.00) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.00) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+@keyframes skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dark mode variant */
+.flashing-Div.dark {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.00) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.00) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
 }
