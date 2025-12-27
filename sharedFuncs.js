@@ -617,6 +617,7 @@ function loadImageWithAnimation(imageContainer, imageElement, imagePath, alterna
     }
     
     imageElement.style.display = 'none';
+    imageElement.style.transition = 'opacity 0.5s ease';
     imageContainer.classList.add("flashing-Div");
     
     const img = new Image();
