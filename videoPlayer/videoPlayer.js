@@ -308,7 +308,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
         VideoElement.removeAttribute("style");
         document.documentElement.removeAttribute("style");
         document.documentElement.style.backgroundColor = "black";
-        TopButtonsContainer.style.display = "flex";
+        TopButtonsContainer.classList.remove("fixedTopBar");
         BottomButtonsContainer.style.display = "block";
         videoIsPlaying = true;
       }).catch(err=>{
@@ -339,8 +339,10 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
       VideoElement.removeAttribute("style");
       document.documentElement.removeAttribute("style");
       document.documentElement.style.backgroundColor = "black";
+      TopButtonsContainer.classList.remove("fixedTopBar");
       TopButtonsContainer.style.display = "flex";
       BottomButtonsContainer.style.display = "block";
+      videoIsPlaying = true;
     }
   }
 }

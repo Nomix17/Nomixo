@@ -102,11 +102,13 @@ html::-webkit-scrollbar{
   z-index: 10;
   width: 100%;
 }
-#div-topButtonsContainer {
+
+#div-topButtonsContainer[class="fixedTopBar"]{
   display:flex;
   background-color:transparent;
   top:-150%;
 }
+
 #div-bottomButtonsContainer {
   bottom:150%;
   padding:20px 20px 10px 20px;
