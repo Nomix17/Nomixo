@@ -41,7 +41,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   cancelDownload: (mediaInfo) => ipcRenderer.invoke("cancel-torrent-download", mediaInfo),
 
   getFetchingTorrentErrors: (fn)=> ipcRenderer.on("torrent-fetching-error",(event,data)=>fn(data)),
-  getDownloadErrorsReports: (fn)=> ipcRenderer.on("report-download-errors",(event,data)=>fn(data))
+  getDownloadErrorsReports: (fn)=> ipcRenderer.on("report-download-errors",(event,data)=>fn(data)),
 
+  downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl)
 });
 

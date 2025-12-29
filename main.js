@@ -462,6 +462,17 @@ ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
 
 });
 
+// ======================= Download OTHER THINGS =======================
+
+ipcMain.handle("download-image",async(event,downloadPath, imageUrl) => {
+  let posterDownloadPath = path.join(downloadPath, "POSTERS") 
+  let ImagePath = await downloadImage(posterDownloadPath, imageUrl);
+  if(ImagePath){
+    return {download_result:"success",image_path:ImagePath}
+  }
+
+  return {download_result:"failed"}
+});
 
 // ======================= LIBRARY MANAGEMENT =======================
 
@@ -813,33 +824,25 @@ function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
 }
 
 
-async function downloadImage(torrentId, downloadDir, posterUrl, retries = 3, timeout = 1000) {
+async function downloadImage(downloadDir, posterUrl) {
   fs.mkdirSync(downloadDir, { recursive: true });
+  try {
+    const controller = new AbortController();
 
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeout);
+    const res = await fetch(posterUrl, { signal: controller.signal });
 
-      const res = await fetch(posterUrl, { signal: controller.signal });
-      clearTimeout(timer);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const buffer = Buffer.from(await res.arrayBuffer());
+    if (!buffer.length) throw new Error('Empty file');
 
-      const buffer = Buffer.from(await res.arrayBuffer());
-      if (!buffer.length) throw new Error('Empty file');
+    const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
+    fs.writeFileSync(file, buffer);
 
-      const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
-      fs.writeFileSync(file, buffer);
-
-      return file;
-    } catch (err) {
-      if (attempt === retries) {
-        reportDownloadError("Image Download", torrentId, err)
-        console.error(`Failed to download ${posterUrl}:`, err.message);
-        return null;
-      }
-    }
+    return file;
+  } catch (err) {
+    console.error(`Failed to download ${posterUrl}:`, err.message);
+    return null;
   }
 }
 
@@ -991,8 +994,8 @@ async function insertNewDownloadEntryPoint(torrentInfo){
     let bgImagePath = path.join(posterDownloadPath,torrentInfo?.bgImageUrl.split("/").pop());
     let posterPath = path.join(posterDownloadPath,torrentInfo?.posterUrl.split("/").pop());
 
-    downloadImage(torrentInfo.torrentId, posterDownloadPath,torrentInfo?.bgImageUrl)
-    downloadImage(torrentInfo.torrentId, posterDownloadPath,torrentInfo?.posterUrl);
+    downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
+    downloadImage(posterDownloadPath,torrentInfo?.posterUrl);
 
     let newEntry = {...torrentInfo, posterPath: posterPath ?? "undefined", bgImagePath: bgImagePath ?? "undefined", Status:"Loading"};
     downloadLib.downloads.push(newEntry);

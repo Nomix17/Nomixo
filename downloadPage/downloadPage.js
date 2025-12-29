@@ -75,12 +75,8 @@ async function createDownloadElement(mediaLibEntryPoint){
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
 
-  let posterPathExist = await imagePathIsValid(mediaLibEntryPoint?.posterPath);
-  if (posterPathExist){
-    PosterElement.src = mediaLibEntryPoint?.posterPath;
-  }else{
-    makeSurePosterIsLoaded(PosterElement,mediaLibEntryPoint?.posterPath);
-  }
+  makeSurePosterIsLoaded(mediaLibEntryPoint,PosterElement,mediaLibEntryPoint?.posterPath);
+  makeSureBgImageIsDownloaded(mediaLibEntryPoint);
 
   if(downloadStatus === "Loading"){
     if(!loadingIntervals?.[mediaLibEntryPoint.torrentId])
@@ -104,23 +100,53 @@ async function createDownloadElement(mediaLibEntryPoint){
   RightmiddleDiv.style.opacity = 1;
 }
 
-function makeSurePosterIsLoaded(PosterElement,posterImage){
-  PosterElement.classList.add("flashing-Div");
-  const tmpImg = new Image();
+async function makeSurePosterIsLoaded(libraryEntryPoint,PosterElement){
+  let posterPathExist = await imagePathIsValid(libraryEntryPoint?.posterPath);
 
-  if(posterImage){
-    let PosterInterval = setInterval(()=>{
-      tmpImg.src = `file://${posterImage}?t=${Date.now()}`;
-    },500);
+  if(posterPathExist){
+    PosterElement.src = `file://${libraryEntryPoint?.posterPath}?t=${Date.now()}`;
+    PosterElement.classList.remove("flashing-Div");
 
-    tmpImg.onload = ()=>{
-      clearInterval(PosterInterval);
+  }else{
+    PosterElement.classList.add("flashing-Div");
+    let responce = await window.electronAPI.downloadImage(libraryEntryPoint.downloadPath, libraryEntryPoint.posterUrl);
+
+    if(responce.download_result === "success") {
+      // close loop
       PosterElement.classList.remove("flashing-Div");
-      PosterElement.src = posterImage;
+      PosterElement.src = `file://${libraryEntryPoint?.posterPath}?t=${Date.now()}`;
+      console.log(`Poster was downloaded Successfully: ${libraryEntryPoint.torrentId}`);
+
+    } else {
+      // keep trying to download
+      console.log(`Failed To download Poster For: ${libraryEntryPoint.torrentId}`)
+      setTimeout(()=>{
+        makeSurePosterIsLoaded(libraryEntryPoint,PosterElement)
+      },5000);
     }
-    tmpImg.onerror = ()=>{};
   }
 }
+
+async function makeSureBgImageIsDownloaded(libraryEntryPoint){
+  let bgImageIsDownloaded = await imagePathIsValid(libraryEntryPoint.bgImagePath);
+
+  if(!bgImageIsDownloaded){
+    let responce = await window.electronAPI.downloadImage(libraryEntryPoint.downloadPath, libraryEntryPoint.bgImageUrl);
+
+    if(responce.download_result === "success") {
+      // close loop
+      console.log(`Background Image was downloaded Successfully: ${libraryEntryPoint.torrentId}`);
+
+    } else {
+      // keep trying to download
+      console.log(`Failed To download Background Image For: ${libraryEntryPoint.torrentId}`)
+      setTimeout(()=>{
+        makeSureBgImageIsDownloaded(libraryEntryPoint)
+      },5000);
+    }
+  }
+}
+
 
 function imagePathIsValid(imagePath){
   return new Promise((res)=>{
