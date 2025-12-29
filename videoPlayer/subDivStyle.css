@@ -122,6 +122,7 @@ button{
   transition: all 0.2s ease;
   position: relative;
   color: rgba(255, 255, 255, 0.6);
+  cursor:pointer;
 }
 
 #div-LeftSubContainer button::before{
@@ -209,6 +210,7 @@ button{
   position: relative;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.6);
+  cursor:pointer;
 }
 
 #div-subsList button.active{
@@ -254,49 +256,47 @@ button{
   gap: 16px;
   width: 100%;
   padding: 0;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 12px;
   height: 56px;
+  border:1px solid rgba(255, 255, 255, 0.2);
 }
 
-#div-subSize button{ 
+#div-subSize button {
+  display: flex;
   background: transparent;
-  height: 40px;
+  height: 100%;
   width: 40px;
-  border-radius: 8px;
-  border: none;
   font-size: 20px;
   font-weight: 600;
-  display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.7);
+  border:1px solid rgba(255, 255, 255, 0.2);
+  cursor:pointer;
 }
 
-#div-subSize button::before{
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.1);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  border-radius: 8px;
+#div-subSize .minus-button{ 
+  border-radius: 10px 0 0 10px;
+  border:none;
+  border-right:1px solid rgba(255, 255, 255, 0.2);
+}
+#div-subSize .plus-button{ 
+  border-radius: 0px 10px 10px 0px;
+  border:none;
+  border-left:1px solid rgba(255, 255, 255, 0.2);
 }
 
 #div-subSize button:hover{
   color: white;
-  transform: scale(1.1);
-}
-
-#div-subSize button:hover::before{
-  opacity: 1;
+  background-color:rgba(255,255,255,0.1);
 }
 
 #div-subSize button:active{
-  transform: scale(0.95);
+  background-color:rgba(255,255,255,0.07);
 }
 
 #div-subSize p{

@@ -251,7 +251,7 @@ async function insertSubElements(fetchedData){
     if (!findSimilairSubElement){
       subElement.addEventListener("click", async() => {
         
-        loadedSubsButtonsArray.forEach(element => {element.classList.remove("active")});
+        Array.from(subsList.children).forEach(element => {element.classList.remove("active")});
 
         subElement.classList.add("active");
 
@@ -460,6 +460,8 @@ function updateVolumeIcons(){
 } 
 
 function hideSubDiv(event){
+  if (SubDiv.classList.contains("hideElement")) return;
+
   let SubDivPositionXStart =  SubDiv.getBoundingClientRect().left;
   let SubDivPositionYStart = SubDiv.getBoundingClientRect().top;
   let SubDivPositionXEnd =  SubDiv.getBoundingClientRect().right;
@@ -478,14 +480,12 @@ function hideSubDiv(event){
 
   if(!cursorIsInsideSubDiv && !cursorIsInsideSubButton){
     SubDiv.classList.add("hideElement");
-    window.removeEventListener("mousedown",hideSubDiv);
   }
 }
 
 function OpenSubtitles(){
   repositionSubDiv();
   SubDiv.classList.toggle("hideElement");
-  window.addEventListener("mousedown",hideSubDiv,{once:true});
 }
 
 function repositionSubDiv(){
@@ -501,7 +501,6 @@ function SubSize(event,operation){
   let Sign = subsSizeOffsetPercent >= 0 ?"+":"";
   SubSizeDivP.innerText = Sign+subsSizeOffsetPercent+ "%"
   let currentFontSize = defaultFontSize + (defaultFontSize*subsSizeOffsetPercent)/100 + "px";
-  console.log(currentFontSize);
   SubDivDisplay.style.fontSize = currentFontSize;
 }
 
@@ -579,10 +578,11 @@ function createWarningDiv(errMessage){
 
 function monitoringErrorsCummingFromMainProcess(){
   window.electronAPI.getFetchingTorrentErrors((err) =>{
-    console.log(err);
+    console.error(err);
     createWarningDiv(err)
   })
 }
 
+window.addEventListener("mousedown",hideSubDiv);
 monitoringErrorsCummingFromMainProcess();
 loadIconsDynamically();
