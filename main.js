@@ -61,7 +61,7 @@ let torrentInit;
 nativeTheme.themeSource = "dark";
 
 // torrent trackers
-const DownloadingTorrents = {};
+const downloadingMediaHashMap = {};
 let StreamClient;
 const DownloadClient = new WebTorrent();
 let lastSecondBeforeQuit=0;
@@ -238,10 +238,6 @@ ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
 
-      const normaliseFileName = (fileName)=>{
-        return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase()
-      }
-
       const file = torrent.files.find(f => normaliseFileName(f.name) === normaliseFileName(fileName));
 
       if (!file) {
@@ -363,6 +359,7 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
       try {
         downloadSubs(subsObjects, torrentId, TorrentDownloadDir);
       } catch (error) {
+        reportDownloadError("Subtitles Download",torrentId,error);
         console.error(error);
       }
 
@@ -371,6 +368,7 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
         await downloadTorrent(torrentInfo);
         results.push({ success: true, torrentId });
       } catch (error) {
+        reportDownloadError("Torrent Download",torrentId,error);
         console.error(error);
         results.push({ success: false, error: error.message, torrentId });
       }
@@ -383,14 +381,26 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
   return results;
 });
 
+function findFileInsideTorrent(torrent, targetFileName){
+  let filesPathsHashMap = {};
+  let files = torrent.files ?? [];
+  for(let fileInsideTorrent of files){
+    if (targetFileName === fileInsideTorrent.name) {
+      return fileInsideTorrent;
+    }
+    filesPathsHashMap[normaliseFileName(fileInsideTorrent.name)] = fileInsideTorrent;
+  }
+  return filesPathsHashMap[normaliseFileName(targetFileName)] ?? null;
+}
+
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
   const torrentId = mediaInfo.torrentId;
-  const targetTorrent = DownloadingTorrents?.[torrentId];
+  const targetTorrent = downloadingMediaHashMap?.[torrentId];
 
   if (targetTorrent) {
     await new Promise((resolve) => {
       targetTorrent.destroy(() => {
-        delete DownloadingTorrents[torrentId];
+        delete downloadingMediaHashMap[torrentId];
         console.log(`Torrent cancelled: ${torrentId}`);
         resolve();
       });
@@ -410,15 +420,27 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
 });
 
 ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
-  const torrent = DownloadingTorrents[torrentId];
+  const torrent = downloadingMediaHashMap[torrentId];
   if (!torrent){
     let wholeDownloadLibrary = await loadDownloadLibrary();
 
     if(wholeDownloadLibrary.downloads.length){
       let torrentInfo = wholeDownloadLibrary.downloads.find(element => element.torrentId === torrentId);
       torrentInfo["torrentId"] = torrentId;
-      downloadTorrent(torrentInfo);
-
+      
+      downloadTorrent(torrentInfo)
+      .catch(
+        (err)=>{
+          console.error(err.message);
+          reportDownloadError("Torrent Download",torrentId,err);
+          const loadedTorrent = downloadingMediaHashMap[torrentId];
+          if(loadedTorrent){
+            loadedTorrent.destroy(() => {
+              delete downloadingMediaHashMap[torrentId];
+            });
+          }
+        }
+      );
       return {response: "continued", torrentId:torrentId};
 
     }else{
@@ -429,7 +451,7 @@ ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
   }else{
     await new Promise((resolve) => {
       torrent.destroy(() => {
-        delete DownloadingTorrents[torrentId];
+        delete downloadingMediaHashMap[torrentId];
         console.log(`Torrent Paused: ${torrentId}`);
         resolve();
       });
@@ -668,39 +690,35 @@ async function downloadTorrent(torrentInfo) {
     path: torrentInfo.downloadPath
   });
 
-  DownloadingTorrents[torrentInfo.torrentId] = torrent;
+  downloadingMediaHashMap[torrentInfo.torrentId] = torrent;
 
   insertNewDownloadEntryPoint(torrentInfo);
 
-  // Wait for torrent to be ready before accessing files
   return new Promise((resolve, reject) => {
     console.log("Loading Torrent:", torrentInfo.torrentId);
+    
     torrent.on("ready", () => {
-      const subtitlesExt = ['.srt', '.ass', '.sub', '.vtt'];
      
       console.log("\nDownload Target: " + torrentInfo?.fileName);
       console.log("\nTorrent Files:-----------------------------------------------------");
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
 
-      const files = torrent.files.filter(f =>
-        f.name.toLowerCase().trim() === torrentInfo?.fileName.toLowerCase().trim() ||
-        subtitlesExt.some(ext => f.name.toLowerCase().endsWith(ext))
-      );
+      let targetFile = findFileInsideTorrent(torrent, torrentInfo?.fileName);
 
-      if (!files.length) {
+      if (!targetFile) {
         reject(new Error('No suitable video file found'));
-        return;
       }
 
       // Deselect all files first
-      torrent.files.forEach(file => { file.deselect() });
+      torrent.files.forEach(file => {file.deselect()});
       
-      // Select only the files that match our criteria
-      files.forEach(file => { file.select() });
+      // Select only the file that match the name
+      targetFile.select();
 
-      // Calculate total size of only selected files
-      const totalSize = files.reduce((sum, file) => sum + file.length, 0);
+
+      // Calculate total size of only selected file
+      const totalSize = targetFile.length;
       let LibraryStartTime = 0;
       let PipingStartTime = 0;
       const DelayBeforeLibrarySave = 1000;
@@ -709,7 +727,7 @@ async function downloadTorrent(torrentInfo) {
       torrent.on("download", () => {
         const now = Date.now();
         // Calculate downloaded bytes for selected files only
-        const downloadedDataLength = files.reduce((sum, file) => sum + file.downloaded, 0);
+        const downloadedDataLength = targetFile.downloaded;
 
         torrentInfo["Total"] = totalSize;
         torrentInfo["Downloaded"] = downloadedDataLength;
@@ -788,13 +806,14 @@ function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
       fs.mkdirSync(subDownloadDir, { recursive: true });
       downloadMultipleSubs(subDownloadDir, subsObjects);
     } catch (err) {
+      reportDownloadError("Subtitles Download", torrentId, err);
       console.error("Subtitle download error:", err);
     }
   }
 }
 
 
-async function downloadImage(downloadDir, posterUrl, retries = 3, timeout = 10000) {
+async function downloadImage(torrentId, downloadDir, posterUrl, retries = 3, timeout = 1000) {
   fs.mkdirSync(downloadDir, { recursive: true });
 
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -816,6 +835,7 @@ async function downloadImage(downloadDir, posterUrl, retries = 3, timeout = 1000
       return file;
     } catch (err) {
       if (attempt === retries) {
+        reportDownloadError("Image Download", torrentId, err)
         console.error(`Failed to download ${posterUrl}:`, err.message);
         return null;
       }
@@ -823,6 +843,13 @@ async function downloadImage(downloadDir, posterUrl, retries = 3, timeout = 1000
   }
 }
 
+function reportDownloadError(errorType, torrentId, err){
+  WINDOW.webContents.send("report-download-errors", {
+    type: errorType,
+    torrentId: torrentId,
+    err_msg: err
+  });
+}
 
 // ############################ NAVIGATION RELATED ############################
 
@@ -848,6 +875,7 @@ function generateUniqueId(seed) {
 
 function findFile(dir, filename) {
   if(!fs.existsSync(dir)) return null;
+  const filesPathsHashMap = {};
   const files = fs.readdirSync(dir);
   for (const file of files) {
     const fullPath = path.join(dir, file);
@@ -858,8 +886,14 @@ function findFile(dir, filename) {
     } else if (file === filename) {
       return fullPath;
     }
+    filesPathsHashMap[normaliseFileName(file)] = fullPath;
   }
-  return null;
+  return filesPathsHashMap[normaliseFileName(filename)] ?? null;
+}
+
+const normaliseFileName = (fileName)=>{
+  if(fileName) return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase()
+  return "";
 }
 
 function sanitizeUrl(urlString) {
@@ -957,8 +991,8 @@ async function insertNewDownloadEntryPoint(torrentInfo){
     let bgImagePath = path.join(posterDownloadPath,torrentInfo?.bgImageUrl.split("/").pop());
     let posterPath = path.join(posterDownloadPath,torrentInfo?.posterUrl.split("/").pop());
 
-    downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
-    downloadImage(posterDownloadPath,torrentInfo?.posterUrl);
+    downloadImage(torrentInfo.torrentId, posterDownloadPath,torrentInfo?.bgImageUrl)
+    downloadImage(torrentInfo.torrentId, posterDownloadPath,torrentInfo?.posterUrl);
 
     let newEntry = {...torrentInfo, posterPath: posterPath ?? "undefined", bgImagePath: bgImagePath ?? "undefined", Status:"Loading"};
     downloadLib.downloads.push(newEntry);

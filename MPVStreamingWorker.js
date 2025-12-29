@@ -24,10 +24,6 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
 
-      const normaliseFileName = (fileName)=>{
-        return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase()
-      }
-
       const file = torrent.files.find(f =>
         (normaliseFileName(metaData?.fileName) ===  normaliseFileName(f.name))
       );
@@ -118,7 +114,10 @@ async function PlayLocalVideo(metaData,startFromTime,subsPaths,mpvConfigDirector
   return new Promise((resolve, reject) => {
     try{
       let videoFullPath = findFile(metaData.downloadPath, metaData.fileName);
-      runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,resolve,reject);
+      if(videoFullPath)
+        runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,resolve,reject);
+      else
+        throw(new Error(`Cannot Find File Named:<br> ${metaData.fileName}`));
     }catch(err){
       console.error(err);
       reject(err);
@@ -161,6 +160,8 @@ function generateUniqueId(seed) {
 }
 
 function findFile(dir, filename) {
+  if(!fs.existsSync(dir)) return null;
+  const filesPathsHashMap = {};
   const files = fs.readdirSync(dir);
   for (const file of files) {
     const fullPath = path.join(dir, file);
@@ -171,8 +172,9 @@ function findFile(dir, filename) {
     } else if (file === filename) {
       return fullPath;
     }
+    filesPathsHashMap[normaliseFileName(file)] = fullPath;
   }
-  return null;
+  return filesPathsHashMap[normaliseFileName(filename)] ?? null;
 }
 
 function loadSubsFromSubDir(downloadPath,TorrentId){
@@ -226,6 +228,10 @@ async function cleanup(){
   }
   
   console.log('Worker cleanup complete');
+}
+
+const normaliseFileName = (fileName)=>{
+  return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase()
 }
 
 parentPort.on('message', async (msg) => {
