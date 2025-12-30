@@ -67,11 +67,13 @@ p{
   background-color:rgba(0,0,0,0%);
   border:none;
 }
+#div-top{
+  padding: 18px;
+}
 #div-middle{
   padding-left:70px;
 }
-#btn-fullscreen,
-#btn-goBack{
+#btn-fullscreen{
   display:flex;
   justify-content:center;
   align-items:center;
@@ -81,6 +83,12 @@ p{
   border:none;
   border-radius:10px;
   cursor:pointer;
+}
+#btn-goBack{
+  padding-right:10px;
+}
+#btn-goBack svg{
+  transform:scale(1.1);
 }
 
 #img-goBack,

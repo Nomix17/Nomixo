@@ -51,12 +51,13 @@ html::-webkit-scrollbar{
   display:flex;
   justify-content:center;
   align-items:center;
-  width:50px;
-  height:50px;
+  width:55px;
+  height:55px;
   background-color: rgba(0,0,0,0%);
   border:none;
   border-radius:10px;
   margin:0;
+  cursor:pointer;
   user-select: none;
   -moz-user-select: none;
   -khtml-user-select: none;
@@ -64,12 +65,22 @@ html::-webkit-scrollbar{
   -o-user-select: none;
 }
 
+#btn-goBack{
+  width:50px;
+  height:50px;
+  padding-right:10px;
+}
+
+#btn-goBack svg{
+  transform:scale(1.1);
+}
+
 #img-fullscreen,
 #img-PauseButton,
 #img-OpenSubtitle,
 #img-VolumeButton {
-  width:75%;
-  height:75%;
+  width:68%;
+  height:68%;
   background-color: rgba(0,0,0,0%);
   object-fit: contain;
   cursor:pointer;
@@ -99,14 +110,30 @@ html::-webkit-scrollbar{
   backdrop-filter: blur(3px);
   background-color: rgba(0,0,0,40%);
   box-sizing: border-box;
-  padding:20px;
+  padding:18px;
   z-index: 10;
   width: 100%;
+}
+
+/* Updated top bar styling to match mainPage */
+#div-topButtonsContainer {
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  backdrop-filter: blur(3px);
+  background-color: rgba(0,0,0,40%);
+  height: 80px;
+  box-sizing: border-box;
+  padding: 18px;
+  z-index: 10;
 }
 
 #div-topButtonsContainer[class="fixedTopBar"]{
   display:flex;
   background-color:transparent;
+  backdrop-filter: blur(0);
   top:-150%;
 }
 
@@ -193,7 +220,6 @@ video{
      1px -1px 0 black,
     -1px  1px 0 black,
      1px  1px 0 black;
-  font-size:35px;
   z-index:1;
   margin:10px;
   font-size: 30px;
