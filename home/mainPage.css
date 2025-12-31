@@ -545,6 +545,7 @@ input::selection {
   padding-right:10px;
 }
 #btn-goBack svg{
+  opacity:0.1;
   transform:scale(1.1);
 }
 #img-goBack {

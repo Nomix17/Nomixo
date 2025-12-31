@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   navigateTo: (page) => ipcRenderer.invoke('change-page', page),
   goBack: () => ipcRenderer.invoke('go-back'),
+  canGoBack: () => ipcRenderer.invoke('can-go-back'),
 
   getFullVideoPath: (dirPath,fileName) => ipcRenderer.invoke("get-full-video-path",dirPath,fileName),
   getVideoUrl: (magnet,fileName) => ipcRenderer.invoke('get-video-url', magnet,fileName),

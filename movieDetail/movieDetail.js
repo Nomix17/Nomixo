@@ -745,4 +745,4 @@ handleLibraryButton()
 fetchInformation();
 handleDivsResize();
 handleFullScreenIcon();
-
+loadIconsDynamically();

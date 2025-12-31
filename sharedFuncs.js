@@ -360,7 +360,11 @@ window.DisplayWarningOrErrorForUser = (warningMessage) => {
 }
 
 window.loadIconsDynamically = ()=>{
-  document.addEventListener("DOMContentLoaded", handleFullScreenIcon);
+  document.addEventListener("DOMContentLoaded", ()=>{
+    handleFullScreenIcon();
+    handleGoBackIcon();
+  });
+
   fetch('../assets/icons/storage.svg')
     .then(response => response.text())
     .then(svgText => {
@@ -653,6 +657,20 @@ window.handleFullScreenIcon = ()=>{
   else
     fullscreenButton?.setAttribute("src",FullScreenIcon);
   
+}
+async function handleGoBackIcon(){
+  let goBackButton = document.querySelector("#btn-goBack");
+  let goBackIcon = goBackButton.querySelector("svg");
+  let canGoBack = await window.electronAPI.canGoBack();
+  if(canGoBack){
+    goBackIcon.style.opacity = "1";
+    goBackButton.style.cursor = "cursor";
+  }else{
+    goBackIcon.style.opacity = "0.1";
+    goBackButton.style.cursor = "auto";
+    goBackButton.style.backgroundColor = "transparent";
+    goBackButton.addEventListener("mouseenter",()=>{goBackButton.style.backgroundColor = "transparent"});
+  }
 }
 
 function putTextIntoDiv(Div,textContent){

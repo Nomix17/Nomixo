@@ -180,6 +180,11 @@ ipcMain.on("apply-sub-config", (event,SubConfig) => {
 
 // ======================= NAVIGATION =======================
 
+ipcMain.handle("can-go-back",(event)=>{
+  const webContents = WINDOW.webContents;
+  return webContents.navigationHistory.canGoBack();
+});
+
 ipcMain.handle("go-back",(event)=>{
   NavigateToPreviousPage();
 });
