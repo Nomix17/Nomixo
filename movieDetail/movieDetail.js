@@ -510,7 +510,7 @@ function addMediaToLibrary(){
 
 function formatMediaLibraryObject(){
   let MediaLibraryObject = {
-    MediaId:movieId,
+    MediaId:movieId.toString(),
     MediaType:MediaType,
     episodesWatched:[],
     lastPlaybackPosition:0,

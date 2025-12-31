@@ -122,12 +122,15 @@ function createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType){
 
   toggleInLibraryBtn.classList.add("btn-toggle-in-library");
 
-  let mediaIsInLibrary = LibraryInformation.filter(libraryEntryPoint => (libraryEntryPoint.MediaId === Id) && (libraryEntryPoint.MediaType === ThisMediaType)).length;
+  let mediaIsInLibrary = LibraryInformation.filter(libraryEntryPoint => 
+    (libraryEntryPoint.MediaId.toString() === Id.toString()) &&
+    (libraryEntryPoint.MediaType.toString() === ThisMediaType.toString())).length;
+
   if(mediaIsInLibrary) setAddToLibraryButtonToPressed(toggleInLibraryBtn);
   else setAddToLibraryButtonToNormal(toggleInLibraryBtn)
 
   toggleInLibraryBtn.addEventListener("click",function() {
-    ToggleInLibrary(Id,ThisMediaType,"Watch Later")
+    ToggleInLibrary(Id.toString(),ThisMediaType,"Watch Later")
   });
   return toggleInLibraryBtn;
 }
@@ -229,7 +232,7 @@ window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
   if(toggleInLibraryElement.hasAttribute("pressed")){
     setAddToLibraryButtonToNormal(toggleInLibraryElement);
     let MediaLibraryObjectIdentifiers = {
-      MediaId:mediaId,
+      MediaId:mediaId.toString(),
       MediaType:mediaType
     }
     window.electronAPI.removeMediaFromLibrary(MediaLibraryObjectIdentifiers);
@@ -247,7 +250,7 @@ window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
       MediaLibraryObject.typeOfSave.push(typeOfSave);
     }else{
       MediaLibraryObject = {
-        MediaId:mediaId,
+        MediaId:mediaId.toString(),
         MediaType:mediaType,
         typeOfSave:[typeOfSave],
         episodesWatched:[],
@@ -513,7 +516,7 @@ function addContrastForPlayIcon(){
 
 function removeMediaFromLibrary(mediaId,mediaType,parentDiv,IsInHomePage){
   let MediaLibraryObject = {
-    MediaId:mediaId,
+    MediaId:mediaId.toString(),
     MediaType:mediaType
   }
 
