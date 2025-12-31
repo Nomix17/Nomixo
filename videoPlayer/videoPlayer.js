@@ -38,7 +38,7 @@ let mouseHoveringOnControlDiv;
 let videoIsPlaying = false;
 var SubsStruct = [];
 let subtitlesArray = [];
-
+let sliderMaxValue = VideoSlider.max;
 VideoElement.volume = 0.5;
 
 setBackgroundImage();
@@ -102,7 +102,7 @@ VideoElement.addEventListener("waiting", ()=>{
 
 VideoElement.addEventListener("timeupdate",()=>{
   if(isFinite(VideoElement.duration) && isFinite(VideoSlider.value)){
-    VideoSlider.value = (VideoElement.currentTime/VideoElement.duration) * 100;
+    VideoSlider.value = (VideoElement.currentTime/VideoElement.duration) * sliderMaxValue;
     VideoDurationElement.innerText = gettingformatedTime(VideoElement.duration);
     VideoPositionElement.innerText = gettingformatedTime(VideoElement.currentTime);
   }
@@ -125,7 +125,7 @@ VolumeSliderElement.addEventListener("input", ()=>{
 
 VideoSlider.addEventListener("input", ()=>{
   if(isFinite(VideoElement.duration) && isFinite(VideoSlider.value)){
-    VideoElement.currentTime = (VideoSlider.value * VideoElement.duration) / 100 ;
+    VideoElement.currentTime = (VideoSlider.value * VideoElement.duration) / sliderMaxValue;
   }
 });
 
