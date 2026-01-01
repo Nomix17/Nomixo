@@ -22,7 +22,7 @@ async function loadMovies(){
   ]).then(([MovieData,TVShowData,_])=>{
       popularMoviesDiv.innerHTML = "";
       popularSeriesDiv.innerHTML = "";
-      if(MovieData.status_code == 7 && TVShowData.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");
+      if(parseInt(MovieData.status_code) === 7 && parseInt(TVShowData.status_code) === 7) throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");
       let MoviesSearchResults =  MovieData.results;
       let TVShowSearchResults = TVShowData.results;
       globalLoadingGif.remove();
@@ -31,7 +31,7 @@ async function loadMovies(){
       insertMediaElements(TVShowSearchResults,popularSeriesDiv,"tv",LibraryInformation);
       checkIfDivShouldHaveMoveToRightOrLeftButton([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
   }).catch(err=>{
-    err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
+    err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
     console.error(err);
     setTimeout(()=>{
       RightmiddleDiv.innerHTML ="";

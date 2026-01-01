@@ -60,14 +60,20 @@ function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType)
   mediaPosterElement.classList.add("img-MoviePoster");
   mediaPosterContainer.classList.add("img-MoviePosterContainer");
   mediaNameElement.classList.add("parag-MovieTitle");
+
+  mediaDomElement.setAttribute("mediaId",Id);
   mediaDomElement.setAttribute("mediaType",ThisMediaType);
+  mediaDomElement.setAttribute("poster_path",PosterImage.split("/").pop());
 
   mediaPosterContainer.appendChild(mediaPosterElement)
   mediaDomElement.appendChild(mediaPosterContainer);
   mediaDomElement.appendChild(mediaNameElement);
 
   mediaDomElement.addEventListener("click",function() {
-    openDetailPage(Id,ThisMediaType);
+    if(ThisMediaType === "person")
+      openProfilePage(Id);
+    else
+      openDetailPage(Id,ThisMediaType);
   });
 
   addFloatingDivToDisplayFullTitle(mediaDomElement);
@@ -89,8 +95,8 @@ window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaTyp
     if(!tempArray.includes(Title)){
       tempArray.push(Title); 
       
-      if(obj?.["poster_path"]) PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["poster_path"];
-      else if(obj?.["profile_path"])  PosterImage = "https://image.tmdb.org/t/p/w500/"+obj["profile_path"];
+      if(obj?.["poster_path"]) PosterImage = ("https://image.tmdb.org/t/p/w500/"+obj["poster_path"]).replace(/([^:]\/)\/+/g, '$1');
+      else if(obj?.["profile_path"])  PosterImage = ("https://image.tmdb.org/t/p/w500/"+obj["profile_path"]).replace(/([^:]\/)\/+/g, '$1');
       else if(ThisMediaType === "person") PosterImage = "../assets/ProfileNotFound.png"
       else PosterImage = "../assets/PosterNotFound.png"
 
@@ -142,7 +148,7 @@ function createMediaElementForLibrary(mediaData, ThisMediaType,ThisSaveType,medi
 
   let PosterImage =  
       mediaData?.["poster_path"] 
-      ? "https://image.tmdb.org/t/p/w342/"+mediaData["poster_path"] 
+      ? "https://image.tmdb.org/t/p/w500/"+mediaData["poster_path"] 
       : "../assets/PosterNotFound.png";
 
   let movieDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
@@ -297,7 +303,7 @@ window.setupKeyPressesHandler = () =>{
       if(dontGoBack)
         dontGoBack = false;
       else
-        window.electronAPI.goBack();
+        window.electronAPI.goBack(document.URL);
     }
     if (event.key === "Tab" ||
         event.metaKey ||
@@ -387,58 +393,162 @@ window.loadIconsDynamically = ()=>{
 }
 
 function goBack(){
-  window.electronAPI.goBack();
+  window.electronAPI.goBack(document.URL);
 }
 
 function backToHome(){
-  path = "./home/mainPage.html"
-  window.electronAPI.navigateTo(path);
+  return navigate("./home/mainPage.html");
 }
 
 function openDiscoveryPage(genreId, MediaType){
-  let path = `./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`;
-  window.electronAPI.navigateTo(path);
+  return navigate(`./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`);
 }
 
 function OpenLibaryPage(typeOfSave = "All"){
-  path = `./libraryPage/libraryPage.html?typeOfSave=${typeOfSave}`;
-  window.electronAPI.navigateTo(path);
+  return navigate(`./libraryPage/libraryPage.html?typeOfSave=${typeOfSave}`);
 }
 
 function OpenDownloadPage(){
-  path = `./downloadPage/downloadPage.html`;
-  window.electronAPI.navigateTo(path);
+  return navigate("./downloadPage/downloadPage.html");
 }
 
 function OpenSettingsPage(){
-  path = "./settingsPage/settingsPage.html"
-  window.electronAPI.navigateTo(path);
+  return navigate("./settingsPage/settingsPage.html");
 }
 
-function openDetailPage(movieId,mediaType){
-  let path;
-  if(mediaType === "person")
-    path = `./personDetails/personDetails.html?personId=${movieId}`;
-  else
-    path = "./movieDetail/movieDetail.html?MovieId="+movieId+"&MediaType="+mediaType;
-  window.electronAPI.navigateTo(path);
+function openProfilePage(personId){
+  return navigate(`./personDetails/personDetails.html?personId=${personId}`);
+}
+
+function openDetailPage(movieId, mediaType){
+  return navigate(`./movieDetail/movieDetail.html?MovieId=${movieId}&MediaType=${mediaType}`);
 }
 
 function openSearchPage(){
-  let searchKeyword = searchInput.value;
-  if(searchKeyword.trim() !==""){
-    let path ="./search/searchPage.html?search="+searchKeyword;
-    window.electronAPI.navigateTo(path);
+  const searchKeyword = searchInput.value.trim();
+  if(!searchKeyword) return;
+  return navigate(`./search/searchPage.html?search=${searchKeyword}`);
+}
+
+async function navigate(newPath){
+  const cachedData = await getCurrentPageCacheData();
+  const fromPath = document.URL;
+  window.electronAPI.navigateTo(newPath, fromPath, cachedData);
+}
+
+function openMediaVideo( TorrentIdentification, MediaId, MediaType, downloadPath, fileName, MagnetLink, IMDB_ID, backgroundImage, episodeInfo){
+  const b64MagnetLink = btoa(MagnetLink);
+  const episodeNumber = episodeInfo?.episodeNumber;
+  const seasonNumber  = episodeInfo?.seasonNumber;
+
+  return navigate(
+    `./videoPlayer/videoPlayer.html?` +
+    `MagnetLink=${b64MagnetLink}` +
+    `&downloadPath=${downloadPath}` +
+    `&fileName=${fileName}` +
+    `&TorrentIdentification=${TorrentIdentification}` +
+    `&MediaId=${MediaId}` +
+    `&MediaType=${MediaType}` +
+    `&ImdbId=${IMDB_ID}` +
+    `&bgPath=${backgroundImage}` +
+    `&episodeNumber=${episodeNumber}` +
+    `&seasonNumber=${seasonNumber}`
+  );
+}
+
+
+// #########################################################################
+
+function getCurrentPageCacheData(){
+  let currentPage = document.URL;
+  switch(true){
+
+    case (currentPage.includes("discoveryPage")):
+      return getDiscoveryPageCacheData();
+
+    case (currentPage.includes("movieDetail")):
+      return getMovieDetailPageCacheData();
+
+    case (currentPage.includes("searchPage")):
+      return getSearchPageCacheData();
+
+    default:
+      return getRightMiddleDivScrollValue();
   }
 }
 
-function openMediaVideo(TorrentIdentification,MediaId,MediaType,downloadPath,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo){
-  let b64MagnetLink = btoa(MagnetLink);
-  let episodeNumber=episodeInfo?.episodeNumber
-  let seasonNumber=episodeInfo?.seasonNumber;
+function getRightMiddleDivScrollValue(){
+  let RightMiddleDiv = document.getElementById("div-middle-right");
+  return {
+    "right_middle_div_top_scroll_value":RightMiddleDiv.scrollTop
+  };
+}
 
-  let path = `./videoPlayer/videoPlayer.html?MagnetLink=${b64MagnetLink}&downloadPath=${downloadPath}&fileName=${fileName}&TorrentIdentification=${TorrentIdentification}&MediaId=${MediaId}&MediaType=${MediaType}&ImdbId=${IMDB_ID}&bgPath=${backgroundImage}&episodeNumber=${episodeNumber}&seasonNumber=${seasonNumber}`;
-  window.electronAPI.navigateTo(path); 
+function scrapMediaElementsData(MediaDomElement){
+  let mediaInformation = {
+    "id":MediaDomElement.getAttribute("mediaId"),
+    "title": MediaDomElement.querySelector(".parag-MovieTitle").innerText,
+    "media_type":MediaDomElement.getAttribute("mediaType"),
+    "poster_path": MediaDomElement.getAttribute("poster_path"),
+    "profile_path": MediaDomElement.getAttribute("poster_path"),
+  }
+  return mediaInformation;
+}
+
+async function getDiscoveryPageCacheData(){
+  let mediaSuggestions = document.getElementById("div-MediaSuggestions"); 
+
+  let MediaDomElements = mediaSuggestions.querySelectorAll(".div-MovieElement");
+  let MediaElementsData = await Array.from(MediaDomElements).map(element=>scrapMediaElementsData(element));
+
+  let cacheData = {
+    page:"discovery",
+    "suggested_media_elements": Array.from(MediaElementsData),
+    ...getRightMiddleDivScrollValue(),
+  };
+  console.log(cacheData);
+  return cacheData;
+}
+
+function getMovieDetailPageCacheData(){
+  return "################################## Movie Detail Page";
+}
+
+function getSearchPageCacheData(){
+  return "################################## Search Page";
+}
+
+async function loadCachedRightMiddleDivScrollValue(){
+  let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  if(cachedData){
+    console.log("Loading Cached Information");
+    let RightmiddleDivScrollTopValue = cachedData.right_middle_div_top_scroll_value;
+console.log(cachedData);
+    let RightmiddleDiv = document.getElementById("div-middle-right");
+    RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
+  }
+}
+
+// #########################################################################
+
+function normalizeRootUrl(input) {
+  try{
+    const url = new URL(input);
+    url.pathname = url.pathname.replace(/\/+/g, "/");
+
+    if (url.pathname === "") {
+      url.pathname = "/";
+    }
+
+    return url.href;
+  }catch{
+    return input;
+  }
+}
+
+function removeAllArgsFromPath(path) {
+  const url = new URL(path, "http://localhost");
+  return url.pathname;
 }
 
 async function fullscreenClicked(){
@@ -615,7 +725,7 @@ async function getPosterPath(imdbId, apiKey) {
   return poster ?? null;
 }
 
-function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "./assets/PosterNotFound.png") {
+function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "../assets/PosterNotFound.png") {
   return new Promise((resolve) => {
     if (!imagePath) {
       imageElement.src = alternativeImage;
@@ -624,18 +734,16 @@ function loadImageWithAnimation(imageContainer, imageElement, imagePath, alterna
     }
     
     imageElement.style.display = 'none';
-    imageElement.style.transition = 'opacity 0.5s ease';
+    imageElement.style.transition = 'opacity 0.3s ease';
     imageContainer.classList.add("flashing-Div");
     
     const img = new Image();
     img.onload = () => {
-      imageElement.src = imagePath;
+      imageElement.src = normalizeRootUrl(imagePath);
       imageElement.style.display = 'block';
       imageElement.style.opacity = '0';
+      imageElement.style.opacity = '1';
 
-      setTimeout(() => {
-        imageElement.style.opacity = '1';
-      }, 10);
       imageContainer.classList.remove("flashing-Div");
       resolve(true);
     };

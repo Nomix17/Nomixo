@@ -1,8 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  navigateTo: (page) => ipcRenderer.invoke('change-page', page),
-  goBack: () => ipcRenderer.invoke('go-back'),
+  navigateTo: (newPageURL,currentPageURL,cacheData) => ipcRenderer.send('change-page', newPageURL,currentPageURL,cacheData),
+  goBack: (currentPageURL) => ipcRenderer.invoke('go-back',currentPageURL),
   canGoBack: () => ipcRenderer.invoke('can-go-back'),
 
   getFullVideoPath: (dirPath,fileName) => ipcRenderer.invoke("get-full-video-path",dirPath,fileName),
@@ -44,6 +44,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getFetchingTorrentErrors: (fn)=> ipcRenderer.on("torrent-fetching-error",(event,data)=>fn(data)),
   getDownloadErrorsReports: (fn)=> ipcRenderer.on("report-download-errors",(event,data)=>fn(data)),
 
-  downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl)
+  downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl),
+
+  loadPageCachedDataFromHistory: (currentPageURL) => ipcRenderer.invoke("load-cached-data-from-history",currentPageURL)
 });
 

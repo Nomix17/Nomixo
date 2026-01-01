@@ -74,11 +74,11 @@ function getPersonInfo(apiKey,personId){
 
 async function fetchData(apiKey,personId, personjob){
   LibraryInformation = await loadLibraryInfo();
-  fetch(`https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${apiKey}`).then(res=>res.json())
+  await fetch(`https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${apiKey}`).then(res=>res.json())
     .then(MediaData => insertDataIntoDiv(MediaData, personjob,LibraryInformation));
+  await loadCachedRightMiddleDivScrollValue();
   globalLoadingGif.remove();
   RightmiddleDiv.style.opacity = 1;
-
 }
 
 function insertDataIntoDiv(MediaData, personJob,LibraryInformation){
@@ -86,7 +86,7 @@ function insertDataIntoDiv(MediaData, personJob,LibraryInformation){
   let GeneraleWorkData;
   let CrewData = MediaData.crew;
   let CastData = MediaData.cast;
-  if(personJob == "Acting") GeneraleWorkData = [...CastData,...CrewData];
+  if(personJob === "Acting") GeneraleWorkData = [...CastData,...CrewData];
   else  GeneraleWorkData = [...CrewData,...CastData];
 
   insertMediaElements(GeneraleWorkData,MediaSuggestions,undefined,LibraryInformation);
@@ -104,6 +104,6 @@ loadIconsDynamically();
 handlingMiddleRightDivResizing();
 let searchInput = document.getElementById("input-searchForMovie");
 searchInput.addEventListener("keypress",(event)=>{
-  if(event.key == "Enter") openSearchPage();
+  if(event.key === "Enter") openSearchPage();
 });
 

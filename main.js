@@ -58,6 +58,7 @@ let InVideoPlayerPage = false;
 let mainzoomFactor = 1;
 let subsPaths;
 let torrentInit;
+let pagesCachedHistory = {};
 nativeTheme.themeSource = "dark";
 
 // torrent trackers
@@ -185,18 +186,21 @@ ipcMain.handle("can-go-back",(event)=>{
   return webContents.navigationHistory.canGoBack();
 });
 
-ipcMain.handle("go-back",(event)=>{
+ipcMain.handle("go-back",(event,currentPageURL)=>{
   NavigateToPreviousPage();
+  deletePageCachedDataFromHistory(currentPageURL);
 });
 
-ipcMain.handle("change-page", (event,page) => {
+ipcMain.on("change-page", (event,newPageURL,currentPageURL,cacheData) => {
   if (WINDOW) {
     const webContents = event.sender;
-    const [filePath, query] = page.split('?');
+    const [filePath, query] = newPageURL.split('?');
     const fullPath = path.join(__dirname, filePath);
     webContents.setZoomFactor(mainzoomFactor);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
     WINDOW.loadURL(url);
+    positionWasChangedViaGoBackButton = false;
+    savePageCachedDataToHistory(currentPageURL,cacheData);
   }
 });
 
@@ -549,6 +553,13 @@ ipcMain.handle("read-sub-file",async(event,filePath)=>{
   return fs.readFileSync(filePath, 'utf8');
 });
 
+
+// ############################## CACHE HISTORY MANAGEMENT ##############################
+ipcMain.handle("load-cached-data-from-history",(event,currentPageURL)=>{
+  return positionWasChangedViaGoBackButton ? loadPageCachedDataFromHistory(currentPageURL) : null;
+});
+
+
 // ################# functions ######################## 
 
 // ########## SETTINGS RELATED #################
@@ -861,6 +872,7 @@ function reportDownloadError(errorType, torrentId, err){
 
 // ############################ NAVIGATION RELATED ############################
 
+let positionWasChangedViaGoBackButton = false;
 function NavigateToPreviousPage(){
   const webContents = WINDOW.webContents;
   if(webContents.navigationHistory.canGoBack()){
@@ -872,6 +884,7 @@ function NavigateToPreviousPage(){
       MPVWorker = null;
     }
     webContents.navigationHistory.goBack();
+    positionWasChangedViaGoBackButton = true;
   }
 }
 
@@ -1171,6 +1184,31 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
   insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
 }
 
+// ############################## CACHE HISTORY MANAGEMENT ##############################
+function savePageCachedDataToHistory(PageURL,cacheData){
+  if(PageURL){
+    let dataId = generateUniqueId(PageURL);
+    if(pagesCachedHistory[dataId])
+      delete pagesCachedHistory[dataId];
+    pagesCachedHistory[dataId] = cacheData;
+  }
+}
+
+function deletePageCachedDataFromHistory(PageURL){
+  if(PageURL){
+    let dataId = generateUniqueId(PageURL);
+    delete pagesCachedHistory[dataId];
+  }
+}
+
+function loadPageCachedDataFromHistory(PageURL){
+  if(PageURL){
+    let dataId = generateUniqueId(PageURL);
+    return pagesCachedHistory[dataId];
+  }else{
+    return null;
+  }
+}
 
 // ################################### maping Languages codes ###################################
 const languageDict = {

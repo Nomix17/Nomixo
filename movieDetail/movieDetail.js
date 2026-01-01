@@ -492,11 +492,6 @@ function resizeTorrentAndEpisodeElement(radio,DivElement){
   addSpaceToTopOfTorrentContainer();
 }
 
-function openProfilePage(personId){
-  let path = `./personDetails/personDetails.html?personId=${personId}`;
-  window.electronAPI.navigateTo(path);
-}
-
 function addMediaToLibrary(){
   ToggleInLibrary(movieId,MediaType,"Watch Later");
   if(addToLibraryButton.hasAttribute("pressed")){

@@ -23,7 +23,6 @@ async function loadData(){
   setDropdownValue(SelectMediaType, "all");
   syncDropdownWidths();
   
-  RightmiddleDiv.style.opacity = 1;
 
   if(wholeLibraryInformation === undefined || wholeLibraryInformation.length === 0){
     let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
@@ -31,9 +30,12 @@ async function loadData(){
     globalLoadingGif.remove();
   }else{
     await fetchMediaDataFromLibrary(apiKey,wholeLibraryInformation,SavedMedia,globalLoadingGif,RightmiddleDiv);
+    await loadCachedRightMiddleDivScrollValue();
+    await loadDropDownCachedValue();
     filterMedia(getDropdownValue(SelectMediaType), getDropdownValue(SelectSaveType));
   }
 
+  RightmiddleDiv.style.opacity = 1;
   SelectMediaType.addEventListener("dropdownChange", () => {
     typeOfSave = getDropdownValue(SelectSaveType);
     categoriDescription.querySelector("h1").innerText = `${typeOfSave}`;
@@ -180,6 +182,10 @@ function manageDropDowns() {
       trigger.setAttribute('aria-expanded', 'false');
     });
   });
+}
+
+async function loadDropDownCachedValue(){
+
 }
 
 loadData();
