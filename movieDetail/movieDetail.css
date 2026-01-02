@@ -917,3 +917,12 @@ label {
     width: 100%;
   }
 }
+
+.div-episodes-Element.episode_hovered{
+  background-color:rgba(255, 255, 255, 0.1);
+}
+
+.div-episodes-Element.pressed_episode{
+  border-color:rgba(var(--MovieElement-hover-BorderColor), 100%);
+  background-color:rgba(255, 255, 255, 0.1);
+}

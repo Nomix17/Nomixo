@@ -146,12 +146,11 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
     }
 
     EpisodeElement.addEventListener("mouseenter",()=>{
-      EpisodeElement.style.backgroundColor = "rgba(255, 255, 255, 10%)";
+      EpisodeElement.classList.add("episode_hovered")
     });
 
     EpisodeElement.addEventListener("mouseleave",()=>{
-      if(EpisodeElement.style.borderColor !== "rgba(var(--MovieElement-hover-BorderColor), 100%)" && (!continueWatchingEpisode))
-        EpisodeElement.style.backgroundColor = "rgba(0,0,0,0)";
+      EpisodeElement.classList.remove("episode_hovered")
     });
 
     EpisodeElement.addEventListener("click",() => {
@@ -194,17 +193,14 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
   });
 }
 
-function handleEpisodeElementColoring(DivContainer,currentEpisodeElement){
-  let EpisodeElements = DivContainer.querySelectorAll('div[class="div-episodes-Element"]');
+function handleEpisodeElementColoring(DivContainer, currentEpisodeElement) {
+  const EpisodeElements = DivContainer.querySelectorAll('.div-episodes-Element');
 
-  EpisodeElements.forEach(element =>{
-    if(element !== currentEpisodeElement){
-      element.style.borderColor = "rgba(0,0,0,0)";
-      element.style.backgroundColor = "rgba(0,0,0,0)";
-    }else{
-      element.style.borderColor = "rgba(var(--MovieElement-hover-BorderColor), 100%)";
-      element.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-    }
+  EpisodeElements.forEach(element => {
+    element.classList.toggle(
+      "pressed_episode",
+      element === currentEpisodeElement
+    );
   });
 }
 
