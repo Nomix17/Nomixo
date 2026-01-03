@@ -19,8 +19,9 @@ async function loadDownloadMediaFromLib(){
       monitorDownloads();
       monitorErrors();
     }
-
   }
+
+  await loadCachedPageInfo();
 }
 
 async function createDownloadElement(mediaLibEntryPoint){
@@ -346,6 +347,16 @@ function monitorErrors(){
     MarkDownloadElementAsPaused(errorReport.torrentId,MediaDownloadElement)
     console.error(`${errorReport?.type} Error: ${errorReport.torrentId}\n${errorReport.err_msg}`);
   });
+}
+
+async function loadCachedPageInfo(){
+  let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  if(cachedData){
+    console.log("Loading Cached Information");
+    let downloadMediaContainerScrollTopValue = cachedData.download_container_top_scroll_value;
+    let downloadMediaContainer = document.querySelector(".downloaded-movie-div-container");
+    downloadMediaContainer.scrollTop = downloadMediaContainerScrollTopValue;
+  }
 }
 
 window.addEventListener("resize",()=>{

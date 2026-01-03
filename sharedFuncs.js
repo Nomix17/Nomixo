@@ -471,6 +471,9 @@ function getCurrentPageCacheData(){
 
     case (currentPage.includes("searchPage")):
       return getSearchPageCacheData();
+    
+    case (currentPage.includes("downloadPage")):
+      return getDownloadCacheData();
 
     default:
       return getRightMiddleDivScrollValue();
@@ -506,12 +509,18 @@ async function getDiscoveryPageCacheData(){
     "suggested_media_elements": Array.from(MediaElementsData),
     ...getRightMiddleDivScrollValue(),
   };
-  console.log(cacheData);
+
   return cacheData;
 }
 
 function getMovieDetailPageCacheData(){
   return "################################## Movie Detail Page";
+function getDownloadCacheData(){
+  let downloadElementsContainers = document.querySelector(".downloaded-movie-div-container");
+  return {
+    page:"download",
+    "download_container_top_scroll_value":downloadElementsContainers.scrollTop
+  }
 }
 
 function getSearchPageCacheData(){
@@ -523,7 +532,6 @@ async function loadCachedRightMiddleDivScrollValue(){
   if(cachedData){
     console.log("Loading Cached Information");
     let RightmiddleDivScrollTopValue = cachedData.right_middle_div_top_scroll_value;
-console.log(cachedData);
     let RightmiddleDiv = document.getElementById("div-middle-right");
     RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
   }
