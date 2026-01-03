@@ -21,7 +21,6 @@ let MiddleContainer = document.getElementById("div-videoContainer");
 let BottomButtonsContainer = document.getElementById("div-bottomButtonsContainer");
 let SubDivDisplay = document.getElementById("div-Subtitles");
 let loadingGif = document.getElementById("LoadingGif");
-let VideoContainer = document.getElementById("div-middle");
 let VideoElement = document.getElementsByTagName("video")[0];
 let VideoSlider = document.getElementById("input-videoSlider");
 let VideoPositionElement = document.getElementById("p-videoPosition");
@@ -585,6 +584,19 @@ function monitoringErrorsCummingFromMainProcess(){
   })
 }
 
+function monitorMsgFromMainProcess(){
+  window.electronAPI.getMsgFromMainProcess((msg) =>{
+    let msgType = msg.type;
+    if(msgType === "request"){
+      let request = msg.request;
+        if(request ===  "exit_video_player")
+          window.electronAPI.goBack();
+
+    }
+  });
+}
+
 window.addEventListener("mousedown",hideSubDiv);
 monitoringErrorsCummingFromMainProcess();
+monitorMsgFromMainProcess();
 loadIconsDynamically();

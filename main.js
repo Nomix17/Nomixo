@@ -872,17 +872,21 @@ function reportDownloadError(errorType, torrentId, err){
 
 // ############################ NAVIGATION RELATED ############################
 
+function cleanUpVideoPlayerStuff(){
+  if(StreamClient) StreamClient.destroy();
+  if(mpv) mpv.kill();
+  if(WINDOW && !WINDOW.isVisible()) WINDOW.show();
+  if(MPVWorker && MPVWorker.threadId !== -1){
+    MPVWorker.postMessage({ type: 'shutdown' });
+    MPVWorker = null;
+  }
+}
+
 let positionWasChangedViaGoBackButton = false;
 function NavigateToPreviousPage(){
   const webContents = WINDOW.webContents;
   if(webContents.navigationHistory.canGoBack()){
-    if(StreamClient) StreamClient.destroy();
-    if(mpv) mpv.kill();
-    if(WINDOW && !WINDOW.isVisible()) WINDOW.show();
-    if(MPVWorker && MPVWorker.threadId !== -1){
-      MPVWorker.postMessage({ type: 'shutdown' });
-      MPVWorker = null;
-    }
+    cleanUpVideoPlayerStuff();
     webContents.navigationHistory.goBack();
     positionWasChangedViaGoBackButton = true;
   }
@@ -1079,7 +1083,10 @@ function handleMpvWorker(metaData){
     if(InVideoPlayerPage){
       InVideoPlayerPage = false;
       updateLastSecondBeforeQuit(lastSecondBeforeQuit,metaData)
-      NavigateToPreviousPage();
+      cleanUpVideoPlayerStuff();
+      let msg = { type:"request", request:"exit_video_player"};
+      WINDOW.webContents.send("msg-from-main-process", msg);
+
     }
   }
 
@@ -1129,8 +1136,10 @@ function handleMpvWorker(metaData){
 }
 
 const handleMpvOutput = (data)=>{
-  if(data.toString().includes("AV:"))
+  if(data.toString().includes("AV:")){
     if(WINDOW && WINDOW.isVisible()) WINDOW.hide();
+  }
+
   let line = data.toString();
   process.stdout.write(line);
   if(line.includes("AV:")){
