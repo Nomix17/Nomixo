@@ -140,13 +140,13 @@ inputBackgroundColorInternal.addEventListener("input",(event)=>{
 
 FontSizeInternalInput.addEventListener("blur",(event) => {commitFontSizeInternal()});
 FontSizeInternalInput.addEventListener("keypress",(event) => {
-  if(event.key == "Enter")
+  if(event.key === "Enter")
     commitFontSizeInternal()
 });
 
 backgroundOpacityInternalInput.addEventListener("blur",(event) => {commitBgOpacityInternal()});
 backgroundOpacityInternalInput.addEventListener("keypress",(event) => {
-  if(event.key == "Enter")
+  if(event.key === "Enter")
     commitBgOpacityInternal()
 });
 
@@ -180,7 +180,7 @@ inputTextColorExternal.addEventListener("input",(event)=>{
 
 FontSizeExternalInput.addEventListener("blur",(event) => {commitFontSizeExternal()});
 FontSizeExternalInput.addEventListener("keypress",(event) => {
-  if(event.key == "Enter")
+  if(event.key === "Enter")
     commitFontSizeExternal()
 });
 
@@ -192,22 +192,22 @@ async function loadTheme(){
     let elementId = Object.keys(obj)[0];
     let elementValue = obj[Object.keys(obj)[0]];
 
-    if(elementId == "dont-Smooth-transition-between-pages"){
+    if(elementId === "dont-Smooth-transition-between-pages"){
       supressInputEventListener = true;
       if(!parseInt(elementValue)) document.getElementById(elementId).click();
       supressInputEventListener = false;
     }
-    else if(elementId == "display-scroll-bar"){
+    else if(elementId === "display-scroll-bar"){
       supressInputEventListener = true;
-      if(elementValue == "block") document.getElementById(elementId).click();
+      if(elementValue === "block") document.getElementById(elementId).click();
       supressInputEventListener = false;
     }
-    else if(elementId == "show-continue-watching-on-home"){
+    else if(elementId === "show-continue-watching-on-home"){
       supressInputEventListener = true;
-      if(elementValue == "flex") document.getElementById(elementId).click();
+      if(elementValue === "flex") document.getElementById(elementId).click();
       supressInputEventListener = false;
     }
-    else if(elementId == "background-gradient-value"){
+    else if(elementId === "background-gradient-value"){
       document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100); // I want the max value to be 25%
     }else{
 
@@ -443,7 +443,7 @@ loadIconsDynamically();
 handlingMiddleRightDivResizing();
 
 window.addEventListener("keydown",(event)=>{
-  if(event.key == "Enter"){
+  if(event.key === "Enter"){
     ApplyButton.click();
   }
 });
