@@ -129,6 +129,9 @@ async function loadMediaFromAPI(apiKey){
 async function loadCachedMedia(cachedData,LibraryInformation){
   let RightmiddleDivScrollTopValue = cachedData.right_middle_div_top_scroll_value;
   let MediaElementsInformation = cachedData.suggested_media_elements;
+  let lastLoadedPage = cachedData.last_loaded_medias_page;
+
+  pageLoaded = lastLoadedPage ?? 2;
 
   MediaSuggestions.innerHTML = "";
   insertMediaElements(MediaElementsInformation,MediaSuggestions,"movie",LibraryInformation);
@@ -171,8 +174,8 @@ function dropDownInit(){
   });
 }
 
+let pageLoaded = 2;
 function detectWhenScrollsArriveAtTheEndOfAPage(apiKey){
-  let pageLoaded = 2;
   RightmiddleDiv.addEventListener('scroll', function () {
     let middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
     if (RightmiddleDiv.scrollTop + middleRightDivHeight + 30 >= RightmiddleDiv.scrollHeight) {

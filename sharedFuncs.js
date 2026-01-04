@@ -507,6 +507,7 @@ async function getDiscoveryPageCacheData(){
   let cacheData = {
     page:"discovery",
     "suggested_media_elements": Array.from(MediaElementsData),
+    "last_loaded_medias_page":pageLoaded,
     ...getRightMiddleDivScrollValue(),
   };
 
