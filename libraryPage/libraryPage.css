@@ -23,7 +23,7 @@
   font-size:30px;
   font-weight: 700;
   background-color:rgba(0,0,0,0);
-  color: rgba(255,255,255,0.6);
+  color: rgba(var(--text-color),0.6);
 }
 .div-MovieElement{
   transition: opacity 0.05s linear;

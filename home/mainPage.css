@@ -16,7 +16,7 @@ body::-webkit-scrollbar-track {
 
 option{
   background-color:rgba(var(--primary-color));
-  color:white;
+  color:rgb(var(--text-color));
 }
 
 ::-webkit-scrollbar{
@@ -46,7 +46,7 @@ input, button, textarea, :focus {
 }
 
 *{
-  color:white;
+  color:rgb(var(--text-color));
   -webkit-user-drag: none;
   -webkit-user-select: none;
   user-drag: none;
@@ -606,7 +606,7 @@ input::selection {
   font-size:30px;
   font-weight: 700;
   background-color:rgba(0,0,0,0);
-  color: rgba(255,255,255,0.6);
+  color: rgba(var(--text-color),0.6);
 }
 
 .parag-MovieTitle {
@@ -631,7 +631,7 @@ input::selection {
 .floatingDiv{
   position: absolute;
   background: rgba(255,255,255,0.1);
-  color: white;
+  color: rgb(var(--text-color));
   padding: 8px 12px;
   border-radius: 7px;
   font-size: 14px;

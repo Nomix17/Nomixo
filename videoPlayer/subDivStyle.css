@@ -23,12 +23,12 @@ html{
 }
 
 p{
-  color: white;
+  color: rgb(var(--text-color));
   font-weight: bold;
 }
 
 button{
-  color: white;
+  color: rgb(var(--text-color));
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -83,7 +83,7 @@ button{
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.3px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--text-color), 0.9);
 }
 
 #div-BottomSubContainer{
@@ -121,7 +121,7 @@ button{
   font-weight: 500;
   transition: all 0.2s ease;
   position: relative;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(var(--text-color), 0.6);
   cursor:pointer;
 }
 
@@ -140,7 +140,7 @@ button{
 
 #div-LeftSubContainer button:hover{
   background-color: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--text-color), 0.9);
 }
 
 #div-LeftSubContainer button:hover::before{
@@ -150,7 +150,7 @@ button{
 
 
 #div-LeftSubContainer button.active{
-  color: rgba(255, 255, 255, 1);
+  color: rgba(var(--text-color), 1);
 }
 
 #div-RightSubContainer {
@@ -172,7 +172,7 @@ button{
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0.3px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(var(--text-color), 0.7);
   width: 100%;
   min-width: 0;
   text-align: left;
@@ -191,7 +191,7 @@ button{
   gap: 8px;
   background: rgba(255, 255, 255, 0.03);
   border:1px solid rgba(255, 255, 255, 0.09);
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(var(--text-color), 0.6);
   border-radius: 10px;
   padding:10px 10px;
 }
@@ -209,7 +209,7 @@ button{
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(var(--text-color), 0.6);
   cursor:pointer;
 }
 
@@ -220,7 +220,7 @@ button{
 #div-subsList button:hover{
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--text-color), 0.9);
 }
 
 #div-subsList button:hover::after{
@@ -241,7 +241,7 @@ button{
 
 .timing-section > p{
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(var(--text-color), 0.5);
   font-weight: 500;
   margin: 0;
   text-align: center;
@@ -274,7 +274,7 @@ button{
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(var(--text-color), 0.7);
   border:1px solid rgba(255, 255, 255, 0.2);
   cursor:pointer;
 }
@@ -291,7 +291,7 @@ button{
 }
 
 #div-subSize button:hover{
-  color: white;
+  color: rgb(var(--text-color));
   background-color:rgba(255,255,255,0.1);
 }
 
@@ -304,7 +304,8 @@ button{
   font-weight: 600;
   min-width: 80px;
   text-align: center;
-  color: white;
+  color: rgb(var(--text-color));
+;
   background: transparent;
   padding: 0;
   border-radius: 0;
