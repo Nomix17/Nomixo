@@ -157,7 +157,6 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
       continueWatchingEpisode=false;
       handleEpisodeElementColoring(SeasonDiv,EpisodeElement)
 
-
       let seasonNumber = String(episode.season_number).padStart(2,"0");
       let episodeNumber = String(episode.episode_number).padStart(2,"0");
       let episodeName = episode.name;
@@ -223,39 +222,54 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}){
 
         .catch(error =>{
           TorrentMagnetContainer.innerHTML = "";
-          let NothingWasFound = document.createElement("span");
+          let NothingWasFound = document.createElement("div");
+          NothingWasFound.classList.add("div-NothingWasFound");
           NothingWasFound.innerHTML = error.message;
-          NothingWasFound.style.backgroundColor = "rgba(0,0,0,0)";
+          NothingWasFound.style.display = "flex";
+          NothingWasFound.style.justifyContent = "center";
+          NothingWasFound.style.alignItems = "center";
+          NothingWasFound.style.textAlign = "center";
+          NothingWasFound.style.padding = "0 80px";
+          NothingWasFound.style.flexWrap = "wrap";
           TorrentMagnetContainer.appendChild(NothingWasFound);
           console.error(error);
         });
     });
 }
 
-function insertMovieElements(data,apiKey){
-  let Title = "Unknown";
-  let Duration = "Unknown";
-  let ReleaseYear = "Unknown";
-  let Rating = "Unknown";
-  let Adult = "Unknown";
-  let Genres = [{name:"Unknown", id:"Unknown"}];
-  let Summary = "Unknown";
-  let Seasons = 0;
-  backgroundImage = "Unknown";
+async function insertMovieElements(data,apiKey){
+  let Title = data?.title ?? data?.name ?? "Unknown";
+  let Duration = data?.runtime
+    ? `${data.runtime} min`
+    : MediaType === "tv"
+      ? "TV Show"
+      : null;
 
-  if(data.hasOwnProperty("title"))  Title = data["title"];
-  else Title = data["name"];
-  if(data.hasOwnProperty("runtime")) Duration = data["runtime"]+" min";
-  else Duration = "TV Show";
-  if(data.hasOwnProperty("release_date")) ReleaseYear = new Date(data["release_date"]).getFullYear();
-  else ReleaseYear = new Date(data["first_air_date"]).getFullYear();
-  if(data.hasOwnProperty("vote_average")) Rating = parseFloat(data["vote_average"]).toFixed(1);
-  if(data.hasOwnProperty("adult")) Adult = data["adult"];
-  if(data.hasOwnProperty("genres")) Genres = data["genres"].map(element => element = {name: element["name"],id: element["id"]});
-  if(data.hasOwnProperty("overview")) Summary = data["overview"];
-  if(data.hasOwnProperty("backdrop_path")) backgroundImage = "https://image.tmdb.org/t/p/original/"+data["backdrop_path"];
-  if(data.hasOwnProperty("seasons")) Seasons = data["seasons"];
+  let ReleaseYear = data?.release_date
+    ? new Date(data.release_date).getFullYear()
+    : data?.first_air_date
+      ? new Date(data.first_air_date).getFullYear()
+      : null;
 
+  let Rating = data?.vote_average != null 
+    ? parseFloat(data.vote_average).toFixed(1) 
+    : null;
+
+  let Adult = data?.adult ?? "Unknown";
+  let Genres = Array.isArray(data?.genres) 
+    ? data.genres.map(el => ({ name: el.name, id: el.id })) 
+    : "Unknown";
+
+  let mediaOriginalLanguage = data?.original_language ?? "Unknown";
+  let Summary = data?.overview ?? "Unknown";
+  let backgroundImage = data?.backdrop_path
+    ? `https://image.tmdb.org/t/p/original/${data.backdrop_path}` 
+    : "Unknown";
+
+  let logoFileName = await loadLogoImage(mediaOriginalLanguage,apiKey);
+  let logoImage = `https://image.tmdb.org/t/p/original/${logoFileName}`;
+
+  let Seasons = data?.seasons ?? 0;
 
   if(backgroundImage !== "https://image.tmdb.org/t/p/original/null"){
     document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
@@ -286,7 +300,20 @@ function insertMovieElements(data,apiKey){
 
   document.title = Title;
 
-  document.getElementById("h1-MovieTitle").innerText = Title;
+  if(logoFileName)
+    document.getElementById("img-MovieLogoTitle").src = logoImage;
+  else{
+    document.getElementById("div-MovieLogoTitleContainer").style.display = "none";
+    document.getElementById("h1-MovieTitle").innerText = Title;
+  }
+
+  if(!Duration) document.getElementById("p-movieDuration").style.display = "none";
+  if(!ReleaseYear) document.getElementById("p-movieYearOfRelease").style.display = "none";
+  if(!Rating || Rating === "0.0"){
+    document.getElementById("p-movieRating").style.display = "none";
+    document.getElementById("img-IMDBlogo").style.display = "none";
+  }
+
   document.getElementById("p-movieDuration").innerText = Duration;
   document.getElementById("p-movieYearOfRelease").innerText = ReleaseYear;
   document.getElementById("p-movieRating").innerText = Rating;
@@ -691,6 +718,20 @@ function setupDownloadDivEvents(DownloadTargetInfo){
     if(dirPath) pathInputElement.value = dirPath;
   });
 
+}
+
+async function loadLogoImage(movieLanguage,apiKey){
+  const res = await fetch(
+    `https://api.themoviedb.org/3/${MediaType}/${movieId}/images?api_key=${apiKey}`
+  );
+
+  const data = await res.json();
+
+  let originalLanguageLogos = data?.logos.filter(imageObj => imageObj?.iso_639_1 === movieLanguage) ;
+  let englishLogos = data?.logos.filter(imageObj => imageObj?.iso_639_1 === "en");
+
+  let titleLogo = englishLogos?.[0]?.file_path ?? originalLanguageLogos?.[0]?.file_path ?? null;
+  return titleLogo;
 }
 
 async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles){

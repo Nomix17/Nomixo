@@ -217,9 +217,9 @@ p{
   align-items:center;
 }
 
-#SeasonsContainer span,
-#div-serieEpisodes span,
-#div-movieMedias span{
+#SeasonsContainer .div-NothingWasFound,
+#div-serieEpisodes .div-NothingWasFound,
+#div-movieMedias .div-NothingWasFound{
   font-size:20px;
   font-weight: 700;
   background-color:rgba(0,0,0,0);
@@ -367,11 +367,30 @@ p{
   padding:0;
 }
 h2{
-  font-weight:100;
-  color:rgba(255,255,255,80%);
+  font-weight:200;
+  color:rgba(255,255,255,100%);
 }
 h1{
   font-size:50px;
+}
+
+
+#div-MovieLogoTitleContainer {
+  display: flex;
+  align-items: flex-start;
+  padding: 0 0 5vh 1vh;
+  width: 100%;
+  min-height: 150px;
+}
+
+#img-MovieLogoTitle {
+  width: auto;
+  max-width: 400px;
+  max-height:200px;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
 }
 
 #img-IMDBlogo{
