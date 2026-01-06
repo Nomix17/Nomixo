@@ -140,6 +140,7 @@ window.addEventListener("keydown",(event)=>{
   else if(event.key === "ArrowLeft") VideoElement.currentTime -= 10;
   else if(event.key === " ") TogglePauseUnpause();
   else if(event.key === "f") fullscreenClicked();
+  else if(event.key === "p") togglePIP();
   else if(event.key === "m"){
     if(oldVolume !== null){
       if( oldVolume === 0 ) oldVolume = 1;
@@ -483,6 +484,27 @@ function hideSubDiv(event){
     SubDiv.classList.add("hideElement");
   }
 }
+
+async function togglePIP(event){
+  if (document.pictureInPictureElement) {
+    await document.exitPictureInPicture();
+  } else {
+    await VideoElement.requestPictureInPicture();
+  }
+}
+
+VideoElement.addEventListener("enterpictureinpicture", (event) => {
+  VideoElement.style.display = "none";
+  document.getElementById("picture-in-picture-indicator-text").style.display = "block";
+  document.getElementById("img-OpenPIP").src = "../assets/icons/closePIP.png";
+});
+
+VideoElement.addEventListener("leavepictureinpicture", (event) => {
+  VideoElement.style.display = "block";
+  document.getElementById("picture-in-picture-indicator-text").style.display = "none";
+  document.getElementById("img-OpenPIP").src = "../assets/icons/PIP.png";
+});
+
 
 function OpenSubtitles(){
   repositionSubDiv();

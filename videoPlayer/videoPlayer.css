@@ -47,6 +47,7 @@ html::-webkit-scrollbar{
 #btn-goBack,
 #btn-PauseButton,
 #btn-OpenSubtitle,
+#btn-OpenPIP,
 #btn-VolumeButton {
   display:flex;
   justify-content:center;
@@ -78,6 +79,7 @@ html::-webkit-scrollbar{
 #img-fullscreen,
 #img-PauseButton,
 #img-OpenSubtitle,
+#img-OpenPIP,
 #img-VolumeButton {
   width:68%;
   height:68%;
@@ -90,11 +92,18 @@ html::-webkit-scrollbar{
 #btn-goBack:hover,
 #btn-PauseButton:hover,
 #btn-VolumeButton:hover,
-#btn-OpenSubtitle:hover{
+#btn-OpenSubtitle:hover,
+#btn-OpenPIP:hover{
   background-color:  rgba(0,0,0,20%);
 }
-#btn-OpenSubtitle{
-  margin-right:50px;
+#btn-OpenSubtitle,
+#btn-OpenPIP{
+  margin-right:10px;
+}
+#img-OpenPIP{
+  margin-top:4px;
+  width:66%;
+  height:66%;
 }
 
 #div-main {
@@ -165,6 +174,18 @@ video{
   left: 50%;
   transform: translate(-50%, -50%);
 } 
+
+#picture-in-picture-indicator-text{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform: translate(-50%,-50%);
+  font-weight:600;
+  font-size:30px;
+  color:rgba(var(--text-color),0.7);
+}
+
 #div-bottomBottomContainer {
   display: flex;
   flex-direction: row;
