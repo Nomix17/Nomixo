@@ -25,7 +25,7 @@ async function loadData(){
   
 
   if(wholeLibraryInformation === undefined || wholeLibraryInformation.length === 0){
-    let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
+    let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty",false);
     RightmiddleDiv.appendChild(WarningElement);
     globalLoadingGif.remove();
   }else{

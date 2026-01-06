@@ -68,10 +68,20 @@ async function fetchData(apiKey, genreId, ThisMediaType, page) {
   if (!LibraryInformation.length) LibraryInformation = await loadLibraryInfo();
   Promise.all([fetch(url).then(res => res.json())])
     .then(GenreData => {
-      insertMediaElements(GenreData[0].results, MediaSuggestions, ThisMediaType, LibraryInformation);
-      MediaSuggestions.appendChild(globalLoadingGif);
+      if(GenreData[0].total_results){
+        insertMediaElements(GenreData[0].results, MediaSuggestions, ThisMediaType, LibraryInformation);
+        MediaSuggestions.appendChild(globalLoadingGif);
+        globalLoadingGif.remove();
+        loadingGif.style.display = "none";
+      }else{
+        throw new Error("No results found for this genre<br> try a different category");
+      }
+    })
+    .catch(err=>{
+      let WarningElement = DisplayWarningOrErrorForUser(err.message,false);
+      RightmiddleDiv.appendChild(WarningElement);
       globalLoadingGif.remove();
-      loadingGif.style.display = "none";
+      RightmiddleDiv.style.opacity = 1;
     });
 }
 

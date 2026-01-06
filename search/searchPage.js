@@ -45,11 +45,11 @@ function loadSearchInformation(apiKey){
       globalLoadingGif.remove();
       checkIfDivShouldHaveMoveToRightOrLeftButton([MoviesRecommandationDiv,SeriesRecommandationDiv,FiguresRecommandationDiv,OtherRecommandationDiv]);
   }).catch(err=>{
-    err.message = (err.message == "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
+    err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
     console.error(err)
     let RightmiddleDiv = document.getElementById("div-middle-right");
     RightmiddleDiv.innerHTML ="";
-    let WarningElement = DisplayWarningOrErrorForUser(err.message);
+    let WarningElement = DisplayWarningOrErrorForUser(err.message,false);
     RightmiddleDiv.appendChild(WarningElement);
     globalLoadingGif.remove();
     RightmiddleDiv.style.opacity = 1;
