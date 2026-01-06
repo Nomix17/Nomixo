@@ -931,3 +931,92 @@ function dropDownInit(){
 function base64Id(str) {
   return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
+
+
+function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
+  const { downloadStatus, displayTitle, progress, totalSize, currentSize } = formatedDownloadInfo;
+
+  let MediaDownloadElement = document.createElement("div");
+
+  const posterDiv = document.createElement("div");
+  posterDiv.className = "poster-div";
+
+  const posterImg = document.createElement("img");
+  posterImg.className = "poster-img";
+
+  posterDiv.appendChild(posterImg);
+  posterDiv.addEventListener("click", () => {
+    openDetailPage(mediaLibEntryPoint?.MediaId, mediaLibEntryPoint?.MediaType);
+  });
+
+  const rightDiv = document.createElement("div");
+  rightDiv.className = "download-movie-right-div";
+
+  const titleP = document.createElement("p");
+  titleP.className = "movie-title-p";
+  titleP.textContent = displayTitle;
+
+  const progressDiv = document.createElement("div");
+  progressDiv.className = "progress-div";
+
+  const progressBarDiv = document.createElement("div");
+  progressBarDiv.className = "progress-bar-div";
+
+  const insideDiv = document.createElement("div");
+  insideDiv.className = "inside";
+  insideDiv.style.width = `${isNaN(progress) ? 0 : progress}%`;
+
+  progressBarDiv.appendChild(insideDiv);
+  progressDiv.appendChild(progressBarDiv);
+
+  const percentageP = document.createElement("p");
+  percentageP.className = "percentage";
+  percentageP.textContent = isNaN(progress) ? "0%" : progress + "%";
+
+  progressDiv.appendChild(percentageP);
+
+  const sizeDiv = document.createElement("div");
+  sizeDiv.className = "movie-size-div";
+
+  const downloadedSizeP = document.createElement("p");
+  downloadedSizeP.className = "downloaded-size";
+  downloadedSizeP.textContent = isNaN(currentSize) ? "---" : currentSize + " GB";
+
+  const totalSizeP = document.createElement("p");
+  totalSizeP.className = "total-size";
+  totalSizeP.textContent = isNaN(totalSize) ? "---" : totalSize + " GB";
+
+  sizeDiv.appendChild(downloadedSizeP);
+  sizeDiv.appendChild(totalSizeP);
+
+  const buttonsDiv = document.createElement("div");
+  buttonsDiv.className = "download-buttons-div";
+
+  const togglePauseBtn = document.createElement("button");
+  togglePauseBtn.className = "toggle-pause-button";
+  togglePauseBtn.innerHTML =
+    downloadStatus === "Downloading" || downloadStatus === "Loading"
+      ? pauseIcon
+      : playIcon;
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "cancel-button";
+  cancelBtn.innerHTML = xRemoveIcon;
+
+  const speedP = document.createElement("p");
+  speedP.className = "download-speed-p";
+
+  buttonsDiv.appendChild(togglePauseBtn);
+  buttonsDiv.appendChild(cancelBtn);
+  buttonsDiv.appendChild(speedP);
+
+  rightDiv.appendChild(titleP);
+  rightDiv.appendChild(progressDiv);
+  rightDiv.appendChild(sizeDiv);
+  rightDiv.appendChild(buttonsDiv);
+
+  MediaDownloadElement.appendChild(posterDiv);
+  MediaDownloadElement.appendChild(rightDiv);
+
+  return MediaDownloadElement;
+}

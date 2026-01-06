@@ -34,37 +34,21 @@ async function createDownloadElement(mediaLibEntryPoint){
   let ElementIdentifier = mediaLibEntryPoint?.torrentId;
   if(document.getElementById(ElementIdentifier)) return
 
-  let MediaDownloadElement = document.createElement("div");
-  MediaDownloadElement.className = "downloaded-movie-div";
-  MediaDownloadElement.id = ElementIdentifier;
-
   let displayTitle = mediaLibEntryPoint?.Title;
   if(mediaLibEntryPoint.seasonNumber && mediaLibEntryPoint.episodeNumber)
     displayTitle = `${mediaLibEntryPoint?.Title} S${mediaLibEntryPoint.seasonNumber} E${mediaLibEntryPoint.episodeNumber}`;
 
-  MediaDownloadElement.innerHTML = `
-    <div class="poster-div">
-      <img class="poster-img"/>
-    </div>
-    <div class="download-movie-right-div">
-      <p class="movie-title-p">${displayTitle}</p>
-      <div class="progress-div">
-        <div class="progress-bar-div">
-          <div class="inside" style="width:${progress}%;"></div>
-        </div>
-        <p class="percentage">${isNaN(progress) ? "0%" : progress+"%"}</p>
-      </div>
-      <div class="movie-size-div">
-        <p class="downloaded-size">${isNaN(currentSize) ? "---" : currentSize+" GB"}</p>
-        <p class="total-size">${isNaN(totalSize) ? "---" : totalSize+" GB"} </p>
-      </div>
-      <div class="download-buttons-div">
-        <button class="toggle-pause-button">${downloadStatus === "Downloading" || downloadStatus === "Loading" ? pauseIcon : playIcon }</button>
-        <button class="cancel-button">${xRemoveIcon}</button>
-        <p class="download-speed-p"></p>
-      </div>
-    </div>
-  `;
+  let formatedDownloadInfo = {
+    downloadStatus,
+    displayTitle,
+    progress,
+    totalSize,
+    currentSize
+  }
+
+  let MediaDownloadElement = createMediaDownloadElement(mediaLibEntryPoint,formatedDownloadInfo);
+  MediaDownloadElement.className = "downloaded-movie-div";
+  MediaDownloadElement.id = ElementIdentifier;
 
   let insiderProgressBar = MediaDownloadElement.querySelector(".progress-bar-div .inside");
   insiderProgressBar.style.width = progress + "%";
