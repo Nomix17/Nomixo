@@ -339,7 +339,7 @@ window.setupNavigationBtnHandler = ()=>{
   });
 }
 
-window.DisplayWarningOrErrorForUser = (warningMessage) => {
+window.DisplayWarningOrErrorForUser = (warningMessage,addRefreshButton = true) => {
   let WarningDiv = document.createElement("div");
   let WarningMessage = document.createElement("span");
   let RefreshButton = document.createElement("button");
@@ -362,7 +362,7 @@ window.DisplayWarningOrErrorForUser = (warningMessage) => {
   RefreshButton.addEventListener("click",()=>{window.location.reload()});
 
   WarningDiv.appendChild(WarningMessage);
-  if(!(window.location.href.includes("searchPage") || window.location.href.includes("libraryPage")))
+  if(addRefreshButton)
     WarningDiv.appendChild(RefreshButton);
 
   return WarningDiv;

@@ -49,7 +49,7 @@ function loadSearchInformation(apiKey){
     console.error(err)
     let RightmiddleDiv = document.getElementById("div-middle-right");
     RightmiddleDiv.innerHTML ="";
-    let WarningElement = DisplayWarningOrErrorForUser(err.message,false);
+    let WarningElement = DisplayWarningOrErrorForUser(err.message);
     RightmiddleDiv.appendChild(WarningElement);
     globalLoadingGif.remove();
     RightmiddleDiv.style.opacity = 1;
