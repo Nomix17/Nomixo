@@ -516,6 +516,8 @@ async function getDiscoveryPageCacheData(){
 
 function getMovieDetailPageCacheData(){
   return "################################## Movie Detail Page";
+}
+
 function getDownloadCacheData(){
   let downloadElementsContainers = document.querySelector(".downloaded-movie-div-container");
   return {
@@ -879,6 +881,51 @@ function manageDropDowns() {
       trigger.setAttribute('aria-expanded', 'false');
     });
   });
+}
+
+function syncDropdownWidths() {
+  const customSelects = document.querySelectorAll('.custom-select');
+  customSelects.forEach(select => {
+    const trigger = select.querySelector('.select-trigger');
+    const dropdown = select.querySelector('.select-dropdown');
+    
+    // Temporarily show dropdown to measure it
+    dropdown.style.display = 'block';
+    dropdown.style.opacity = '0';
+    dropdown.style.pointerEvents = 'none';
+
+    // Get the dropdown width
+    const dropdownWidth = dropdown.offsetWidth;
+
+    // Set trigger width to match
+    trigger.style.width = dropdownWidth + 'px';
+    
+    // Hide dropdown again
+    dropdown.style.display = '';
+    dropdown.style.opacity = '';
+    dropdown.style.pointerEvents = '';
+  });
+}
+
+function setDropdownValue(dropdown, value) {
+  const option = dropdown.querySelector(`.select-option[value="${value}"]`);
+  if (option) {
+    const customSelect = dropdown.closest('.custom-select');
+    const trigger = customSelect.querySelector('.select-trigger');
+    trigger.textContent = option.textContent;
+    dropdown.setAttribute('data-value', value);
+    dropdown.querySelectorAll('.select-option').forEach(opt => opt.classList.remove('selected'));
+    option.classList.add('selected');
+  }
+}
+
+function getDropdownValue(dropdown) {
+  return dropdown.getAttribute('data-value') || dropdown.querySelector('.select-option').getAttribute('value');
+}
+
+function dropDownInit(){
+  manageDropDowns();
+  setTimeout(syncDropdownWidths, 100);
 }
 
 function base64Id(str) {

@@ -140,6 +140,7 @@ p{
   border:3px solid rgb(var(--primary-color));
   border-right:none;
   border-radius:20px 0 0 0 ;
+  margin-right:0px;
 }
 
 .selectSeason-container{
@@ -458,26 +459,6 @@ h1{
   display:flex;
   flex-direction:column;
   justify-content:space-between;
-}
-
-option{
-  background-color:rgba(var(--primary-color));
-  color: rgb(var(--text-color));
-}
-
-#select-Seasons{
-  font-size:15px;
-  font-weight: bold;
-  padding:10;
-  max-width:25%;
-  border-radius:13px;
-  margin-left:15px;
-  border:2px solid rgba(255,255,255,0.5);
-  background-color:rgba(var(--primary-color),1);
-}
-
-#select-Seasons option {
-  border:none;
 }
 
 #div-globlaLoadingGif{
@@ -944,4 +925,8 @@ label {
 .div-episodes-Element.pressed_episode{
   border-color:rgba(var(--MovieElement-hover-BorderColor), 100%);
   background-color:rgba(255, 255, 255, 0.1);
+}
+
+.custom-select{
+  margin-left:10px;
 }

@@ -19,14 +19,13 @@
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   background-color: rgba(255, 255, 255, 10%);
-  color: white;
+  color: rgb(var(--text-color));
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
   white-space: nowrap;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  margin-bottom: 7px;
   font-size: 15px;
   box-sizing: border-box;
 }
@@ -60,6 +59,7 @@
   top: calc(100% + 0px);
   left: 0;
   width: max-content;
+  min-width: 100%;
   background: rgba(var(--drop-down-color));
   border: 1px solid rgba(255, 255, 255, 10%);
   border-radius: 10px;
@@ -72,15 +72,18 @@
   transition: all 0.2s ease;
   display: none;
   box-sizing: border-box;
+  margin-top:10px;
 }
 
 .select-option {
   padding: 0.75rem 1rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--text-color), 0.9);
   white-space: nowrap;
   padding-right: 60px;
+  font-weight:400;
+  font-size:13px;
 }
 .select-option:hover {
   background: rgba(255, 255, 255, 0.15);

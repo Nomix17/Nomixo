@@ -284,15 +284,22 @@ async function insertMovieElements(data,apiKey){
     Seasons.forEach(season =>{
       let name = season.name;
       let seasonNumber = season.season_number;
-      let newOption = document.createElement("option");
-      newOption.value = seasonNumber;
+      let newOption = document.createElement("div");
+      newOption.classList.add("select-option");
+      newOption.setAttribute("role","option");
+      newOption.setAttribute("value",seasonNumber);
       newOption.innerText = name;
       selectElement.appendChild(newOption); 
       loadEpisodes(apiKey,movieId,seasonNumber,Title);
     });
-    selectElement.addEventListener("change",()=>{
-      displayEpisodes(selectElement.value);
+
+    dropDownInit();
+
+    selectElement.addEventListener("dropdownChange",()=>{
+      let newDropDownValue = getDropdownValue(selectElement);
+      displayEpisodes(newDropDownValue);
     });
+
   }else{
     TorrentMagnetContainer.style.display = "flex";
     selectSeasonContainer.style.display = "none";
@@ -475,7 +482,7 @@ function displayEpisodes(seasonIndex){
     selectElement.style.display = "block";
     EpisodesContainer.style.display = "block";
     EpisodesContainer.innerHTML = "";
-    selectElement.value = seasonIndex;
+    setDropdownValue(selectElement,seasonIndex);
     EpisodesContainer.appendChild(currentSeasonDiv);
   }
 }

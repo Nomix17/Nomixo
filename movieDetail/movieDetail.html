@@ -7,6 +7,7 @@
     <script src="movieDetail.js" defer></script>
     <link id="test" rel="stylesheet" href="theme://theme.css">
     <link rel="stylesheet" href="../home/loadingDiv.css">
+    <link rel="stylesheet" href="../home/dropDown.css">
     <link rel="stylesheet" href="../home/mainPage.css">
     <link rel="stylesheet" href="../home/WarningMessage.css">
     <link rel="stylesheet" href="movieDetail.css">
@@ -71,7 +72,12 @@
             <button class="toggleButton">
               <img src="../assets/icons/right.png"></img>
             </button>
-            <select style="display:none" id="select-Seasons"></select>
+
+            <div class="custom-select">
+              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">Seasons</button>
+              <div class="select-dropdown" role="listbox" id="select-Seasons"></div>
+            </div>
+
           </div>
 
           <div id="EpisodesContainer">
