@@ -33,26 +33,33 @@ function loadSearchInformation(apiKey){
       SeriesRecommandationDiv.innerHTML = "";
       FiguresRecommandationDiv.innerHTML = "";
       OtherRecommandationDiv.innerHTML = "";
-      if(data.status_code == 7) throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");
-      if(data.total_results == 0) throw new Error(`Cannot Found Any Media Named: ${searchKeyword}`)
+      if(Number(data.status_code) === 7) throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");
+      if(Number(data.total_results) === 0) throw new Error(`Cannot Found Any Media Named: ${searchKeyword}`)
 
       RightmiddleDiv.style.opacity = 1;
       insertResultsElement(data);
-      if(MoviesRecommandationDiv.innerHTML == "") document.getElementById("MoviesRecommandationsContainer").remove();
-      if(SeriesRecommandationDiv.innerHTML == "") document.getElementById("SeriesRecommandationsContainer").remove();
-      if(FiguresRecommandationDiv.innerHTML == "") document.getElementById("FiguresRecommandationsContainer").remove();
-      if(OtherRecommandationDiv.innerHTML == "") document.getElementById("OtherRecommandationsContainer").remove();
+      if(MoviesRecommandationDiv.innerHTML.trim() === "") document.getElementById("MoviesRecommandationsContainer").remove();
+      if(SeriesRecommandationDiv.innerHTML.trim() === "") document.getElementById("SeriesRecommandationsContainer").remove();
+      if(FiguresRecommandationDiv.innerHTML.trim() === "") document.getElementById("FiguresRecommandationsContainer").remove();
+      if(OtherRecommandationDiv.innerHTML.trim() === "") document.getElementById("OtherRecommandationsContainer").remove();
       globalLoadingGif.remove();
       checkIfDivShouldHaveMoveToRightOrLeftButton([MoviesRecommandationDiv,SeriesRecommandationDiv,FiguresRecommandationDiv,OtherRecommandationDiv]);
-  }).catch(err=>{
-    err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data.</br>Please Check your connection and refresh!":err.message;
-    console.error(err)
+
+  }).catch(err=>{ 
     let RightmiddleDiv = document.getElementById("div-middle-right");
     RightmiddleDiv.innerHTML ="";
-    let WarningElement = DisplayWarningOrErrorForUser(err.message);
+    let displayRefreshButton = err.message === "Failed to fetch";
+
+    if(err.message === "Failed to fetch"){
+      err.message = "We’re having trouble loading data.</br>Please Check your connection and refresh!";
+    }
+
+    let WarningElement = DisplayWarningOrErrorForUser(err.message,displayRefreshButton);
     RightmiddleDiv.appendChild(WarningElement);
     globalLoadingGif.remove();
     RightmiddleDiv.style.opacity = 1;
+
+    console.error(err)
   });
 }
 
