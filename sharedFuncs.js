@@ -482,6 +482,7 @@ function getCurrentPageCacheData(){
 
 function getRightMiddleDivScrollValue(){
   let RightMiddleDiv = document.getElementById("div-middle-right");
+  if(!RightMiddleDiv) return {};
   return {
     "right_middle_div_top_scroll_value":RightMiddleDiv.scrollTop
   };

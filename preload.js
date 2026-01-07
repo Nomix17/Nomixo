@@ -47,6 +47,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl),
 
-  loadPageCachedDataFromHistory: (currentPageURL) => ipcRenderer.invoke("load-cached-data-from-history",currentPageURL)
+  loadPageCachedDataFromHistory: (currentPageURL) => ipcRenderer.invoke("load-cached-data-from-history",currentPageURL),
+
+  validateApiKey: (inputedApiKey)=> ipcRenderer.invoke("validate-api-key",inputedApiKey),
+  saveApiKey: (apiKey) => ipcRenderer.invoke("save-api-key",apiKey),
+
+  openExternelLink: (url) => ipcRenderer.invoke("open-externel-link",url)
 });
 

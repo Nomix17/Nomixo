@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Nomixo</title>
+    <link rel="icon" href="../assets/icons/logo.png" type="image/x-icon">
+    <script src="../sharedFuncs.js" defer></script>
+    <script src="loginPage.js" defer></script>
+    <link rel="stylesheet" href="../home/mainPage.css">
+    <link rel="stylesheet" href="./loginPage.css">
+    <link id="test" rel="stylesheet" href="theme://theme.css">
+  </head>
+  
+  <body>
+    <div id="div-main">
+      <div id="div-top">
+        <div id="place-holder-top-div"></div>
+        <button id="btn-fullscreen" onclick="fullscreenClicked()"><img id="img-fullscreen"</img></button>
+      </div>
+      <!-- middle div --> 
+      <div id="div-middle">
+        <div class="login-container">
+          <div class="login-card">
+            <div class="login-header">
+              <h1 class="login-title">Welcome to Nomixo</h1>
+              <p class="login-subtitle">Enter your API key to continue</p>
+            </div>
+            
+            <div id="login-form" class="login-form">
+              <div class="form-group">
+                <label for="api-key" class="form-label">API Key</label>
+                <div id="div-input-button-visibility">
+                  <input 
+                    type="password" 
+                    id="api-key" 
+                    name="api-key" 
+                    class="form-input" 
+                    placeholder="Enter your API key"
+                    required
+                    autocomplete="off"
+                  />
+                  <button type="button" id="toggle-visibility" class="toggle-btn" aria-label="Toggle password visibility" >
+                    <img src="../assets/icons/openedEye.svg"/>
+                  </button>
+                </div>
+              </div>
+              
+              <button type="submit" id="login-btn" class="submit-btn">
+                <div id="lds-dual-ring-container">
+                  <div class="lds-dual-ring"></div>
+                </div>
+                <p id="login-text">Login</p>
+              </button>
+              
+              <div id="error-message" class="error-message"></div>
+            </div>
+            
+            <div class="login-footer">
+              <p class="footer-text">Need an API key? <a id="get-api-key-from-website" class="footer-link">Get one here</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

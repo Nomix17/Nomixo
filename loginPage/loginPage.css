@@ -1,0 +1,252 @@
+#div-top{
+  position:fixed;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.login-card {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 450px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: rgba(var(--text-color));
+  margin: 0 0 8px 0;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: rgba(var(--text-color),0.7);
+  margin: 0;
+}
+
+/* Form Styles */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(var(--text-color),0.7);
+}
+#div-input-button-visibility{
+  display:flex;
+  flex-direction:row;
+}
+
+.form-input {
+  width: 100%;
+  background-color:rgba(0,0,0,0.3);
+  padding: 12px 40px 12px 16px;
+  font-size: 14px;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-right:none;
+  border-radius: 8px 0 0 8px;
+  transition: all 0.3s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: rgba(255,255,255,1);
+}
+
+.form-input:focus + .toggle-btn {
+  border-color: rgba(255,255,255,1);
+}
+.form-input::placeholder {
+  color: rgba(var(--text-color),0.7);
+}
+
+.toggle-btn {
+  right: 12px;
+  bottom: 11px;
+  background-color:rgba(0,0,0,0.3);
+  border: 2px solid rgba(255,255,255,0.5);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s ease, opacity 0.2s ease;
+  width:45px;
+  height:45px;
+}
+
+.toggle-btn img{
+  width:90%;
+  height:90%;
+}
+
+.eye-icon {
+  font-size: 18px;
+  user-select: none;
+}
+
+.submit-btn {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(var(--text-color));
+  background-color:rgba(var(--secondary-color));
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(255,255,255, 0.1);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.error-message {
+  font-size: 13px;
+  color: #e74c3c;
+  text-align: center;
+  min-height: 20px;
+  display: none;
+}
+
+.error-message.show {
+  display: block;
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.login-footer {
+  margin-top: 24px;
+  text-align: center;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.footer-text {
+  font-size: 13px;
+  color: rgba(var(--text-color),0.7);
+  margin: 0;
+}
+
+.footer-link {
+  color: #4a90e2;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #357abd;
+  text-decoration: underline;
+}
+
+#login-text{
+  padding:0;
+  margin:0;
+  transition: opacity 0.1s ease;
+}
+
+#lds-dual-ring-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity:0;
+  transition: opacity 0.3 ease;
+}
+.lds-dual-ring,
+.lds-dual-ring:after {
+  box-sizing: border-box;
+}
+.lds-dual-ring {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width: 35px;
+  height: 35px;
+}
+.lds-dual-ring:after {
+  content: " ";
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid currentColor;
+  border-color: currentColor transparent currentColor transparent;
+  animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+#login-btn {
+  opacity:1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

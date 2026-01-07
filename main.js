@@ -1,4 +1,4 @@
-import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog} from "electron";
+import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog, shell} from "electron";
 import downloadMultipleSubs from "./downloadSubtitles.js";
 import { spawn } from "child_process";
 import { Worker } from 'worker_threads';
@@ -12,17 +12,13 @@ import http from 'http';
 import path from "path";
 import fs from 'fs';
 
+let API_KEY = null;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const __configs = path.join(app.getPath('userData'),"configs");
 let __envfile = path.join(__configs,".env");
 
 dotenv.config({path:__envfile});
-
-if (!process.env.API_KEY) {
-  console.error(`Missing TMDB API key. Please set API_KEY in your environment. or Add it to the file ${__envfile}`);
-  process.exit(1);
-}
 
 // ======================= PATHS =======================
 const isDev = !app.isPackaged;
@@ -69,7 +65,39 @@ let lastSecondBeforeQuit=0;
 
 // ======================= WINDOW MANAGER =======================
 
-const createWindow = async () => {
+if (!process.env.API_KEY) {
+  console.error(`Missing TMDB API key. Please set API_KEY in your environment. or Add it to the file ${__envfile}`);
+  openMainWindow("./loginPage/loginPage.html");
+
+}else{
+  API_KEY = process.env.API_KEY;
+  openMainWindow();
+}
+
+
+function openMainWindow(fileEntryPoint = "./home/mainPage.html"){
+  app.on("ready", () =>{
+    protocol.handle('theme', async () => {
+      const css = await fs.promises.readFile(ThemeFilePath, 'utf8');
+      return new Response(css, { headers: { 'content-type': 'text/css' ,'cache-control': 'no-store'} });
+    });
+    createMainWindow(fileEntryPoint)
+  });
+
+  app.on("window-all-closed", async() => {
+    if(closeWindow)
+      app.quit();
+
+    let wholeDownloadLibrary = await loadDownloadLibrary();
+    let torrentsIds = wholeDownloadLibrary.downloads
+      .filter(torrentElement => torrentElement?.Status === "Downloading" || torrentElement?.Status === "Loading" )
+      .map(torrent => torrent.torrentId);
+
+    await editDownloadLibraryElements(torrentsIds,"Status","Paused");
+  });
+}
+
+const createMainWindow = async (entryPointPath = "./home/mainPage.html") => {
    WINDOW = new BrowserWindow({
      width: 1100,
      height: 650,
@@ -81,7 +109,7 @@ const createWindow = async () => {
     }
   });
   WINDOW.setMenuBarVisibility(false);
-  WINDOW.loadFile("./home/mainPage.html");
+  WINDOW.loadFile(entryPointPath);
   
   let defaultSettings = loadSettings();
   mainzoomFactor = defaultSettings.PageZoomFactor;
@@ -91,31 +119,10 @@ const createWindow = async () => {
 
   WINDOW.webContents.on('did-finish-load', () => {
     WINDOW.webContents.setZoomFactor(mainzoomFactor);
-    // WINDOW.maximize();
+
     WINDOW.show();
   });
 }
-
-app.on("ready", () =>{
-  protocol.handle('theme', async () => {
-    const css = await fs.promises.readFile(ThemeFilePath, 'utf8');
-    return new Response(css, { headers: { 'content-type': 'text/css' ,'cache-control': 'no-store'} });
-  });
-  createWindow()
-});
-
-app.on("window-all-closed", async() => {
-  if(closeWindow){
-    app.quit();
-  }
-
-  let wholeDownloadLibrary = await loadDownloadLibrary();
-  let torrentsIds = wholeDownloadLibrary.downloads
-    .filter(torrentElement => torrentElement?.Status === "Downloading" || torrentElement?.Status === "Loading" )
-    .map(torrent => torrent.torrentId);
-
-  await editDownloadLibraryElements(torrentsIds,"Status","Paused");
-});
 
 // ======================= IPC HANDLERS =======================
 
@@ -198,9 +205,18 @@ ipcMain.on("change-page", (event,newPageURL,currentPageURL,cacheData) => {
     const fullPath = path.join(__dirname, filePath);
     webContents.setZoomFactor(mainzoomFactor);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
+    savePageCachedDataToHistory(currentPageURL,cacheData);
+
+    if(currentPageURL.includes("loginPage")){
+      const clearOnLoad = () => {
+        webContents.navigationHistory.clear();
+        webContents.removeListener('did-finish-load', clearOnLoad);
+      };
+      webContents.once('did-finish-load', clearOnLoad);
+    }
+
     WINDOW.loadURL(url);
     positionWasChangedViaGoBackButton = false;
-    savePageCachedDataToHistory(currentPageURL,cacheData);
   }
 });
 
@@ -225,7 +241,22 @@ ipcMain.handle("open-filesystem-browser",async(event,currentPath)=>{
   return null
 });
 
-ipcMain.handle("get-api-key",() => process.env.API_KEY);
+ipcMain.handle("open-externel-link",(event,url)=>{
+  shell.openExternal(url);
+});
+
+ipcMain.handle("get-api-key",() => API_KEY);
+
+ipcMain.handle("validate-api-key",async(event,inputedApiKey)=>{
+  let responce = await validateApiKey(inputedApiKey);
+  return responce;
+});
+
+ipcMain.handle("save-api-key",async(event,apiKey)=>{
+  API_KEY = apiKey;
+  let done = await writeAPIKEYIntoEnvFile(apiKey);
+  return done;
+});
 
 // ======================= VIDEO STREAMING =======================
 
@@ -1244,3 +1275,33 @@ const languageDict = {
   uyghur: "ug", uzbek: "uz", vietnamese: "vi", welsh: "cy", xhosa: "xh",
   yiddish: "yi", yoruba: "yo", zulu: "zu"
 };
+
+
+// ################################### API KEY MANAGEMENT ###################################
+
+async function validateApiKey(apiKey) {
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}`
+    );
+
+    return {
+      type: "verify-api-key",
+      responce: res.ok ? "api-key-valid" : "api-key-not-valid",
+    };
+  } catch {
+    return {
+      type: "verify-api-key",
+      responce: "no-internet-connection",
+    };
+  }
+}
+
+async function writeAPIKEYIntoEnvFile(apiKey){
+  if(!fs.existsSync(__configs)){
+    fs.mkdirSync(__configs, { recursive: true });
+  }
+  const fileContent = `API_KEY="${apiKey}"`;
+  await fs.writeFileSync(__envfile,fileContent);
+  return null;
+}
