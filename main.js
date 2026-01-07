@@ -808,7 +808,7 @@ async function downloadTorrent(torrentInfo) {
           WINDOW.webContents.send("download-progress-stream", jsonMessage);
           
           torrent.destroy(() => {
-            delete DownloadingTorrents[torrentInfo.torrentId];
+            delete pagesCachedHistory[torrentInfo.torrentId];
             console.log(`Torrent cleaned up: ${torrentInfo.torrentId}`);
           });
           

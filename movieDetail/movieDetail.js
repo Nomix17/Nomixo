@@ -262,7 +262,7 @@ async function insertMovieElements(data,apiKey){
 
   let mediaOriginalLanguage = data?.original_language ?? "Unknown";
   let Summary = data?.overview ?? "Unknown";
-  let backgroundImage = data?.backdrop_path
+  backgroundImage = data?.backdrop_path
     ? `https://image.tmdb.org/t/p/original/${data.backdrop_path}` 
     : "Unknown";
 
