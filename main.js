@@ -1044,9 +1044,12 @@ async function insertNewDownloadEntryPoint(torrentInfo){
     let posterDownloadPath = torrentInfo?.downloadPath 
        ? path.join(torrentInfo.downloadPath, "POSTERS") 
        : postersDirPath;
+    
+    let bgImageUrl = torrentInfo?.bgImageUrl;
+    let posterUrl = torrentInfo?.posterUrl;
 
-    let bgImagePath = path.join(posterDownloadPath,torrentInfo?.bgImageUrl.split("/").pop());
-    let posterPath = path.join(posterDownloadPath,torrentInfo?.posterUrl.split("/").pop());
+    let bgImagePath = bgImageUrl ? path.join(posterDownloadPath,bgImageUrl.split("/").pop()) : "";
+    let posterPath = posterUrl ? path.join(posterDownloadPath,posterUrl.split("/").pop()) : "";
 
     downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
     downloadImage(posterDownloadPath,torrentInfo?.posterUrl);
