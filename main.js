@@ -703,6 +703,7 @@ function initializeDataFiles(){
       :root{
       --dont-Smooth-transition-between-pages:0;
       --display-scroll-bar:none;
+      --show-continue-watching-on-home:flex;
       --background-gradient-value:0.1;
       --primary-color:0,0,0;
       --secondary-color:64,64,64,0.5;
@@ -713,7 +714,7 @@ function initializeDataFiles(){
       --drop-down-color:0,0,0,1;
       --icon-color:46,46,46;
       --icon-hover-color:189,189,189,0.76;
-      --text-color:0,0,0;
+      --text-color:255,255,255;
       }
     `;
     fs.writeFileSync(ThemeFilePath,defaultFileData);
