@@ -28,3 +28,10 @@
 .div-MovieElement{
   transition: opacity 0.05s linear;
 }
+.div-categories-description{
+  padding:25px 20px 20px 20px!important;
+}
+.div-categories-description h1{
+  margin:0px !important;
+
+}

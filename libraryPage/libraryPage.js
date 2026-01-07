@@ -13,8 +13,6 @@ addSmoothTransition();
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
 async function loadData(){
-  categoriDescription.querySelector("h1").innerText = `${typeOfSave}`;
-
   const apiKey = await window.electronAPI.getAPIKEY();
   let wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
   
@@ -23,6 +21,9 @@ async function loadData(){
   setDropdownValue(SelectMediaType, "all");
   syncDropdownWidths();
   
+  let descriptionTitle = categoriDescription.querySelector("h1")
+  if(descriptionTitle)
+    descriptionTitle.innerText = typeOfSave;
 
   if(wholeLibraryInformation === undefined || wholeLibraryInformation.length === 0){
     let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty",false);
@@ -36,15 +37,20 @@ async function loadData(){
   }
 
   RightmiddleDiv.style.opacity = 1;
-  SelectMediaType.addEventListener("dropdownChange", () => {
-    typeOfSave = getDropdownValue(SelectSaveType);
-    categoriDescription.querySelector("h1").innerText = `${typeOfSave}`;
-    filterMedia(getDropdownValue(SelectMediaType), getDropdownValue(SelectSaveType));
+  [SelectMediaType,SelectSaveType].forEach(selectElement=>{
+    selectElement.addEventListener("dropdownChange", () => {
+      let newTypeOfSave = getDropdownValue(SelectSaveType);
+      let newMediaType = getDropdownValue(SelectMediaType);
+      if(descriptionTitle)
+        descriptionTitle.innerText = typeOfSave;
+      filterMedia(newMediaType, newTypeOfSave);
+    });
   });
 
   SelectSaveType.addEventListener("dropdownChange", () => {
     typeOfSave = getDropdownValue(SelectSaveType);
-    categoriDescription.querySelector("h1").innerText = `${typeOfSave}`;
+    if(descriptionTitle)
+      descriptionTitle.innerText = typeOfSave;
     filterMedia(getDropdownValue(SelectMediaType), getDropdownValue(SelectSaveType));
   });
 }
@@ -69,7 +75,7 @@ function filterMedia(MediaTypeFilter,SaveTypeFilter){
   if(displayedNumber === 0){
     let existingWarning = RightmiddleDiv.querySelector(".div-WarningMessage");
     if(!existingWarning){
-      let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
+      let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty",false);
       RightmiddleDiv.appendChild(WarningElement);
     }else{
       existingWarning.style.display = "flex";

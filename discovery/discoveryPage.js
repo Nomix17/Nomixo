@@ -68,6 +68,11 @@ function loadGenres(apiKey) {
       });
       
       setDropdownValue(SelectGenre, genreId);
+
+      const currentGenre = GenresData.find(GObj => Number(GObj.id) === Number(genreId));
+      if(currentGenre)
+        document.querySelector(".div-categories-description").querySelector("h1").innerText = currentGenre.name;
+
       RightmiddleDiv.style.opacity = 1;
     })
     .catch(err => {
