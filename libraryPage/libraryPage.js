@@ -28,14 +28,16 @@ async function loadData(){
   if(wholeLibraryInformation === undefined || wholeLibraryInformation.length === 0){
     let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty",false);
     RightmiddleDiv.appendChild(WarningElement);
-    globalLoadingGif.remove();
   }else{
-    await fetchMediaDataFromLibrary(apiKey,wholeLibraryInformation,SavedMedia,globalLoadingGif,RightmiddleDiv);
+    let now = Date.now();
+    await fetchMediaDataFromLibrary(apiKey,wholeLibraryInformation,SavedMedia,RightmiddleDiv);
+    console.log("Library Media Elements where Created in: ",Date.now() - now + " ms")
     await loadCachedRightMiddleDivScrollValue();
     await loadDropDownCachedValue();
     filterMedia(getDropdownValue(SelectMediaType), getDropdownValue(SelectSaveType));
   }
 
+  globalLoadingGif.remove()
   RightmiddleDiv.style.opacity = 1;
   [SelectMediaType,SelectSaveType].forEach(selectElement=>{
     selectElement.addEventListener("dropdownChange", () => {

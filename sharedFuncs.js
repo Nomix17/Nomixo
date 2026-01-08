@@ -46,7 +46,7 @@ window.checkIfDivShouldHaveMoveToRightOrLeftButton = (MediaDivs) => {
   });
 }
 
-function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType){
+function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,IsInHomePage=false){
 
   let mediaDomElement = document.createElement("div");
   let mediaPosterContainer = document.createElement("div");
@@ -54,7 +54,11 @@ function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType)
   let mediaNameElement = document.createElement("div");
 
   mediaNameElement.innerHTML = `<p>${Title}</p>`;
-  loadImageWithAnimation(mediaPosterContainer,mediaPosterElement, PosterImage);
+
+  if(IsInHomePage)
+    loadImageWithAnimation(mediaPosterContainer,mediaPosterElement, PosterImage);
+  else
+    mediaPosterElement.src = normalizeRootUrl(PosterImage);
 
   mediaDomElement.classList.add("div-MovieElement");
   mediaPosterElement.classList.add("img-MoviePoster");
@@ -151,7 +155,7 @@ function createMediaElementForLibrary(mediaData, ThisMediaType,ThisSaveType,medi
       ? "https://image.tmdb.org/t/p/w500/"+mediaData["poster_path"] 
       : "../assets/PosterNotFound.png";
 
-  let movieDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
+  let movieDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,IsInHomePage);
   let removeFromLibraryButton = createRemoveFromWatchingLaterButton(Id,ThisMediaType,movieDomElement,IsInHomePage)
 
   movieDomElement.setAttribute("saveType",ThisSaveType);
@@ -163,7 +167,6 @@ function createMediaElementForLibrary(mediaData, ThisMediaType,ThisSaveType,medi
     movieDomElement.appendChild(continueVideoButton);
   }
 
-  checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
   return movieDomElement;
 }
 
@@ -597,7 +600,7 @@ window.MOST_POPULAR_LANGUAGES = [
   "Italian"
 ]
 
-window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,globalLoadingGif,RightmiddleDiv,IsInHomePage=false)=>{
+window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,RightmiddleDiv,IsInHomePage=false)=>{
   const promises = wholeLibraryInformation.map(mediaEntryPoint =>{
     let MediaId = mediaEntryPoint.MediaId;
     let MediaType = mediaEntryPoint.MediaType;
@@ -607,8 +610,8 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,gl
       .then(res=>res.json())
       .then(data => {
         if(data.status_code === 7) throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
-        globalLoadingGif.remove();
         SavedMedia.appendChild(createMediaElementForLibrary(data,MediaType,mediaEntryPoint.typeOfSave,mediaEntryPoint,SavedMedia,IsInHomePage));
+        checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
       })
       .catch(err=>{
         err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data</br>Please Check your connection and refresh!":err.message;
@@ -617,7 +620,6 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,gl
           let WarningElement = DisplayWarningOrErrorForUser(err.message);
           WarningElement.style.paddingBottom = "1000px;";
           RightmiddleDiv.appendChild(WarningElement);
-          globalLoadingGif.remove();
           RightmiddleDiv.style.opacity = 1;
         },800);
       });
