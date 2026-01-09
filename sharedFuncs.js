@@ -156,7 +156,11 @@ function addToggleToLibButtonEventListener(thistoggleinlibrarybtn,mediaId,mediaT
   }
 }
 
-function createMediaElementForLibrary(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoint,SavedMedia,IsInHomePage=false){
+function createMediaElementForLibrary(mediaData, mediaEntryPoint, IsInHomePage=false){
+  const ThisMediaType = mediaEntryPoint?.MediaType;
+  const ThisSaveType = mediaEntryPoint?.typeOfSave;
+  const ThisSaveTime = mediaEntryPoint?.timeOfSave;
+
   let Id = mediaData?.["id"] ?? "Unknown";
   let Title = mediaData?.["title"] ?? mediaData?.["name"] ?? "Unknown";
   let Adult = mediaData?.["adult"] ?? "Unknown";
@@ -171,7 +175,8 @@ function createMediaElementForLibrary(mediaData, ThisMediaType,ThisSaveType,medi
   let removeFromLibraryButton = createRemoveFromWatchingLaterButton(Id,ThisMediaType,IsInHomePage)
 
   movieDomElement.setAttribute("saveType",ThisSaveType);
- 
+  movieDomElement.setAttribute("saveTime",ThisSaveTime);
+
   movieDomElement.appendChild(removeFromLibraryButton);
 
   if(ThisSaveType.includes("Currently Watching")){
@@ -283,13 +288,17 @@ window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
     let MediaElementDoesExist = SearchedMediaElement.length > 0;
     let MediaLibraryObject;
 
+    const currentEpochTime = Date.now().toString();
+
     if(MediaElementDoesExist){
       MediaLibraryObject = SearchedMediaElement[0];
       MediaLibraryObject.typeOfSave.push(typeOfSave);
+      MediaLibraryObject.timefSave = currentEpochTime;
     }else{
       MediaLibraryObject = {
         MediaId:mediaId.toString(),
         MediaType:mediaType,
+        timeOfSave:currentEpochTime,
         typeOfSave:[typeOfSave],
         episodesWatched:[],
         lastPlaybackPosition:0,
@@ -672,7 +681,7 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,Ri
       .then(res=>res.json())
       .then(data => {
         if(data.status_code === 7) throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
-        SavedMedia.appendChild(createMediaElementForLibrary(data,MediaType,mediaEntryPoint.typeOfSave,mediaEntryPoint,SavedMedia,IsInHomePage));
+        SavedMedia.appendChild(createMediaElementForLibrary(data,mediaEntryPoint,IsInHomePage));
         checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
       })
       .catch(err=>{

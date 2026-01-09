@@ -1,6 +1,7 @@
 let RightmiddleDiv = document.getElementById("div-middle-right");
 let SelectMediaType = document.getElementById("select-type");
 let SelectSaveType = document.getElementById("select-save");
+let SelectSortType = document.getElementById("select-sort");
 let SavedMedia = document.getElementById("div-SavedMedia");
 let categoriDescription = document.querySelector(".div-categories-description");
 let searchInput = document.getElementById("input-searchForMovie");
@@ -57,7 +58,55 @@ async function addDropDownsEventListener(){
         hideEmptyLibraryWarning(RightmiddleDiv);
     });
   });
+
+  SelectSortType.addEventListener("dropdownChange",()=>{
+    let sortType = getDropdownValue(SelectSortType);
+    sortMediaELements(SortingCriteria[sortType]);
+  });
+
 }
+
+const SortingCriteria = {
+  alphabetical: 0,
+  newest: 1,
+  oldest: 2
+};
+
+function sortMediaELements(sortingType = SortingCriteria.alphabetical) {
+  const mediaElements = Array.from(SavedMedia.children);
+  switch (sortingType) {
+    case SortingCriteria.alphabetical:{
+      mediaElements.sort((a,b) => {
+        const aTitle = a.querySelector(".parag-MovieTitle p").textContent || "";
+        const bTitle = b.querySelector(".parag-MovieTitle p").textContent || "";
+        return aTitle.localeCompare(bTitle);
+      });
+      break;
+    }
+
+    case SortingCriteria.newest:{
+      mediaElements.sort((a,b) => {
+        const aSaveTime = Number(a.getAttribute("saveTime")) || 0;
+        const bSaveTime = Number(b.getAttribute("saveTime")) || 0;
+        return bSaveTime - aSaveTime;
+      });
+
+      break;
+    }
+
+    case SortingCriteria.oldest:{
+      mediaElements.sort((a,b) => {
+        const aSaveTime = Number(a.getAttribute("saveTime")) || 0;
+        const bSaveTime = Number(b.getAttribute("saveTime")) || 0;
+        return aSaveTime - bSaveTime;
+      });
+      break;
+    }
+  }
+
+  mediaElements.forEach(ele => {SavedMedia.appendChild(ele)});
+}
+
 
 function changeDescriptionTitleValue(newTypeOfSave=typeOfSave){
   let descriptionTitle = categoriDescription.querySelector("h1")
@@ -129,7 +178,8 @@ async function loadMedia(){
     loadCachedRightDivScrollValue(cachedMediaInfo);
     loadCachedDropDownValue(cachedMediaInfo);
   }else{
-    loadDataFromLibrary(apiKey);
+    await loadDataFromLibrary(apiKey);
+    sortMediaELements(SortingCriteria.newest)
   }
 }
 
@@ -137,8 +187,9 @@ async function initPage(){
   changeDescriptionTitleValue();
 
   dropDownInit();
-  setDropdownValue(SelectSaveType, typeOfSave || "All");
   setDropdownValue(SelectMediaType, "all");
+  setDropdownValue(SelectSaveType, typeOfSave || "All");
+  setDropdownValue(SelectSortType,"newest");
   addDropDownsEventListener();
 
   await loadMedia();

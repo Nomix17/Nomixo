@@ -35,3 +35,7 @@
   margin:0px !important;
 
 }
+
+#custom-sortType-dropdown button{
+  border-color:rgb(255,255,255,0.3);
+}
