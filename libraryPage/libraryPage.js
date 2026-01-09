@@ -49,7 +49,7 @@ async function addDropDownsEventListener(){
     selectElement.addEventListener("dropdownChange", () => {
       let newTypeOfSave = getDropdownValue(SelectSaveType);
       let newMediaType = getDropdownValue(SelectMediaType);
-      changeDescriptionTitleValue();
+      changeDescriptionTitleValue(newTypeOfSave);
       let numberOfDisplayedElements = filterMedia(newMediaType, newTypeOfSave);
       if(!numberOfDisplayedElements)
         addEmptyLibraryWarning(RightmiddleDiv);
@@ -59,10 +59,10 @@ async function addDropDownsEventListener(){
   });
 }
 
-function changeDescriptionTitleValue(){
+function changeDescriptionTitleValue(newTypeOfSave=typeOfSave){
   let descriptionTitle = categoriDescription.querySelector("h1")
   if(descriptionTitle)
-    descriptionTitle.innerText = typeOfSave;
+    descriptionTitle.innerText = newTypeOfSave;
 }
 
 async function loadCachedMediaData(cachedData){
