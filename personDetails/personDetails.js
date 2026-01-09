@@ -66,8 +66,19 @@ function insertPersonInformation(personInformation){
   personBioElement.innerText = Biography;
   personFullBioParagraphElement.innerText = Biography;
 
+  if(!Biography || Biography.trim() === "")
+    hideBiography();
+  else
+    document.getElementById("biography-placeholder").style.display = "none"
+
   loadImageWithAnimation(personProfileElementContainer, personProfileElement, imagePath);
   personProfileFullBioElement.src = imagePath;
+}
+
+function hideBiography(){
+  const rightDescriptionDiv = document.getElementById("div-right-Person-description")
+  document.querySelector(".bio-wrapper").style.display = "none"
+
 }
 
 function addDescriptionButtonsEventListener(){

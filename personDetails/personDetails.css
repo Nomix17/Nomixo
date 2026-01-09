@@ -48,6 +48,17 @@
   font-size: 19px;
 }
 
+#biography-placeholder{
+  font-size:14px;
+  color:rgba(var(--text-color),0.4);
+  margin-left:25px;
+  font-style:italic;
+}
+
+#biography-section.hidden{
+  display:none;
+}
+
 a:hover {
   cursor: pointer;
 }
