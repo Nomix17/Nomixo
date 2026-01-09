@@ -442,10 +442,10 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
     });
     TorrentMagnetContainer.classList.remove("preloadingTorrent");
     if(TorrentMagnetContainer.innerHTML.trim() === "") throw new Error("No Useful Results Were found !");
-    if(TorrentMagnetContainer.style.display !== "none"){
+    // if(TorrentMagnetContainer.style.display !== "none"){
       TorrentContainer.style.display = "block";
       TorrentMagnetContainer.style.display = "block";
-    }
+    // }
     loadIconsDynamically();
 }
 
