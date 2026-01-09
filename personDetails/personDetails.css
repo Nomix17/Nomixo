@@ -48,12 +48,174 @@
   font-size: 19px;
 }
 
-#para-personBiography {
-  margin-top: 0;
-  margin-left: 20px;
-}
-
 a:hover {
   cursor: pointer;
 }
 
+.bio-wrapper {
+  margin: 10px 0 0 20px;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+#bio-content {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.bio-btn {
+  display: inline-block;
+  margin-top: 5px;
+  color: rgba(var(--text-color),0.4);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.bio-btn:hover {
+  text-decoration: underline;
+}
+
+#full-bio-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#full-bio-overlay.active {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+}
+
+#full-bio-div {
+  background: linear-gradient(135deg, rgba(var(--primary-color), 0.95), rgba(var(--primary-color), 0.98));
+  border: 1px solid rgba(var(--div-containers-borders-color), 0.3);
+  border-radius: 24px;
+  padding: 50px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 40vh;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transform: translateY(-20px) scale(0.95);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  overflow: hidden;
+}
+
+#full-bio-overlay.active #full-bio-div {
+  transform: translateY(0) scale(1);
+}
+
+#img-personProfilePic-full-bio {
+  width:30%;
+  object-fit: cover;
+  border-radius: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+#full-bio-person-name{
+  font-size:30px;
+  width:100%;
+}
+#full-bio-rigth-div{
+  display:flex;
+  flex-direction:column;
+}
+#full-bio-paragraph {
+  width:100%;
+  overflow-y: auto;
+  line-height: 1.8;
+  padding-right: 12px;
+  font-size: 15px;
+  color: rgba(var(--text-color), 0.9);
+  flex: 1;
+}
+
+#full-bio-paragraph::-webkit-scrollbar {
+  width: 6px;
+}
+
+#full-bio-paragraph::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+}
+
+#full-bio-paragraph::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+#full-bio-paragraph::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+  background-clip: padding-box;
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 24px;
+  color: rgb(var(--text-color));
+  cursor: pointer;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.close-btn::before,
+.close-btn::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 2px;
+  background: rgb(var(--text-color));
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.close-btn::before {
+  transform: rotate(45deg);
+}
+
+.close-btn::after {
+  transform: rotate(-45deg);
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: rotate(90deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn:active {
+  transform: rotate(90deg) scale(0.95);
+}

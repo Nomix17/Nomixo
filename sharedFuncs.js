@@ -46,7 +46,7 @@ window.checkIfDivShouldHaveMoveToRightOrLeftButton = (MediaDivs) => {
   });
 }
 
-function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,IsInHomePage=false){
+function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,imageLoadingAnimation=true){
 
   let mediaDomElement = document.createElement("div");
   let mediaPosterContainer = document.createElement("div");
@@ -55,7 +55,7 @@ function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,
 
   mediaNameElement.innerHTML = `<p>${Title}</p>`;
 
-  if(IsInHomePage)
+  if(imageLoadingAnimation)
     loadImageWithAnimation(mediaPosterContainer,mediaPosterElement, PosterImage);
   else
     mediaPosterElement.src = normalizeRootUrl(PosterImage);
@@ -67,25 +67,28 @@ function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,
 
   mediaDomElement.setAttribute("mediaId",Id);
   mediaDomElement.setAttribute("mediaType",ThisMediaType);
-  mediaDomElement.setAttribute("poster_path",PosterImage.split("/").pop());
 
   mediaPosterContainer.appendChild(mediaPosterElement)
   mediaDomElement.appendChild(mediaPosterContainer);
   mediaDomElement.appendChild(mediaNameElement);
 
-  mediaDomElement.addEventListener("click",function() {
-    if(ThisMediaType === "person")
-      openProfilePage(Id);
-    else
-      openDetailPage(Id,ThisMediaType);
-  });
+  addEventListenerToMediaDomElementToOpenDetailPage(mediaDomElement,Id,ThisMediaType);
 
   addFloatingDivToDisplayFullTitle(mediaDomElement);
 
   return mediaDomElement;
 }
 
-window.insertMediaElements = function(MediaSearchResults,MediaContainer,MediaType,LibraryInformation){
+function addEventListenerToMediaDomElementToOpenDetailPage(mediaDomElement,mediaId,mediaType){
+  mediaDomElement.addEventListener("click",function() {
+    if(mediaType === "person")
+      openProfilePage(mediaId);
+    else
+      openDetailPage(mediaId,mediaType);
+  });
+}
+
+function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,LibraryInformation){
   if(!MediaSearchResults?.length) throw new Error("No data was Fetched");
 
   let tempArray = [];
@@ -139,10 +142,18 @@ function createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType){
   if(mediaIsInLibrary) setAddToLibraryButtonToPressed(toggleInLibraryBtn);
   else setAddToLibraryButtonToNormal(toggleInLibraryBtn)
 
-  toggleInLibraryBtn.addEventListener("click",function() {
-    ToggleInLibrary(Id.toString(),ThisMediaType,"Watch Later")
-  });
+  addToggleToLibButtonEventListener(toggleInLibraryBtn,Id,ThisMediaType);
   return toggleInLibraryBtn;
+}
+
+function addToggleToLibButtonEventListener(thistoggleinlibrarybtn,mediaId,mediaType){
+  if(thistoggleinlibrarybtn){
+    thistoggleinlibrarybtn.addEventListener("click",(event)=>{
+      ToggleInLibrary(mediaId.toString(),mediaType,"Watch Later")
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    });
+  }
 }
 
 function createMediaElementForLibrary(mediaData, ThisMediaType,ThisSaveType,mediaEntryPoint,SavedMedia,IsInHomePage=false){
@@ -155,8 +166,9 @@ function createMediaElementForLibrary(mediaData, ThisMediaType,ThisSaveType,medi
       ? "https://image.tmdb.org/t/p/w500/"+mediaData["poster_path"] 
       : "../assets/PosterNotFound.png";
 
-  let movieDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,IsInHomePage);
-  let removeFromLibraryButton = createRemoveFromWatchingLaterButton(Id,ThisMediaType,movieDomElement,IsInHomePage)
+  let imageLoadingAnimation = true;
+  let movieDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,imageLoadingAnimation);
+  let removeFromLibraryButton = createRemoveFromWatchingLaterButton(Id,ThisMediaType,IsInHomePage)
 
   movieDomElement.setAttribute("saveType",ThisSaveType);
  
@@ -204,16 +216,33 @@ function createContinueWatchingButton(mediaEntryPoint){
   return continueVideoButton;
 }
 
-function createRemoveFromWatchingLaterButton(Id,ThisMediaType,movieDomElement,IsInHomePage){
+function createRemoveFromWatchingLaterButton(Id,ThisMediaType,IsInHomePage){
   let removeFromLibraryButton = document.createElement("button"); 
   removeFromLibraryButton.innerHTML = xRemoveIcon;
   removeFromLibraryButton.classList.add("btn-remove-from-library");
-  removeFromLibraryButton.addEventListener("click",()=>{
-    removeMediaFromLibrary(Id,ThisMediaType,movieDomElement,IsInHomePage);
-  });
+  addEventListenerToRemoveFromLibraryButton(removeFromLibraryButton,Id,ThisMediaType,IsInHomePage)
   return removeFromLibraryButton;
 }
 
+function addEventListenerToRemoveFromLibraryButton(removeFromLibraryButton,Id,ThisMediaType,IsInHomePage = false){
+  removeFromLibraryButton.addEventListener("click",(event)=>{
+    let numberOfElementsLeftInLibrary = removeMediaFromLibrary(removeFromLibraryButton,Id,ThisMediaType);
+
+    if(!numberOfElementsLeftInLibrary){
+      if (!IsInHomePage) {
+        addEmptyLibraryWarning(RightmiddleDiv)
+
+      } else {
+        let continueWatchingElement = document.getElementById("continue-watching-categorie");
+        if(continueWatchingElement)
+          continueWatchingElement.style.display = "none";
+      }
+    }
+
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+  });
+}
 
 window.setAddToLibraryButtonToNormal = (toggleInLibrary) => {
   toggleInLibrary.innerHTML = `<svg class="toggleButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -468,6 +497,12 @@ function getCurrentPageCacheData(){
 
     case (currentPage.includes("discoveryPage")):
       return getDiscoveryPageCacheData();
+    
+    case (currentPage.includes("libraryPage")):
+      return getLibraryPageCacheData();
+
+    case(currentPage.includes("personDetails")):
+      return getProfilePageCacheData();
 
     case (currentPage.includes("movieDetail")):
       return getMovieDetailPageCacheData();
@@ -491,27 +526,54 @@ function getRightMiddleDivScrollValue(){
   };
 }
 
-function scrapMediaElementsData(MediaDomElement){
-  let mediaInformation = {
-    "id":MediaDomElement.getAttribute("mediaId"),
-    "title": MediaDomElement.querySelector(".parag-MovieTitle").innerText,
-    "media_type":MediaDomElement.getAttribute("mediaType"),
-    "poster_path": MediaDomElement.getAttribute("poster_path"),
-    "profile_path": MediaDomElement.getAttribute("poster_path"),
-  }
-  return mediaInformation;
-}
-
 async function getDiscoveryPageCacheData(){
-  let mediaSuggestions = document.getElementById("div-MediaSuggestions"); 
-
-  let MediaDomElements = mediaSuggestions.querySelectorAll(".div-MovieElement");
-  let MediaElementsData = await Array.from(MediaDomElements).map(element=>scrapMediaElementsData(element));
-
+  let mediaSuggestionsContainer = document.getElementById("div-MediaSuggestions");
+  let containersData = await getContainersHTML([mediaSuggestionsContainer]);
   let cacheData = {
     page:"discovery",
-    "suggested_media_elements": Array.from(MediaElementsData),
-    "last_loaded_medias_page":pageLoaded,
+    "containers_data": containersData,
+    "last_loaded_medias_page":numberOfLoadedPages,
+    ...getRightMiddleDivScrollValue(),
+  };
+
+  return cacheData;
+}
+
+async function getLibraryPageCacheData(){
+  let savedMediaContainer = document.getElementById("div-SavedMedia");
+  let pageDropDowns = document.querySelectorAll(".select-dropdown");
+  let containersData = savedMediaContainer ? await getContainersHTML([savedMediaContainer]) : null;
+  let dropDownsData = pageDropDowns ? await getDropDownCacheValue(Array.from(pageDropDowns)) : null;
+  let cacheData = {
+    page:"library",
+    "containers_data": containersData,
+    "dropdowns_data":dropDownsData,
+    "saved_media_container_html":savedMediaContainer.innerHTML,
+    ...getRightMiddleDivScrollValue(),
+  };
+
+  return cacheData;
+}
+
+async function getContainersHTML(containersList){
+  let containersData = Array.from(containersList).map(container=> ({"id":container.id,"HTMLContent":container.innerHTML}));
+  return containersData;
+}
+
+async function getDropDownCacheValue(dropDowns){
+  let dropDownsData = Array.from(dropDowns).map(dropDown => ({"id":dropDown.id,"cachedValue":getDropdownValue(dropDown)}));
+  return dropDownsData;
+}
+
+async function getProfilePageCacheData(){
+  let mediaSuggestionsContainer = document.getElementById("div-MediaSuggestions");
+  let containersData = await getContainersHTML([mediaSuggestionsContainer]);
+  let personInformationElement = document.getElementById("div-Person-description");
+  let personInformationHTML = personInformationElement ? personInformationElement.innerHTML : null;
+  let cacheData = {
+    page:"profile",
+    "containers_data": containersData,
+    "person_information": personInformationHTML,
     ...getRightMiddleDivScrollValue(),
   };
 
@@ -638,33 +700,39 @@ function addContrastForPlayIcon(){
 }
 
 
-function removeMediaFromLibrary(mediaId,mediaType,parentDiv,IsInHomePage){
+function removeMediaFromLibrary(removeFromLibraryButton,mediaId,mediaType){
   let MediaLibraryObject = {
     MediaId:mediaId.toString(),
     MediaType:mediaType
   }
 
-  parentDiv.style.opacity = 0;
+  let MediaElementsContainer = removeFromLibraryButton.parentElement;
+  let SaveDiv = MediaElementsContainer.parentElement;
+  MediaElementsContainer.style.opacity = 0;
+  MediaElementsContainer.remove();
 
-  let MediaElementsContainer = parentDiv.parentElement;
-  parentDiv.remove();
-  if(MediaElementsContainer.innerHTML.trim() === "" ){
-    let continueWatchingElement = document.getElementById("continue-watching-categorie");
-    if(continueWatchingElement){
-      continueWatchingElement.style.display = "none";
-    }
-    if(!IsInHomePage){
-      let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty");
-      WarningElement.style.marginBottom = "100px";
-      RightmiddleDiv.appendChild(WarningElement);
-    }
-  }
+  let numberOfElementsLeftInLibrary = SaveDiv ? SaveDiv.querySelectorAll(".div-MovieElement").length : 0;
 
   window.electronAPI.removeMediaFromLibrary(MediaLibraryObject);
-
-  event.stopPropagation();
+  return numberOfElementsLeftInLibrary;
 }
 
+function addEmptyLibraryWarning(warningContainer){
+  let existingWarning = warningContainer.querySelector(".div-WarningMessage");
+  if(!existingWarning){
+    let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty",false);
+    warningContainer.appendChild(WarningElement);
+  }else{
+    existingWarning.style.display = "flex";
+  }
+}
+
+function hideEmptyLibraryWarning(warningContainer){
+  let WarningElement = warningContainer.querySelector(".div-WarningMessage");
+  if(WarningElement){
+    WarningElement.style.display = "none";
+  }
+}
 
 window.xRemoveIcon = `            
   <svg class="closeButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" preserveAspectRatio="none">
@@ -1023,3 +1091,12 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
 
   return MediaDownloadElement;
 }
+
+async function loadCachedRightDivScrollValue(cachedData){
+  let RightmiddleDiv = document.getElementById("div-middle-right");
+  let RightmiddleDivScrollTopValue = cachedData?.right_middle_div_top_scroll_value;
+  if(RightmiddleDivScrollTopValue)
+    RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
+}
+
+
