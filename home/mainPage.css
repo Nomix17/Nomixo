@@ -224,6 +224,7 @@ body, html {
   width: 202px;
   height: 310px;
   border-radius: 15px;
+  cursor:pointer;
 }
 
 .img-MoviePoster {
