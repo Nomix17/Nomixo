@@ -5,6 +5,7 @@ let MediaType = data.get("MediaType");
 let backgroundImage;
 let IMDB_ID;
 
+let mainPageDiv = document.getElementById("div-main");
 let TorrentContainer = document.getElementById("div-TorrentContainer");
 let SerieContainer = document.getElementById("div-serieEpisodes");
 
@@ -48,7 +49,7 @@ async function fetchInformation(){
     let middleDiv = document.getElementById("div-middle");
     document.documentElement.classList.add("fetchingFailed");
     middleDiv.innerHTML = "";
-    document.getElementById("div-main").style.opacity = "1";
+    mainPageDiv.style.opacity = "1";
     setTimeout(() => {
       let WarningElement = DisplayWarningOrErrorForUser("We're having trouble loading data.</br>Please Check your connection and retry!");
       middleDiv.appendChild(WarningElement);
@@ -64,7 +65,7 @@ function loadMovieInformation(apiKey){
   return fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}?api_key=${apiKey}`)
     .then(res=>res.json())  
     .then(data =>{
-      insertMovieElements(data,apiKey);
+      insertMediaInformation(data,apiKey);
       if(MediaType === "movie")
         return fetchTorrent(apiKey,movieId,MediaType); 
     })
@@ -79,7 +80,7 @@ function loadCastInformation(apiKey){
   let MediaTypeForSearch = MediaType === "anime" ? "tv" :MediaType;
   return  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/credits?api_key=${apiKey}`)
     .then(res => res.json())
-    .then(data => insertCastElements(data))
+    .then(data => insertCastInformation(data))
     .catch(err =>{
       noInfoFounded();
       console.error(err);
@@ -87,12 +88,27 @@ function loadCastInformation(apiKey){
   });
 }
 
+
 function noInfoFounded(){
-  divCastElement.innerHTML += '<p class="infoText">No Cast information were Found</p>';
-  divDirectoryElement.innerHTML += '<p class="infoText">No Directors information were Found</p>';
+  noCastInfoFounded();
+  noDirectorInfoFounded();
 }
 
-async function loadEpisodes(apiKey,series_id,season_number,title){
+function noCastInfoFounded(){
+  let NoCastInfoFounded = document.createElement("p");
+  NoCastInfoFounded.innerHTML = 'No Cast information were Found';
+  divCastElement.appendChild(NoCastInfoFounded);
+  NoCastInfoFounded.classList.add("case-info-unavailable");
+}
+
+function noDirectorInfoFounded(){
+  let NoDirectorInfoFounded = document.createElement("p");
+  NoDirectorInfoFounded.innerHTML = 'No Directors information were Found';
+  divDirectoryElement.appendChild(NoDirectorInfoFounded);
+  NoDirectorInfoFounded.classList.add("case-info-unavailable");
+}
+
+async function loadAllEpisodesOfSeason(apiKey,series_id,season_number,title){
   let libraryInfo = await loadMediaEntryPointLibraryInfo();
   fetch(`https://api.themoviedb.org/3/tv/${series_id}/season/${season_number}?api_key=${apiKey}`)
     .then(res => res.json())
@@ -218,26 +234,56 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}){
 
       fetch(fetchUrl)
         .then(res=>res.json())  
-        .then(data => insertTorrentInfoElement(data,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo))
-
+        .then(data =>{
+          insertTorrentInfoElement(data,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo);
+        })
         .catch(error =>{
           TorrentMagnetContainer.innerHTML = "";
           let NothingWasFound = document.createElement("div");
           NothingWasFound.classList.add("div-NothingWasFound");
           NothingWasFound.innerHTML = error.message;
-          NothingWasFound.style.display = "flex";
-          NothingWasFound.style.justifyContent = "center";
-          NothingWasFound.style.alignItems = "center";
-          NothingWasFound.style.textAlign = "center";
-          NothingWasFound.style.padding = "0 80px";
-          NothingWasFound.style.flexWrap = "wrap";
           TorrentMagnetContainer.appendChild(NothingWasFound);
           console.error(error);
         });
     });
 }
 
-async function insertMovieElements(data,apiKey){
+async function insertMediaInformation(data,apiKey){
+  let [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons] = await extractMediaInfoFromApiResponse(apiKey,data);
+
+  document.title = Title;
+  addBackgroundImageToBody(backgroundImage)
+
+  insertLogoTitleInformation(logoFileName,Title)
+  let mediaGeneraleInfo = [Duration,ReleaseYear,Rating,Summary];
+  insertMediaGeneraleInformation(mediaGeneraleInfo);
+  insertGenresOfMedia(Genres);
+
+  if(Duration === "TV Show") TorrentMagnetContainer.style.display = "none";
+  else EpisodesContainer.style.display = "none";
+
+  if(Seasons){
+    SerieContainer.style.display = "flex";
+    for(let season of Seasons){
+      let [newOption,seasonNumber] = createSeasonOptionElement(season);
+      selectElement.appendChild(newOption); 
+      loadAllEpisodesOfSeason(apiKey,movieId,seasonNumber,Title);
+    }
+
+    dropDownInit(); // initialise seasons drop down
+    addSeasonsDropDownEventListener()
+
+  }else{
+    TorrentMagnetContainer.style.display = "flex";
+    selectSeasonContainer.style.display = "none";
+  }
+
+  globalLoadingGif.remove();
+
+  mainPageDiv.style.opacity = "1";
+}
+
+async function extractMediaInfoFromApiResponse(apiKey,data){
   let Title = data?.title ?? data?.name ?? "Unknown";
   let Duration = data?.runtime
     ? `${data.runtime} min`
@@ -261,16 +307,89 @@ async function insertMovieElements(data,apiKey){
     : "Unknown";
 
   let mediaOriginalLanguage = data?.original_language ?? "Unknown";
-  let Summary = data?.overview ?? "Unknown";
+  let Summary = data?.overview ?? null;
   backgroundImage = data?.backdrop_path
     ? `https://image.tmdb.org/t/p/original/${data.backdrop_path}` 
     : "Unknown";
 
   let logoFileName = await loadLogoImage(mediaOriginalLanguage,apiKey);
-  let logoImage = `https://image.tmdb.org/t/p/original/${logoFileName}`;
 
   let Seasons = data?.seasons ?? 0;
 
+  return [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons];
+}
+
+function insertLogoTitleInformation(logoFileName,Title){
+  let logoTitleContainer = document.getElementById("div-MovieLogoTitleContainer");
+  let textTitleElement = document.getElementById("h1-MovieTitle");
+  let logoTitleElement = document.getElementById("img-MovieLogoTitle");
+
+  if(logoFileName){
+    let logoImage = `https://image.tmdb.org/t/p/original/${logoFileName}`;
+    logoTitleElement.src = logoImage;
+    textTitleElement.style.display = "none";
+  }else
+    logoTitleContainer.style.display = "none";
+
+  textTitleElement.innerText = Title;
+}
+
+function insertMediaGeneraleInformation(mediaBasicInfo){
+  let mediaDurationElement = document.getElementById("p-movieDuration");
+  let mediaYearOfReleaseElement = document.getElementById("p-movieYearOfRelease");
+  let mediaRatingElement = document.getElementById("p-movieRating");
+  let mediaSummaryElement = document.getElementById("p-summaryParagraph");
+  let imdbLogoElement = document.getElementById("img-IMDBlogo");
+
+  let [Duration,ReleaseYear,Rating,Summary] = mediaBasicInfo;
+  let summaryExist = true;
+  if(!Duration) mediaDurationElement.style.display = "none";
+  if(!ReleaseYear) mediaYearOfReleaseElement.style.display = "none";
+  if(!Rating || Rating === "0.0"){
+    mediaRatingElement.style.display = "none";
+    imdbLogoElement.style.display = "none";
+  }
+  if(!Summary || Summary.trim() === ""){
+    summaryExist = false;
+    mediaSummaryElement.classList.add("unavailable-summary");
+  }
+
+  mediaDurationElement.innerText = Duration;
+  mediaYearOfReleaseElement.innerText = ReleaseYear;
+  mediaRatingElement.innerText = Rating;
+  mediaSummaryElement.innerText = summaryExist ? Summary : "No Summary available" ;
+}
+
+function insertGenresOfMedia(Genres){
+  let DivGenresContainer = document.getElementById("div-genresInfos");
+  for(let genre of Genres){
+    let newGenreElement = document.createElement("button");
+    newGenreElement.onclick = ()=>{openDiscoveryPage(genre.id,MediaType)};
+    newGenreElement.classList.add("btn-MovieDetailsButtons");
+    newGenreElement.innerText = genre.name;
+    DivGenresContainer.append(newGenreElement);
+  }
+}
+
+function createSeasonOptionElement(season){
+  let name = season.name;
+  let seasonNumber = season.season_number;
+  let newOption = document.createElement("div");
+  newOption.classList.add("select-option");
+  newOption.setAttribute("role","option");
+  newOption.setAttribute("value",seasonNumber);
+  newOption.innerText = name;
+  return [newOption,seasonNumber];
+}
+
+function addSeasonsDropDownEventListener(){
+  selectElement.addEventListener("dropdownChange",()=>{
+    let newDropDownValue = getDropdownValue(selectElement);
+    displayEpisodes(newDropDownValue);
+  });
+}
+
+function addBackgroundImageToBody(backgroundImage){
   if(backgroundImage !== "https://image.tmdb.org/t/p/original/null"){
     document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
     document.documentElement.style.backgroundRepeat = `no-repeat`;
@@ -278,72 +397,9 @@ async function insertMovieElements(data,apiKey){
     document.documentElement.style.backgroundSize = `cover`;
     document.documentElement.style.backgroundAttachment = `fixed`;
   }
-
-  if(Seasons){
-    SerieContainer.style.display = "flex";
-    Seasons.forEach(season =>{
-      let name = season.name;
-      let seasonNumber = season.season_number;
-      let newOption = document.createElement("div");
-      newOption.classList.add("select-option");
-      newOption.setAttribute("role","option");
-      newOption.setAttribute("value",seasonNumber);
-      newOption.innerText = name;
-      selectElement.appendChild(newOption); 
-      loadEpisodes(apiKey,movieId,seasonNumber,Title);
-    });
-
-    dropDownInit();
-
-    selectElement.addEventListener("dropdownChange",()=>{
-      let newDropDownValue = getDropdownValue(selectElement);
-      displayEpisodes(newDropDownValue);
-    });
-
-  }else{
-    TorrentMagnetContainer.style.display = "flex";
-    selectSeasonContainer.style.display = "none";
-  }
-
-  document.title = Title;
-
-  if(logoFileName)
-    document.getElementById("img-MovieLogoTitle").src = logoImage;
-  else{
-    document.getElementById("div-MovieLogoTitleContainer").style.display = "none";
-    document.getElementById("h1-MovieTitle").innerText = Title;
-  }
-
-  if(!Duration) document.getElementById("p-movieDuration").style.display = "none";
-  if(!ReleaseYear) document.getElementById("p-movieYearOfRelease").style.display = "none";
-  if(!Rating || Rating === "0.0"){
-    document.getElementById("p-movieRating").style.display = "none";
-    document.getElementById("img-IMDBlogo").style.display = "none";
-  }
-
-  document.getElementById("p-movieDuration").innerText = Duration;
-  document.getElementById("p-movieYearOfRelease").innerText = ReleaseYear;
-  document.getElementById("p-movieRating").innerText = Rating;
-  document.getElementById("p-summaryParagraph").innerText = Summary;
-
-  if(Duration === "TV Show") TorrentMagnetContainer.style.display = "none";
-  else EpisodesContainer.style.display = "none";
-
-  globalLoadingGif.remove();
-
-  let DivGenresContainer = document.getElementById("div-genresInfos");
-  Genres.forEach(element=>{
-    let newGenreElement = document.createElement("button");
-    newGenreElement.onclick = ()=>{openDiscoveryPage(element.id,MediaType)};
-    newGenreElement.classList.add("btn-MovieDetailsButtons");
-    newGenreElement.innerText = element.name;
-    DivGenresContainer.append(newGenreElement);
-  });
-
-  document.getElementById("div-main").style.opacity = "1";
 }
 
-function insertCastElements(data){
+function insertCastInformation(data){
     if(data.success === false) throw new Error("No Information about the Crew Founded.");
     let Crew = data.crew;
     let Cast = data.cast;
@@ -353,7 +409,7 @@ function insertCastElements(data){
 
     if(Crew?.[0]?.hasOwnProperty("job") || Crew?.[0]?.hasOwnProperty("known_for_department")){
       DirectorsObjects = Crew.filter(element => element.job === "Director" && element.known_for_department === "Directing");
-      if(DirectorsObjects.lenght){
+      if(DirectorsObjects.length){
         DirectorsObjects = Crew.filter(element => element.job === "Director" || element.known_for_department === "Directing");
       }
     }else{
@@ -378,8 +434,12 @@ function insertCastElements(data){
        divCastElement.append(newCastElement);
     });
 
-    if(!MainCastObjects.length) divCastElement.innerHTML += '<p class="infoText">No Cast information were Found</p>';
-    if(!DirectorsObjects.length) divDirectoryElement.innerHTML += '<p class="infoText">No Directors information were Found</p>';
+    if(!MainCastObjects.length){
+      noCastInfoFounded();
+    }
+    if(!DirectorsObjects.length){
+      noDirectorInfoFounded();
+    }
 }
 
 function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episodeInfo={}){
@@ -531,17 +591,6 @@ function addMediaToLibrary(){
     setAddToLibraryButtonToNormal(addToLibraryButton);
     addToLibraryButton.innerHTML+="Save To Library";
   }
-}
-
-function formatMediaLibraryObject(){
-  let MediaLibraryObject = {
-    MediaId:movieId.toString(),
-    MediaType:MediaType,
-    episodesWatched:[],
-    lastPlaybackPosition:0,
-    typeOfSave:"WatchLater"
-  }
-  return MediaLibraryObject;
 }
 
 async function loadMediaEntryPointLibraryInfo(){

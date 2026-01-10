@@ -359,6 +359,17 @@ p{
   margin:0px;
   padding:0px 0px 0px 10px;
 }
+
+.unavailable-summary,
+.case-info-unavailable{
+  font-size:15px;
+  color:rgba(var(--text-color),0.4);
+  margin:0;
+  margin-left:15px;
+  font-style:italic;
+  padding:10px;
+}
+
 #mediaTitle{
   padding:0;
   margin:5px 0 0 0;
@@ -930,3 +941,13 @@ label {
 .custom-select{
   margin-left:10px;
 }
+
+.div-NothingWasFound{
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 80px;
+  flex-wrap: wrap;
+}
+
