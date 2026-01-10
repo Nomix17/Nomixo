@@ -416,23 +416,36 @@ function insertCastInformation(data){
       throw new Error("No Information about the Crew Founded.");
     }
 
-    if(Cast?.[0]?.hasOwnProperty("name")) MainCastObjects = Cast.slice(0,5);
+    if(Cast?.[0]?.hasOwnProperty("name")) 
+      MainCastObjects = Cast;
 
-    DirectorsObjects.forEach(directorObject=>{
-       let newDirectorElement = document.createElement("button");
-       newDirectorElement.onclick = ()=>{openProfilePage(directorObject.id)};
-       newDirectorElement.classList.add("btn-MovieDetailsButtons");
-       newDirectorElement.innerText = directorObject.name;
-       divDirectoryElement.append(newDirectorElement);
-    });
+    let loadedDirectors = [];
+    for(let directorObject of DirectorsObjects){
+      if(!loadedDirectors.includes(directorObject.id)){
+        let newDirectorElement = document.createElement("button");
+        newDirectorElement.onclick = ()=>{openProfilePage(directorObject.id)};
+        newDirectorElement.id = directorObject.id;
+        newDirectorElement.classList.add("btn-MovieDetailsButtons");
+        newDirectorElement.innerText = directorObject.name;
+        divDirectoryElement.append(newDirectorElement);
+        loadedDirectors.push(directorObject.id);
+        if(loadedDirectors.length > 4) break;
+      }
+    }
 
-    MainCastObjects.forEach(castObject=>{
-       let newCastElement = document.createElement("button");
-       newCastElement.onclick = ()=>{openProfilePage(castObject.id)};
-       newCastElement.classList.add("btn-MovieDetailsButtons");
-       newCastElement.innerText = castObject.name;
-       divCastElement.append(newCastElement);
-    });
+    let loadedCast = [];
+    for(let castObject of MainCastObjects){
+      if(!loadedCast.includes(castObject.id)){
+        let newCastElement = document.createElement("button");
+        newCastElement.onclick = ()=>{openProfilePage(castObject.id)};
+        newCastElement.id = castObject.id;
+        newCastElement.classList.add("btn-MovieDetailsButtons");
+        newCastElement.innerText = castObject.name;
+        divCastElement.append(newCastElement);
+        loadedCast.push(castObject.id);
+        if(loadedCast.length > 4) break;
+      }
+    }
 
     if(!MainCastObjects.length){
       noCastInfoFounded();
