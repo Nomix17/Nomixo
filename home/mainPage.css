@@ -234,7 +234,7 @@ body, html {
   border: 3px solid rgba(255,255,255,0%);
   position: static; 
   object-fit: cover;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.4s ease !important;
 }
 
 .parag-MovieTitle {
