@@ -81,19 +81,18 @@ function openMainWindow(fileEntryPoint = "./home/mainPage.html"){
       const css = await fs.promises.readFile(ThemeFilePath, 'utf8');
       return new Response(css, { headers: { 'content-type': 'text/css' ,'cache-control': 'no-store'} });
     });
-    createMainWindow(fileEntryPoint)
+    createMainWindow(fileEntryPoint);
+
+    // when the app crash the downloads aren't mark as paused (because "window-all-closed" isn't called),
+    // so I call it here to to correct that and make sure they apprear as paused.
+    markMediaDownloadsAsPaused(); 
   });
 
   app.on("window-all-closed", async() => {
     if(closeWindow)
       app.quit();
 
-    let wholeDownloadLibrary = await loadDownloadLibrary();
-    let torrentsIds = wholeDownloadLibrary.downloads
-      .filter(torrentElement => torrentElement?.Status === "Downloading" || torrentElement?.Status === "Loading" )
-      .map(torrent => torrent.torrentId);
-
-    await editDownloadLibraryElements(torrentsIds,"Status","Paused");
+    await markMediaDownloadsAsPaused();
   });
 }
 
@@ -1077,6 +1076,15 @@ async function editDownloadLibraryElements(torrentsIds,key,value){
   }
 
   await insertNewInfoToLibrary(downloadLibraryFilePath,downloadLibraryInfo);
+}
+
+async function markMediaDownloadsAsPaused() {
+  let wholeDownloadLibrary = await loadDownloadLibrary();
+  let torrentsIds = wholeDownloadLibrary.downloads
+    .filter(torrentElement => torrentElement?.Status === "Downloading" || torrentElement?.Status === "Loading" )
+    .map(torrent => torrent.torrentId);
+
+  await editDownloadLibraryElements(torrentsIds,"Status","Paused");
 }
 
 async function updateElementDownloadLibrary(torrentInfo, downloadedBytes, totalSize) {
