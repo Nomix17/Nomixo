@@ -214,30 +214,28 @@ function handleCancelButton(mediaInfo,MediaDownloadElement){
 
 let loadingIntervals = {};
 function handleTogglingPauseButton(torrentId,MediaDownloadElement){
-
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
-  let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
 
   PausePlayButton.addEventListener("click",async ()=>{
-    let pauseResponce = await window.electronAPI.toggleTorrentDownload(torrentId);
-    if(pauseResponce?.response  === "paused"){
-      PausePlayButton.innerHTML = playIcon;
-      downloadSpeedElement.innerHTML ="";
-      removeLoadingAnimation(torrentId,PausePlayButton,"Paused");
+    let pauseResponces = await window.electronAPI.toggleTorrentDownload(torrentId);
+    for(const res of pauseResponces){
+      if(res?.response  === "paused" && res?.torrentId){
+        let targetElement = document.getElementById(res?.torrentId);
+        MarkDownloadElementAsPaused(targetElement);
 
-    }else if(pauseResponce?.response  === "continued"){
-      PausePlayButton.innerHTML = pauseIcon;
-      downloadSpeedElement.innerHTML = "loading"
+      } else if(res?.response  === "continued" && res?.torrentId){
+        let targetElement = document.getElementById(res?.torrentId);
+        MarkDownloadElementAsLoading(targetElement);
+        await SaveDownloadStatus(res.torrentId, "Loading");
 
-      addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlayButton);
+      } else if(res?.response === "failed"){
+        console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
+        MarkDownloadElementAsPaused(MediaDownloadElement)
 
-      await SaveDownloadStatus(torrentId, "Loading");
-
-    }else{
-      MarkDownloadElementAsPaused(torrentId,MediaDownloadElement)
-      console.error("Cannot Find Torrent: ",pauseResponce?.torrentId);
+      } else {
+        console.error("Cannot Find Torrent: ",res?.torrentId);
+      }
     }
-
   });
 }
 
@@ -310,11 +308,12 @@ function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo){
   });
 }
 
-function MarkDownloadElementAsPaused(torrentId,MediaDownloadElement){
+function MarkDownloadElementAsPaused(MediaDownloadElement){
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
-  
+  let elementId = MediaDownloadElement.id; 
+
   downloadSpeedElement.innerHTML = "";
   PausePlayButton.innerHTML = playIcon;
 
@@ -322,13 +321,25 @@ function MarkDownloadElementAsPaused(torrentId,MediaDownloadElement){
     PausePlayButton.classList.remove("just-finished");
   }, 600);
 
-  removeLoadingAnimation(torrentId,PausePlayButton,"Paused"); 
+  removeLoadingAnimation(elementId,PausePlayButton,"Paused"); 
+}
+
+function MarkDownloadElementAsLoading(MediaDownloadElement){
+  let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
+  let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
+  let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
+  let elementId = MediaDownloadElement.id;
+
+  PausePlayButton.innerHTML = pauseIcon;
+  downloadSpeedElement.innerHTML = "loading"
+
+  addingLoadingAnimation(elementId,downloadSpeedElement,PausePlayButton);
 }
 
 function monitorErrors(){
   window.electronAPI.getDownloadErrorsReports(async (errorReport) => {
     let MediaDownloadElement = document.getElementById(errorReport.torrentId);
-    MarkDownloadElementAsPaused(errorReport.torrentId,MediaDownloadElement)
+    MarkDownloadElementAsPaused(MediaDownloadElement)
     console.error(`${errorReport?.type} Error: ${errorReport.torrentId}\n${errorReport.err_msg}`);
   });
 }

@@ -58,6 +58,7 @@ let pagesCachedHistory = {};
 nativeTheme.themeSource = "dark";
 
 // torrent trackers
+const downloadQueue = [];
 const downloadingMediaHashMap = {};
 let StreamClient;
 const DownloadClient = new WebTorrent();
@@ -69,7 +70,7 @@ if (!process.env.API_KEY) {
   console.error(`Missing TMDB API key. Please set API_KEY in your environment. or Add it to the file ${__envfile}`);
   openMainWindow("./loginPage/loginPage.html");
 
-}else{
+} else {
   API_KEY = process.env.API_KEY;
   openMainWindow();
 }
@@ -404,8 +405,13 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
 
       // download the torrent
       try {
-        await downloadTorrent(torrentInfo);
-        results.push({ success: true, torrentId });
+        const clientIsBusy = DownloadClient.torrents.length;
+        if(!clientIsBusy){
+          await downloadTorrent(torrentInfo);
+          results.push({ success: true, torrentId });
+        }else{
+          downloadQueue.push(torrentInfo);
+        }
       } catch (error) {
         reportDownloadError("Torrent Download",torrentId,error);
         console.error(error);
@@ -434,12 +440,12 @@ function findFileInsideTorrent(torrent, targetFileName){
 
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
   const torrentId = mediaInfo.torrentId;
-  const targetTorrent = downloadingMediaHashMap?.[torrentId];
+  const targetTorrent = downloadingMediaHashMap?.[torrentId]?.torrentInstance;
 
   if (targetTorrent) {
     await new Promise((resolve) => {
       targetTorrent.destroy(() => {
-        delete downloadingMediaHashMap[torrentId];
+        deleteTorrentFromMediaHashMap(torrentId);
         console.log(`Torrent cancelled: ${torrentId}`);
         resolve();
       });
@@ -459,47 +465,67 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
 });
 
 ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
-  const torrent = downloadingMediaHashMap[torrentId];
-  if (!torrent){
+  const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
+  if (!targetTorrent) {
     let wholeDownloadLibrary = await loadDownloadLibrary();
 
-    if(wholeDownloadLibrary.downloads.length){
+    if (wholeDownloadLibrary.downloads.length) {
       let torrentInfo = wholeDownloadLibrary.downloads.find(element => element.torrentId === torrentId);
       torrentInfo["torrentId"] = torrentId;
-      
-      downloadTorrent(torrentInfo)
-      .catch(
-        (err)=>{
-          console.error(err.message);
-          reportDownloadError("Torrent Download",torrentId,err);
-          const loadedTorrent = downloadingMediaHashMap[torrentId];
-          if(loadedTorrent){
-            loadedTorrent.destroy(() => {
-              delete downloadingMediaHashMap[torrentId];
-            });
-          }
-        }
-      );
-      return {response: "continued", torrentId:torrentId};
+     
+      // pause every other torrent
+      let pausedTorrents = [];
+      try {
+        pausedTorrents = await pauseAllDownloadingTorrents();
+      } catch(err) {
+        console.error(err.message);
+        return [{responce:"failed",error:err.message,torrentId:torrentId}];
+      }
 
-    }else{
+      // start the requested download
+      try {
+        downloadTorrent(torrentInfo)
+      } catch(err) {
+        console.error(err.message);
+        pauseDownloadingTorrent(targetTorrent,torrentId);
+        return [{responce:"failed",error:err.message,torrentId:torrentId}];
+      }
+      
+      return [{response: "continued", torrentId:torrentId},...pausedTorrents];
+
+    } else {
       console.error("Empty download library, cannot continue download for",torrentId);
-      return {response: "empty download library",torrentId:torrentId};
+      return [{response: "empty download library",torrentId:torrentId}];
     }
 
-  }else{
-    await new Promise((resolve) => {
-      torrent.destroy(() => {
-        delete downloadingMediaHashMap[torrentId];
-        console.log(`Torrent Paused: ${torrentId}`);
-        resolve();
-      });
-    });
+  } else {
 
-    return {response: "paused", torrentId:torrentId};
+    try {
+      await pauseDownloadingTorrent(targetTorrent, torrentId)
+    } catch(err) {
+      console.error(err.message);
+      return [{response:"failed",error:err.message,torrentId:torrentId}];
+    }
+
+    return [{response: "paused", torrentId:torrentId}];
   }
 
 });
+
+async function pauseAllDownloadingTorrents(){
+  const pausedTorrents = [];
+
+  const currentlyDownloadingTorrents = Object.values(downloadingMediaHashMap);
+  for (const downloadingTorrent of currentlyDownloadingTorrents) {
+    let torrentInstance = downloadingTorrent.torrentInstance;
+    let torrentInfo = downloadingTorrent.torrentInfo;
+    let pausedTorrentId = await pauseDownloadingTorrent(torrentInstance, torrentInfo.torrentId)
+    pausedTorrents.push({response: "paused", torrentId:pausedTorrentId});
+    downloadQueue.push(torrentInfo);
+  }
+
+  return pausedTorrents;
+}
 
 // ======================= Download OTHER THINGS =======================
 
@@ -748,7 +774,7 @@ async function downloadTorrent(torrentInfo) {
     path: torrentInfo.downloadPath
   });
 
-  downloadingMediaHashMap[torrentInfo.torrentId] = torrent;
+  downloadingMediaHashMap[torrentInfo.torrentId] = {torrentInstance:torrent,torrentInfo:torrentInfo};
 
   insertNewDownloadEntryPoint(torrentInfo);
 
@@ -782,7 +808,7 @@ async function downloadTorrent(torrentInfo) {
       const DelayBeforeLibrarySave = 1000;
       const DelayBeforePiping = 400;
 
-      torrent.on("download", () => {
+      torrent.on("download", async () => {
         const now = Date.now();
         // Calculate downloaded bytes for selected files only
         const downloadedDataLength = targetFile.downloaded;
@@ -804,13 +830,17 @@ async function downloadTorrent(torrentInfo) {
           torrentInfo["Status"] = "Done";
           updateElementDownloadLibrary(torrentInfo, downloadedDataLength,totalSize);
           
-          WINDOW.webContents.send("download-progress-stream", jsonMessage);
-          
-          torrent.destroy(() => {
-            delete downloadingMediaHashMap[torrentInfo.torrentId];
+          try {
+            await destroyDownloadingTorrent(torrent, torrentInfo.torrentId);
             console.log(`Torrent cleaned up: ${torrentInfo.torrentId}`);
-          });
-          
+          } catch(err) {
+            console.error(err.message);
+          }
+
+          WINDOW.webContents.send("download-progress-stream", jsonMessage);
+
+          downloadNextTorrentInQueue();
+
           resolve();
           return;
         }
@@ -844,7 +874,11 @@ async function downloadTorrent(torrentInfo) {
 
     torrent.on("error", (err) => {
       console.error(`Torrent error: ${torrentInfo.torrentId}, ${err}`);
-      
+      torrent.destroy(() => {
+        deleteTorrentFromMediaHashMap(torrentId);
+        downloadNextTorrentInQueue();
+      });
+     
       WINDOW.webContents.send("download-progress-stream", {
         TorrentId: torrentInfo.torrentId,
         Status: "error",
@@ -854,6 +888,50 @@ async function downloadTorrent(torrentInfo) {
       reject(err);
     });
   });
+}
+
+
+function destroyDownloadingTorrent(torrent, torrentId){
+  return new Promise((res,rej) => {
+    try {
+      torrent.destroy(() => {
+        deleteTorrentFromMediaHashMap(torrentId);
+        res();
+      });
+
+    } catch(err) {
+      rej(new Error(err));
+    }
+
+  });
+
+}
+
+function downloadNextTorrentInQueue() {
+  if(downloadQueue.length){
+    const nextTorrent = downloadQueue.shift();
+    downloadTorrent(nextTorrent);
+  }
+}
+
+function deleteTorrentFromMediaHashMap(torrentId){
+  if(downloadingMediaHashMap[torrentId])
+    delete downloadingMediaHashMap[torrentId];
+}
+
+async function pauseDownloadingTorrent(torrent, torrentId){
+  if(!torrent) {
+    return new Error(`Failed to pause: ${torrent}`);
+  }
+
+  if(!torrentId) {
+    return new Error(`Cannot find the torrent Id ${TorrentId}`)
+  }
+
+  await destroyDownloadingTorrent(torrent,torrentId);
+  console.log(`Torrent Paused: ${torrentId}`);
+  return torrentId;
+
 }
 
 function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
