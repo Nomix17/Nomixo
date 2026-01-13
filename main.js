@@ -746,7 +746,7 @@ function initializeDataFiles(){
 
 // ########## DOWLOAD RELATED #################
 
-async function downloadTorrent(torrentInfo) {
+async function downloadTorrent(torrentInfo,filesToSelect=null) {
   // Add torrent
   const torrent = DownloadClient.add(torrentInfo.MagnetLink, {
     path: torrentInfo.downloadPath
@@ -766,24 +766,40 @@ async function downloadTorrent(torrentInfo) {
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
 
-      let targetFile = findFileInsideTorrent(torrent, torrentInfo?.fileName);
-
-      if (!targetFile) {
-        reject(new Error('No suitable video file found'));
-      }
-
       // Deselect all files first
       torrent.files.forEach(file => {file.deselect()});
-      
-      // Select only the file that match the name
-      targetFile.select();
 
-      if(!downloadingTorrents[torrentInfo.MagnetLink])
-        downloadingTorrents[torrentInfo.MagnetLink] = [{torrentInfo:torrentInfo,webTorrentfile:targetFile}];
-      else
-        downloadingTorrents[torrentInfo.MagnetLink].push({torrentInfo:torrentInfo,webTorrentfile:targetFile});
+      if (filesToSelect === null) {
+        let targetFile = findFileInsideTorrent(torrent, torrentInfo?.fileName);
 
-     
+        if (!targetFile) {
+          reject(new Error('No suitable video file found'));
+        }
+        
+        // Select only the file that match the name
+        targetFile.select();
+
+        if(!downloadingTorrents[torrentInfo.MagnetLink])
+          downloadingTorrents[torrentInfo.MagnetLink] = [{torrentInfo:torrentInfo,webTorrentfile:targetFile}];
+        else
+          downloadingTorrents[torrentInfo.MagnetLink].push({torrentInfo:torrentInfo,webTorrentfile:targetFile});
+
+
+      } else {
+        filesToSelect.forEach(fileInfo => {
+          let toSelectFile = findFileInsideTorrent(torrent,fileInfo.fileName);
+          toSelectFile.select();
+          console.log(`${toSelectFile.name} (selected)`);
+          if(!downloadingTorrents[torrentInfo.MagnetLink])
+            downloadingTorrents[torrentInfo.MagnetLink] = [{torrentInfo:fileInfo,webTorrentfile:toSelectFile}];
+          else
+            downloadingTorrents[torrentInfo.MagnetLink].push({torrentInfo:fileInfo,webTorrentfile:toSelectFile});
+        });
+
+        console.log("\n");
+
+      }
+
       // Calculate total size of only selected file
       let LibraryStartTime = 0;
       let PipingStartTime = 0;
@@ -883,7 +899,7 @@ async function downloadRequestHandeling(torrentInfo) {
         let targetFile = findFileInsideTorrent(targetTorrent,torrentInfo.fileName);
         if(targetFile){
           console.log(`Loading ${torrentInfo.fileName}`);
-          selectFileToDownload(torrentInfo.MagnetLink,targetFile);
+          selectFileToDownload(torrentInfo);
           downloadingTorrents[torrentInfo.MagnetLink].push({torrentInfo:torrentInfo,webTorrentfile:targetFile});
         }
 
@@ -924,17 +940,17 @@ function clearTorrentWhenDownloadIsDone(torrent, MagnetLink, torrentFileInfo){
   } 
 }
 
-function selectFileToDownload(torrentMagnet,fileToSelect){
-  let torrent = getDownloadingTorrentFromMagnet(torrentMagnet);
+function selectFileToDownload(torrentInfo){
+  let torrent = getDownloadingTorrentFromMagnet(torrentInfo.MagnetLink);
   if (torrent) {
-    for(let torrentFile of torrent.files){
-      torrentFile.deselect();
-    }
+    let currentlyDownloadingFiles = downloadingTorrents[torrentInfo.MagnetLink]
+      .map(file => file.torrentInfo);
 
-    fileToSelect.select();
-    for(let downloadingFile of downloadingTorrents[torrentMagnet]) { 
-      downloadingFile.webTorrentfile.select();
-    }
+    let FilesToSelect = [...currentlyDownloadingFiles, torrentInfo];
+      
+    torrent.destroy(()=>{
+      downloadTorrent(torrentInfo,FilesToSelect);
+    });
 
   } else {
     console.log("Failed to select new File");
