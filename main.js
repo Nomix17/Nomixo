@@ -1176,6 +1176,7 @@ async function updateElementDownloadLibrary(torrentInfo, downloadedBytes, totalS
   if(existingIndex !== -1){
     downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
     downloadLib.downloads[existingIndex]["typeOfSave"] = torrentInfo.Status === "Done" ? "Download-Complete" : "Download"
+    downloadLib.downloads[existingIndex]["timeOfSave"] = Date.now().toString();
     downloadLib.downloads[existingIndex]["Total"] = totalSize;
 
     if(torrentInfo.Status === "Done")
@@ -1285,6 +1286,7 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
       LibraryInfo.media[index]["bgImagePath"] = metaData?.bgImagePath;
       LibraryInfo.media[index]["downloadPath"] = metaData?.downloadPath;
       LibraryInfo.media[index]["fileName"] = metaData?.fileName;
+      LibraryInfo.media[index]["timeOfSave"] = Date.now().toString();
 
 
       if(!LibraryInfo.media[index]["typeOfSave"].includes("Currently Watching")){
@@ -1294,6 +1296,7 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
       found = true;
     }
   }
+
   if(!found){
     let MediaLibraryObject = {
       MediaId:metaData?.MediaId,
@@ -1307,6 +1310,7 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
       lastPlaybackPosition:lastPbPosition,
       seasonNumber:metaData.seasonNumber,
       episodeNumber:metaData.episodeNumber,
+      timeOfSave:Date.now().toString(),
       typeOfSave:["Currently Watching"]
     }
     LibraryInfo.media.push(MediaLibraryObject);

@@ -579,7 +579,7 @@ async function updateLastSecondBeforeQuit(lastPbPosition,metaData){
     await window.electronAPI.removeMediaFromLibrary(targetIdentification);
 
   }else{
-    MediaLibraryObject = {...metaData,lastPlaybackPosition:lastPbPosition,typeOfSave:["Currently Watching"]}
+    MediaLibraryObject = {...metaData,lastPlaybackPosition:lastPbPosition,typeOfSave:["Currently Watching"],timeOfSave:Date.now()}
   }
   window.electronAPI.addMediaToLibrary(MediaLibraryObject);
 }
