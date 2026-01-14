@@ -410,6 +410,7 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
           await downloadTorrent(torrentInfo);
           results.push({ success: true, torrentId });
         }else{
+          insertNewDownloadEntryPoint(torrentInfo,"Queued");
           downloadQueue.push(torrentInfo);
         }
       } catch (error) {
@@ -487,6 +488,7 @@ ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
         downloadTorrent(torrentInfo)
       } catch(err) {
         console.error(err.message);
+        await editDownloadLibraryElements([torrentInfo.torrentId], "Status", "Loading");
         pauseDownloadingTorrent(targetTorrent,torrentId);
         return [{responce:"failed",error:err.message,torrentId:torrentId}];
       }
@@ -1109,7 +1111,7 @@ function loadDownloadLibrary(){
   }
 }
 
-async function insertNewDownloadEntryPoint(torrentInfo){
+async function insertNewDownloadEntryPoint(torrentInfo,Status="Loading"){
   let downloadLib = await loadDownloadLibrary();
 
   // Find existing entry or create new one
@@ -1131,7 +1133,7 @@ async function insertNewDownloadEntryPoint(torrentInfo){
     downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
     downloadImage(posterDownloadPath,torrentInfo?.posterUrl);
 
-    let newEntry = {...torrentInfo, posterPath: posterPath ?? "undefined", bgImagePath: bgImagePath ?? "undefined", Status:"Loading"};
+    let newEntry = {...torrentInfo, posterPath: posterPath ?? "undefined", bgImagePath: bgImagePath ?? "undefined", Status:Status};
     downloadLib.downloads.push(newEntry);
 
     const jsonMessage = { Status: "NewDownload" }
@@ -1159,7 +1161,7 @@ async function editDownloadLibraryElements(torrentsIds,key,value){
 async function markMediaDownloadsAsPaused() {
   let wholeDownloadLibrary = await loadDownloadLibrary();
   let torrentsIds = wholeDownloadLibrary.downloads
-    .filter(torrentElement => torrentElement?.Status === "Downloading" || torrentElement?.Status === "Loading" )
+    .filter(torrentElement => torrentElement?.Status.toLowerCase() !== "done")
     .map(torrent => torrent.torrentId);
 
   await editDownloadLibraryElements(torrentsIds,"Status","Paused");
@@ -1176,7 +1178,6 @@ async function updateElementDownloadLibrary(torrentInfo, downloadedBytes, totalS
   if(existingIndex !== -1){
     downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
     downloadLib.downloads[existingIndex]["typeOfSave"] = torrentInfo.Status === "Done" ? "Download-Complete" : "Download"
-    downloadLib.downloads[existingIndex]["timeOfSave"] = Date.now().toString();
     downloadLib.downloads[existingIndex]["Total"] = totalSize;
 
     if(torrentInfo.Status === "Done")
@@ -1286,7 +1287,6 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
       LibraryInfo.media[index]["bgImagePath"] = metaData?.bgImagePath;
       LibraryInfo.media[index]["downloadPath"] = metaData?.downloadPath;
       LibraryInfo.media[index]["fileName"] = metaData?.fileName;
-      LibraryInfo.media[index]["timeOfSave"] = Date.now().toString();
 
 
       if(!LibraryInfo.media[index]["typeOfSave"].includes("Currently Watching")){
@@ -1296,7 +1296,6 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
       found = true;
     }
   }
-
   if(!found){
     let MediaLibraryObject = {
       MediaId:metaData?.MediaId,
@@ -1310,7 +1309,6 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
       lastPlaybackPosition:lastPbPosition,
       seasonNumber:metaData.seasonNumber,
       episodeNumber:metaData.episodeNumber,
-      timeOfSave:Date.now().toString(),
       typeOfSave:["Currently Watching"]
     }
     LibraryInfo.media.push(MediaLibraryObject);

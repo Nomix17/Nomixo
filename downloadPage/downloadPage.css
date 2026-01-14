@@ -13,7 +13,7 @@
   overflow: hidden;
   padding-bottom:80px;
 }
-.downloaded-movie-div-container {
+.download-categorie-container {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -24,17 +24,20 @@
   padding: 0 30px 0px 10px;
   box-sizing: border-box;
   position:relative;
+  gap:30px;
 }
-.downloaded-movie-div {
+.download-media {
+  position:relative;
   display: flex;
-  background-color:rgba(255,255,255,0.09);
+  background-color:rgba(255,255,255,0.03);
   border-radius: 12px;
-  padding: 24px;
+  padding:20px;
   margin-bottom: 20px;
   gap: 20px;
   align-items: center;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   flex-shrink: 0;
 }
 .poster-div{
@@ -44,15 +47,15 @@
 
 .poster-img {
   position: relative;
-  width: 146px;
-  height: 220px;
+  width: 120px;
+  height: 180px;
   border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
-  border:3px solid rgba(255,255,255,0.5);
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
-.download-movie-right-div {
+.download-movie-middle-div {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -75,7 +78,7 @@
 .progress-bar-div {
   flex: 1;
   min-width: 0;
-  height: 12px;
+  height: 10px;
   background-color: rgba(255,255,255,0.1);
   border-radius: 12px;
   overflow: hidden;
@@ -104,10 +107,10 @@
 .total-size{
   display:flex;
   justify-content:center;
-  font-size:14px;
-  font-weight:bold;
+  font-size:15px;
   align-items:center;
-  color: rgb(var(--text-color));
+  color: rgb(var(--text-color),0.8);
+  white-space: nowrap;
   margin: 0;
 }
 
@@ -127,88 +130,38 @@
   color: rgb(var(--text-color));
   cursor: pointer;
   font-size: 1rem;
-  transition: opacity 0.2s;
-  background-color:rgb(var(--icon-color));
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 
-/* Completed download button styles */
+.cancel-button.completed,
 .toggle-pause-button.completed {
-  background-color: rgba(76, 175, 80, 0.9);
   cursor: pointer;
   pointer-events: auto;
-  width: 40px;
-  border-radius: 20px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              background-color 0.3s ease,
-              border-radius 0.4s ease;
-  overflow: hidden;
-  white-space: nowrap;
-  position: relative;
+  width: 90px;
+  height: 50px;
+  border-radius: 15px;
+  transition:  transform 0.4s ease;
+  background-color: rgba(var(--primary-color),0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  margin-right:20px;
+  padding:10px;
+}
+.cancel-button.completed{
+  background-color:rgb(160,11,6);
 }
 
-.toggle-pause-button.completed::before {
-  content: '';
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
-  background-color: white;
-  mask-image: var(--checkmark-icon);
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  -webkit-mask-image: var(--checkmark-icon);
-  -webkit-mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  opacity: 0;
-  transition: opacity 0.3s ease 0.15s;
-  pointer-events: none;
-}
-
-.toggle-pause-button.completed::after {
-  content: 'Watch Now';
-  position: absolute;
-  left: 34px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  font-weight: 600;
-  color: rgb(var(--text-color));
-  opacity: 0;
-  transition: opacity 0.3s ease 0.15s;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-.toggle-pause-button.completed .playIcon,
-.toggle-pause-button.completed .checkIcon {
-  transition: opacity 0.2s ease;
-}
-
+.cancel-button.completed:hover,
 .toggle-pause-button.completed:hover {
-  width: 130px;
-  background-color: rgba(76, 175, 80, 1);
-  border-radius: 20px;
+  transform: scale(1.1);
 }
 
-.toggle-pause-button.completed:hover::before {
-  opacity: 1;
-}
-
-.toggle-pause-button.completed:hover::after {
-  opacity: 1;
-}
-
-.toggle-pause-button.completed:hover .playIcon,
-.toggle-pause-button.completed:hover .checkIcon {
-  opacity: 0;
+.cancel-button.completed .trashIcon{
+  height:100%;
 }
 
 .toggle-pause-button.completed:active {
-  transform: scale(0.95);
+  transform: scale(1);
 }
 
 @keyframes completePulse {
@@ -228,6 +181,9 @@
   margin:0 10px;
   padding:0;
 }
+.toggle-pause-button{
+  background-color: rgba(var(--primary-color),0.6);
+}
 
 .cancel-button {
   background-color:rgb(160,11,6);
@@ -236,10 +192,15 @@
   transform: scale(0.8, 0.8);
   fill:white;
 }
+.trashIcon{
+  transition: transform ease 0.5s;
+}
 .cancel-button .trashIcon{
-  transform: scale(0.5,0.6);
+  transform: scale(0.55,0.65);
   fill:white;
 }
+
+.toggle-pause-button .videoIcon,
 .toggle-pause-button .playIcon{
   transform: scale(0.5, 0.5);
   fill:white;
@@ -250,14 +211,36 @@
 
 }
 
-.toggle-pause-button:hover, .cancel-button:hover {
-  opacity: 0.7;
+.toggle-pause-button:hover,
+.cancel-button:hover {
+  transform: scale(1.1);
+}
+
+
+
+.drag-button{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:35px;
+  height:35px;
+  border-radius:5px;
+  border:none;
+  cursor:pointer;
+}
+.drag-button:hover{
+  background-color:rgba(0,0,0,0.2);
+}
+.twoBarsIcon{
+  fill:white;
+  width:100%;
+  height:100%;
 }
 
 h1 {
   font-size: 35px;
   margin: 10px 10px 10px 25px;
-  padding-bottom: 10px;
+  /* padding-bottom: 10px; */
   flex-shrink: 0;
 }
 
@@ -280,61 +263,8 @@ h1 {
 
 }
 
-.continue-video-button{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  bottom: 50%;
-  right: 50%;
-  width: 75px;
-  height: 75px;
-  border-radius: 100%;
-  border: 3px solid rgba(255,255,255,0.0);
-  background-color: rgba(255,255,255,1);
-  cursor: pointer;
-  opacity: 0;
-  transform: translate(70%, 70%) scale(0.8);
-  transform-origin: center center;
-  transition: opacity 0.3s ease, transform 0.3s ease, filter 0.4s ease, fill 0.3s ease;
-  will-change: transform, opacity;
-  z-index: 1000;
-}
-
-.poster-container:hover .continue-video-button {
-  opacity: 1;
-  pointer-events: auto; 
-  transform: translate(70%, 70%) scale(1);
-}
-
-.continue-video-icon {
-  display: inline-block;
-  width: 160%;
-  height: 160%;
-  fill: rgba(var(--icon-hover-color));
-  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
-}
-
-.continue-video-button:hover .continue-video-icon{
-  transform: scale(1.09);
-}
-
-.continue-video-icon:hover{
-  transform: translate(0, 0) scale(1.07);
-}
-
-.continue-video-button:active .continue-video-icon{
-  transform: scale(0.99);
-}
-
-.poster-div:hover .continue-video-button {
-  opacity: 1;
-  transform: translate(50%, 50%);
-  filter: drop-shadow(2px 2px 6px rgba(0, 0, 0, 0.6));
-}
-
 .poster-div:hover .poster-img{
-  border-color: rgba(var(--MovieElement-hover-BorderColor));
+  transform: scale(1.06);
 }
 
 .requesting-continue-download {
@@ -372,4 +302,63 @@ h1 {
   100% {
     transform: rotate(360deg);
   }
+}
+.download-movie-right-div{
+  display:flex;
+  flex-direction:row;
+  height:100%;
+}
+
+.downloads-categorie{
+  background-color:rgba(255,255,255,0.1);
+  padding: 30px 30px;
+  border-radius: 20px;
+}
+.movieContainer{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  min-height:200px;
+  padding:20px;
+}
+.empty-container{
+  font-style:italic;
+  color:rgba(var(--text-color),0.8);
+  font-size:1.2em;
+}
+
+.trash-button{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background-color:transparent;
+}
+
+.left-div {
+  display:flex;
+  flex-direction:row;
+  justify-content:center;
+  align-items:center;
+}
+
+.downloads-categorie .title-container{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+}
+.downloads-counter{
+  display:flex;
+  flex-direction:row;
+  justify-content:center;
+  align-items:center;
+
+  background-color:rgba(255,255,255,0.2);
+  padding:10px;
+  margin:10px;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  font-size:15px;
+  font-weight:bold;
 }

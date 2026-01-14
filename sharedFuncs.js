@@ -594,7 +594,7 @@ function getMovieDetailPageCacheData(){
 }
 
 function getDownloadCacheData(){
-  let downloadElementsContainers = document.querySelector(".downloaded-movie-div-container");
+  let downloadElementsContainers = document.querySelector(".download-categorie-container");
   return {
     page:"download",
     "download_container_top_scroll_value":downloadElementsContainers.scrollTop
@@ -745,6 +745,12 @@ function hideEmptyLibraryWarning(warningContainer){
   }
 }
 
+window.videoIcon = `
+  <svg class="videoIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+    <path d="M96 64c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L96 64zM464 336l73.5 58.8c4.2 3.4 9.4 5.2 14.8 5.2 13.1 0 23.7-10.6 23.7-23.7l0-240.6c0-13.1-10.6-23.7-23.7-23.7-5.4 0-10.6 1.8-14.8 5.2L464 176 464 336z"/>
+  </svg>
+`;
+
 window.xRemoveIcon = `            
   <svg class="closeButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" preserveAspectRatio="none">
     <path d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z"/>
@@ -764,7 +770,21 @@ window.pauseIcon = `
 
 window.closedTrashIcon = `
   <svg class="trashIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-    <path d="M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1zM32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z"/>
+    <path class="trash-lid" d="M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1z"/>
+
+    <path d="M32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z"/>
+  </svg>
+`;
+
+window.twoBarsIcon = `
+  <svg class="twoBarsIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+    <path d="M32 288c-17.7 0-32 14.3-32 32s14.3 32 32 32l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 288zm0-128c-17.7 0-32 14.3-32 32s14.3 32 32 32l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 160z"/>
+  </svg>
+`;
+
+window.threeBarsIcon = `
+  <svg class="threeBarsIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+    <path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"/>
   </svg>
 `;
 
@@ -1020,6 +1040,9 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
 
   let MediaDownloadElement = document.createElement("div");
 
+  const leftDiv = document.createElement("div");
+  leftDiv.className = "left-div";
+
   const posterDiv = document.createElement("div");
   posterDiv.className = "poster-div";
 
@@ -1033,6 +1056,9 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
 
   const rightDiv = document.createElement("div");
   rightDiv.className = "download-movie-right-div";
+
+  const middleDiv = document.createElement("div");
+  middleDiv.className = "download-movie-middle-div";
 
   const titleP = document.createElement("p");
   titleP.className = "movie-title-p";
@@ -1088,16 +1114,19 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
   const speedP = document.createElement("p");
   speedP.className = "download-speed-p";
 
+  leftDiv.appendChild(posterDiv);
+
   buttonsDiv.appendChild(togglePauseBtn);
   buttonsDiv.appendChild(cancelBtn);
   buttonsDiv.appendChild(speedP);
 
-  rightDiv.appendChild(titleP);
-  rightDiv.appendChild(progressDiv);
-  rightDiv.appendChild(sizeDiv);
-  rightDiv.appendChild(buttonsDiv);
+  middleDiv.appendChild(titleP);
+  middleDiv.appendChild(progressDiv);
+  middleDiv.appendChild(sizeDiv);
+  middleDiv.appendChild(buttonsDiv);
 
-  MediaDownloadElement.appendChild(posterDiv);
+  MediaDownloadElement.appendChild(leftDiv);
+  MediaDownloadElement.appendChild(middleDiv);
   MediaDownloadElement.appendChild(rightDiv);
 
   return MediaDownloadElement;
