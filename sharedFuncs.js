@@ -1139,4 +1139,23 @@ async function loadCachedRightDivScrollValue(cachedData){
     RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
 }
 
+const welcomeMessages = [
+  "Enjoy the Show",
+  "Settle In and Enjoy",
+  "Happy Watching",
+  "Lights, Camera, Action!",
+  "Let's Watch Something Great",
+  "The Show Begins",
+  "Welcome to Your Theater",
+  "Sit Back and Relax",
+  "Let's Make It a Movie Night",
+  "Grab Your Popcorn",
+
+  // cinema reference 
+  "You mustn't be afraid to dream a little bigger, darling.",
+  "Do you want to take a leap of faith?",
+  "There's no place like home",
+  "May the Force be with you",
+  "Are you watching closely?"
+];
 

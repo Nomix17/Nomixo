@@ -1,5 +1,16 @@
-#div-top{
-  position:fixed;
+#div-main .welcome-page{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+#div-top {
+  position: fixed;
+  transition: opacity 0.3s ease;
+}
+
+#div-top.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .login-container {
@@ -7,23 +18,36 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  padding: 20px;
+  position: relative;
 }
 
 .login-card {
-  background: rgba(255,255,255,0.1);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 40px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 
+              0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  padding: 48px 40px;
   width: 100%;
-  max-width: 450px;
-  animation: fadeInUp 0.5s ease-out;
+  max-width: 420px;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  position: absolute;
+}
+
+.login-card.hidden {
+  opacity: 0;
+  transform: translateY(-30px);
+  pointer-events: none;
 }
 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -33,90 +57,108 @@
 
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .login-title {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 700;
   color: rgba(var(--text-color));
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .login-subtitle {
-  font-size: 14px;
-  color: rgba(var(--text-color),0.7);
+  font-size: 15px;
+  color: rgba(var(--text-color), 0.65);
   margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
 }
 
-/* Form Styles */
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
 }
 
 .form-group {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .form-label {
   font-size: 14px;
-  font-weight: 500;
-  color: rgba(var(--text-color),0.7);
+  font-weight: 600;
+  color: rgba(var(--text-color), 0.85);
+  letter-spacing: 0.2px;
 }
-#div-input-button-visibility{
-  display:flex;
-  flex-direction:row;
+
+#div-input-button-visibility {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  width: 100%;
 }
 
 .form-input {
   width: 100%;
-  background-color:rgba(0,0,0,0.3);
-  padding: 12px 40px 12px 16px;
-  font-size: 14px;
-  border: 2px solid rgba(255,255,255,0.5);
-  border-right:none;
-  border-radius: 8px 0 0 8px;
-  transition: all 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.25);
+  padding: 14px 52px 14px 16px;
+  font-size: 15px;
+  color: rgba(var(--text-color));
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
   box-sizing: border-box;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .form-input:focus {
-  border-color: rgba(255,255,255,1);
+  border-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 
+              0 0 0 3px rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
 }
 
-.form-input:focus + .toggle-btn {
-  border-color: rgba(255,255,255,1);
-}
 .form-input::placeholder {
-  color: rgba(var(--text-color),0.7);
+  color: rgba(var(--text-color), 0.4);
 }
 
 .toggle-btn {
-  right: 12px;
-  bottom: 11px;
-  background-color:rgba(0,0,0,0.3);
-  border: 2px solid rgba(255,255,255,0.5);
-  border-left: none;
-  border-radius: 0 8px 8px 0;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+  border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.3s ease, opacity 0.2s ease;
-  width:45px;
-  height:45px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
 }
 
-.toggle-btn img{
-  width:90%;
-  height:90%;
+.toggle-btn img {
+  width: 25px;
+  height: 25px;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  display: block;
+}
+
+.toggle-btn:hover img {
+  opacity: 1;
 }
 
 .eye-icon {
@@ -125,24 +167,43 @@
 }
 
 .submit-btn {
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
-  padding: 14px;
+  padding: 16px;
   font-size: 16px;
   font-weight: 600;
   color: rgba(var(--text-color));
-  background-color:rgba(var(--secondary-color));
+  background-color: rgba(var(--secondary-color));
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.3px;
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.submit-btn:hover::before {
+  opacity: 1;
 }
 
 .submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(255,255,255, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .submit-btn:active {
@@ -155,54 +216,72 @@
   transform: none;
 }
 
+.submit-btn:disabled:hover::before {
+  opacity: 0;
+}
+
 .error-message {
   font-size: 13px;
-  color: #e74c3c;
+  font-weight: 500;
+  color: #ff6b6b;
   text-align: center;
   min-height: 20px;
   display: none;
+  padding: 10px 16px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
 .error-message.show {
   display: block;
-  animation: shake 0.4s ease;
+  animation: shake 0.4s ease, fadeIn 0.3s ease;
 }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-10px); }
-  75% { transform: translateX(10px); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .login-footer {
-  margin-top: 24px;
+  margin-top: 32px;
   text-align: center;
-  padding-top: 24px;
-  border-top: 1px solid #e0e0e0;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .footer-text {
-  font-size: 13px;
-  color: rgba(var(--text-color),0.7);
+  font-size: 14px;
+  color: rgba(var(--text-color), 0.65);
   margin: 0;
+  font-weight: 400;
 }
 
 .footer-link {
-  color: #4a90e2;
+  color: rgba(var(--text-color), 0.85);
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(var(--text-color), 0.3);
+  padding-bottom: 1px;
 }
 
 .footer-link:hover {
-  color: #357abd;
-  text-decoration: underline;
+  color: rgba(var(--text-color), 1);
+  border-bottom-color: rgba(var(--text-color), 0.6);
 }
 
-#login-text{
-  padding:0;
-  margin:0;
-  transition: opacity 0.1s ease;
+#login-text {
+  padding: 0;
+  margin: 0;
+  transition: opacity 0.2s ease;
 }
 
 #lds-dual-ring-container {
@@ -210,20 +289,24 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity:0;
-  transition: opacity 0.3 ease;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
+
 .lds-dual-ring,
 .lds-dual-ring:after {
   box-sizing: border-box;
 }
+
 .lds-dual-ring {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width: 35px;
-  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
 }
+
 .lds-dual-ring:after {
   content: " ";
   display: block;
@@ -232,8 +315,9 @@
   border-radius: 50%;
   border: 3px solid currentColor;
   border-color: currentColor transparent currentColor transparent;
-  animation: lds-dual-ring 1.2s linear infinite;
+  animation: lds-dual-ring 1s linear infinite;
 }
+
 @keyframes lds-dual-ring {
   0% {
     transform: rotate(0deg);
@@ -244,9 +328,104 @@
 }
 
 #login-btn {
-  opacity:1;
+  opacity: 1;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.welcome-card {
+  text-align: center;
+  color: white;
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.welcome-card.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.welcome-card.hidden {
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
+}
+
+.welcome-title {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: rgba(var(--text-color));
+  opacity: 0;
+  transform: translateY(30px);
+  animation: none;
+}
+
+.welcome-card.show .welcome-title {
+  animation: fadeInUp 0.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.welcome-subtitle {
+  font-size: 20px;
+  color: rgba(var(--text-color), 0.85);
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: none;
+}
+
+.welcome-card.show .welcome-subtitle {
+  animation: fadeInUp 0.6s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 36px 28px;
+  }
+  
+  .login-title {
+    font-size: 28px;
+  }
+  
+  .login-subtitle {
+    font-size: 14px;
+  }
+
+  .welcome-title {
+    font-size: 36px;
+  }
+
+  .welcome-subtitle {
+    font-size: 18px;
+  }
+}
+
+#start-streaming-btn {
+  position: relative;
+  width: 150px;
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  background-color:rgba(255,255,255,0.1);
+  color: rgba(var(--text-color));
+  /* font-size: 1.1em; */
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+#start-streaming-btn:hover{
+  transform: scale(1.05);
+}
+
+#start-streaming-btn:active{
+  transform: scale(.9);
 }
