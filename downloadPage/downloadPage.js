@@ -204,6 +204,9 @@ function monitorDownloads(){
       if(doneDownloadContainer)
         doneDownloadContainer.appendChild(TargetDownloadElement);
       MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);
+      const downloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
+      downloadContainer.appendChild(TargetDownloadElement);
+      updateDownloadUI();
     }
 
   });
