@@ -330,11 +330,13 @@ function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo){
   let downloadedSizeElement = MediaDownloadElement.querySelector(".downloaded-size");
   let totalSizeElement = MediaDownloadElement.querySelector(".total-size");
   let rightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
+  const dragButton = MediaDownloadElement.querySelector(".drag-button");
 
   PercentageTextElement.style.display = "none";
   downloadSpeedElement.style.display = "none";
   progressBarElement.style.display = "none";
   downloadedSizeElement.style.display = "none";
+  if(dragButton) dragButton.remove();
 
   PausePlayButton.classList.add("completed", "just-finished");
   CancelButton.classList.add("completed", "just-finished");
@@ -373,8 +375,10 @@ function MarkDownloadElementAsPaused(MediaDownloadElement){
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
+  const dragButton = MediaDownloadElement.querySelector(".drag-button");
   let elementId = MediaDownloadElement.id; 
 
+  if(dragButton) dragButton.remove();
   downloadSpeedElement.innerHTML = "";
   PausePlayButton.innerHTML = playIcon;
 
@@ -427,7 +431,7 @@ function updateDownloadUI(){
 }
 
 function handleEmptyDownloadCategories(){
-  const categories = document.querySelectorAll(".downloads-categorie");
+  const categories = document.querySelectorAll(".downloads-categorie:not(#currently-downloading-div)");
 
   for(const downloadCategorieDiv of categories){
 
@@ -437,6 +441,18 @@ function handleEmptyDownloadCategories(){
     } else {
       downloadCategorieDiv.style.display = "block";
 
+    }
+  }
+  
+  const currentlyDownloadingContainer = currentlyDownloadingDiv.querySelector(".movieContainer");
+  if(currentlyDownloadingContainer) {
+    if(currentlyDownloadingContainer.innerHTML.trim() === ""){
+      currentlyDownloadingContainer.innerHTML = `<p class="empty-container" id="nothing-is-downloading"> Nothing is downloading </p>`;
+
+    } else {
+      const nothingIsDownloadingElement = document.getElementById("nothing-is-downloading");
+      if(nothingIsDownloadingElement)
+        nothingIsDownloadingElement.remove();
     }
   }
 }
