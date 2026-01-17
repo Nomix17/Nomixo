@@ -248,7 +248,7 @@ button{
 }
 
 /* Size Controls (also used for timing) */
-#div-subSize{
+.subtitles-configuration{
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -262,7 +262,7 @@ button{
   border:1px solid rgba(255, 255, 255, 0.2);
 }
 
-#div-subSize button {
+.subtitles-configuration button {
   display: flex;
   background: transparent;
   height: 100%;
@@ -279,27 +279,27 @@ button{
   cursor:pointer;
 }
 
-#div-subSize .minus-button{ 
+.subtitles-configuration .minus-button{ 
   border-radius: 10px 0 0 10px;
   border:none;
   border-right:1px solid rgba(255, 255, 255, 0.2);
 }
-#div-subSize .plus-button{ 
+.subtitles-configuration .plus-button{ 
   border-radius: 0px 10px 10px 0px;
   border:none;
   border-left:1px solid rgba(255, 255, 255, 0.2);
 }
 
-#div-subSize button:hover{
+.subtitles-configuration button:hover{
   color: rgb(var(--text-color));
   background-color:rgba(255,255,255,0.1);
 }
 
-#div-subSize button:active{
+.subtitles-configuration button:active{
   background-color:rgba(255,255,255,0.07);
 }
 
-#div-subSize p{
+.subtitles-configuration p{
   font-size: 16px;
   font-weight: 600;
   min-width: 80px;

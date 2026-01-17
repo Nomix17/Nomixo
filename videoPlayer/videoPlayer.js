@@ -516,7 +516,7 @@ function repositionSubDiv(){
 }
 
 let subsSizeOffsetPercent = 0;
-function SubSize(event,operation){
+function SubSize(operation){
   let SubSizeDivP = document.getElementById("div-subSize").querySelector("p");
   if(operation === "+" && subsSizeOffsetPercent < 200) subsSizeOffsetPercent += 10;
   else if(operation === "-" && subsSizeOffsetPercent > -100 ) subsSizeOffsetPercent -= 10;
@@ -525,6 +525,27 @@ function SubSize(event,operation){
   SubSizeDivP.innerText = Sign+subsSizeOffsetPercent+ "%"
   let currentFontSize = defaultFontSize + (defaultFontSize*subsSizeOffsetPercent)/100 + "px";
   SubDivDisplay.style.fontSize = currentFontSize;
+}
+
+let subsDelay = 0; // ms
+function SubDelay(operation){
+  let SubDelayDivP = document.getElementById("div-subDelay").querySelector("p");
+
+  let valueToAdd = 
+     operation === "+" ? 100 
+    : operation === "-" ? -100 
+    : 0;
+
+  subsDelay += valueToAdd;
+
+  let Sign = subsDelay >= 0 ?"+":"";
+  SubDelayDivP.innerText = Sign+subsDelay+ "ms"
+
+  for(let i=0;i<SubsStruct.length;i++) {
+    SubsStruct[i].startTime += valueToAdd;
+    SubsStruct[i].endTime += valueToAdd;
+  }
+
 }
 
 async function loadSubSettings(){
