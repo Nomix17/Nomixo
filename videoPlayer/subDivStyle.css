@@ -315,3 +315,16 @@ button{
 .hideElement{
   display: none !important;
 }
+
+.subtitles-configuration input{
+  text-align: center; 
+  border-radius: 5px;
+  padding: 5px;
+  margin: 5px;
+  font-size: 1.0em;
+  font-weight:bold;
+  background-color: transparent;
+  width: 180px;
+  border: none;
+  color: rgb(var(--text-color),0.7);
+}

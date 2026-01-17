@@ -14,7 +14,8 @@ let mediaImdbId = data.get("ImdbId");
 let seasonNumber = data.get("seasonNumber");
 let episodeNumber = data.get("episodeNumber");
 
-let defaultFontSize = 30;
+let subsDelay = 0; // ms
+let defaultFontSize = 30; // px
 
 let TopButtonsContainer = document.getElementById("div-topButtonsContainer");
 let MiddleContainer = document.getElementById("div-videoContainer");
@@ -30,6 +31,8 @@ let VolumeSliderElement = document.getElementById("input-volumeSlider");
 let switchToggle = document.getElementById("toggle-subs");
 let SubButton = document.getElementById("btn-OpenSubtitle");
 let SubDiv = document.getElementById("div-MainSubtitleContainer");
+let SubSizeDivInput = document.getElementById("div-subSize").querySelector("input");
+let SubDelayDivInput = document.getElementById("div-subDelay").querySelector("input");
 let bottomSubElement = document.getElementById("div-BottomSubContainer");
 
 let oldVolume = null;
@@ -133,6 +136,9 @@ MiddleContainer.addEventListener("dblclick",(event)=>{
 });
 
 window.addEventListener("keydown",(event)=>{
+  if(event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA')
+    return;
+
   if(event.key === "Escape") window.electronAPI.goBack();
   else if(event.key === "ArrowUp") VideoElement.volume = Math.min(1, VideoElement.volume + 0.1);
   else if(event.key === "ArrowDown") VideoElement.volume = Math.max(0, VideoElement.volume - 0.1);
@@ -414,7 +420,8 @@ function scrapSubs(SubsText){
 function displaySub(){
   let founded = false;
   for(let i=0;i<SubsStruct.length;i++){
-    if(SubsStruct[i].startTime <= VideoElement.currentTime && SubsStruct[i].endTime >= VideoElement.currentTime){
+    if((SubsStruct[i].startTime + (subsDelay / 1000)) <= VideoElement.currentTime &&
+       (SubsStruct[i].endTime + (subsDelay / 1000)) >= VideoElement.currentTime){
 
       if(SubDivDisplay.innerHTML !== SubsStruct[i].content){ 
         SubDivDisplay.innerHTML = SubsStruct[i].content.replaceAll("\n","<br>");
@@ -517,36 +524,59 @@ function repositionSubDiv(){
 
 let subsSizeOffsetPercent = 0;
 function SubSize(operation){
-  let SubSizeDivP = document.getElementById("div-subSize").querySelector("p");
   if(operation === "+" && subsSizeOffsetPercent < 200) subsSizeOffsetPercent += 10;
   else if(operation === "-" && subsSizeOffsetPercent > -100 ) subsSizeOffsetPercent -= 10;
 
   let Sign = subsSizeOffsetPercent >= 0 ?"+":"";
-  SubSizeDivP.innerText = Sign+subsSizeOffsetPercent+ "%"
+  SubSizeDivInput.value = Sign+subsSizeOffsetPercent+ "%"
   let currentFontSize = defaultFontSize + (defaultFontSize*subsSizeOffsetPercent)/100 + "px";
   SubDivDisplay.style.fontSize = currentFontSize;
 }
 
-let subsDelay = 0; // ms
 function SubDelay(operation){
-  let SubDelayDivP = document.getElementById("div-subDelay").querySelector("p");
-
   let valueToAdd = 
-     operation === "+" ? 100 
-    : operation === "-" ? -100 
+     operation === "+" ? 100
+    : operation === "-" ? -100
     : 0;
 
-  subsDelay += valueToAdd;
+  subsDelay += valueToAdd; // ms
 
   let Sign = subsDelay >= 0 ?"+":"";
-  SubDelayDivP.innerText = Sign+subsDelay+ "ms"
-
-  for(let i=0;i<SubsStruct.length;i++) {
-    SubsStruct[i].startTime += valueToAdd;
-    SubsStruct[i].endTime += valueToAdd;
-  }
+  SubDelayDivInput.value = Sign+subsDelay+ "ms"
 
 }
+
+SubSizeDivInput.value = "+0%";
+SubDelayDivInput.value = "+0ms";
+
+[SubSizeDivInput, SubDelayDivInput].forEach(subInputElement => {
+  subInputElement.addEventListener("focus" ,() => {
+    const formatedValue = getNumberFromStringInput(subInputElement.value);
+    subInputElement.setAttribute("old_value", formatedValue);
+  });
+
+  subInputElement.addEventListener("keydown",(event) => {
+    if(event.key === "Enter")
+      subInputElement.blur();
+  });
+});
+
+SubSizeDivInput.addEventListener("blur" ,() => {
+  let inputedValue = getValueForSubInputConfiguration(SubSizeDivInput);
+
+  let currentFontSize = defaultFontSize + (defaultFontSize * Number(inputedValue))/100 + "px";
+  SubDivDisplay.style.fontSize = currentFontSize;
+
+  subsDelay += Number(inputedValue);
+  SubSizeDivInput.value = `${inputedValue}%`;
+});
+
+SubDelayDivInput.addEventListener("blur" ,() => {
+  let inputedValue = getValueForSubInputConfiguration(SubDelayDivInput);
+  subsDelay = Number(inputedValue);
+  SubDelayDivInput.value = `${inputedValue}ms`;
+});
+
 
 async function loadSubSettings(){
   let Settings = await window.electronAPI.loadSettings(); 
@@ -637,6 +667,23 @@ function monitorMsgFromMainProcess(){
 
     }
   });
+}
+
+function getValueForSubInputConfiguration(inputElement){
+  const newValue = getNumberFromStringInput(inputElement.value);
+  const oldValue = inputElement.getAttribute("old_value");
+  const choosenValue =  newValue ?? oldValue;
+  if(choosenValue >= 0) return `+${choosenValue}`;
+  return choosenValue
+}
+
+function getNumberFromStringInput(rawInput){
+  let formatedInput = rawInput
+    .replace("ms","")
+    .replace("%","");
+
+  const numberInput = Number(formatedInput);
+  return !isNaN(numberInput) ? numberInput : null;
 }
 
 window.addEventListener("mousedown",hideSubDiv);
