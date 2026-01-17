@@ -4,7 +4,7 @@ const doneDownloadsDiv = document.getElementById("download-done-div");
 const pausedDownloadsDiv = document.getElementById("download-paused-div");
 
 let monitoringProgress = false;
-async function loadDownloadMediaFromLib(){
+async function loadDownloadMediaFromLib() {
   let library = await window.electronAPI.loadDownloadLibraryInfo();
 
   if(library !== undefined){
@@ -30,7 +30,7 @@ async function loadDownloadMediaFromLib(){
   updateDownloadUI();
 }
 
-async function createDownloadElement(mediaLibEntryPoint){
+async function createDownloadElement(mediaLibEntryPoint) {
   let downloadStatus = mediaLibEntryPoint?.Status;
   
   let currentSize = (mediaLibEntryPoint?.Downloaded / (1024 * 1024 * 1024)).toFixed(2);
@@ -71,11 +71,12 @@ async function createDownloadElement(mediaLibEntryPoint){
 
   let downloadCategorie;
 
-  if(downloadStatus.toLowerCase() === "downloading" || downloadStatus.toLowerCase() === "loading") {
+  if (downloadStatus.toLowerCase() === "downloading" || downloadStatus.toLowerCase() === "loading") {
     downloadCategorie = currentlyDownloadingDiv;
     handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
+    addBackgroundImageToDownloadingDiv(MediaDownloadElement,mediaLibEntryPoint?.posterPath);
 
-    if(downloadStatus.toLowerCase() === "loading") {
+    if (downloadStatus.toLowerCase() === "loading") {
       if(!loadingIntervals?.[mediaLibEntryPoint.torrentId])
         addingLoadingAnimation(mediaLibEntryPoint.torrentId,downloadSpeedElement,PausePlayButton);
     }
@@ -104,14 +105,14 @@ async function createDownloadElement(mediaLibEntryPoint){
   RightmiddleDiv.style.opacity = 1;
 }
 
-async function makeSurePosterIsLoaded(libraryEntryPoint,PosterElement){
+async function makeSurePosterIsLoaded(libraryEntryPoint,PosterElement) {
   let posterPathExist = await imagePathIsValid(libraryEntryPoint?.posterPath);
 
-  if(posterPathExist){
+  if (posterPathExist) {
     PosterElement.src = `file://${libraryEntryPoint?.posterPath}?t=${Date.now()}`;
     PosterElement.classList.remove("flashing-Div");
 
-  }else{
+  } else {
     PosterElement.classList.add("flashing-Div");
     let responce = await window.electronAPI.downloadImage(libraryEntryPoint.downloadPath, libraryEntryPoint.posterUrl);
 
@@ -131,7 +132,7 @@ async function makeSurePosterIsLoaded(libraryEntryPoint,PosterElement){
   }
 }
 
-async function makeSureBgImageIsDownloaded(libraryEntryPoint){
+async function makeSureBgImageIsDownloaded(libraryEntryPoint) {
   let bgImageIsDownloaded = await imagePathIsValid(libraryEntryPoint.bgImagePath);
 
   if(!bgImageIsDownloaded){
@@ -151,8 +152,7 @@ async function makeSureBgImageIsDownloaded(libraryEntryPoint){
   }
 }
 
-
-function imagePathIsValid(imagePath){
+function imagePathIsValid(imagePath) {
   return new Promise((res)=>{
     const tmpImg = new Image();
     tmpImg.onload = ()=>res(true);
@@ -161,7 +161,7 @@ function imagePathIsValid(imagePath){
   });
 }
 
-function monitorDownloads(){
+function monitorDownloads() {
   window.electronAPI.getDownloadProgress(async (data) => {
     let JsonData = data;
 
@@ -213,7 +213,7 @@ function monitorDownloads(){
   monitoringProgress = true;
 }
 
-function refreshEnties(){
+function refreshEnties() {
   window.electronAPI.getDownloadProgress(async (data) => {
     let JsonData = data;
     if(JsonData?.Status === "NewDownload"){
@@ -225,7 +225,7 @@ function refreshEnties(){
   });
 }
 
-function handleCancelButton(mediaInfo,MediaDownloadElement){
+function handleCancelButton(mediaInfo,MediaDownloadElement) {
   let cancelDownloadButton = MediaDownloadElement.querySelector(".cancel-button");
   cancelDownloadButton.addEventListener("click",async()=>{
     await window.electronAPI.cancelDownload(mediaInfo);
@@ -240,7 +240,7 @@ function handleCancelButton(mediaInfo,MediaDownloadElement){
 }
 
 let loadingIntervals = {};
-function handleTogglingPauseButton(torrentId,MediaDownloadElement){
+function handleTogglingPauseButton(torrentId,MediaDownloadElement) {
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
 
   PausePlayButton.addEventListener("click",async ()=>{
@@ -288,7 +288,7 @@ function handleTogglingPauseButton(torrentId,MediaDownloadElement){
   });
 }
 
-function addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlayButton){
+function addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlayButton) {
   PausePlayButton.classList.add("requesting-continue-download");
 
   let counter = 1;
@@ -300,19 +300,19 @@ function addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlayButton){
   },500);
 }
 
-async function removeLoadingAnimation(torrentId,PausePlayButton,NewStatus){
+async function removeLoadingAnimation(torrentId,PausePlayButton,NewStatus) {
   PausePlayButton.classList.remove("requesting-continue-download");
   clearInterval(loadingIntervals[torrentId]);
   delete loadingIntervals[torrentId];
   await SaveDownloadStatus(torrentId, NewStatus);
 }
 
-async function SaveDownloadStatus(torrentId, Status){
+async function SaveDownloadStatus(torrentId, Status) {
   await window.electronAPI.editElementInDownloadLibraryInfo(torrentId, "Status", Status);
 }
 
 
-function alignSizeDiv(){
+function alignSizeDiv() {
   let downloadTorrent = document.querySelectorAll(".download-media");
   downloadTorrent.forEach(element=>{
     let ProgressBar = element.querySelector(".progress-bar-div");
@@ -321,7 +321,7 @@ function alignSizeDiv(){
   });
 }
 
-function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo){
+function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo) {
   let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
@@ -371,7 +371,7 @@ function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo){
   });
 }
 
-function MarkDownloadElementAsPaused(MediaDownloadElement){
+function MarkDownloadElementAsPaused(MediaDownloadElement) {
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
@@ -389,7 +389,7 @@ function MarkDownloadElementAsPaused(MediaDownloadElement){
   removeLoadingAnimation(elementId,PausePlayButton,"Paused"); 
 }
 
-function MarkDownloadElementAsLoading(MediaDownloadElement){
+function MarkDownloadElementAsLoading(MediaDownloadElement) {
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
@@ -405,9 +405,11 @@ function MarkDownloadElementAsLoading(MediaDownloadElement){
   downloadSpeedElement.innerHTML = "loading"
 
   addingLoadingAnimation(elementId,downloadSpeedElement,PausePlayButton);
+  let posterImage = MediaDownloadElement.querySelector(".poster-img").src;
+  addBackgroundImageToDownloadingDiv(MediaDownloadElement,posterImage);
 }
 
-function monitorErrors(){
+function monitorErrors() {
   window.electronAPI.getDownloadErrorsReports(async (errorReport) => {
     let MediaDownloadElement = document.getElementById(errorReport.torrentId);
     MarkDownloadElementAsPaused(MediaDownloadElement)
@@ -415,7 +417,7 @@ function monitorErrors(){
   });
 }
 
-async function loadCachedPageInfo(){
+async function loadCachedPageInfo() {
   let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   if(cachedData){
     console.log("Loading Cached Information");
@@ -425,12 +427,12 @@ async function loadCachedPageInfo(){
   }
 }
 
-function updateDownloadUI(){
+function updateDownloadUI() {
   handleEmptyDownloadCategories();
   updateElementsCounterForEachContainer();
 }
 
-function handleEmptyDownloadCategories(){
+function handleEmptyDownloadCategories() {
   const categories = document.querySelectorAll(".downloads-categorie:not(#currently-downloading-div)");
 
   for(const downloadCategorieDiv of categories){
@@ -448,6 +450,7 @@ function handleEmptyDownloadCategories(){
   if(currentlyDownloadingContainer) {
     if(currentlyDownloadingContainer.innerHTML.trim() === ""){
       currentlyDownloadingContainer.innerHTML = `<p class="empty-container" id="nothing-is-downloading"> Nothing is downloading </p>`;
+      removeDownloadBackgroundDiv();
 
     } else {
       const nothingIsDownloadingElement = document.getElementById("nothing-is-downloading");
@@ -457,7 +460,7 @@ function handleEmptyDownloadCategories(){
   }
 }
 
-function updateElementsCounterForEachContainer(){
+function updateElementsCounterForEachContainer() {
   const categories = document.querySelectorAll(".downloads-categorie");
 
   for(const downloadCategorieDiv of categories){
@@ -465,6 +468,25 @@ function updateElementsCounterForEachContainer(){
     const downloadingMedias = downloadElementsContainer.querySelectorAll(".download-media");
     const counterElement = downloadCategorieDiv.querySelector(".downloads-counter");
     counterElement.innerText = downloadingMedias.length;
+  }
+
+}
+
+function addBackgroundImageToDownloadingDiv(mediaElement,posterImage) {
+  removeDownloadBackgroundDiv();
+
+  if(mediaElement && posterImage && posterImage.trim() !== "") {
+    let backgroundImageDiv = document.createElement("div");
+    backgroundImageDiv.className = "currently-downloading-background-div";
+    backgroundImageDiv.style.backgroundImage = `url('${posterImage}')`;
+    currentlyDownloadingDiv.prepend(backgroundImageDiv);
+  }
+}
+
+function removeDownloadBackgroundDiv() {
+  const downloadBackgroundDiv = document.querySelector(".currently-downloading-background-div");
+  if (downloadBackgroundDiv) {
+    downloadBackgroundDiv.remove();
   }
 
 }
