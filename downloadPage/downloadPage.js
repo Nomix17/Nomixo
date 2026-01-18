@@ -26,8 +26,8 @@ async function loadDownloadMediaFromLib() {
     }
   }
 
-  await loadCachedPageInfo();
   updateDownloadUI();
+  await loadCachedPageInfo();
 }
 
 async function createDownloadElement(mediaLibEntryPoint) {
