@@ -470,38 +470,11 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
       let MagnetLink = `magnet:?xt=urn:btih:${Hash}`
 
       if(parseInt(SeedersNumber) && fileName.trim() !== ""){
-        let TorrentElement = document.createElement("div");
-        TorrentElement.id = "div-TorrentMedia";
-        TorrentElement.style.marginBottom = "5px";
-        TorrentElement.innerHTML = `
-          <div style="" class="div-MediaQuality"><p style="font-size:15px;padding-right: 0px">${Quality}</p></div>
-          <div style="max-width:80%;width: fit-content;"  class="div-MediaDescription">
-            <p style="padding:0px 10px 10px 0px;">${Title}</p>
-            <div style="display:flex;justify-content:flex-start;align-items:center;flex-direction:row;font-size:13px;">
-              <div id="div-storageImage"></div> ${Size} &ensp;
-              <div id="div-seedImage"></div> ${SeedersNumber} 
-            </div>
-          </div>
-        `;
+        const torrentBasicInfo = [Quality, Title, Size, SeedersNumber];
+        const torrentAdvancedInfo = [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
+                                      backgroundImage, episodeInfo, Size, Quality, Title];
 
-        TorrentElement.addEventListener("click",()=>{
-          openMediaVideo(undefined,MediaId,MediaType,undefined,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
-        });
-        
-        TorrentElement.addEventListener("mousedown",(event)=>{
-          if (event.button === 2) {
-            let mediaTitle = document.getElementById("h1-MovieTitle").innerText;
-            let mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
-            let DownloadTargetInfo = {
-              IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
-              Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
-              fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
-              seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
-            };
-            setupDownloadDivEvents(DownloadTargetInfo);
-            handleRightClicksForTorrentElement(DownloadTargetInfo);
-          }
-        });
+        const TorrentElement = createTorrentElement(torrentBasicInfo,torrentAdvancedInfo);
 
         if(MediaLibraryInfo?.typeOfSave?.includes("Currently Watching") &&
           String(MagnetLink) === String(MediaLibraryInfo["Magnet"]) &&
@@ -513,12 +486,13 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
         TorrentMagnetContainer.append(TorrentElement);
       }
     });
+
     TorrentMagnetContainer.classList.remove("preloadingTorrent");
-    if(TorrentMagnetContainer.innerHTML.trim() === "") throw new Error("No Useful Results Were found !");
-    // if(TorrentMagnetContainer.style.display !== "none"){
-      TorrentContainer.style.display = "block";
-      TorrentMagnetContainer.style.display = "block";
-    // }
+    if(TorrentMagnetContainer.innerHTML.trim() === "")
+      throw new Error("No Useful Results Were found !");
+
+    TorrentContainer.style.display = "block";
+    TorrentMagnetContainer.style.display = "block";
     loadIconsDynamically();
 }
 
@@ -539,7 +513,9 @@ function insertContinueWatchingButton(container,MediaLibraryInfo){
   let episodeInfo = {"seasonNumber":MediaLibraryInfo.seasonNumber, "episodeNumber":MediaLibraryInfo.episodeNumber}
 
   continueVideoButton.addEventListener("click",()=>{
-    openMediaVideo(MediaLibraryInfo.TorrentIdentification,MediaLibraryInfo.MediaId, MediaLibraryInfo.MediaType, MediaLibraryInfo.Magnet,MediaLibraryInfo.mediaImdbId,MediaLibraryInfo.bgImagePath,episodeInfo);
+    openMediaVideo(MediaLibraryInfo.TorrentIdentification,MediaLibraryInfo.MediaId, MediaLibraryInfo.MediaType,
+      MediaLibraryInfo.Magnet,MediaLibraryInfo.mediaImdbId,MediaLibraryInfo.bgImagePath,episodeInfo);
+
     event.preventDefault();
     event.stopPropagation();
   });

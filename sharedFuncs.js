@@ -311,6 +311,78 @@ window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
 
 }
 
+function createTorrentElement(torrentBasicInfo, torrentAdvancedInfo) {
+  let [Quality, Title, Size, SeedersNumber] = torrentBasicInfo;
+  const TorrentElement = document.createElement("div");
+  TorrentElement.classList.add("div-TorrentMedia");
+  TorrentElement.style.marginBottom = "5px";
+
+  const qualityDiv = document.createElement("div");
+  qualityDiv.classList.add("div-MediaQuality");
+
+  const qualityP = document.createElement("p");
+  qualityP.textContent = Quality;
+  qualityDiv.appendChild(qualityP);
+
+  const descriptionDiv = document.createElement("div");
+  descriptionDiv.classList.add("div-MediaDescription");
+
+  const titleP = document.createElement("p");
+  titleP.textContent = Title;
+
+  const infoDiv = document.createElement("div");
+  infoDiv.classList.add("torrent-info-div");
+
+  const storageIcon = document.createElement("div");
+  storageIcon.classList.add("div-storageImage");
+
+  const seedIcon = document.createElement("div");
+  seedIcon.classList.add("div-seedImage");
+
+  const sizeText = document.createTextNode(` ${Size} \u00A0\u00A0`);
+  const seedText = document.createTextNode(` ${SeedersNumber}`);
+
+  infoDiv.appendChild(storageIcon);
+  infoDiv.appendChild(sizeText);
+  infoDiv.appendChild(seedIcon);
+  infoDiv.appendChild(seedText);
+
+  descriptionDiv.appendChild(titleP);
+  descriptionDiv.appendChild(infoDiv);
+
+  TorrentElement.appendChild(qualityDiv);
+  TorrentElement.appendChild(descriptionDiv);
+
+  addTorrentElementEventListener(TorrentElement,torrentAdvancedInfo);
+
+  return TorrentElement;
+}
+
+function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
+  let [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
+       backgroundImage, episodeInfo, Size, Quality, Title] = torrentsInfo;
+
+  TorrentElement.addEventListener("click",()=>{
+    openMediaVideo(undefined,MediaId,MediaType,undefined,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
+  });
+ 
+  // right click handeling
+  TorrentElement.addEventListener("mousedown",(event)=>{
+    if (event.button === 2) {
+      let mediaTitle = document.getElementById("h1-MovieTitle").innerText;
+      let mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
+      let DownloadTargetInfo = {
+        IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
+        Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
+        fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
+        seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
+      };
+      setupDownloadDivEvents(DownloadTargetInfo);
+      handleRightClicksForTorrentElement(DownloadTargetInfo);
+    }
+  });
+}
+
 async function loadLibraryInfo(){
   try{
     const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch((err)=>console.error(err.message));
@@ -418,7 +490,7 @@ window.loadIconsDynamically = ()=>{
   fetch('../assets/icons/storage.svg')
     .then(response => response.text())
     .then(svgText => {
-      document.querySelectorAll('#div-storageImage').forEach(element=>element.innerHTML = svgText);
+      document.querySelectorAll('.div-storageImage').forEach(element=>element.innerHTML = svgText);
     })
     .catch(err=>{
       console.error(err.message);
@@ -426,7 +498,7 @@ window.loadIconsDynamically = ()=>{
   fetch('../assets/icons/seeds.svg')
     .then(response => response.text())
     .then(svgText => {
-      document.querySelectorAll('#div-seedImage').forEach(element=>element.innerHTML = svgText);
+      document.querySelectorAll('.div-seedImage').forEach(element=>element.innerHTML = svgText);
     })
     .catch(err=>{
       console.error(err.message);
