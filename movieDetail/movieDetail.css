@@ -411,7 +411,7 @@ h1{
 
 #div-MovieLogoTitleContainer {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   padding: 0 0 5vh 1vh;
   width: 100%;
   min-height: 150px;
