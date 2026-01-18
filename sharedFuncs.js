@@ -427,105 +427,105 @@ window.setupKeyPressesHandler = () =>{
   });
 }
 
-function getNumberOfElementsInRow(currentElementIndex, focusableElements){
-  const currentElementYPos = focusableElements?.[currentElementIndex].getBoundingClientRect().top;
-  let numberOfElementsInRow = 1;
-
-  if (currentElementYPos) {
-    for(let i = 1 ;; i++){
-      let found = false;
-      const elementOnLeft = focusableElements?.[currentElementIndex - i];
-      const elementOnRight = focusableElements?.[currentElementIndex + i];
-
-      if (elementOnLeft) {
-        let yPosition = elementOnLeft.getBoundingClientRect().top;
-        if (yPosition  === currentElementYPos) {
-          found = true;
-          numberOfElementsInRow ++;
-        }
-      }
-
-      if (elementOnRight) {
-        let yPosition = elementOnRight.getBoundingClientRect().top;
-        if (yPosition  === currentElementYPos) {
-          found = true;
-          numberOfElementsInRow ++;
-        }
-      }
-
-      if(!found) break;
-    }
-
-  }
-
-  return numberOfElementsInRow;
-}
-
 function handleNavigationButtonsHandler(focusFunction) {
 
   document.addEventListener("keydown", (event) => {
-    const focusable = [...document.querySelectorAll("[tabindex='0']")];
-    let index = focusable.indexOf(document.activeElement);
-
-    if(index < 0){
-      let currentlyHovered = document.querySelector("[tabindex='0']:hover");
-      index = focusable.indexOf(currentlyHovered);
-    }
-
-    if (event.key === "ArrowRight") {
+    const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
+    if(arrowKeys.includes(event.key)) {
       event.preventDefault();
-      const next = focusable[index + 1];
-      if (next) {
-        focusFunction(next);
-      }
-    }
 
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      const prev = focusable[index - 1];
-      if (prev) {
-        focusFunction(prev);
-      }
-    }
+      const focusable = [...document.querySelectorAll("[tabindex='0']")];
+      let index = focusable.indexOf(document.activeElement);
 
-    if (index > -1)  {
-      if (event.key === "ArrowUp") {
-        event.preventDefault();
-        const numberOfElementsInARow = getNumberOfElementsInRow(index, focusable) ;
-        const prev = focusable[index - numberOfElementsInARow];
-        if (prev) {
-          focusFunction(prev);
-        } else {
-          focusFunction(focusable[0]);
-        }
+      if (index < 0) {
+        let currentlyHovered = document.querySelector("[tabindex='0']:hover");
+        let hoveredElementIndex = focusable.indexOf(currentlyHovered);
+        if(hoveredElementIndex)
+          index = hoveredElementIndex;
+        else 
+          return;
       }
+      
+      let offset = 0;
+      if (event.key === "ArrowRight")  offset = 1;
 
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
-        const numberOfElementsInARow = getNumberOfElementsInRow(index, focusable) ;
-        const next = focusable[index + numberOfElementsInARow];
-        if (next) {
-          focusFunction(next);
-        } else {
-          focusFunction(focusable[focusable.length-1]);
-        }
+      if (event.key === "ArrowLeft") offset = -1;
+
+      if (event.key === "ArrowUp")
+        offset = -1 * getElementOnTopOffset(index, focusable);
+      
+
+      if (event.key === "ArrowDown")
+        offset = getElementOnBottomOffset(index, focusable);
+
+      const nextHover = focusable[index + offset];
+      if (nextHover) {
+        focusFunction(nextHover);
       }
 
     } else {
-      event.preventDefault();
-      const prev = focusable[0];
-      if (prev) {
-        focusFunction(prev);
+      if (event.key === "Enter") {
+        document.activeElement.click();
       }
     }
-
-    if (event.key === "Enter") {
-      document.activeElement.click();
-    }
-
   });
 }
 
+function getElementOnTopOffset(currentElementIndex, focusableElements) {
+  const currentElement = focusableElements?.[currentElementIndex];
+  let topOffset = 1;
+  
+  if (currentElement) {
+    const currentElementXPos = currentElement.getBoundingClientRect().right;
+    for(let i = 1 ;; i++) {
+      const elementPrevElement = focusableElements?.[currentElementIndex - i];
+
+      if (elementPrevElement) {
+        let xPosition = elementPrevElement.getBoundingClientRect().right;
+
+        if (xPosition  !== currentElementXPos) {
+          topOffset ++;
+          
+        } else {
+          return topOffset
+        }
+
+      } else {
+        return currentElementIndex;
+      }
+    }
+  }
+
+  return -1 * topOffset; 
+}
+
+function getElementOnBottomOffset(currentElementIndex, focusableElements) {
+  const currentElement = focusableElements?.[currentElementIndex];
+  let bottomOffset = 1;
+  
+  if (currentElement) {
+    const currentElementXPos = currentElement.getBoundingClientRect().right;
+    for(let i = 1 ;; i++) {
+      const elementNextElement = focusableElements?.[currentElementIndex + i];
+
+      if (elementNextElement) {
+        let xPosition = elementNextElement.getBoundingClientRect().right;
+
+        if (xPosition  !== currentElementXPos) {
+          bottomOffset ++;
+          
+        } else {
+          return bottomOffset;
+        }
+
+      } else {
+        return focusableElements.length-1 - currentElementIndex;
+      }
+    }
+  }
+ 
+  return bottomOffset
+}
 
 window.setupNavigationBtnHandler = ()=>{
   let moveRightBtns = document.querySelectorAll(".moveMovieElementsToTheRightBtn");
