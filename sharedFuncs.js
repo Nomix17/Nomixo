@@ -61,6 +61,7 @@ function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,
     mediaPosterElement.src = normalizeRootUrl(PosterImage);
 
   mediaDomElement.classList.add("div-MovieElement");
+  mediaDomElement.setAttribute("tabindex",0);
   mediaPosterElement.classList.add("img-MoviePoster");
   mediaPosterContainer.classList.add("img-MoviePosterContainer");
   mediaNameElement.classList.add("parag-MovieTitle");
@@ -315,6 +316,7 @@ function createTorrentElement(torrentBasicInfo, torrentAdvancedInfo) {
   let [Quality, Title, Size, SeedersNumber] = torrentBasicInfo;
   const TorrentElement = document.createElement("div");
   TorrentElement.classList.add("div-TorrentMedia");
+  TorrentElement.setAttribute("tabindex", "0");
   TorrentElement.style.marginBottom = "5px";
 
   const qualityDiv = document.createElement("div");
@@ -424,6 +426,106 @@ window.setupKeyPressesHandler = () =>{
         event.altKey) event.preventDefault();
   });
 }
+
+function getNumberOfElementsInRow(currentElementIndex, focusableElements){
+  const currentElementYPos = focusableElements?.[currentElementIndex].getBoundingClientRect().top;
+  let numberOfElementsInRow = 1;
+
+  if (currentElementYPos) {
+    for(let i = 1 ;; i++){
+      let found = false;
+      const elementOnLeft = focusableElements?.[currentElementIndex - i];
+      const elementOnRight = focusableElements?.[currentElementIndex + i];
+
+      if (elementOnLeft) {
+        let yPosition = elementOnLeft.getBoundingClientRect().top;
+        if (yPosition  === currentElementYPos) {
+          found = true;
+          numberOfElementsInRow ++;
+        }
+      }
+
+      if (elementOnRight) {
+        let yPosition = elementOnRight.getBoundingClientRect().top;
+        if (yPosition  === currentElementYPos) {
+          found = true;
+          numberOfElementsInRow ++;
+        }
+      }
+
+      if(!found) break;
+    }
+
+  }
+
+  return numberOfElementsInRow;
+}
+
+function handleNavigationButtonsHandler(focusFunction) {
+
+  document.addEventListener("keydown", (event) => {
+    const focusable = [...document.querySelectorAll("[tabindex='0']")];
+    let index = focusable.indexOf(document.activeElement);
+
+    if(index < 0){
+      let currentlyHovered = document.querySelector("[tabindex='0']:hover");
+      index = focusable.indexOf(currentlyHovered);
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      const next = focusable[index + 1];
+      if (next) {
+        focusFunction(next);
+      }
+    }
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      const prev = focusable[index - 1];
+      if (prev) {
+        focusFunction(prev);
+      }
+    }
+
+    if (index > -1)  {
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        const numberOfElementsInARow = getNumberOfElementsInRow(index, focusable) ;
+        const prev = focusable[index - numberOfElementsInARow];
+        if (prev) {
+          focusFunction(prev);
+        } else {
+          focusFunction(focusable[0]);
+        }
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        const numberOfElementsInARow = getNumberOfElementsInRow(index, focusable) ;
+        const next = focusable[index + numberOfElementsInARow];
+        if (next) {
+          focusFunction(next);
+        } else {
+          focusFunction(focusable[focusable.length-1]);
+        }
+      }
+
+    } else {
+      event.preventDefault();
+      const prev = focusable[0];
+      if (prev) {
+        focusFunction(prev);
+      }
+    }
+
+    if (event.key === "Enter") {
+      document.activeElement.click();
+    }
+
+  });
+}
+
 
 window.setupNavigationBtnHandler = ()=>{
   let moveRightBtns = document.querySelectorAll(".moveMovieElementsToTheRightBtn");

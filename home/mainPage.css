@@ -666,7 +666,6 @@ input::selection {
   }
 }
 
-/* Dark mode variant */
 .flashing-Div.dark {
   background: linear-gradient(
     90deg,
@@ -676,4 +675,9 @@ input::selection {
   );
   background-size: 200% 100%;
   animation: skeleton 1.5s ease-in-out infinite;
+}
+
+:focus-visible  .img-MoviePoster {
+  cursor:pointer;
+  border-color: rgba(var(--MovieElement-hover-BorderColor));
 }

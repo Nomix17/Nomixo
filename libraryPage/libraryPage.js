@@ -200,9 +200,14 @@ async function initPage(){
   RightmiddleDiv.style.opacity = 1;
 }
 
+function focusFunction(element) {
+  element.focus();
+}
+
 initPage();
 setupKeyPressesForInputElement(searchInput);
 setupKeyPressesHandler();
+handleNavigationButtonsHandler(focusFunction);
 setLeftButtonStyle("btn-library");
 loadIconsDynamically();
 handlingMiddleRightDivResizing();

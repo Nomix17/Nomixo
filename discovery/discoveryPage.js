@@ -205,10 +205,14 @@ async function initPage(){
   detectWhenScrollsArriveAtTheEndOfAPage(apiKey);
 }
 
+function focusFunction(element) {
+  element.focus();
+}
 
 initPage();
 
 setupKeyPressesForInputElement(searchInput);
+handleNavigationButtonsHandler(focusFunction);
 setupKeyPressesHandler();
 setLeftButtonStyle("btn-discover");
 loadIconsDynamically();

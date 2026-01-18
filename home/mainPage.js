@@ -54,18 +54,17 @@ async function manageLibraryData(apiKey,LibraryInformation){
     document.getElementById("continue-watching-categorie").style.display = "none";
 }
 
+function focusFunction(element) {
+  element.focus();
+}
+
 loadMovies();
 
 setupKeyPressesHandler();
-
+handleNavigationButtonsHandler(focusFunction);
 setLeftButtonStyle("btn-home");
-
 setupKeyPressesForInputElement(searchInput); 
-
 setupNavigationBtnHandler();
-
 resizeMoviesPostersContainers([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
-
 loadIconsDynamically();
-
 handlingMiddleRightDivResizing();

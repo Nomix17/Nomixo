@@ -137,6 +137,8 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
     SeasonDiv.setAttribute("season_number",episode.season_number);
     let EpisodeElement = document.createElement("div");
     EpisodeElement.className = "div-episodes-Element";
+    EpisodeElement.setAttribute("tabindex",0);
+
     EpisodeElement.innerHTML += `
       <h4>${episode.episode_number}</h4>
         <div style="height:70px;width:124px" class="episode-image-container">
@@ -816,6 +818,32 @@ window.addEventListener("keydown",(event)=>{
   }
 });
 
+function focusFunction(element) {
+  if (element.classList.contains("div-episodes-Element")) {
+    const EpisodeElements = document.querySelectorAll(".div-episodes-Element");
+
+    for(const element of EpisodeElements) {
+      if (element.classList.contains("episode_hovered")) {
+        element.classList.remove("episode_hovered")
+        break;
+      }
+    }
+
+    element.classList.add("episode_hovered")
+    
+  } else {
+    const TorrentElements = document.querySelectorAll(".div-TorrentMedia");
+    for(const element of TorrentElements) {
+      if (element.classList.contains("hovered_torrent")) {
+        element.classList.remove("hovered_torrent")
+        break;
+      }
+    }
+    element.classList.add("hovered_torrent")
+  }
+
+  element.focus();
+}
 
 setupKeyPressesHandler();
 handleLibraryButton()
@@ -823,3 +851,4 @@ fetchInformation();
 handleDivsResize();
 handleFullScreenIcon();
 loadIconsDynamically();
+handleNavigationButtonsHandler(focusFunction);
