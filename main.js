@@ -442,6 +442,13 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
   return results;
 });
 
+ipcMain.handle("download-subtitles", async(event, mediaInfo, subsObjects) => {
+  const torrentId = mediaInfo.torrentId;
+  const TorrentDownloadDir = mediaInfo.downloadPath;
+  const subtitlesWhereUpdated = await downloadSubs(subsObjects, torrentId, TorrentDownloadDir);
+  return {updated:subtitlesWhereUpdated};
+});
+
 function findFileInsideTorrent(torrent, targetFileName){
   let filesPathsHashMap = {};
   let files = torrent.files ?? [];
@@ -957,16 +964,23 @@ async function pauseDownloadingTorrent(torrent, torrentId){
 
 }
 
-function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
+async function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
   // Download subtitles
   if (subsObjects.length) {
     try {
       let subDownloadDir = path.join(TorrentDownloadDir, `SUBS_${torrentId}`);
       fs.mkdirSync(subDownloadDir, { recursive: true });
-      downloadMultipleSubs(subDownloadDir, subsObjects);
+      const downloadRes = await downloadMultipleSubs(subDownloadDir, subsObjects);
+      const numberOfSeccessfulDownloads = downloadRes.filter(res => res.status === "success")?.length;
+      console.log(numberOfSeccessfulDownloads);
+      if(!numberOfSeccessfulDownloads)
+        return false;
+      return true;
+
     } catch (err) {
       reportDownloadError("Subtitles Download", torrentId, err);
       console.error("Subtitle download error:", err);
+      return false
     }
   }
 }

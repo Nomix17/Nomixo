@@ -32,7 +32,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeElementFromDownloadLibraryInfo: (torrentId) => ipcRenderer.invoke("remove-from-download-lib",torrentId),
   editElementInDownloadLibraryInfo: (torrentId, key, value) => ipcRenderer.invoke("edit-download-lib",torrentId, key, value),
   loadDownloadLibraryInfo: (targetIdentification) => ipcRenderer.invoke("load-from-download-lib",targetIdentification),
-
+  
+  downloadSubtitles: (mediaInfo, subsObjects) => ipcRenderer.invoke("download-subtitles", mediaInfo, subsObjects),
   loadLocalSubs: (downloadPath,identifyingElements) => ipcRenderer.invoke("load-local-subs",downloadPath,identifyingElements),
   readSubFile: (filePath) => ipcRenderer.invoke("read-sub-file",filePath),
 

@@ -272,7 +272,6 @@ async function SaveDownloadStatus(torrentId, Status) {
   await window.electronAPI.editElementInDownloadLibraryInfo(torrentId, "Status", Status);
 }
 
-
 function alignSizeDiv() {
   let downloadTorrent = document.querySelectorAll(".download-media");
   downloadTorrent.forEach(element=>{
@@ -282,7 +281,114 @@ function alignSizeDiv() {
   });
 }
 
-function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo) {
+// Helper function to hide context menu with animation
+function hideContextMenu(menuDiv) {
+  menuDiv.classList.remove("visible");
+  setTimeout(() => {
+    menuDiv.classList.remove("show");
+  }, 200);
+}
+
+// Helper function to show context menu with animation
+function showContextMenu(menuDiv) {
+  menuDiv.classList.add("show");
+  // Force reflow to ensure transition works
+  menuDiv.offsetHeight;
+  setTimeout(() => {
+    menuDiv.classList.add("visible");
+  }, 10);
+}
+
+// Updated context menu handler with improved click-outside detection
+function setupContextMenuHandler(contextMenuButton, contextMenuDiv) {
+  let isMenuOpen = false;
+
+  contextMenuButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    
+    if (!isMenuOpen) {
+      // Close any other open menus first
+      document.querySelectorAll(".select-dropdown.visible").forEach(menu => {
+        if (menu !== contextMenuDiv) {
+          hideContextMenu(menu);
+        }
+      });
+      
+      showContextMenu(contextMenuDiv);
+      isMenuOpen = true;
+      
+      // Add click-outside handler
+      setTimeout(() => {
+        document.addEventListener("click", handleClickOutside);
+      }, 0);
+    } else {
+      hideContextMenu(contextMenuDiv);
+      isMenuOpen = false;
+      document.removeEventListener("click", handleClickOutside);
+    }
+  });
+
+  function handleClickOutside(event) {
+    // Check if click is outside both button and menu
+    if (!contextMenuButton.contains(event.target) && 
+        !contextMenuDiv.contains(event.target)) {
+      hideContextMenu(contextMenuDiv);
+      isMenuOpen = false;
+      document.removeEventListener("click", handleClickOutside);
+    }
+  }
+}
+
+function createContextMenuDiv(totalSizeElement,MediaInfo) {
+  const menuDiv = document.createElement("div");
+  menuDiv.classList.add("select-dropdown");
+
+  const updateSubtitles = document.createElement("div");
+  updateSubtitles.textContent = "Update Subtitles";
+  updateSubtitles.classList.add("select-option");
+
+  const updatePosters = document.createElement("div");
+  updatePosters.textContent = "Update Posters";
+  updatePosters.classList.add("select-option");
+
+  updateSubtitles.addEventListener("click", async(e) => {
+    e.stopPropagation();
+    const totalSizeElementContaint = totalSizeElement.innerHTML;
+    const subsObjects = await loadingAllSubs(MediaInfo.IMDB_ID);
+                
+    totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating subtitles`;
+
+    window.electronAPI.downloadSubtitles(MediaInfo,  subsObjects).then((res) => {
+      console.log(res?.updated);
+      if (res?.updated) {
+        totalSizeElement.innerHTML = "Subtitles Updated ✔";
+        setTimeout(() => {
+          totalSizeElement.innerHTML = totalSizeElementContaint;
+        },3000);
+
+      } else {
+        totalSizeElement.innerHTML = "Failed To Update Subtitles ⨯";
+        setTimeout(() => {
+          totalSizeElement.innerHTML = totalSizeElementContaint;
+        },3000);
+      }
+    });
+
+    hideContextMenu(menuDiv);
+  });
+
+  updatePosters.addEventListener("click", (e) => {
+    e.stopPropagation();
+    hideContextMenu(menuDiv);
+  });
+
+  menuDiv.appendChild(updateSubtitles);
+  menuDiv.appendChild(updatePosters);
+
+  return menuDiv;
+}
+
+function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
@@ -291,28 +397,45 @@ function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo) {
   let downloadedSizeElement = MediaDownloadElement.querySelector(".downloaded-size");
   let totalSizeElement = MediaDownloadElement.querySelector(".total-size");
   let rightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
-  const dragButton = MediaDownloadElement.querySelector(".drag-button");
+  let dragButton = MediaDownloadElement.querySelector(".drag-button");
+  
+  // Remove existing context menu if any
+  let existingContextMenu = MediaDownloadElement.querySelector(".context-menu-button");
+  if (existingContextMenu) existingContextMenu.remove();
+  
+  let contextMenuButton = document.createElement("button");
+  let contextMenuDiv = createContextMenuDiv(totalSizeElement,MediaInfo);
 
   PercentageTextElement.style.display = "none";
   downloadSpeedElement.style.display = "none";
   progressBarElement.style.display = "none";
   downloadedSizeElement.style.display = "none";
-  if(dragButton) dragButton.remove();
+  if (dragButton) dragButton.remove();
 
   PausePlayButton.classList.add("completed", "just-finished");
   CancelButton.classList.add("completed", "just-finished");
+  contextMenuButton.classList.add("context-menu-button");
 
+  contextMenuButton.innerHTML = menuThreePoints;
   PausePlayButton.innerHTML = `${videoIcon} Watch`;
   totalSizeElement.innerText = `${totalSizeElement.innerText} • Completed`;
   CancelButton.innerHTML = closedTrashIcon;
+  
   rightDiv.appendChild(PausePlayButton);
   rightDiv.appendChild(CancelButton);
+  MediaDownloadElement.appendChild(contextMenuButton);
+  contextMenuButton.appendChild(contextMenuDiv);
 
   setTimeout(() => {
     PausePlayButton.classList.remove("just-finished");
+    CancelButton.classList.remove("just-finished");
   }, 600);
-  
+
+  // Setup context menu with improved handler
+  setupContextMenuHandler(contextMenuButton, contextMenuDiv);
+
   PausePlayButton.addEventListener("click", (event) => {
+    event.stopPropagation();
     let episodeInfo = {
       "seasonNumber": MediaInfo.seasonNumber, 
       "episodeNumber": MediaInfo.episodeNumber
@@ -328,7 +451,6 @@ function MarkDownloadElementAsFinished(MediaDownloadElement,MediaInfo) {
       MediaInfo.bgImagePath,
       episodeInfo
     );
-    event.stopPropagation();
   });
 }
 
