@@ -384,7 +384,22 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
       if (userDownloadPath) {
         defaultDownloadDir = userDownloadPath;
       }
-      
+
+      const MAX_LENGTH = 200;
+
+      if (torrentInfo.dirName.length > MAX_LENGTH) {
+        const dirId = generateUniqueId(torrentInfo.dirName);
+        const prefix = torrentInfo.dirName.slice(0, 120);
+        
+        let newName = prefix;
+
+        if (torrentInfo.seasonNumber && torrentInfo.episodeNumber) {
+          newName += `-S${torrentInfo.seasonNumber}E${torrentInfo.episodeNumber}`;
+        }
+
+        torrentInfo.dirName = `${newName}-${dirId}`;
+      }
+
       const TorrentDownloadDir = path.join(defaultDownloadDir, torrentInfo.dirName);
       fs.mkdirSync(TorrentDownloadDir, { recursive: true });
       
