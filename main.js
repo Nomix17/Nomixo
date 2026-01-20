@@ -518,7 +518,8 @@ ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
   } else {
 
     try {
-      await pauseDownloadingTorrent(targetTorrent, torrentId)
+      await pauseDownloadingTorrent(targetTorrent, torrentId);
+      downloadNextTorrentInQueue();
     } catch(err) {
       console.error(err.message);
       return [{response:"failed",error:err.message,torrentId:torrentId}];
@@ -537,7 +538,7 @@ async function pauseAllDownloadingTorrents(){
     let torrentInstance = downloadingTorrent.torrentInstance;
     let torrentInfo = downloadingTorrent.torrentInfo;
     let pausedTorrentId = await pauseDownloadingTorrent(torrentInstance, torrentInfo.torrentId)
-    pausedTorrents.push({response: "paused", torrentId:pausedTorrentId});
+    pausedTorrents.push({response: "queued", torrentId:pausedTorrentId});
     downloadQueue.push(torrentInfo);
   }
 
@@ -915,19 +916,19 @@ function destroyDownloadingTorrent(torrent, torrentId){
         deleteTorrentFromMediaHashMap(torrentId);
         res();
       });
-
     } catch(err) {
       rej(new Error(err));
     }
-
   });
-
 }
 
 function downloadNextTorrentInQueue() {
   if(downloadQueue.length){
     const nextTorrent = downloadQueue.shift();
-    downloadTorrent(nextTorrent);
+    if (nextTorrent?.torrentId) {
+      downloadTorrent(nextTorrent);
+      WINDOW.webContents.send("update-download-categorie",[{response:"continued",torrentId:nextTorrent.torrentId}]);
+    }
   }
 }
 

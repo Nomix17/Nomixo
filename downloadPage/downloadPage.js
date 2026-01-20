@@ -245,46 +245,7 @@ function handleTogglingPauseButton(torrentId,MediaDownloadElement) {
 
   PausePlayButton.addEventListener("click",async ()=>{
     let pauseResponces = await window.electronAPI.toggleTorrentDownload(torrentId);
-    for(const res of pauseResponces){
-      let targetElement = document.getElementById(res?.torrentId);
-      let targetElementCategorie;
-
-      if(res?.response  === "paused" && res?.torrentId){
-        if(targetElement){
-          MarkDownloadElementAsPaused(targetElement);
-          // if (MediaDownloadElement !== targetElement)
-          targetElementCategorie = pausedDownloadsDiv;
-        }
-
-      } else if(res?.response  === "continued" && res?.torrentId){
-        if(targetElement){
-          MarkDownloadElementAsLoading(targetElement);
-          targetElementCategorie = currentlyDownloadingDiv;
-        }
-        await SaveDownloadStatus(res.torrentId, "Loading");
-
-      } else if(res?.response === "failed"){
-        console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
-        if(targetElement){
-          MarkDownloadElementAsPaused(targetElement)
-          targetElementCategorie = pausedDownloadsDiv;
-        }
-
-      } else {
-        console.error("Cannot Find Torrent: ",res?.torrentId);
-        if(targetElement){
-          MarkDownloadElementAsPaused(targetElement)
-          targetElementCategorie = pausedDownloadsDiv;
-        }
-      }
-    
-      const targetElementContainer = targetElementCategorie.querySelector(".movieContainer");
-      if(targetElementContainer){
-        targetElementContainer.appendChild(targetElement);
-      }
-
-    }
-    updateDownloadUI();
+    await handlingDownloadCategorieChanging(pauseResponces);
   });
 }
 
@@ -472,12 +433,13 @@ function updateElementsCounterForEachContainer() {
 
 }
 
-function addBackgroundImageToDownloadingDiv(mediaElement,posterImage) {
+async function addBackgroundImageToDownloadingDiv(mediaElement,posterImage) {
   removeDownloadBackgroundDiv();
 
   if(mediaElement && posterImage && posterImage.trim() !== "") {
     let backgroundImageDiv = document.createElement("div");
     backgroundImageDiv.className = "currently-downloading-background-div";
+    await makeSureImageIsLoaded(posterImage);
     backgroundImageDiv.style.backgroundImage = `url('${posterImage}')`;
     currentlyDownloadingDiv.prepend(backgroundImageDiv);
   }
@@ -491,12 +453,85 @@ function removeDownloadBackgroundDiv() {
 
 }
 
+function makeSureImageIsLoaded(imagePath) {
+  return new Promise((resolve) => {
+    if(!imagePath){
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      resolve();
+    };
+    img.onerror = () => {
+      console.log(`Failed To load Image: ${imagePath}`);
+      setTimeout(()=>{
+        makeSureImageIsLoaded(imagePath);
+      },1000);
+    };
+    img.src = imagePath;
+  });
+}
+
+function handleDownloadCategoryUpdateFromMain() {
+  window.electronAPI.updateDownloadCategorie(res => {
+    handlingDownloadCategorieChanging(res);
+  });
+}
+
+async function handlingDownloadCategorieChanging(categorieChangedTorrents) {
+  for(const res of categorieChangedTorrents) {
+    let targetElement = document.getElementById(res?.torrentId);
+    let targetElementCategorie;
+
+    if((res?.response  === "paused" || res?.response === "queued") && res?.torrentId){
+      if(targetElement){
+        if(res?.response  === "paused"){
+          targetElementCategorie = pausedDownloadsDiv;
+        } else if(res?.response === "queued") {
+          targetElementCategorie = queuedDownloadsDiv;
+        }
+        MarkDownloadElementAsPaused(targetElement);
+      }
+
+    } else if(res?.response  === "continued" && res?.torrentId){
+      if(targetElement){
+        MarkDownloadElementAsLoading(targetElement);
+        targetElementCategorie = currentlyDownloadingDiv;
+      }
+      await SaveDownloadStatus(res.torrentId, "Loading");
+
+    } else if(res?.response === "failed"){
+      console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
+      if(targetElement){
+        MarkDownloadElementAsPaused(targetElement)
+        targetElementCategorie = pausedDownloadsDiv;
+      }
+
+    } else {
+      console.error("Cannot Find Torrent: ",res?.torrentId);
+      if(targetElement){
+        MarkDownloadElementAsPaused(targetElement)
+        targetElementCategorie = pausedDownloadsDiv;
+      }
+    }
+
+    const targetElementContainer = targetElementCategorie.querySelector(".movieContainer");
+    if(targetElementContainer){
+      targetElementContainer.appendChild(targetElement);
+    }
+
+  }
+  updateDownloadUI();
+}
+
 window.addEventListener("resize",()=>{
   alignSizeDiv();
 });
 
 setupKeyPressesHandler();
 loadDownloadMediaFromLib();
+handleDownloadCategoryUpdateFromMain();
 refreshEnties();
 setLeftButtonStyle("btn-download");
 loadIconsDynamically();
