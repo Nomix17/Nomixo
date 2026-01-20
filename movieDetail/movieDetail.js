@@ -177,7 +177,6 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
 
       let seasonNumber = String(episode.season_number).padStart(2,"0");
       let episodeNumber = String(episode.episode_number).padStart(2,"0");
-      let episodeName = episode.name;
 
       let episodeInfo = {seasonNumber:seasonNumber,episodeNumber:episodeNumber}
       try{
@@ -221,33 +220,33 @@ function handleEpisodeElementColoring(DivContainer, currentEpisodeElement) {
   });
 }
 
-async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}){
+async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
   let MediaTypeForSearch = MediaType === "anime" ? "tv" :MediaType;
   let libraryInfo = await loadMediaEntryPointLibraryInfo();
-  fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`)
-    .then(res => res.json())
-    .then(data => {
-      IMDB_ID = data.imdb_id;
-      let fetchUrl;
-      if(MediaTypeForSearch === "tv")
-        fetchUrl = `https://torrentio.strem.fun/stream/series/${IMDB_ID}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`;
-      else
-        fetchUrl = `https://torrentio.strem.fun/stream/movie/${IMDB_ID}.json`;
 
-      fetch(fetchUrl)
-        .then(res=>res.json())  
-        .then(data =>{
-          insertTorrentInfoElement(data,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo);
-        })
-        .catch(error =>{
-          TorrentMagnetContainer.innerHTML = "";
-          let NothingWasFound = document.createElement("div");
-          NothingWasFound.classList.add("div-NothingWasFound");
-          NothingWasFound.innerHTML = error.message;
-          TorrentMagnetContainer.appendChild(NothingWasFound);
-          console.error(error);
-        });
-    });
+  let mediaTorrentInformation;
+
+  try {
+    const mediaExternalIdsRes = await fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`);
+    const mediaExternalIdsData = await mediaExternalIdsRes.json();
+    IMDB_ID = mediaExternalIdsData.imdb_id;
+    let url = (MediaType === "tv") 
+      ? `https://torrentio.strem.fun/stream/series/${IMDB_ID}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`
+      : `https://torrentio.strem.fun/stream/movie/${IMDB_ID}.json`;
+
+
+    const mediaTorrentRes = await fetch(url);
+    mediaTorrentInformation = await mediaTorrentRes.json();
+    insertTorrentInfoElement(mediaTorrentInformation,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo);
+
+  } catch(error) {
+    TorrentMagnetContainer.innerHTML = "";
+    let NothingWasFound = document.createElement("div");
+    NothingWasFound.classList.add("div-NothingWasFound");
+    NothingWasFound.innerHTML = error.message;
+    TorrentMagnetContainer.appendChild(NothingWasFound);
+    console.error(error);
+  };
 }
 
 async function insertMediaInformation(data,apiKey){
@@ -790,7 +789,7 @@ async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles){
   DownloadTargetInfo["userDownloadPath"] = userDownloadPath;
   let subsObjects = [];
   if(downloadSubtitles){
-     subsObjects = await loadingAllSubs(DownloadTargetInfo.IMDB_ID);
+    subsObjects = await loadingAllSubs(DownloadTargetInfo.IMDB_ID,DownloadTargetInfo.episodeNumber,DownloadTargetInfo.seasonNumber);
   }
 
   window.electronAPI.downloadTorrent([DownloadTargetInfo],subsObjects);
