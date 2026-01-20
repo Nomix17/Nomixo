@@ -48,8 +48,6 @@ loadSubSettings();
 
 loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber)
 
-loadingAllSubs(mediaImdbId);
-
 TopButtonsContainer.addEventListener("mouseenter", ()=>{ mouseHoveringOnControlDiv = true });
 TopButtonsContainer.addEventListener("mouseleave", ()=>{ mouseHoveringOnControlDiv = false });
 BottomButtonsContainer.addEventListener("mouseenter", ()=>{ mouseHoveringOnControlDiv = true });
@@ -295,7 +293,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
   let fileIsMkv = (fileName.endsWith("mkv"));
 
   if(usingMagnet){
-    let subs = await loadingAllSubs(mediaImdbId);
+    let subs = await loadingAllSubs(mediaImdbId,seasonNumber,episodeNumber);
     subtitlesArray = subs;
     if(fileIsMkv){
       // pass to externel Player

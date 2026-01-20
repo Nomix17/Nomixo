@@ -1083,9 +1083,15 @@ function putTextIntoDiv(Div,textContent){
   Div.append(textDiv);
 }
 
-async function loadingAllSubs(id){
+async function loadingAllSubs(id,episodeNumber,seasonNumber){
   try{
-    const res = await fetch(`https://sub.wyzie.ru/search?id=${id}`);
+    let url;
+    if (episodeNumber && seasonNumber) {
+      url = `https://sub.wyzie.ru/search?id=${id}&season=${episodeNumber}&episode=${seasonNumber}`;
+    } else {
+      url = `https://sub.wyzie.ru/search?id=${id}`;
+    }
+    const res = await fetch(url);
     
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
