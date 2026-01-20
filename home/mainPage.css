@@ -279,7 +279,7 @@ body, html {
   height:50px;
   background-color: rgba(var(--input-backgroundColor));
   border:2px solid rgba(255,255,255,30%);
-  border-radius:400px 0 0 400px;
+  border-radius:100px 0 0 100px;
   border-right:none;
   cursor:text;
   transition: border-color 0.3s ease;
@@ -304,7 +304,7 @@ body, html {
   height:50px;
   background-color: rgba(var(--input-backgroundColor));
   border:2px solid rgba(255,255,255,30%);
-  border-radius:0 1000px 1000px 0;
+  border-radius:0 100px 100px 0;
   border-left:none;
   cursor:pointer;
 }
