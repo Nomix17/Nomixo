@@ -261,12 +261,12 @@ async function insertSubElements(fetchedData){
 
         if(fetchedData[i]?.type === "local"){
           let fileContent = await window.electronAPI.readSubFile(subtitlePath);
-          scrapSubs(fileContent);
+          parseSrtSubs(fileContent);
 
         }else{
           fetch(subtitlePath).then(res => res.text())
           .then(data => {
-            scrapSubs(data);
+            parseSrtSubs(data);
           });
         }
       });
@@ -389,7 +389,7 @@ function getTimeInSecFromString(text){
   return Time;
 }
 
-function scrapSubs(SubsText){
+function parseSrtSubs(SubsText){
   SubsStruct = [];
   SubDivDisplay.innerHTML = "";
 

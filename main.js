@@ -699,6 +699,11 @@ function loadSubConfigs(){
 }
 
 function applySubConfigs(jsonContent){
+  const mpvConfig = parseMpvConfigs(jsonContent);
+  fs.writeFileSync(SubConfigFile,mpvConfig);
+}
+
+function parseMpvConfigs(jsonContent) {
   let mpvConfig = "osc=yes \nborder=no \nosd-bar=no";
 
   let Entities = Object.entries(jsonContent);
@@ -713,7 +718,7 @@ function applySubConfigs(jsonContent){
       mpvConfig += entry[0] + "=" + value;
     }
   }
-  fs.writeFileSync(SubConfigFile,mpvConfig);
+  return mpvConfig;
 }
 
 function initializeDataFiles(){
