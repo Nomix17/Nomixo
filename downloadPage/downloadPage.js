@@ -577,23 +577,31 @@ function removeDownloadBackgroundDiv() {
 
 function makeSureImageIsLoaded(imagePath) {
   return new Promise((resolve) => {
-    if(!imagePath){
+    if (!imagePath) {
+      resolve();
       return;
     }
 
-    const img = new Image();
-    img.onload = () => {
-      resolve();
+    const tryLoad = () => {
+      const img = new Image();
+
+      img.onload = () => {
+        console.log(`Image Successfully loaded: ${imagePath}`);
+        resolve();
+      };
+
+      img.onerror = () => {
+        console.log(`Failed To load Image: ${imagePath}, retrying...`);
+        setTimeout(tryLoad, 1000);
+      };
+
+      img.src = `${imagePath}?t=${Date.now()}`;
     };
-    img.onerror = () => {
-      console.log(`Failed To load Image: ${imagePath}`);
-      setTimeout(()=>{
-        makeSureImageIsLoaded(imagePath);
-      },1000);
-    };
-    img.src = imagePath;
+
+    tryLoad();
   });
 }
+
 
 function handleDownloadCategoryUpdateFromMain() {
   window.electronAPI.updateDownloadCategorie(res => {
