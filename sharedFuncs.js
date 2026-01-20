@@ -412,24 +412,35 @@ window.setupKeyPressesForInputElement = (searchInput)=>{
 }
 
 let dontGoBack = false;
-window.setupKeyPressesHandler = () =>{
+function setupKeyPressesHandler() {
   window.addEventListener("keydown",(event)=>{
-    if(event.key === "Escape"){
-      if(dontGoBack)
+    if (event.key === "Escape") {
+      if(dontGoBack) {
         dontGoBack = false;
-      else
+      } else {
         window.electronAPI.goBack(document.URL);
+      }
+    
+    } else if (event.key === "Tab" || event.metaKey || event.altKey) {// event.ctrlKey
+      event.preventDefault();
+
+    } else if (event.key === "/") {
+      const searchInput = document.getElementById("input-searchForMovie");
+      if (searchInput) {
+        searchInput.focus();
+        event.preventDefault();
+      }
     }
-    if (event.key === "Tab" ||
-        event.metaKey ||
-        // event.ctrlKey ||
-        event.altKey) event.preventDefault();
   });
 }
 
 function handleNavigationButtonsHandler(focusFunction) {
 
   document.addEventListener("keydown", (event) => {
+    const tag = event.target;
+    if (tag.tagName === "INPUT" || tag.tagName === "TEXTAREA" || tag.isContentEditable)  
+      return;
+
     const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
     if(arrowKeys.includes(event.key)) {
       event.preventDefault();
