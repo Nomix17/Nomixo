@@ -238,15 +238,45 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
     const mediaTorrentRes = await fetch(url);
     mediaTorrentInformation = await mediaTorrentRes.json();
     insertTorrentInfoElement(mediaTorrentInformation,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo);
+  
 
-  } catch(error) {
-    TorrentMagnetContainer.innerHTML = "";
-    let NothingWasFound = document.createElement("div");
-    NothingWasFound.classList.add("div-NothingWasFound");
-    NothingWasFound.innerHTML = error.message;
-    TorrentMagnetContainer.appendChild(NothingWasFound);
+  } catch (error) {
     console.error(error);
-  };
+
+    TorrentMagnetContainer.innerHTML = "";
+
+    const nothingWasFoundDiv = document.createElement("div");
+    nothingWasFoundDiv.classList.add("div-NothingWasFound");
+
+    const isNoResultsError =
+      error?.message !== "No Useful Results Were found !";
+
+    nothingWasFoundDiv.textContent = isNoResultsError
+      ? error.message
+      : "Failed To Fetch Torrents, Please try again";
+
+    if (!isNoResultsError) {
+      const refreshButton = document.createElement("button");
+      refreshButton.className = "btn-refreshAfterWarningMessage";
+      refreshButton.innerHTML = reloadIcon;
+      refreshButton.addEventListener("click",() => {
+        TorrentMagnetContainer.innerHTML =
+          `<div class="img-movieMedias-LoadingGif" class="loader">
+            <div class="dot dot1"></div>
+            <div class="dot dot2"></div>
+            <div class="dot dot3"></div>
+            <div class="dot dot4"></div>
+          </div>`;
+
+        setTimeout(() => {
+          fetchTorrent(apiKey,MediaId,MediaType);
+        },1000);
+      });
+      nothingWasFoundDiv.appendChild(refreshButton);
+    }
+
+    TorrentMagnetContainer.appendChild(nothingWasFoundDiv);
+  }
 }
 
 async function insertMediaInformation(data,apiKey){
