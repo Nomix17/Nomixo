@@ -359,7 +359,6 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
     totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating subtitles`;
 
     window.electronAPI.downloadSubtitles(MediaInfo,  subsObjects).then((res) => {
-      console.log(res?.updated);
       if (res?.updated) {
         totalSizeElement.innerHTML = "Subtitles Updated ✔";
         setTimeout(() => {
