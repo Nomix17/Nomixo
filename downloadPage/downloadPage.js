@@ -353,6 +353,8 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
 
   updateSubtitles.addEventListener("click", async(e) => {
     e.stopPropagation();
+    hideContextMenu(menuDiv);
+
     const totalSizeElementContaint = totalSizeElement.innerHTML;
     const subsObjects = await loadingAllSubs(MediaInfo.IMDB_ID);
                 
@@ -373,7 +375,6 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
       }
     });
 
-    hideContextMenu(menuDiv);
   });
 
   updatePosters.addEventListener("click", (e) => {
