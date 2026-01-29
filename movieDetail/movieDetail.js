@@ -34,7 +34,7 @@ setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.erro
 
 EpisodesContainer.style.cursor = 'default';
 
-if(MediaType === "movie") TorrentContainer.style.display = "flex";
+if(MediaType === "movie") TorrentContainer.style.display = "block";
 
 let seasonsDivArray = [];
 
@@ -184,10 +184,10 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
         resizeTorrentAndEpisodeElement(defaultRatio,EpisodesContainer);
         resizeTorrentAndEpisodeElement(defaultRatio,TorrentMagnetContainer);
 
-        TorrentContainer.style.display = "flex";
+        TorrentContainer.style.display = "block";
         TorrentContainer.style.borderRadius = "0px";
 
-        TorrentMagnetContainer.style.display = "flex";
+        TorrentMagnetContainer.style.display = "block";
         TorrentMagnetContainer.style.borderRadius = "0px";
         TorrentContainer.style.borderRadius = "0px";
         TorrentMagnetContainer.style.width = "100px";
@@ -310,7 +310,7 @@ async function insertMediaInformation(data,apiKey){
     addSeasonsDropDownEventListener()
 
   }else{
-    TorrentMagnetContainer.style.display = "flex";
+    TorrentMagnetContainer.style.display = "block";
     selectSeasonContainer.style.display = "none";
   }
 
@@ -535,8 +535,6 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
     if(TorrentMagnetContainer.innerHTML.trim() === "")
       throw new Error("No Useful Results Were found !");
 
-    TorrentContainer.style.display = "block";
-    TorrentMagnetContainer.style.display = "block";
     loadIconsDynamically();
 }
 

@@ -517,8 +517,8 @@ h1{
 }
 
 .img-movieMedias-LoadingGif{
-  position:relative;
-  margin-left:20px;
+  margin: 0 auto;
+  width: fit-content;
 }
 #bottomButtonsDiv{
   display:flex;
