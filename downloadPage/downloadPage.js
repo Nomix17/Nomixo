@@ -436,7 +436,9 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   // Setup context menu with improved handler
   setupContextMenuHandler(contextMenuButton, contextMenuDiv);
 
-  PausePlayButton.addEventListener("click", (event) => {
+  const newPausePlayButton = removeAllListeners(PausePlayButton);
+
+  newPausePlayButton.addEventListener("click", (event) => {
     event.stopPropagation();
     let episodeInfo = {
       "seasonNumber": MediaInfo.seasonNumber, 
@@ -454,6 +456,12 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
       episodeInfo
     );
   });
+}
+
+function removeAllListeners(elementToReplace){
+  const newElement = elementToReplace.cloneNode(true);
+  elementToReplace.parentNode.replaceChild(newElement, elementToReplace);
+  return newElement;
 }
 
 function MarkDownloadElementAsPaused(MediaDownloadElement) {
