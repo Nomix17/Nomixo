@@ -286,7 +286,7 @@ function hideContextMenu(menuDiv) {
   menuDiv.classList.remove("visible");
   setTimeout(() => {
     menuDiv.classList.remove("show");
-  }, 200);
+  }, 30);
 }
 
 // Helper function to show context menu with animation
@@ -417,7 +417,7 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   contextMenuButton.classList.add("context-menu-button");
 
   contextMenuButton.innerHTML = menuThreePoints;
-  PausePlayButton.innerHTML = `${videoIcon}<p style="margin-bottom:10%"> Watch</p>`;
+  PausePlayButton.innerHTML = `${videoIcon}<p style="margin-bottom:20%"> Watch</p>`;
   totalSizeElement.innerText = `${totalSizeElement.innerText} • Completed`;
   CancelButton.innerHTML = closedTrashIcon;
   

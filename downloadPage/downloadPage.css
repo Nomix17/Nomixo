@@ -42,6 +42,10 @@
   font-size: 35px;
 }
 
+#download-done-div{
+  margin-bottom:30px;
+}
+
 .downloads-counter {
   display: flex;
   justify-content: center;
