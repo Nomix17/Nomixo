@@ -66,7 +66,7 @@ async function createDownloadElement(mediaLibEntryPoint) {
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
 
-  makeSurePosterIsLoaded(mediaLibEntryPoint,PosterElement,mediaLibEntryPoint?.posterPath);
+  makeSurePosterIsLoaded(mediaLibEntryPoint,PosterDiv,PosterElement);
   makeSureBgImageIsDownloaded(mediaLibEntryPoint);
 
   let downloadCategorie;
@@ -105,20 +105,22 @@ async function createDownloadElement(mediaLibEntryPoint) {
   RightmiddleDiv.style.opacity = 1;
 }
 
-async function makeSurePosterIsLoaded(libraryEntryPoint,PosterElement) {
+async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement) {
   let posterPathExist = await imagePathIsValid(libraryEntryPoint?.posterPath);
 
   if (posterPathExist) {
+    PosterElement.classList.add("show");
     PosterElement.src = `file://${libraryEntryPoint?.posterPath}?t=${Date.now()}`;
-    PosterElement.classList.remove("flashing-Div");
+    PosterDiv.classList.remove("flashing-Div");
 
   } else {
-    PosterElement.classList.add("flashing-Div");
+    PosterDiv.classList.add("flashing-Div");
     let responce = await window.electronAPI.downloadImage(libraryEntryPoint.downloadPath, libraryEntryPoint.posterUrl);
 
     if(responce.download_result === "success") {
       // close loop
-      PosterElement.classList.remove("flashing-Div");
+      PosterDiv.classList.remove("flashing-Div");
+      PosterElement.classList.add("show");
       PosterElement.src = `file://${libraryEntryPoint?.posterPath}?t=${Date.now()}`;
       console.log(`Poster was downloaded Successfully: ${libraryEntryPoint.torrentId}`);
 
@@ -555,15 +557,22 @@ function updateElementsCounterForEachContainer() {
 
 }
 
-async function addBackgroundImageToDownloadingDiv(mediaElement,posterImage) {
+async function addBackgroundImageToDownloadingDiv(mediaElement, posterImage) {
   removeDownloadBackgroundDiv();
-
   if(mediaElement && posterImage && posterImage.trim() !== "") {
     let backgroundImageDiv = document.createElement("div");
     backgroundImageDiv.className = "currently-downloading-background-div";
+
+    backgroundImageDiv.classList.remove("shown");   
     await makeSureImageIsLoaded(posterImage);
     backgroundImageDiv.style.backgroundImage = `url('${posterImage}')`;
     currentlyDownloadingDiv.prepend(backgroundImageDiv);
+    
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        backgroundImageDiv.classList.add("shown");
+      });
+    });
   }
 }
 

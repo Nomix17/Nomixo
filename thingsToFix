@@ -1,1 +1,0 @@
-when removing a downloaded media, you should remove the download path from the library.json or set it to undefine or something.

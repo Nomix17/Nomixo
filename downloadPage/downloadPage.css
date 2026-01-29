@@ -92,18 +92,23 @@
 .poster-div {
   position: relative;
   cursor: pointer;
+  border-radius: 10px;
 }
 
 .poster-img {
+  opacity:0;
   width: 120px;
   height: 180px;
   border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   flex-shrink: 0;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
+.poster-img.show{
+  opacity:1;
+}
 .poster-div:hover .poster-img {
   transform: scale(1.06);
 }
@@ -474,6 +479,8 @@
   background-size: cover;
   background-position: center;
   border-radius: 20px;
+  opacity:0;
+  transition: opacity 0.4s ease-in-out;
   filter: blur(8px) brightness(50%);
   mask-image: 
     linear-gradient(to right, transparent 0px, black 5px, black calc(100% - 5px), transparent 100%),
@@ -483,6 +490,9 @@
     linear-gradient(to bottom, transparent 0px, black 5px, black calc(100% - 5px), transparent 100%);
   mask-composite: intersect;
   -webkit-mask-composite: source-in;
+}
+#currently-downloading-div .currently-downloading-background-div.shown {
+  opacity:1;
 }
 
 #currently-downloading-div > *:not(.currently-downloading-background-div) {
