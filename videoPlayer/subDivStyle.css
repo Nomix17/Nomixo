@@ -183,7 +183,7 @@ button{
   overflow-x: auto;
   display: flex;
   flex-direction: row;
-  align-items: start;
+  align-items: center;
   justify-content: flex-start;
   width: 100%;
   max-width: 100%;
