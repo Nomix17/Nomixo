@@ -356,9 +356,9 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
     hideContextMenu(menuDiv);
 
     const totalSizeElementContaint = totalSizeElement.innerHTML;
-    const subsObjects = await loadingAllSubs(MediaInfo.IMDB_ID);
-                
     totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating subtitles`;
+
+    const subsObjects = await loadingAllSubs(MediaInfo.IMDB_ID);
 
     window.electronAPI.downloadSubtitles(MediaInfo,  subsObjects).then((res) => {
       if (res?.updated) {
