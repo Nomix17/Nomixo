@@ -55,10 +55,11 @@ function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,
 
   mediaNameElement.innerHTML = `<p>${Title}</p>`;
 
+  PosterImage = normalizeRootUrl(PosterImage);
   if(imageLoadingAnimation)
     loadImageWithAnimation(mediaPosterContainer,mediaPosterElement, PosterImage);
   else
-    mediaPosterElement.src = normalizeRootUrl(PosterImage);
+    mediaPosterElement.src = PosterImage;
 
   mediaDomElement.classList.add("div-MovieElement");
   mediaDomElement.setAttribute("tabindex",0);
@@ -68,6 +69,7 @@ function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,
 
   mediaDomElement.setAttribute("mediaId",Id);
   mediaDomElement.setAttribute("mediaType",ThisMediaType);
+  mediaDomElement.setAttribute("posterUrl",PosterImage);
 
   mediaPosterContainer.appendChild(mediaPosterElement)
   mediaDomElement.appendChild(mediaPosterContainer);
@@ -171,12 +173,14 @@ function createMediaElementForLibrary(mediaData, mediaEntryPoint, IsInHomePage=f
       ? "https://image.tmdb.org/t/p/w500/"+mediaData["poster_path"] 
       : "../assets/PosterNotFound.png";
 
+  PosterImage = normalizeRootUrl(PosterImage);
   let imageLoadingAnimation = true;
   let movieDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,imageLoadingAnimation);
   let removeFromLibraryButton = createRemoveFromWatchingLaterButton(Id,ThisMediaType,IsInHomePage)
 
   movieDomElement.setAttribute("saveType",ThisSaveType);
   movieDomElement.setAttribute("saveTime",ThisSaveTime);
+  movieDomElement.setAttribute("posterUrl",PosterImage);
 
   movieDomElement.appendChild(removeFromLibraryButton);
 

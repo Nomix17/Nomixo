@@ -137,8 +137,13 @@ async function loadCachedMediaData(cachedData){
       if(mediaDomElement){
         const mediaId = mediaDomElement.getAttribute("mediaId");
         const mediaType = mediaDomElement.getAttribute("mediaType");
-        if(mediaId && mediaType)
+        const posterUrl = mediaDomElement.getAttribute("posterUrl");
+        if(mediaId && mediaType){
+          const posterContainer = mediaDomElement.querySelector(".img-MoviePosterContainer");
+          const posterElement = mediaDomElement.querySelector(".img-MoviePoster");
+          loadImageWithAnimation(posterContainer,posterElement,posterUrl);
           addEventListenerToMediaDomElementToOpenDetailPage(mediaDomElement,mediaId,mediaType)
+        }
       }
     }
 
