@@ -227,21 +227,28 @@ function insertLanguageButton(subs) {
 
 function getSubsViaLanguage(language){
   let languageData = subtitlesArray.filter(sub => sub.language === language);
+  hideAllSubsInList();
   if(!languageData.length){
-    document.getElementById("div-subsList").innerHTML = "Cannot Find Subtitles In This Language";
+    const subsList = document.getElementById("div-subsList");
+    subsList.classList.add("no-subs-found");
     return;
   }
   insertSubElements(languageData);
 }
 
-async function insertSubElements(fetchedData){
+async function hideAllSubsInList() {
   let subsList = document.getElementById("div-subsList");
+  subsList.classList.remove("no-subs-found");
 
-  let loadedSubsButtonsArray = Array.from(subsList.children);
+  let loadedSubsButtonsArray = Array.from(subsList.querySelectorAll("button"));
   loadedSubsButtonsArray.forEach(element=>{
     element.style.display = "none";
     element.style.margin = 0;
   });
+}
+
+async function insertSubElements(fetchedData){
+  let subsList = document.getElementById("div-subsList");
 
   for(let i=0 ;i<fetchedData.length;i++){
 

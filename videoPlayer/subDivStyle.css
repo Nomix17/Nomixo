@@ -188,12 +188,23 @@ button{
   width: 100%;
   max-width: 100%;
   height: auto;
+  min-height:15%;
   gap: 8px;
   background: rgba(255, 255, 255, 0.03);
   border:1px solid rgba(255, 255, 255, 0.09);
   color: rgba(var(--text-color), 0.6);
   border-radius: 10px;
   padding:10px 10px;
+}
+
+#div-subsList p{
+  font-weight:400;
+  color: rgba(var(--text-color), 0.4);
+  display:none;
+}
+
+#div-subsList.no-subs-found p{
+  display: block;
 }
 
 #div-subsList button{ 
