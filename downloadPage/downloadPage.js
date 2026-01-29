@@ -417,7 +417,7 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   contextMenuButton.classList.add("context-menu-button");
 
   contextMenuButton.innerHTML = menuThreePoints;
-  PausePlayButton.innerHTML = `${videoIcon} Watch`;
+  PausePlayButton.innerHTML = `${videoIcon}<p style="margin-bottom:10%"> Watch</p>`;
   totalSizeElement.innerText = `${totalSizeElement.innerText} • Completed`;
   CancelButton.innerHTML = closedTrashIcon;
   
