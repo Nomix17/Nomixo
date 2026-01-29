@@ -134,7 +134,7 @@ MiddleContainer.addEventListener("dblclick",(event)=>{
 });
 
 window.addEventListener("keydown",(event)=>{
-  if(event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA')
+  if((event.target.tagName === 'INPUT' && event.target.type !== "range") || event.target.tagName === 'TEXTAREA')
     return;
 
   if(event.key === "Escape") window.electronAPI.goBack();
