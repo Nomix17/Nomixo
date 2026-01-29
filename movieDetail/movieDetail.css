@@ -338,14 +338,27 @@ p{
 #p-movieDuration,
 #p-movieYearOfRelease,
 #p-movieRating{
-  padding:30px 30px 30px 20px;
+  margin:30px 30px 30px 20px;
   display:inline;
   font-weight:bold;
   font-size: 19px;
   background-color:rgba(0,0,0,0);
 }
+
+#movie-rating-div{
+  display:inline-block;
+  border-bottom:1px solid transparent;
+  padding: 5px;
+  cursor:pointer;
+}
 #p-movieRating{
+  margin:0;
   padding-right:10px;
+  cursor:pointer;
+}
+
+#movie-rating-div:hover{
+  border-color:white;
 }
 
 .btn-MovieDetailsButtons{

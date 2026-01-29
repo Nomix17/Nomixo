@@ -234,6 +234,7 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
     const mediaExternalIdsRes = await fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`);
     const mediaExternalIdsData = await mediaExternalIdsRes.json();
     IMDB_ID = mediaExternalIdsData.imdb_id;
+    addEventListenerToIMDB_Rating(IMDB_ID)
     let url = (MediaType === "tv") 
       ? `https://torrentio.strem.fun/stream/series/${IMDB_ID}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`
       : `https://torrentio.strem.fun/stream/movie/${IMDB_ID}.json`;
@@ -393,6 +394,14 @@ function insertMediaGeneraleInformation(mediaBasicInfo){
   mediaYearOfReleaseElement.innerText = ReleaseYear;
   mediaRatingElement.innerText = Rating;
   mediaSummaryElement.innerText = summaryExist ? Summary : "No Summary available" ;
+}
+
+function addEventListenerToIMDB_Rating(IMDB_ID){
+  const IMDB_RatingElement = document.getElementById("movie-rating-div");
+  const imdbLink = `https://www.imdb.com/title/${IMDB_ID}`;
+  IMDB_RatingElement.addEventListener("click",() => {
+    window.electronAPI.openExternelLink(imdbLink);
+  });
 }
 
 function insertGenresOfMedia(Genres){
