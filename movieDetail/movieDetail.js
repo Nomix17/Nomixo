@@ -171,7 +171,7 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
       EpisodeElement.classList.remove("episode_hovered")
     });
 
-    EpisodeElement.addEventListener("click",() => {
+    EpisodeElement.addEventListener("click",async () => {
       continueWatchingEpisode=false;
       handleEpisodeElementColoring(SeasonDiv,EpisodeElement)
 
@@ -180,6 +180,10 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
 
       let episodeInfo = {seasonNumber:seasonNumber,episodeNumber:episodeNumber}
       try{
+        let defaultRatio = await getDefaultRatio();
+        resizeTorrentAndEpisodeElement(defaultRatio,EpisodesContainer);
+        resizeTorrentAndEpisodeElement(defaultRatio,TorrentMagnetContainer);
+
         TorrentContainer.style.display = "flex";
         TorrentContainer.style.borderRadius = "0px";
 
@@ -566,11 +570,15 @@ function displayEpisodes(seasonIndex){
     EpisodesContainer.appendChild(currentSeasonDiv);
   }
 }
-
-async function handleDivsResize(){
+async function getDefaultRatio() {
   let systemSettings = await window.electronAPI.loadSettings();
   let defaultRatio = systemSettings?.defaultDivRadio;
   if(defaultRatio == undefined) defaultRatio = 0.3;
+  return defaultRatio;
+}
+
+async function handleDivsResize(){
+  let defaultRatio = await getDefaultRatio();
 
   resizeTorrentAndEpisodeElement(defaultRatio,EpisodesContainer);
   resizeTorrentAndEpisodeElement(defaultRatio,TorrentMagnetContainer);
