@@ -972,10 +972,7 @@ async function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
       fs.mkdirSync(subDownloadDir, { recursive: true });
       const downloadRes = await downloadMultipleSubs(subDownloadDir, subsObjects);
       const numberOfSeccessfulDownloads = downloadRes.filter(res => res.status === "success")?.length;
-      console.log(numberOfSeccessfulDownloads);
-      if(!numberOfSeccessfulDownloads)
-        return false;
-      return true;
+      return !!numberOfSeccessfulDownloads; // false if isn't equal to 0, true otherwise
 
     } catch (err) {
       reportDownloadError("Subtitles Download", torrentId, err);
