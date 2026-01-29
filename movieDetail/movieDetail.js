@@ -788,11 +788,12 @@ function setupDownloadDivEvents(DownloadTargetInfo){
 
   // handle the download button event listener
   downloadButton.addEventListener("click",async (event)=>{
+    event.stopPropagation();
+    event.preventDefault();
+    console.log(DownloadTargetInfo);
     DownloadTorrent(DownloadTargetInfo,addSubtitlesCheckbox.checked);
     await saveDownloadSettings(downloadPathInput.value, addSubtitlesCheckbox.checked, rememberPathCheckbox.checked);
     DownloadOverlay.classList.remove('active');
-    event.stopPropagation();
-    event.preventDefault();
   });
   
   // handle browsing fs button
