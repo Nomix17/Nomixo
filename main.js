@@ -711,7 +711,7 @@ function applySubConfigs(jsonContent){
 }
 
 function parseMpvConfigs(jsonContent) {
-  let mpvConfig = "osc=yes \nborder=no \nosd-bar=no";
+  let mpvConfig = "osc=yes \nborder=yes \nosd-bar=no";
 
   let Entities = Object.entries(jsonContent);
   for(let entry of Entities){
@@ -786,7 +786,7 @@ function initializeDataFiles(){
   if(!fs.existsSync(SubConfigFile)){
     let defaultFileData = `
       osc=yes 
-      border=no 
+      border=yes 
       osd-bar=no
       sub-font-size=30
       sub-font="Arial"
