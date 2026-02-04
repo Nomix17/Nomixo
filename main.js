@@ -756,20 +756,20 @@ function initializeDataFiles(){
   if(!fs.existsSync(ThemeFilePath)){
     let defaultFileData = `
       :root{
-      --dont-Smooth-transition-between-pages:0;
-      --display-scroll-bar:none;
-      --show-continue-watching-on-home:flex;
-      --background-gradient-value:0.1;
-      --primary-color:0,0,0;
-      --secondary-color:64,64,64,0.5;
-      --div-containers-borders-color:255,255,255,0;
-      --main-buttons-color:0,0,0,0.25;
-      --MovieElement-hover-BorderColor:255,255,255;
-      --input-backgroundColor:0,0,0,0.25;
-      --drop-down-color:0,0,0,1;
-      --icon-color:46,46,46;
-      --icon-hover-color:189,189,189,0.76;
-      --text-color:255,255,255;
+        --dont-Smooth-transition-between-pages:0;
+        --display-scroll-bar:none;
+        --show-continue-watching-on-home:flex;
+        --background-gradient-value:0;
+        --primary-color:10,14,23;
+        --secondary-color:55,65,81,1;
+        --div-containers-borders-color:255,255,255,0;
+        --main-buttons-color:255,255,255,0.04;
+        --MovieElement-hover-BorderColor:255,255,255;
+        --input-backgroundColor:0,0,0,0.44;
+        --drop-down-color:26,35,50,1;
+        --icon-color:55,65,81;
+        --icon-hover-color:148,163,184,1;
+        --text-color:255,255,255;
       }
     `;
     fs.writeFileSync(ThemeFilePath,defaultFileData);
