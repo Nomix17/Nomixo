@@ -280,6 +280,7 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
       nothingWasFoundDiv.appendChild(refreshButton);
     }
 
+    TorrentMagnetContainer.style.display = "flex";
     TorrentMagnetContainer.appendChild(nothingWasFoundDiv);
   }
 }
