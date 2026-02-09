@@ -885,15 +885,16 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,Ri
   return Promise.all(promises);
 }
 
-function addContrastForPlayIcon(){
+function addContrastForPlayIcon() {
   const root = document.documentElement;
-  const value = getComputedStyle(root).getPropertyValue('--icon-hover-color').trim();
-  const [r,g,b] = value.split(",").slice(0,3).map(Number);
-  const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
-  const fillColor = luminance > 180 ? "#ffffff" : "rgba(10,10,10,1)";
-  const bgColor = luminance < 180 ? "#ffffff" : "rgba(10,10,10,1)";
-  document.querySelectorAll(".continue-video-icon").forEach(item => {item.style.fill = fillColor});
+  const primaryColor = getComputedStyle(root).getPropertyValue('--primary-color').trim();
+  const [r,g,b] = primaryColor.split(",").slice(0,3).map(Number);
+  const avgColor = (r + g + b) / 3;
+  const fillColor = avgColor > 100 ? "black" : "white";
+  const bgColor = `rgba(${primaryColor})`;
+
   document.querySelectorAll(".continue-video-button").forEach(item=> {item.style.backgroundColor = bgColor});
+  document.querySelectorAll(".continue-video-icon").forEach(item => {item.style.fill = fillColor});
 }
 
 
