@@ -187,18 +187,19 @@ function insertLanguageButton(subs) {
 
   // Priority languages in order
   let langArray = [];
-  langArray.push({ display:"English", language:"en" });
-  langArray.push({ display:"Arabic",  language:"ar" });
-  langArray.push({ display:"French",  language:"fr" });
+  langArray.push({ display:"Built In", languageCode:"built-in" });
+  langArray.push({ display:"English", languageCode:"en" });
+  langArray.push({ display:"Arabic",  languageCode:"ar" });
+  langArray.push({ display:"French",  languageCode:"fr" });
 
   // Add remaining, avoiding duplicates
   subs.forEach(sub => {
     if (!langArray.some(langObj =>
-      langObj.language.toLowerCase() === sub.language.toLowerCase()
+      langObj.languageCode.toLowerCase() === sub.languageCode.toLowerCase()
     )) {
       langArray.push({
         display: sub.display,
-        language: sub.language
+        languageCode: sub.languageCode
       });
     }
   });
@@ -217,7 +218,7 @@ function insertLanguageButton(subs) {
         loadLanguageSub(event.target);
       });
 
-      buttonElement.value = lang.language;
+      buttonElement.value = lang.languageCode;
       buttonElement.innerText = lang.display;
 
       subBtnDiv.append(buttonElement);
@@ -225,8 +226,8 @@ function insertLanguageButton(subs) {
   }
 }
 
-function getSubsViaLanguage(language){
-  let languageData = subtitlesArray.filter(sub => sub.language === language);
+function getSubsViaLanguage(languageCode){
+  let languageData = subtitlesArray.filter(sub => sub.languageCode === languageCode);
   hideAllSubsInList();
   if(!languageData.length){
     const subsList = document.getElementById("div-subsList");
@@ -249,13 +250,12 @@ async function hideAllSubsInList() {
 
 async function insertSubElements(fetchedData){
   let subsList = document.getElementById("div-subsList");
-
-  for(let i=0 ;i<fetchedData.length;i++){
-
-    let subtitlePath = fetchedData[i].url;
+  let counter = 0;
+  for(const subData of fetchedData){
+    let subtitlePath = subData.url;
     let subElement = document.createElement("button");
     subElement.id = base64Id(subtitlePath);
-    subElement.innerText = i;
+    subElement.innerText = subData.display === "Built In" ? subData.languageName : counter;
     subElement.value = subtitlePath;
 
     let findSimilairSubElement = subsList.querySelector(`#${base64Id(subtitlePath)}`);
@@ -266,7 +266,7 @@ async function insertSubElements(fetchedData){
 
         subElement.classList.add("active");
 
-        if(fetchedData[i]?.type === "local"){
+        if(subData?.type === "local"){
           let fileContent = await window.electronAPI.readSubFile(subtitlePath);
           parseSrtSubs(fileContent);
 
@@ -283,7 +283,7 @@ async function insertSubElements(fetchedData){
     } else {
       findSimilairSubElement.style.display = "block";
     }
-
+    counter ++;
   };
 }
 
@@ -329,11 +329,10 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     }
 
   }else{
-    let identifyingElements = {"IMDB_ID":mediaImdbId,"episodeNumber":episodeNumber,"seasonNumber":seasonNumber,"TorrentDownloadDir":downloadPath};
-    let subs = await window.electronAPI.loadLocalSubs(downloadPath,identifyingElements);
-    subtitlesArray = subs;
-
+    let identifyingElements = {"IMDB_ID":mediaImdbId,"episodeNumber":episodeNumber,"seasonNumber":seasonNumber,"DownloadDir":downloadPath};
     let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
+    let subs = await window.electronAPI.loadLocalSubs(videoPath,identifyingElements);
+    subtitlesArray = subs;
 
     if(fileIsMkv){
       // pass to externel Player
@@ -341,7 +340,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
 
     }else{
       insertLanguageButton(subs); 
-      getSubsViaLanguage("en");
+      getSubsViaLanguage("built-in");
 
       VideoElement.id = "video-MediaPlayer";
       VideoElement.innerHTML = `<source src='${videoPath}'>`;
@@ -411,7 +410,7 @@ function parseSrtSubs(SubsText){
       
       let chunk = "";
       for(let startPoint=index+1; startPoint < subLines.length ;startPoint++){
-        if(!isNaN(subLines[startPoint]) && subLines[startPoint+1].includes(" --> ") ) break;
+        if( subLines[startPoint+1] !== undefined && !isNaN(subLines[startPoint]) && subLines[startPoint+1].includes(" --> ") ) break;
         else if(subLines[startPoint].trim() !== "") chunk += subLines[startPoint]+"\n";
       }
       let newSubObj = new SubObj(startTime, endTime, chunk); 

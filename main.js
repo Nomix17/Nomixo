@@ -352,10 +352,10 @@ ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
     IMDB_ID:metaData.mediaImdbId,
     episodeNumber:metaData.episodeNumber,
     seasonNumber:metaData.seasonNumber,
-    TorrentDownloadDir:metaData.downloadPath
+    DownloadDir:metaData.downloadPath
   };
 
-  let subsPaths = await loadSubsFromSubDir(metaData.downloadPath,subIdentifyingElements).map(sub=>sub.url);
+  let subsPaths = await loadSubsFromSubDir(subIdentifyingElements).map(sub=>sub.url);
 
   MPVWorker = new Worker(MPVPlayerWorkerPath, {
     workerData: {
@@ -626,8 +626,11 @@ ipcMain.handle("load-from-download-lib",async(event,targetIdentification)=>{
 
 // ############################## SUBTITLES FILES MANAGEMENT ##############################
 
-ipcMain.handle("load-local-subs",async(event,downloadPath,identifyingElements)=>{
-  return loadSubsFromSubDir(downloadPath,identifyingElements);
+ipcMain.handle("load-local-subs",async(event,videoPath,identifyingElements)=>{
+  const localBuiltInSubs = await loadSubsFromVideoDirectory(videoPath);
+  const localDownloadedSubs = await loadSubsFromSubDir(identifyingElements);
+
+  return [...localBuiltInSubs, ...localDownloadedSubs];
 });
 
 ipcMain.handle("read-sub-file",async(event,filePath)=>{
@@ -1070,24 +1073,51 @@ function sanitizeUrl(urlString) {
     return u.toString();
 }
 
-function loadSubsFromSubDir(downloadPath,identifyingElements){
+function loadSubsFromSubDir(identifyingElements) {
   let torrentId = generateUniqueId(
-    `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.TorrentDownloadDir}`
+    `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.DownloadDir}`
   );
 
+  const downloadPath = identifyingElements.DownloadDir;
   let subsDirectory = path.join(downloadPath,`SUBS_${torrentId}`);
-  try{
+  try {
     return fs.readdirSync(subsDirectory).map(subFileName => {
       let displayName = subFileName.split("-")[0];
       return {
         url:path.join(subsDirectory,subFileName),
         display:displayName,
-        language:languageDict[displayName.toLowerCase()] ?? displayName,
+        languageCode:languageDict[displayName.toLowerCase()] ?? displayName,
         type:"local"
       }
     });
-  }catch(err){
+  } catch(err) {
+    console.log(err);
     return [];
+  }
+}
+
+function loadSubsFromVideoDirectory(videoPath) {
+  let videoParentsPath = path.dirname(videoPath);
+  try {
+    return fs.readdirSync(videoParentsPath)
+    .flatMap(subFileName => {
+      const fileExtension = path.extname(subFileName);
+      if (fileExtension === ".srt" || fileExtension === ".vtt") {
+        const displayName = subFileName.split(fileExtension)[0];
+        // const languageOfSub = displayName;
+        return [{
+          url: path.join(videoParentsPath, subFileName),
+          display: "Built In",
+          languageCode: "built-in",
+          languageName: displayName,
+          type: "local"
+        }];
+      }
+      return [];
+    });
+  } catch(err) {
+    console.log(err);
+    return[];
   }
 }
 
