@@ -463,8 +463,9 @@ function findFileInsideTorrent(torrent, targetFileName){
 
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
   const torrentId = mediaInfo.torrentId;
-  const targetTorrent = downloadingMediaHashMap?.[torrentId]?.torrentInstance;
 
+  // remove it from download
+  const targetTorrent = downloadingMediaHashMap?.[torrentId]?.torrentInstance;
   if (targetTorrent) {
     await new Promise((resolve) => {
       targetTorrent.destroy(() => {
@@ -481,7 +482,16 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
     await fs.promises.rm(downloadPath, { recursive: true, force: true });
     console.log(`Removed directory: ${downloadPath}`);
   }
-  
+
+  // remove it from download Queue
+  const index = downloadQueue.findIndex(
+    element => element.torrentId === torrentId
+  );
+
+  if (index > -1) {
+    downloadQueue.splice(index,1);
+  }
+
   await removeFromDownloadLibrary(torrentId);
   
   return { success: true, torrentId };
@@ -825,6 +835,7 @@ async function downloadTorrent(torrentInfo) {
 
       if (!targetFile) {
         reject(new Error('No suitable video file found'));
+        return;
       }
 
       // Deselect all files first
