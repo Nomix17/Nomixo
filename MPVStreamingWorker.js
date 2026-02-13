@@ -127,7 +127,14 @@ async function PlayLocalVideo(metaData,startFromTime,subsPaths,mpvConfigDirector
 
 function runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,onClose,onError){
   let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
-  let childProcessArguments = [videoFullPath, "--fullscreen", `--config-dir=${mpvConfigDirectory}`,`--start=${startFromTime}`,...subsArgument]; 
+  let childProcessArguments = [
+      videoFullPath,
+      "--fullscreen",
+      "--keep-open=yes",
+      `--config-dir=${mpvConfigDirectory}`,
+      `--start=${startFromTime}`,
+      ...subsArgument
+  ]; 
 
   mpvProcess = spawn('mpv', childProcessArguments);
 
