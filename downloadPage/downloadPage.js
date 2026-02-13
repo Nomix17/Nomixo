@@ -73,7 +73,6 @@ async function createDownloadElement(mediaLibEntryPoint) {
 
   if (downloadStatus.toLowerCase() === "downloading" || downloadStatus.toLowerCase() === "loading") {
     downloadCategorie = currentlyDownloadingDiv;
-    handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
     addBackgroundImageToDownloadingDiv(MediaDownloadElement,mediaLibEntryPoint?.posterPath);
 
     if (downloadStatus.toLowerCase() === "loading") {
@@ -87,18 +86,17 @@ async function createDownloadElement(mediaLibEntryPoint) {
 
   } else if(downloadStatus.toLowerCase() === "queued") {
     downloadCategorie = queuedDownloadsDiv;
-    handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
 
   } else if(downloadStatus.toLowerCase() === "paused") {
     downloadCategorie = pausedDownloadsDiv;
-    handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
     MarkDownloadElementAsPaused(MediaDownloadElement);
   }
 
+  handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
   const downloadContainer = downloadCategorie.querySelector(".movieContainer");
   downloadContainer.appendChild(MediaDownloadElement);
- 
-  handleCancelButton(mediaLibEntryPoint,MediaDownloadElement);
+
+  handleCancelButton(mediaLibEntryPoint,CancelButton);
   alignSizeDiv();
 
   let RightmiddleDiv = document.getElementById("div-middle-right");
@@ -227,28 +225,30 @@ function refreshEnties() {
   });
 }
 
-function handleCancelButton(mediaInfo,MediaDownloadElement) {
-  let cancelDownloadButton = MediaDownloadElement.querySelector(".cancel-button");
-  cancelDownloadButton.addEventListener("click",async()=>{
-    await window.electronAPI.cancelDownload(mediaInfo);
-    let TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
-    TargetDownloadElement.remove();
-    let MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
-    if(MediaDownloadElementContainer.innerHTML.trim() === "")
-      putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
+function handleCancelButton(mediaInfo,cancelDownloadButton) {
+  if(cancelDownloadButton) {
+    cancelDownloadButton.addEventListener("click",async () => {
+      await window.electronAPI.cancelDownload(mediaInfo);
+      let TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
+      TargetDownloadElement.remove();
+      let MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
+      if(MediaDownloadElementContainer.innerHTML.trim() === "")
+        putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
 
-    updateDownloadUI();
-  });
+      updateDownloadUI();
+    });
+  }
 }
 
 let loadingIntervals = {};
 function handleTogglingPauseButton(torrentId,MediaDownloadElement) {
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
-
-  PausePlayButton.addEventListener("click",async ()=>{
-    let pauseResponces = await window.electronAPI.toggleTorrentDownload(torrentId);
-    await handlingDownloadCategorieChanging(pauseResponces);
-  });
+  if(PausePlayButton) {
+    PausePlayButton.addEventListener("click",async ()=>{
+      let pauseResponces = await window.electronAPI.toggleTorrentDownload(torrentId);
+      await handlingDownloadCategorieChanging(pauseResponces);
+    });
+  }
 }
 
 function addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlayButton) {
@@ -391,54 +391,56 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
 }
 
 function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
-  let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
   let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
-  let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
   let progressBarElement = MediaDownloadElement.querySelector(".progress-div");
   let downloadedSizeElement = MediaDownloadElement.querySelector(".downloaded-size");
   let totalSizeElement = MediaDownloadElement.querySelector(".total-size");
   let rightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
   let dragButton = MediaDownloadElement.querySelector(".drag-button");
-  
-  // Remove existing context menu if any
+  let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
+  let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
+  CancelButton.remove();
+  PausePlayButton.remove();
+
   let existingContextMenu = MediaDownloadElement.querySelector(".context-menu-button");
   if (existingContextMenu) existingContextMenu.remove();
   
   let contextMenuButton = document.createElement("button");
-  let contextMenuDiv = createContextMenuDiv(totalSizeElement,MediaInfo);
-
+  let contextMenuDiv = createContextMenuDiv(totalSizeElement, MediaInfo);
+  
   PercentageTextElement.style.display = "none";
   downloadSpeedElement.style.display = "none";
   progressBarElement.style.display = "none";
   downloadedSizeElement.style.display = "none";
   if (dragButton) dragButton.remove();
-
-  PausePlayButton.classList.add("completed", "just-finished");
-  CancelButton.classList.add("completed", "just-finished");
-  contextMenuButton.classList.add("context-menu-button");
-
-  contextMenuButton.innerHTML = menuThreePoints;
-  PausePlayButton.innerHTML = `${videoIcon}<p style="margin-bottom:20%"> Watch</p>`;
-  totalSizeElement.innerText = `${totalSizeElement.innerText} • Completed`;
-  CancelButton.innerHTML = closedTrashIcon;
   
-  rightDiv.appendChild(PausePlayButton);
-  rightDiv.appendChild(CancelButton);
+  const playMediaButton = document.createElement("button");
+  const deleteMediaButton = document.createElement("button");
+  playMediaButton.classList.add("play-button");
+  deleteMediaButton.classList.add("delete-button");
+
+  playMediaButton.classList.add("completed", "just-finished");
+  deleteMediaButton.classList.add("completed", "just-finished");
+  contextMenuButton.classList.add("context-menu-button");
+  contextMenuButton.innerHTML = menuThreePoints;
+  playMediaButton.innerHTML = `${videoIcon}<p style="margin-bottom:20%"> Watch</p>`;
+  totalSizeElement.innerText = `${totalSizeElement.innerText} • Completed`;
+  deleteMediaButton.innerHTML = closedTrashIcon;
+  
+  rightDiv.appendChild(playMediaButton);
+  rightDiv.appendChild(deleteMediaButton);
   MediaDownloadElement.appendChild(contextMenuButton);
   contextMenuButton.appendChild(contextMenuDiv);
-
+  
   setTimeout(() => {
-    PausePlayButton.classList.remove("just-finished");
-    CancelButton.classList.remove("just-finished");
+    playMediaButton.classList.remove("just-finished");
+    deleteMediaButton.classList.remove("just-finished");
   }, 600);
-
-  // Setup context menu with improved handler
+  
   setupContextMenuHandler(contextMenuButton, contextMenuDiv);
-
-  const newPausePlayButton = removeAllListeners(PausePlayButton);
-
-  newPausePlayButton.addEventListener("click", (event) => {
+  
+  playMediaButton.addEventListener("click", (event) => {
     event.stopPropagation();
     let episodeInfo = {
       "seasonNumber": MediaInfo.seasonNumber, 
@@ -456,12 +458,62 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
       episodeInfo
     );
   });
+
+  setupDeleteButtonLogic(MediaInfo, deleteMediaButton);
 }
 
-function removeAllListeners(elementToReplace){
-  const newElement = elementToReplace.cloneNode(true);
-  elementToReplace.parentNode.replaceChild(newElement, elementToReplace);
-  return newElement;
+function setupDeleteButtonLogic(MediaInfo, deleteMediaButton) {
+  const deleteMediaOverlay = document.getElementById("deleteOverlay");
+
+  deleteMediaButton.addEventListener("click", (event) => {
+    dontGoBack = true;
+
+    fillingDeleteOverlay(MediaInfo);
+    const closeBtn = deleteMediaOverlay.querySelector('#closeBtn');
+    const cancelBtn = deleteMediaOverlay.querySelector('#cancelBtn');
+    const deleteBtn = deleteMediaOverlay.querySelector('#deleteBtn');
+    deleteMediaOverlay.classList.add("active");
+
+    [cancelBtn,closeBtn].forEach(
+      btn => {
+        btn.addEventListener("click",()=>{
+          deleteMediaOverlay.classList.remove("active")
+        },{once:true})
+      }
+    );
+
+    handleCancelButton(MediaInfo, deleteBtn);
+    deleteBtn.addEventListener("click",()=>{
+      deleteMediaOverlay.classList.remove("active")
+    });
+  });
+
+  document.addEventListener("keydown", (event)=>{
+    if(event.key === "Escape") {
+      deleteMediaOverlay.classList.remove("active")
+    }
+  });
+}
+
+function fillingDeleteOverlay(MediaInfo) {
+  const deleteOverlay = document.getElementById('deleteOverlay');
+
+  const mediaPosterContainer = deleteOverlay.querySelector('#mediaPoster');
+  const mediaPosterImg = deleteOverlay.querySelector('#mediaPosterImg');
+  const mediaTitle = deleteOverlay.querySelector('#mediaTitle');
+  const seasonEpisode = deleteOverlay.querySelector('#season-episode');
+  const mediaSize = deleteOverlay.querySelector('#mediaSize');
+  const mediaYear = deleteOverlay.querySelector('.media-year');
+
+  loadImageWithAnimation(mediaPosterContainer, mediaPosterImg, MediaInfo.posterPath);
+
+  mediaTitle.innerHTML = MediaInfo.Title;
+  mediaSize.innerHTML = MediaInfo.Size;
+  mediaSize.innerHTML = MediaInfo.Size +" • "+MediaInfo.Quality;
+
+  mediaYear.innerHTML = MediaInfo.Year;
+  if(MediaInfo.seasonNumber && MediaInfo.episodeNumber)
+    seasonEpisode.innerText = `S${MediaInfo.seasonNumber}-E${MediaInfo.episodeNumber}`;
 }
 
 function MarkDownloadElementAsPaused(MediaDownloadElement) {

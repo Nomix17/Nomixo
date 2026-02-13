@@ -92,6 +92,32 @@
         </div>
       </div>
     </div>
+
+    <div class="overlay" id="deleteOverlay">
+      <div class="delete-container">
+        <button class="close-btn" id="closeBtn" aria-label="Close">×</button>
+        
+        <h2 class="delete-title">Delete this media?</h2>
+        
+        <div class="media-info">
+          <div class="media-poster" id="mediaPoster">
+            <img alt="Movie Poster" id="mediaPosterImg">
+          </div>
+          <div class="media-details">
+            <h3 id="mediaTitle"></h3>
+            <p id="season-episode"></p>
+            <p class="media-year" id="mediaYear"></p>
+            <p class="media-size" id="mediaSize"></p>
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button id="cancelBtn" class="secondary-btn">Cancel</button>
+          <button id="deleteBtn" class="primary-btn">Delete</button>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>
 
