@@ -1329,8 +1329,17 @@ const handleMpvOutput = (data)=>{
   process.stdout.write(line);
   if(line.includes("AV:")){
     let lastTimeBeforeQuit = line.split("AV:")[1].split("/")[0].trim();
+    let videoDuration = line.split("AV:")[1].split("/")[1].trim();
+
+    const [durationHour, durationMin, durationSeconds] = videoDuration.split(":").map(item => parseInt(item));
     const [hours, minutes, seconds] = lastTimeBeforeQuit.split(":").map(item => parseInt(item));
-    lastSecondBeforeQuit = (hours*60+minutes)*60+seconds;
+
+    videoDuration = (durationHour * 60 + durationMin) * 60 + durationSeconds; // s
+    lastSecondBeforeQuit = (hours * 60 + minutes) * 60 + seconds; // s
+
+    if(lastSecondBeforeQuit >= videoDuration-120) {
+      lastSecondBeforeQuit = 0;
+    }
   }
 };
 
