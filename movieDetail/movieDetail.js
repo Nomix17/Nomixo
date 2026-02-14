@@ -4,6 +4,7 @@ let MediaType = data.get("MediaType");
 
 let backgroundImage;
 let IMDB_ID;
+let GlobalTitle = null;
 
 let mainPageDiv = document.getElementById("div-main");
 let TorrentContainer = document.getElementById("div-TorrentContainer");
@@ -288,6 +289,7 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
 async function insertMediaInformation(data,apiKey){
   let [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons] = await extractMediaInfoFromApiResponse(apiKey,data);
 
+  GlobalTitle = Title;
   document.title = Title;
   addBackgroundImageToBody(backgroundImage)
 
@@ -619,7 +621,7 @@ function resizeTorrentAndEpisodeElement(radio,DivElement){
 }
 
 function addMediaToLibrary(){
-  ToggleInLibrary(movieId,MediaType,"Watch Later");
+  ToggleInLibrary(movieId,MediaType,GlobalTitle, undefined,"Watch Later");
   if(addToLibraryButton.hasAttribute("pressed")){
     setAddToLibraryButtonToPressed(addToLibraryButton);
     addToLibraryButton.innerHTML+="Saved!";

@@ -111,7 +111,7 @@ function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,Library
       else PosterImage = "../assets/PosterNotFound.png"
 
       let mediaDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
-      let toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType)
+      let toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title,PosterImage)
 
       if(ThisMediaType.toLowerCase() !== "person")
         mediaDomElement.appendChild(toggleInLibraryBtn);
@@ -133,7 +133,7 @@ function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,Library
   });
 }
 
-function createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType){
+function createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title,posterUrl){
   let toggleInLibraryBtn = document.createElement("button"); 
 
   toggleInLibraryBtn.classList.add("btn-toggle-in-library");
@@ -145,38 +145,44 @@ function createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType){
   if(mediaIsInLibrary) setAddToLibraryButtonToPressed(toggleInLibraryBtn);
   else setAddToLibraryButtonToNormal(toggleInLibraryBtn)
 
-  addToggleToLibButtonEventListener(toggleInLibraryBtn,Id,ThisMediaType);
+  addToggleToLibButtonEventListener(toggleInLibraryBtn,Id,ThisMediaType,Title,posterUrl);
   return toggleInLibraryBtn;
 }
 
-function addToggleToLibButtonEventListener(thistoggleinlibrarybtn,mediaId,mediaType){
+function addToggleToLibButtonEventListener(thistoggleinlibrarybtn,mediaId,mediaType,Title,posterUrl){
   if(thistoggleinlibrarybtn){
     thistoggleinlibrarybtn.addEventListener("click",(event)=>{
-      ToggleInLibrary(mediaId.toString(),mediaType,"Watch Later")
+      ToggleInLibrary(mediaId.toString(),mediaType,Title,posterUrl,"Watch Later");
       event.stopPropagation();
       event.stopImmediatePropagation();
     });
   }
 }
 
-function createMediaElementForLibrary(mediaData, mediaEntryPoint, IsInHomePage=false){
+async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePage=false){
+  const ThisMediaId = mediaEntryPoint?.MediaId;
   const ThisMediaType = mediaEntryPoint?.MediaType;
   const ThisSaveType = mediaEntryPoint?.typeOfSave;
   const ThisSaveTime = mediaEntryPoint?.timeOfSave;
+  let ThisMediaTitle = mediaEntryPoint?.Title;
+  let PosterImage = mediaEntryPoint?.posterUrl;
 
-  let Id = mediaData?.["id"] ?? "Unknown";
-  let Title = mediaData?.["title"] ?? mediaData?.["name"] ?? "Unknown";
-  let Adult = mediaData?.["adult"] ?? "Unknown";
+  if (!mediaEntryPoint?.posterUrl || !mediaEntryPoint?.Title) {
+    const mediaInfo = await getMediaInfo(ThisMediaId, ThisMediaType, apiKey);
+    PosterImage =  
+        mediaInfo?.["poster_path"] 
+        ? "https://image.tmdb.org/t/p/w500/"+mediaInfo["poster_path"] 
+        : "../assets/PosterNotFound.png";
 
-  let PosterImage =  
-      mediaData?.["poster_path"] 
-      ? "https://image.tmdb.org/t/p/w500/"+mediaData["poster_path"] 
-      : "../assets/PosterNotFound.png";
+    PosterImage = normalizeRootUrl(PosterImage);
+    ThisMediaTitle =  mediaInfo?.["title"];
+    let targetIdentification = {MediaId:ThisMediaId,MediaType:ThisMediaType};
+    updateLibraryElement(targetIdentification,{posterUrl:PosterImage, Title:ThisMediaTitle});
+  }
 
-  PosterImage = normalizeRootUrl(PosterImage);
   let imageLoadingAnimation = true;
-  let movieDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,imageLoadingAnimation);
-  let removeFromLibraryButton = createRemoveFromWatchingLaterButton(Id,ThisMediaType,IsInHomePage)
+  let movieDomElement = creatingTheBaseOfNewMediaElement(ThisMediaTitle, PosterImage, ThisMediaId, ThisMediaType,imageLoadingAnimation);
+  let removeFromLibraryButton = createRemoveFromWatchingLaterButton(ThisMediaId,ThisMediaType,IsInHomePage)
 
   movieDomElement.setAttribute("saveType",ThisSaveType);
   movieDomElement.setAttribute("saveTime",ThisSaveTime);
@@ -190,6 +196,16 @@ function createMediaElementForLibrary(mediaData, mediaEntryPoint, IsInHomePage=f
   }
 
   return movieDomElement;
+}
+
+async function getMediaInfo(MediaId, MediaType, apiKey) {
+  let searchQuery = `https://api.themoviedb.org/3/${MediaType}/${MediaId}?api_key=${apiKey}`;
+  const res = await fetch(searchQuery);
+  const mediaData = await res.json();
+  if(mediaData.status_code === 7)
+    throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
+
+  return mediaData;
 }
 
 function createContinueWatchingButton(mediaEntryPoint){
@@ -269,7 +285,7 @@ window.setAddToLibraryButtonToPressed = (toggleInLibrary) => {
   toggleInLibrary.setAttribute("pressed"," ");
 }
 
-window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
+async function ToggleInLibrary(mediaId,mediaType,Title, posterUrl,typeOfSave) {
   let toggleInLibraryElement = event.target;
   
   if (event !== undefined) {
@@ -305,6 +321,8 @@ window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
         MediaType:mediaType,
         timeOfSave:currentEpochTime,
         typeOfSave:[typeOfSave],
+        Title:Title,
+        posterUrl:posterUrl,
         episodesWatched:[],
         lastPlaybackPosition:0,
         timeWatched:0
@@ -313,7 +331,6 @@ window.ToggleInLibrary = async (mediaId,mediaType,typeOfSave) => {
 
     window.electronAPI.addMediaToLibrary(MediaLibraryObject);
   }
-
 }
 
 function createTorrentElement(torrentBasicInfo, torrentAdvancedInfo) {
@@ -389,9 +406,9 @@ function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
   });
 }
 
-async function loadLibraryInfo(){
+async function loadLibraryInfo(identification=undefined){
   try{
-    const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch((err)=>console.error(err.message));
+    const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo(identification).catch((err)=>console.error(err.message));
     if(wholeLibraryInformation == undefined){
       console.log("No matches in the library");
       return [];
@@ -400,6 +417,17 @@ async function loadLibraryInfo(){
   }catch(err){
     console.error(err.message);
     return undefined;
+  }
+}
+
+async function updateLibraryElement(targetIdentification,updateValues) {
+  const MediaId = targetIdentification.MediaId;
+  const MediaType = targetIdentification.MediaType;
+  let MediaLibraryObject = await loadLibraryInfo(targetIdentification);
+  if(MediaLibraryObject !== undefined && MediaLibraryObject.length){
+    MediaLibraryObject = {...MediaLibraryObject[0],...updateValues}; 
+    await window.electronAPI.removeMediaFromLibrary(targetIdentification);
+    window.electronAPI.addMediaToLibrary(MediaLibraryObject);
   }
 }
 
@@ -857,21 +885,19 @@ window.MOST_POPULAR_LANGUAGES = [
   "Italian"
 ]
 
-window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,RightmiddleDiv,IsInHomePage=false)=>{
-  const promises = wholeLibraryInformation.map(mediaEntryPoint =>{
-    let MediaId = mediaEntryPoint.MediaId;
-    let MediaType = mediaEntryPoint.MediaType;
-    let searchQuery = `https://api.themoviedb.org/3/${MediaType}/${MediaId}?api_key=${apiKey}`;
-
-    return fetch(searchQuery)
-      .then(res=>res.json())
-      .then(data => {
-        if(data.status_code === 7) throw new Error("We’re having trouble loading data</br>Please make sure your Authentication Key is valide!");
-        SavedMedia.appendChild(createMediaElementForLibrary(data,mediaEntryPoint,IsInHomePage));
+function fetchMediaDataFromLibrary (apiKey,wholeLibraryInformation,SavedMedia,RightmiddleDiv,IsInHomePage=false) {
+  return Promise.all (
+    wholeLibraryInformation.map(async (mediaEntryPoint) =>{
+      try {
+        const libElement = await createMediaElementForLibrary(mediaEntryPoint,apiKey,IsInHomePage);
+        SavedMedia.appendChild(libElement);
         checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
-      })
-      .catch(err=>{
-        err.message = (err.message === "Failed to fetch") ? "We’re having trouble loading data</br>Please Check your connection and refresh!":err.message;
+
+      } catch(err) {
+        console.error(err);
+        err.message = (err.message === "Failed to fetch")
+          ? "We’re having trouble loading data</br>Please Check your connection and refresh!":err.message;
+
         setTimeout(()=>{
           RightmiddleDiv.innerHTML ="";
           let WarningElement = DisplayWarningOrErrorForUser(err.message);
@@ -879,10 +905,10 @@ window.fetchMediaDataFromLibrary = (apiKey,wholeLibraryInformation,SavedMedia,Ri
           RightmiddleDiv.appendChild(WarningElement);
           RightmiddleDiv.style.opacity = 1;
         },800);
-      });
-  });
 
-  return Promise.all(promises);
+      }
+    })
+  );
 }
 
 function addContrastForPlayIcon() {
