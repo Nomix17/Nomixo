@@ -462,37 +462,59 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   setupDeleteButtonLogic(MediaInfo, deleteMediaButton);
 }
 
+let deleteOverlayEscapeHandler = null;
 function setupDeleteButtonLogic(MediaInfo, deleteMediaButton) {
   const deleteMediaOverlay = document.getElementById("deleteOverlay");
-
-  deleteMediaButton.addEventListener("click", (event) => {
+  
+  const deleteMediaButtonNew = deleteMediaButton.cloneNode(true);
+  deleteMediaButton.parentNode.replaceChild(deleteMediaButtonNew, deleteMediaButton);
+  
+  deleteMediaButtonNew.addEventListener("click", (event) => {
     dontGoBack = true;
-
     fillingDeleteOverlay(MediaInfo);
-    const closeBtn = deleteMediaOverlay.querySelector('#closeBtn');
-    const cancelBtn = deleteMediaOverlay.querySelector('#cancelBtn');
-    const deleteBtn = deleteMediaOverlay.querySelector('#deleteBtn');
+    
+    let closeBtn = deleteMediaOverlay.querySelector('#closeBtn');
+    let cancelBtn = deleteMediaOverlay.querySelector('#cancelBtn');
+    let deleteBtn = deleteMediaOverlay.querySelector('#deleteBtn');
+    
+    const closeBtnNew = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(closeBtnNew, closeBtn);
+    
+    const cancelBtnNew = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(cancelBtnNew, cancelBtn);
+    
+    const deleteBtnNew = deleteBtn.cloneNode(true);
+    deleteBtn.parentNode.replaceChild(deleteBtnNew, deleteBtn);
+    
+    closeBtn = closeBtnNew;
+    cancelBtn = cancelBtnNew;
+    deleteBtn = deleteBtnNew;
+    
     deleteMediaOverlay.classList.add("active");
-
-    [cancelBtn,closeBtn].forEach(
-      btn => {
-        btn.addEventListener("click",()=>{
-          deleteMediaOverlay.classList.remove("active")
-        },{once:true})
-      }
-    );
-
+    
+    [cancelBtn, closeBtn].forEach(btn => {
+      btn.addEventListener("click", () => {
+        deleteMediaOverlay.classList.remove("active");
+      });
+    });
+    
     handleCancelButton(MediaInfo, deleteBtn);
-    deleteBtn.addEventListener("click",()=>{
-      deleteMediaOverlay.classList.remove("active")
+    deleteBtn.addEventListener("click", () => {
+      deleteMediaOverlay.classList.remove("active");
     });
   });
-
-  document.addEventListener("keydown", (event)=>{
+ 
+  if (deleteOverlayEscapeHandler) {
+    document.removeEventListener("keydown", deleteOverlayEscapeHandler);
+  }
+  
+  deleteOverlayEscapeHandler = (event) => {
     if(event.key === "Escape") {
-      deleteMediaOverlay.classList.remove("active")
+      deleteMediaOverlay.classList.remove("active");
     }
-  });
+  };
+  
+  document.addEventListener("keydown", deleteOverlayEscapeHandler);
 }
 
 function fillingDeleteOverlay(MediaInfo) {
