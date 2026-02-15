@@ -780,9 +780,7 @@ async function showDownloadInfoInputDiv(DownloadTargetInfo){
   loadImageWithAnimation(MediaPosterContainer, MediaPosterElement, `https://image.tmdb.org/t/p/w185${posterPath}`);
 }
 
-function setupDownloadDivEvents(DownloadTargetInfo){
-  // IMDB_ID,Title,Size,Quality,MagnetLink,fileName,MediaId,MediaType,seasonNumber,episodeNumber
-
+function setupDownloadDivEvents(DownloadTargetInfo) {
   let cancelButton = DownloadOverlay.querySelector("#cancelBtn");
   let closeBtn = DownloadOverlay.querySelector("#closeBtn");
   let downloadButton = DownloadOverlay.querySelector("#downloadBtn");
@@ -790,29 +788,49 @@ function setupDownloadDivEvents(DownloadTargetInfo){
   let downloadPathInput = DownloadOverlay.querySelector("#downloadPath");
   let rememberPathCheckbox = DownloadOverlay.querySelector("#rememberPath");
   let addSubtitlesCheckbox = DownloadOverlay.querySelector("#addSubtitles");
-
+  
+  // Clone and replace elements to remove all event listeners
+  const cancelButtonNew = cancelButton.cloneNode(true);
+  cancelButton.parentNode.replaceChild(cancelButtonNew, cancelButton);
+  
+  const closeBtnNew = closeBtn.cloneNode(true);
+  closeBtn.parentNode.replaceChild(closeBtnNew, closeBtn);
+  
+  const downloadButtonNew = downloadButton.cloneNode(true);
+  downloadButton.parentNode.replaceChild(downloadButtonNew, downloadButton);
+  
+  const browseButtonNew = browseButton.cloneNode(true);
+  browseButton.parentNode.replaceChild(browseButtonNew, browseButton);
+  
+  // Update references to the new elements
+  cancelButton = cancelButtonNew;
+  closeBtn = closeBtnNew;
+  downloadButton = downloadButtonNew;
+  browseButton = browseButtonNew;
+  
   // handle closing and canceling buttons event listener
-  [cancelButton,closeBtn].forEach((btn)=>{btn.addEventListener("click",()=>{
-    DownloadOverlay.classList.remove('active');
-  })});
-
+  [cancelButton, closeBtn].forEach((btn) => {
+    btn.addEventListener("click", () => {
+      DownloadOverlay.classList.remove('active');
+    });
+  });
+  
   // handle the download button event listener
-  downloadButton.addEventListener("click",async (event)=>{
+  downloadButton.addEventListener("click", async (event) => {
     event.stopPropagation();
     event.preventDefault();
     console.log(DownloadTargetInfo);
-    DownloadTorrent(DownloadTargetInfo,addSubtitlesCheckbox.checked);
+    DownloadTorrent(DownloadTargetInfo, addSubtitlesCheckbox.checked);
     await saveDownloadSettings(downloadPathInput.value, addSubtitlesCheckbox.checked, rememberPathCheckbox.checked);
     DownloadOverlay.classList.remove('active');
   });
   
   // handle browsing fs button
-  browseButton.addEventListener("click",async (event)=>{
+  browseButton.addEventListener("click", async (event) => {
     let pathInputElement = document.getElementById("downloadPath");
     let dirPath = await window.electronAPI.openFileSystemBrowser(pathInputElement.value);
     if(dirPath) pathInputElement.value = dirPath;
   });
-
 }
 
 async function loadLogoImage(movieLanguage,apiKey){
