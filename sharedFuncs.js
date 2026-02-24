@@ -691,7 +691,7 @@ async function navigate(newPath){
   window.electronAPI.navigateTo(newPath, fromPath, cachedData);
 }
 
-function openMediaVideo( TorrentIdentification, MediaId, MediaType, downloadPath, fileName, MagnetLink, IMDB_ID, backgroundImage, episodeInfo){
+function openMediaVideo(TorrentIdentification, MediaId, MediaType, downloadPath, fileName, MagnetLink, IMDB_ID, backgroundImage, episodeInfo, playerType){
   const b64MagnetLink = btoa(MagnetLink);
   const episodeNumber = episodeInfo?.episodeNumber;
   const seasonNumber  = episodeInfo?.seasonNumber;
@@ -707,7 +707,8 @@ function openMediaVideo( TorrentIdentification, MediaId, MediaType, downloadPath
     `&ImdbId=${IMDB_ID}` +
     `&bgPath=${backgroundImage}` +
     `&episodeNumber=${episodeNumber}` +
-    `&seasonNumber=${seasonNumber}`
+    `&seasonNumber=${seasonNumber}` + 
+    `&playerType=${playerType}`
   );
 }
 

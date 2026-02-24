@@ -345,15 +345,45 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
   const menuDiv = document.createElement("div");
   menuDiv.classList.add("select-dropdown");
 
-  const updateSubtitles = document.createElement("div");
-  updateSubtitles.textContent = "Update Subtitles";
-  updateSubtitles.classList.add("select-option");
+  const updateSubtitlesOption = document.createElement("div");
+  updateSubtitlesOption.textContent = "Update Subtitles";
+  updateSubtitlesOption.classList.add("select-option");
 
-  const updatePosters = document.createElement("div");
-  updatePosters.textContent = "Update Posters";
-  updatePosters.classList.add("select-option");
+  const updatePostersOption = document.createElement("div");
+  updatePostersOption.textContent = "Update Posters";
+  updatePostersOption.classList.add("select-option");
 
-  updateSubtitles.addEventListener("click", async(e) => {
+  const playWithExternalPlayerOption = document.createElement("div");
+  playWithExternalPlayerOption.textContent = "Play Using External Player";
+  playWithExternalPlayerOption.classList.add("select-option");
+
+  const playWithInternalPlayerOption = document.createElement("div");
+  playWithInternalPlayerOption.textContent = "Play Using Built-in Player";
+  playWithInternalPlayerOption.classList.add("select-option");
+
+  [playWithExternalPlayerOption, playWithInternalPlayerOption].forEach((option,index) => {
+    option.addEventListener("click", (event) => {
+      event.stopPropagation();
+      let episodeInfo = {
+        "seasonNumber": MediaInfo.seasonNumber, 
+        "episodeNumber": MediaInfo.episodeNumber
+      };
+      openMediaVideo(
+        MediaInfo.torrentId,
+        MediaInfo.MediaId, 
+        MediaInfo.MediaType, 
+        MediaInfo.downloadPath,
+        MediaInfo.fileName,
+        MediaInfo.Magnet,
+        MediaInfo.IMDB_ID,
+        MediaInfo.bgImagePath,
+        episodeInfo,
+        (index === 0) ? "externel" : "internel"
+      );
+    });
+  });
+
+  updateSubtitlesOption.addEventListener("click", async(e) => {
     e.stopPropagation();
     hideContextMenu(menuDiv);
 
@@ -376,16 +406,17 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
         },3000);
       }
     });
-
   });
 
-  updatePosters.addEventListener("click", (e) => {
+  updatePostersOption.addEventListener("click", (e) => {
     e.stopPropagation();
     hideContextMenu(menuDiv);
   });
 
-  menuDiv.appendChild(updateSubtitles);
-  menuDiv.appendChild(updatePosters);
+  menuDiv.appendChild(playWithExternalPlayerOption);
+  menuDiv.appendChild(playWithInternalPlayerOption);
+  menuDiv.appendChild(updateSubtitlesOption);
+  menuDiv.appendChild(updatePostersOption);
 
   return menuDiv;
 }

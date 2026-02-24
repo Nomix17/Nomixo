@@ -14,6 +14,9 @@ let mediaImdbId = data.get("ImdbId");
 let seasonNumber = data.get("seasonNumber");
 let episodeNumber = data.get("episodeNumber");
 
+let playerTypeRaw = data.get("playerType");
+let playerType = playerTypeRaw === "undefined" ? null : playerTypeRaw;
+
 let subsDelay = 0; // ms
 let defaultFontSize = 30; // px
 
@@ -302,7 +305,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
   if(usingMagnet){
     let subs = await loadingAllSubs(mediaImdbId,seasonNumber,episodeNumber);
     subtitlesArray = subs;
-    if(fileIsMkv){
+    if(playerType === "externel" || (fileIsMkv && playerType == null)){
       // pass to externel Player
       playVideoInMpv(true,Magnet,undefined,fileName,undefined,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs);
       
@@ -334,7 +337,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     let subs = await window.electronAPI.loadLocalSubs(videoPath,identifyingElements);
     subtitlesArray = subs;
 
-    if(fileIsMkv){
+    if(playerType === "externel" || (fileIsMkv && playerType == null)){
       // pass to externel Player
       playVideoInMpv(false,undefined,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,undefined);
 
