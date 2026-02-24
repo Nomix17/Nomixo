@@ -853,7 +853,9 @@ async function downloadTorrent(torrentInfo) {
 
   return new Promise((resolve, reject) => {
     console.log("Loading Torrent:", torrentInfo.torrentId);
-    
+    torrent.on("metadata", () => console.log("Metadata received!"));
+    torrent.on("warning", (warn) => console.warn("Torrent warning:", warn));
+
     torrent.on("ready", () => {
      
       console.log("\nDownload Target: " + torrentInfo?.fileName);
