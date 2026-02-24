@@ -583,7 +583,7 @@ h1{
   display: none;
   list-style: none;
   margin: 0;
-  padding: 5px;
+  padding: 0;
   background-color:rgb(var(--primary-color));
   border: 1px solid #ccc;
   border-radius:10px;
@@ -592,16 +592,8 @@ h1{
   z-index:1000;
 }
 
-.context-menu::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.1);
-  pointer-events: none;
-}
-
 .context-menu li {
-  padding: 10px;
+  padding: 15px;
   cursor: pointer;
   width:100%;
   border-radius:10px;
@@ -610,8 +602,6 @@ h1{
 .context-menu li:hover {
   background-color:rgba(255,255,255,0.2);
 }
-
-/* download Dialog Style */
 
 * {
   box-sizing: border-box;
