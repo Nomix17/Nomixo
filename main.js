@@ -951,7 +951,7 @@ async function downloadTorrent(torrentInfo) {
     torrent.on("error", (err) => {
       console.error(`Torrent error: ${torrentInfo.torrentId}, ${err}`);
       torrent.destroy(() => {
-        deleteTorrentFromMediaHashMap(torrentId);
+        deleteTorrentFromMediaHashMap(torrentInfo.torrentId);
         downloadNextTorrentInQueue();
       });
      
