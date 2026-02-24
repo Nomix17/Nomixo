@@ -167,7 +167,7 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
   let ThisMediaTitle = mediaEntryPoint?.Title;
   let PosterImage = mediaEntryPoint?.posterUrl;
 
-  if (!mediaEntryPoint?.posterUrl || !mediaEntryPoint?.Title) {
+  if (mediaEntryPoint?.posterUrl == null || mediaEntryPoint?.Title == null) {
     const mediaInfo = await getMediaInfo(ThisMediaId, ThisMediaType, apiKey);
     PosterImage =  
         mediaInfo?.["poster_path"] 
@@ -175,7 +175,7 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
         : "../assets/PosterNotFound.png";
 
     PosterImage = normalizeRootUrl(PosterImage);
-    ThisMediaTitle =  mediaInfo?.["title"];
+    ThisMediaTitle =  mediaInfo?.["name"] ?? mediaInfo?.["title"];
     let targetIdentification = {MediaId:ThisMediaId,MediaType:ThisMediaType};
     updateLibraryElement(targetIdentification,{posterUrl:PosterImage, Title:ThisMediaTitle});
   }
