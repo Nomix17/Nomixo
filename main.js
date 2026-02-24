@@ -811,10 +811,40 @@ function initializeDataFiles(){
 
 // ########## DOWLOAD RELATED #################
 
+async function getTrackers() {
+  try{
+    const urls = [
+      'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt',
+    ];
+
+    const results = await Promise.all(urls.map(u => fetch(u).then(r => r.text())));
+    const trackers = results
+      .flatMap(text => text.trim().split('\n\n'))
+      .filter(Boolean);
+
+    console.log(`Loaded ${trackers.length} trackers`);
+    return trackers;
+  } catch(err) {
+    console.log(err);
+    return [
+      'udp://tracker.opentrackr.org:1337/announce',
+      'udp://open.demonii.com:1337/announce',
+      'udp://tracker.openbittorrent.com:6969/announce',
+      'udp://tracker.torrent.eu.org:451/announce',
+      'udp://explodie.org:6969/announce',
+      'udp://tracker.empire-js.us:1337/announce',
+    ];
+  }
+}
+
+const torrentTrackersPromise = getTrackers();
 async function downloadTorrent(torrentInfo) {
   // Add torrent
+  const trackers = await torrentTrackersPromise;
+
   const torrent = DownloadClient.add(torrentInfo.MagnetLink, {
-    path: torrentInfo.downloadPath
+    path: torrentInfo.downloadPath,
+    announce: trackers
   });
 
   downloadingMediaHashMap[torrentInfo.torrentId] = {torrentInstance:torrent,torrentInfo:torrentInfo};
