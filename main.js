@@ -75,24 +75,33 @@ if (!process.env.API_KEY) {
   openMainWindow();
 }
 
+function openMainWindow(fileEntryPoint = "./home/mainPage.html") {
+  if (!app.requestSingleInstanceLock()) {
+    app.quit();
+    return;
+  }
 
-function openMainWindow(fileEntryPoint = "./home/mainPage.html"){
-  app.on("ready", () =>{
-    protocol.handle('theme', async () => {
-      const css = await fs.promises.readFile(ThemeFilePath, 'utf8');
-      return new Response(css, { headers: { 'content-type': 'text/css' ,'cache-control': 'no-store'} });
-    });
-    createMainWindow(fileEntryPoint);
-
-    // when the app crash the downloads aren't mark as paused (because "window-all-closed" isn't called),
-    // so I call it here to to correct that and make sure they apprear as paused.
-    markMediaDownloadsAsPaused(); 
+  app.on("second-instance", () => {
+    if (WINDOW?.isMinimized()) WINDOW.restore();
+    WINDOW?.focus();
   });
 
-  app.on("window-all-closed", async() => {
-    if(closeWindow)
-      app.quit();
+  app.on("ready", () => {
+    protocol.handle("theme", async () => {
+      const css = await fs.promises.readFile(ThemeFilePath, "utf8");
+      return new Response(css, {
+        headers: { "content-type": "text/css", "cache-control": "no-store" },
+      });
+    });
 
+    createMainWindow(fileEntryPoint);
+    // On crash, "window-all-closed" is never fired, so downloads won't be marked as paused.
+    // Call here to ensure they appear correctly on next launch.
+    markMediaDownloadsAsPaused();
+  });
+
+  app.on("window-all-closed", async () => {
+    if (closeWindow) app.quit();
     await markMediaDownloadsAsPaused();
   });
 }
