@@ -221,6 +221,20 @@ function createContinueWatchingButton(mediaEntryPoint){
   .catch(err=>{
     console.error(err.message);
   });
+  continueWatchingEventListener(continueVideoButton,mediaEntryPoint)
+
+  return continueVideoButton;
+}
+
+async function continueWatchingEventListener(continueVideoButton,mediaEntryPoint) {
+  if(mediaEntryPoint.findInLib === true) {
+    const mediaLibraryEntryPointIdentifier = {
+      MediaId:mediaEntryPoint.mediaId,
+      MediaType:mediaEntryPoint.mediaType
+    };
+    mediaEntryPoint = await window.electronAPI.loadMediaLibraryInfo(mediaLibraryEntryPointIdentifier);
+    mediaEntryPoint = mediaEntryPoint[0];
+  }
 
   continueVideoButton.addEventListener("click",()=>{
     openMediaVideo(
@@ -239,7 +253,6 @@ function createContinueWatchingButton(mediaEntryPoint){
     event.preventDefault();
     event.stopPropagation();
   });
-  return continueVideoButton;
 }
 
 function createRemoveFromWatchingLaterButton(Id,ThisMediaType,IsInHomePage){

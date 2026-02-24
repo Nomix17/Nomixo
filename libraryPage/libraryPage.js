@@ -124,15 +124,19 @@ async function loadCachedMediaData(cachedData){
 
     let allMediaElements = [];
     let allXremoveFromLibButtons = [];
+    let allContinueWatchingButton = [];
+
     for(let mediaContainer of containersData){
       if(mediaContainer.id){
         let containerDomElement = document.getElementById(mediaContainer.id);
         if(containerDomElement && mediaContainer?.HTMLContent) containerDomElement.innerHTML = mediaContainer.HTMLContent;
         allMediaElements.push(...Array.from(document.querySelectorAll(".div-MovieElement")))
         allXremoveFromLibButtons.push(...Array.from(document.querySelectorAll(".btn-remove-from-library")));
+        allContinueWatchingButton.push(...Array.from(document.querySelectorAll(".continue-video-button")));
       }
     }
-
+    
+    // recreate MediaElement Event Listeners
     for(let mediaDomElement of allMediaElements){
       if(mediaDomElement){
         const mediaId = mediaDomElement.getAttribute("mediaId");
@@ -147,6 +151,7 @@ async function loadCachedMediaData(cachedData){
       }
     }
 
+    // recreate xremove Btns Event Listeners
     for(let removeFromLibButton of allXremoveFromLibButtons){
       let thisMediaElement = removeFromLibButton.parentElement;
       if(thisMediaElement && removeFromLibButton) {
@@ -156,6 +161,15 @@ async function loadCachedMediaData(cachedData){
       }
     }
 
+    // recreate continue watching Btns Event Listeners
+    for(let continueWatchingBtn of allContinueWatchingButton){
+      let thisMediaElement = continueWatchingBtn.parentElement;
+      if(thisMediaElement && continueWatchingBtn) {
+        const mediaId = thisMediaElement.getAttribute("mediaId");
+        const mediaType = thisMediaElement.getAttribute("mediaType");
+        continueWatchingEventListener(continueWatchingBtn, {mediaId:mediaId,mediaType:mediaType,findInLib:true})
+      }
+    }
   }
 }
 
