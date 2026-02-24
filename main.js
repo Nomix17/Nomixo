@@ -1,4 +1,5 @@
-import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog, shell} from "electron";
+import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog, shell, screen} from "electron";
+import Store from 'electron-store';
 import downloadMultipleSubs from "./downloadSubtitles.js";
 import { spawn } from "child_process";
 import { Worker } from 'worker_threads';
@@ -45,6 +46,7 @@ initializeDataFiles();
 // ======================= GLOBALS =======================
 
 let WINDOW;
+const store = new Store();
 let server;
 let mpv = null;
 let MPVWorker = null;
@@ -106,30 +108,50 @@ function openMainWindow(fileEntryPoint = "./home/mainPage.html") {
   });
 }
 
+
 const createMainWindow = async (entryPointPath = "./home/mainPage.html") => {
-   WINDOW = new BrowserWindow({
-     width: 1100,
-     height: 650,
-     show:false,
-     webPreferences: {
-       preload: path.join(__dirname, 'preload.js'),
-       contextIsolation: true,
-       nodeIntegration: false
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+
+  let { width, height, x, y, isMaximized } = store.get('windowBounds') || {
+    width: Math.floor(screenWidth * 0.8),
+    height: Math.floor(screenHeight * 0.8),
+    isMaximized: false
+  };
+
+  WINDOW = new BrowserWindow({
+    width,
+    height,
+    x,
+    y,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
+
   WINDOW.setMenuBarVisibility(false);
   WINDOW.loadFile(entryPointPath);
-  
+
   let defaultSettings = loadSettings();
   mainzoomFactor = defaultSettings.PageZoomFactor;
   let settingDefaultDownloadingPath = defaultSettings?.defaultDownloadPath;
-  if(settingDefaultDownloadingPath !== undefined)
+  if (settingDefaultDownloadingPath !== undefined)
     defaultDownloadDir = settingDefaultDownloadingPath;
 
-  WINDOW.webContents.on('did-finish-load', () => {
+  WINDOW.once('ready-to-show', () => {
     WINDOW.webContents.setZoomFactor(mainzoomFactor);
-
+    if (isMaximized) WINDOW.maximize();
     WINDOW.show();
+  });
+
+  WINDOW.on('close', () => {
+    store.set('windowBounds', {
+      ...WINDOW.isMaximized() ? store.get('windowBounds') : WINDOW.getBounds(),
+      isMaximized: WINDOW.isMaximized()
+    });
   });
 }
 
