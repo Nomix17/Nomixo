@@ -1004,7 +1004,7 @@ async function pauseDownloadingTorrent(torrent, torrentId){
     return new Error(`Cannot find the torrent Id ${TorrentId}`)
   }
 
-  await destroyDownloadingTorrent(torrent,torrentId);
+  destroyDownloadingTorrent(torrent,torrentId);
   console.log(`Torrent Paused: ${torrentId}`);
   return torrentId;
 
