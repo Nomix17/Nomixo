@@ -138,7 +138,7 @@ const createMainWindow = async (entryPointPath = "./home/mainPage.html") => {
   let defaultSettings = loadSettings();
   mainzoomFactor = defaultSettings.PageZoomFactor;
   let settingDefaultDownloadingPath = defaultSettings?.defaultDownloadPath;
-  if (settingDefaultDownloadingPath !== undefined)
+  if (settingDefaultDownloadingPath != null)
     defaultDownloadDir = settingDefaultDownloadingPath;
 
   WINDOW.once('ready-to-show', () => {
@@ -745,7 +745,7 @@ function loadSubConfigs(){
       }
     }
   });
-  if(JsonConfig?.["no-sub"] == undefined) JsonConfig["no-sub"] = false;
+  if(JsonConfig?.["no-sub"] == null) JsonConfig["no-sub"] = false;
   return JsonConfig;
 }
 
@@ -1216,7 +1216,7 @@ function insertNewInfoToLibrary(libraryFilePath, newData) {
 function loadFromLibrary(targetIdentification){
   let LibraryInfo = getLibraryInfo();
   if(LibraryInfo.media.length){
-    if(targetIdentification == undefined) return LibraryInfo.media;
+    if(targetIdentification == null) return LibraryInfo.media;
     let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId === targetIdentification.MediaId && element.MediaType === targetIdentification.MediaType);
     if(targetLibraryInfo.length) return targetLibraryInfo; 
     return undefined
@@ -1326,7 +1326,7 @@ async function getLastestPlayBackPostion(metaData){
   let CurrentMediaLibraryEntry = await loadFromLibrary({MediaId:metaData.MediaId,MediaType:metaData.MediaType});
 
   let startFromTime;
-  if(CurrentMediaLibraryEntry == undefined || 
+  if(CurrentMediaLibraryEntry == null || 
     CurrentMediaLibraryEntry[0].episodeNumber !== metaData.episodeNumber ||
     CurrentMediaLibraryEntry[0].seasonNumber !== metaData.seasonNumber)
       return 0;

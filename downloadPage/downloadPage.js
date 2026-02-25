@@ -7,7 +7,7 @@ let monitoringProgress = false;
 async function loadDownloadMediaFromLib() {
   let library = await window.electronAPI.loadDownloadLibraryInfo();
 
-  if(library !== undefined){
+  if(library != null){
     for(let mediaLibEntryPoint of library.downloads){
         createDownloadElement(mediaLibEntryPoint);
     }

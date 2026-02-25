@@ -607,7 +607,7 @@ async function getLatestPlayBackPosition(MediaId,MediaType,episodeNumber,seasonN
   let targetIdentification = {MediaId:MediaId,MediaType:MediaType};
   let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
 
-  if(MediaLibraryObject == undefined) return 0;
+  if(MediaLibraryObject == null) return 0;
   MediaLibraryObject = MediaLibraryObject[0];
 
   let mediaIsAnEpisode = (MediaLibraryObject.hasOwnProperty("episodeNumber") && MediaLibraryObject.hasOwnProperty("seasonNumber"));
@@ -628,7 +628,7 @@ async function updateLastSecondBeforeQuit(lastPbPosition,metaData){
   let targetIdentification = {MediaId:metaData?.MediaId,MediaType:metaData?.MediaType};
   let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
 
-  if(MediaLibraryObject !== undefined){
+  if(MediaLibraryObject != null){
     MediaLibraryObject = {...MediaLibraryObject[0], ...metaData,lastPlaybackPosition:lastPbPosition}; 
 
     if(!MediaLibraryObject?.["typeOfSave"].includes("Currently Watching"))

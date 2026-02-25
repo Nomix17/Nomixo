@@ -16,7 +16,7 @@ setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(
 async function loadDataFromLibrary(apiKey){
   let wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
   
-  if(wholeLibraryInformation === undefined || wholeLibraryInformation.length === 0){
+  if(wholeLibraryInformation == null || wholeLibraryInformation.length === 0){
     addEmptyLibraryWarning(RightmiddleDiv);
   }else{
     await fetchMediaDataFromLibrary(apiKey,wholeLibraryInformation,SavedMedia,RightmiddleDiv);

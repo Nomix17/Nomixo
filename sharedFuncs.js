@@ -301,7 +301,7 @@ window.setAddToLibraryButtonToPressed = (toggleInLibrary) => {
 async function ToggleInLibrary(mediaId,mediaType,Title, posterUrl,typeOfSave) {
   let toggleInLibraryElement = event.target;
   
-  if (event !== undefined) {
+  if (event != null) {
     event.stopPropagation();
     event.preventDefault();
   }
@@ -422,7 +422,7 @@ function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
 async function loadLibraryInfo(identification=undefined){
   try{
     const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo(identification).catch((err)=>console.error(err.message));
-    if(wholeLibraryInformation == undefined){
+    if(wholeLibraryInformation == null){
       console.log("No matches in the library");
       return [];
     }
@@ -437,7 +437,7 @@ async function updateLibraryElement(targetIdentification,updateValues) {
   const MediaId = targetIdentification.MediaId;
   const MediaType = targetIdentification.MediaType;
   let MediaLibraryObject = await loadLibraryInfo(targetIdentification);
-  if(MediaLibraryObject !== undefined && MediaLibraryObject.length){
+  if(MediaLibraryObject != null && MediaLibraryObject.length){
     MediaLibraryObject = {...MediaLibraryObject[0],...updateValues}; 
     await window.electronAPI.removeMediaFromLibrary(targetIdentification);
     window.electronAPI.addMediaToLibrary(MediaLibraryObject);
@@ -868,7 +868,7 @@ function removeAllArgsFromPath(path) {
 async function fullscreenClicked(){
   let isFullScreen = await window.electronAPI.toggleFullscreen();
   let fullscreenImageElement = document.getElementById("img-fullscreen");
-  if(isFullScreen  == undefined) return;
+  if(isFullScreen == null) return;
   fullscreenImageElement.src = isFullScreen ? "../assets/icons/unfullscreen.png" : "../assets/icons/fullscreen.png";
 }
 

@@ -583,7 +583,7 @@ function displayEpisodes(seasonIndex){
 async function getDefaultRatio() {
   let systemSettings = await window.electronAPI.loadSettings();
   let defaultRatio = systemSettings?.defaultDivRadio;
-  if(defaultRatio == undefined) defaultRatio = 0.3;
+  if(defaultRatio == null) defaultRatio = 0.3;
   return defaultRatio;
 }
 
