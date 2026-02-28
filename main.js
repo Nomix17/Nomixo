@@ -735,7 +735,7 @@ function loadSubConfigs(){
   let mpvConfig = fs.readFileSync(SubConfigFile,"utf-8");
   let lines = mpvConfig.split("\n");
   lines.forEach(line=>{
-    if(!line.includes("osc") && !line.includes("border") && !line.includes("osd-bar")){
+    if(!line.includes("osc") && !line.includes("border") && !line.includes("osd-bar") && !line.includes("target-colorspace-hint")){
       if(line.includes("no-sub")){
         JsonConfig["no-sub"] = true;
       }else if(line.includes("=")){
@@ -755,7 +755,7 @@ function applySubConfigs(jsonContent){
 }
 
 function parseMpvConfigs(jsonContent) {
-  let mpvConfig = "osc=yes \nborder=yes \nosd-bar=no";
+  let mpvConfig = "osc=yes \nborder=yes \nosd-bar=no\ntarget-colorspace-hint=no";
 
   let Entities = Object.entries(jsonContent);
   for(let entry of Entities){
@@ -835,6 +835,7 @@ function initializeDataFiles(){
       sub-font-size=30
       sub-font="Arial"
       sub-color="#ffffff"
+      target-colorspace-hint=no
     `;
     fs.writeFileSync(SubConfigFile,defaultFileData);
   }
