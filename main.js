@@ -234,7 +234,6 @@ ipcMain.on("change-page", (event,newPageURL,currentPageURL,cacheData) => {
     const webContents = event.sender;
     const [filePath, query] = newPageURL.split('?');
     const fullPath = path.join(__dirname, filePath);
-    webContents.setZoomFactor(mainzoomFactor);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
     savePageCachedDataToHistory(currentPageURL,cacheData);
 
@@ -245,6 +244,12 @@ ipcMain.on("change-page", (event,newPageURL,currentPageURL,cacheData) => {
       };
       webContents.once('did-finish-load', clearOnLoad);
     }
+
+    const setZoomAfterLoad = () => {
+      webContents.setZoomFactor(mainzoomFactor);
+      webContents.removeListener('did-finish-load', setZoomAfterLoad);
+    };
+    webContents.once('did-finish-load', setZoomAfterLoad);
 
     WINDOW.loadURL(url);
     positionWasChangedViaGoBackButton = false;
