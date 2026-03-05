@@ -66,6 +66,10 @@ function insertPersonInformation(personInformation){
   personBioElement.innerText = Biography;
   personFullBioParagraphElement.innerText = Biography;
 
+  personNameElement.addEventListener("click",()=>{
+    window.electronAPI.openExternelLink(`https://www.imdb.com/name/${ImdbId}/`);
+  });
+
   if(!Biography || Biography.trim() === "")
     hideBiography();
   else

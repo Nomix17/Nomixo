@@ -1029,7 +1029,6 @@ const menuThreePoints = `
 
 function addFloatingDivToDisplayFullTitle (MediaElement, elementToTrackQuerySelector="p") {
   const paragraph = MediaElement?.querySelector(elementToTrackQuerySelector);
-console.log(MediaElement);
   if (paragraph) {
     const floatingDiv = document.createElement('div');
     floatingDiv.className = 'floating-tooltip';
