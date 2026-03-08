@@ -255,7 +255,7 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
     nothingWasFoundDiv.classList.add("div-NothingWasFound");
 
     const isNoResultsError =
-      error?.message !== "No Useful Results Were found !";
+      error?.message === "No Useful Results Were found !";
 
     nothingWasFoundDiv.textContent = isNoResultsError
       ? error.message
