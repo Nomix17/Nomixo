@@ -1,14 +1,17 @@
 let data = new URLSearchParams(window.location.search);
 let genreId = data.get("GenreId");
 let MediaType = data.get("MediaType") === "All" ? "movie" : data.get("MediaType");
+let SortBase = data.get("SortBase") === "Default" ? "popularity.desc" : data.get("SortBase"); 
 
 let RightmiddleDiv = document.getElementById("div-middle-right");
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 let loadingGif = document.getElementById("lds-dual-ring-container");
 let searchInput = document.getElementById("input-searchForMovie");
+let MediaSuggestions = document.getElementById("div-MediaSuggestions");
+
 let SelectMediaType = document.getElementById("select-type");
 let SelectGenre = document.getElementById("select-Genres");
-let MediaSuggestions = document.getElementById("div-MediaSuggestions");
+let SelectSortBase = document.getElementById("select-sort");
 
 let LibraryInformation = [];
 
@@ -18,8 +21,20 @@ setTimeout(() => { try { globalLoadingGif.style.opacity = "1" } catch (err) { co
 async function fetchData(apiKey, genreId, ThisMediaType, page) {
   let url = "";
 
-  if (genreId.toLowerCase() === "all") url = `https://api.themoviedb.org/3/${ThisMediaType}/popular?api_key=${apiKey}&page=${page}`;
-  else url = `https://api.themoviedb.org/3/discover/${ThisMediaType}?api_key=${apiKey}&with_genres=${genreId}&page=${page}`;
+  if (genreId.toLowerCase() === "all") {
+    url = `https://api.themoviedb.org/3/discover/${ThisMediaType}?api_key=${apiKey}&page=${page}&sort_by=${SortBase}`;
+  } else {
+    const params = new URLSearchParams({
+      api_key: apiKey,
+      with_genres: genreId,
+      page:page,
+      // "vote_count.gte": 100,
+      // "popularity.gte": 10,
+      include_adult:false,
+      sort_by: SortBase,
+    });
+    url = `https://api.themoviedb.org/3/discover/${ThisMediaType}?${params}`;
+  }
 
   if (!LibraryInformation.length) LibraryInformation = await loadLibraryInfo();
   Promise.all([fetch(url).then(res => res.json())])
@@ -98,11 +113,12 @@ function changeDescriptionTitleValue(titleValue){
 }
 
 function addDropDownsEventListener(){
-  [SelectMediaType,SelectGenre].forEach(selectElement=>{
+  [SelectMediaType, SelectGenre, SelectSortBase].forEach(selectElement=>{
     selectElement.addEventListener("dropdownChange", () => {
       let newGenreId = getDropdownValue(SelectGenre);
       let newMediaType = getDropdownValue(SelectMediaType);
-      openDiscoveryPage(newGenreId, newMediaType);
+      let sortBase = getDropdownValue(SelectSortBase);
+      openDiscoveryPage(newGenreId, newMediaType, sortBase);
     });
   });
 }
@@ -202,6 +218,7 @@ async function initPage(){
 
   dropDownInit();
   setDropdownValue(SelectMediaType, MediaType);
+  setDropdownValue(SelectSortBase, SortBase);
   addDropDownsEventListener();
 
   globalLoadingGif.remove();

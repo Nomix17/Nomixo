@@ -669,8 +669,8 @@ function backToHome(){
   return navigate("./home/mainPage.html");
 }
 
-function openDiscoveryPage(genreId, MediaType){
-  return navigate(`./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}`);
+function openDiscoveryPage(genreId = "All", MediaType = "All" , SortBase = "Default"){
+  return navigate(`./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}&SortBase=${SortBase}`);
 }
 
 function OpenLibaryPage(typeOfSave = "All"){
