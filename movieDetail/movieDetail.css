@@ -346,7 +346,9 @@ p{
 }
 
 #movie-rating-div{
-  display:inline-block;
+  display: inline-flex;
+  justify-content:center;
+  align-items:center;
   border-bottom:1px solid transparent;
   padding: 5px;
   transition:border-color 0.2s ease;
@@ -443,7 +445,7 @@ h1{
 }
 
 #img-IMDBlogo{
-  width: 30px;
+  width: 38px;
   background-color:rgba(0,0,0,0%);
 }
 
