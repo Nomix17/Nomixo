@@ -345,14 +345,6 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
   const menuDiv = document.createElement("div");
   menuDiv.classList.add("select-dropdown");
 
-  const updateSubtitlesOption = document.createElement("div");
-  updateSubtitlesOption.textContent = "Update Subtitles";
-  updateSubtitlesOption.classList.add("select-option");
-
-  const updatePostersOption = document.createElement("div");
-  updatePostersOption.textContent = "Update Posters";
-  updatePostersOption.classList.add("select-option");
-
   const playWithExternalPlayerOption = document.createElement("div");
   playWithExternalPlayerOption.textContent = "Play Using External Player";
   playWithExternalPlayerOption.classList.add("select-option");
@@ -360,6 +352,14 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
   const playWithInternalPlayerOption = document.createElement("div");
   playWithInternalPlayerOption.textContent = "Play Using Built-in Player";
   playWithInternalPlayerOption.classList.add("select-option");
+
+  const updatePosterOption = document.createElement("div");
+  updatePosterOption.textContent = "Update Poster Image";
+  updatePosterOption.classList.add("select-option");
+
+  const updateSubtitlesOption = document.createElement("div");
+  updateSubtitlesOption.textContent = "Update Subtitles";
+  updateSubtitlesOption.classList.add("select-option");
 
   [playWithExternalPlayerOption, playWithInternalPlayerOption].forEach((option,index) => {
     option.addEventListener("click", (event) => {
@@ -383,6 +383,35 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
     });
   });
 
+  updatePosterOption.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    hideContextMenu(menuDiv);
+    
+    const totalSizeElementContaint = totalSizeElement.innerHTML;
+    totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating subtitles`;
+
+    const apiKey = await window.electronAPI.getAPIKEY().then();
+    const posterFileName = await getPosterPath(MediaInfo.IMDB_ID, apiKey);
+    const res = await window.electronAPI.downloadImage(MediaInfo.downloadPath, `https://image.tmdb.org/t/p/w500/${posterFileName}`);
+
+    if (res.download_result === "success") {
+      await window.electronAPI.editElementInDownloadLibraryInfo(
+        MediaInfo.torrentId,
+        "posterPath",
+        res.image_path
+      );
+    }
+
+    totalSizeElement.innerHTML = 
+      res.download_result === "success" 
+        ? "Poster Updated ✔" 
+        : "Failed To Update Poster ⨯"
+
+    setTimeout(() => {
+      totalSizeElement.innerHTML = totalSizeElementContaint;
+    },3000);
+  });
+
   updateSubtitlesOption.addEventListener("click", async(e) => {
     e.stopPropagation();
     hideContextMenu(menuDiv);
@@ -392,31 +421,18 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
 
     const subsObjects = await loadingAllSubs(MediaInfo.IMDB_ID);
 
-    window.electronAPI.downloadSubtitles(MediaInfo,  subsObjects).then((res) => {
-      if (res?.updated) {
-        totalSizeElement.innerHTML = "Subtitles Updated ✔";
-        setTimeout(() => {
-          totalSizeElement.innerHTML = totalSizeElementContaint;
-        },3000);
+    const res = await window.electronAPI.downloadSubtitles(MediaInfo,  subsObjects);
+    totalSizeElement.innerHTML = res?.updated ? "Subtitles Updated ✔" : "Failed To Update Subtitles ⨯";
+    setTimeout(() => {
+      totalSizeElement.innerHTML = totalSizeElementContaint;
+    },3000);
 
-      } else {
-        totalSizeElement.innerHTML = "Failed To Update Subtitles ⨯";
-        setTimeout(() => {
-          totalSizeElement.innerHTML = totalSizeElementContaint;
-        },3000);
-      }
-    });
-  });
-
-  updatePostersOption.addEventListener("click", (e) => {
-    e.stopPropagation();
-    hideContextMenu(menuDiv);
   });
 
   menuDiv.appendChild(playWithExternalPlayerOption);
   menuDiv.appendChild(playWithInternalPlayerOption);
+  menuDiv.appendChild(updatePosterOption);
   menuDiv.appendChild(updateSubtitlesOption);
-  menuDiv.appendChild(updatePostersOption);
 
   return menuDiv;
 }
