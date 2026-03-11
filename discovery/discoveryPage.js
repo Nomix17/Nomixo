@@ -166,6 +166,7 @@ async function loadCachedMediaData(cachedData){
           const posterElement = mediaDomElement.querySelector(".img-MoviePoster");
           loadImageWithAnimation(posterContainer,posterElement,posterUrl);
           addEventListenerToMediaDomElementToOpenDetailPage(mediaDomElement,mediaId,mediaType)
+          addFloatingDivToDisplayFullTitle(mediaDomElement);
         }
       }
     }
