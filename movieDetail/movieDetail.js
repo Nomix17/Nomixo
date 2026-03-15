@@ -234,7 +234,8 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
   try {
     const mediaExternalIdsRes = await fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`);
     const mediaExternalIdsData = await mediaExternalIdsRes.json();
-    IMDB_ID = mediaExternalIdsData.imdb_id;
+    IMDB_ID = mediaExternalIdsData?.imdb_id;
+    if(IMDB_ID == null || IMDB_ID.trim() == "") throw new Error("No Results Were found !");
     addEventListenerToIMDB_Rating(IMDB_ID)
     let url = (MediaType === "tv") 
       ? `https://torrentio.strem.fun/stream/series/${IMDB_ID}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`
@@ -255,7 +256,8 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
     nothingWasFoundDiv.classList.add("div-NothingWasFound");
 
     const isNoResultsError =
-      error?.message === "No Useful Results Were found !";
+      error?.message === "No Useful Results Were found !" ||
+      error?.message === "No Results Were found !";
 
     nothingWasFoundDiv.textContent = isNoResultsError
       ? error.message
