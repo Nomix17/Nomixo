@@ -1,16 +1,16 @@
 {
   "name": "nomixo",
   "version": "1.0.0",
-  "description": "Watch your favorite movies, shows in one smooth streaming experience.",
+  "description": "Stream your favorite movies and shows in one seamless experience",
   "type": "module",
   "author": {
     "name": "Nomix17",
-    "url": "https://github.com/Nomix17/Nomixo"
+    "url": "https://github.com/Nomix17"
   },
   "main": "main.js",
   "scripts": {
     "dev": "electron .",
-    "build": "electron-builder --linux rpm"
+    "build": "electron-builder"
   },
   "dependencies": {
     "dotenv": "^17.2.0",
@@ -20,17 +20,30 @@
   },
   "devDependencies": {
     "electron": "^39.1.1",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.8.1"
   },
   "build": {
     "appId": "com.nomixo.app",
     "productName": "Nomixo",
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "mpvConfigs/",
+        "to": "mpvConfigs"
+      }
+    ],
     "linux": {
       "target": [
-        "rpm"
+        "tar.gz"
       ],
       "category": "AudioVideo",
-      "icon": "build/icons",
+      "icon": "dist/icons",
       "maintainer": "Nomix17"
     }
   }

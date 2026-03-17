@@ -22,10 +22,6 @@ let __envfile = path.join(__configs,".env");
 dotenv.config({path:__envfile});
 
 // ======================= PATHS =======================
-const isDev = !app.isPackaged;
-const mpvConfigAssetsDirectory = isDev
-  ? path.join(__dirname, 'assets/mpvConfigs')
-  : path.join(process.resourcesPath, "assets", "mpvConfigs");
 
 const SettingsFilePath = path.join(__configs, 'settings.json');
 const ThemeFilePath = path.join(__configs, 'Theme.css');
@@ -828,8 +824,12 @@ function initializeDataFiles(){
     fs.mkdirSync(defaultDownloadDir, { recursive: true });
   }
 
-  if(!fs.existsSync(mpvConfigDirectory)){
-    fs.cpSync(mpvConfigAssetsDirectory,mpvConfigDirectory,{ recursive: true });
+  if (!fs.existsSync(mpvConfigDirectory)) {
+    const currentMpvConfPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'mpvConfigs')
+      : path.join(__dirname, 'mpvConfigs');
+
+    fs.cpSync(currentMpvConfPath, mpvConfigDirectory, { recursive: true });
   }
 
   if(!fs.existsSync(SubConfigFile)){
