@@ -45,6 +45,12 @@
       "category": "AudioVideo",
       "icon": "dist/icons",
       "maintainer": "Nomix17"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "dist/icons/icon.ico"
     }
   }
 }
