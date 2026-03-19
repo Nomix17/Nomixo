@@ -126,7 +126,7 @@ async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement)
       // keep trying to download
       console.log(`Failed To download Poster For: ${libraryEntryPoint.torrentId}`)
       setTimeout(()=>{
-        makeSurePosterIsLoaded(libraryEntryPoint,PosterElement)
+        makeSurePosterIsLoaded(libraryEntryPoint, PosterDiv,PosterElement)
       },5000);
     }
   }
@@ -200,7 +200,7 @@ function monitorDownloads() {
     if(JsonData?.Status.toLowerCase() === "done"){
       let library = await window.electronAPI.loadDownloadLibraryInfo();
       let libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
-      let doneDownloadContainer = doneDownloadsDiv.querySelector("movieContainer");
+      let doneDownloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
       if(doneDownloadContainer)
         doneDownloadContainer.appendChild(TargetDownloadElement);
       MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);
@@ -577,7 +577,6 @@ function fillingDeleteOverlay(MediaInfo) {
   loadImageWithAnimation(mediaPosterContainer, mediaPosterImg, MediaInfo.posterPath);
 
   mediaTitle.innerHTML = MediaInfo.Title;
-  mediaSize.innerHTML = MediaInfo.Size;
   mediaSize.innerHTML = MediaInfo.Size +" • "+MediaInfo.Quality;
 
   mediaYear.innerHTML = MediaInfo.Year;
