@@ -1,20 +1,25 @@
-let RightmiddleDiv = document.getElementById("div-middle-right");
-let SelectMediaType = document.getElementById("select-type");
-let SelectSaveType = document.getElementById("select-save");
-let SelectSortType = document.getElementById("select-sort");
-let SavedMedia = document.getElementById("div-SavedMedia");
-let categoriDescription = document.querySelector(".div-categories-description");
-let searchInput = document.getElementById("input-searchForMovie");
-let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
+const RightmiddleDiv = document.getElementById("div-middle-right");
+const SelectMediaType = document.getElementById("select-type");
+const SelectSaveType = document.getElementById("select-save");
+const SelectSortType = document.getElementById("select-sort");
+const SavedMedia = document.getElementById("div-SavedMedia");
+const categoriDescription = document.querySelector(".div-categories-description");
+const searchInput = document.getElementById("input-searchForMovie");
+const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
 const data = new URLSearchParams(window.location.search);
-let typeOfSave = data.get("typeOfSave");
+const typeOfSave = data.get("typeOfSave");
 
-addSmoothTransition();
-setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
+setTimeout(()=>{
+  try {
+    globalLoadingGif.style.opacity = "1"
+  } catch(err) {
+    console.log(err)
+  }
+},100);
 
 async function loadDataFromLibrary(apiKey){
-  let wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
+  const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
   
   if(wholeLibraryInformation == null || wholeLibraryInformation.length === 0){
     addEmptyLibraryWarning(RightmiddleDiv);
@@ -24,7 +29,7 @@ async function loadDataFromLibrary(apiKey){
 }
 
 const getCategorieFullName = (value) => {
-  let option = SelectMediaType.querySelector(`.select-option[value="${getDropdownValue(SelectMediaType)}"]`);
+  const option = SelectMediaType.querySelector(`.select-option[value="${getDropdownValue(SelectMediaType)}"]`);
   return option ? option.textContent : value;
 }
 
@@ -48,10 +53,10 @@ function filterMedia(MediaTypeFilter,SaveTypeFilter){
 async function addDropDownsEventListener(){
   [SelectMediaType,SelectSaveType].forEach(selectElement=>{
     selectElement.addEventListener("dropdownChange", () => {
-      let newTypeOfSave = getDropdownValue(SelectSaveType);
-      let newMediaType = getDropdownValue(SelectMediaType);
+      const newTypeOfSave = getDropdownValue(SelectSaveType);
+      const newMediaType = getDropdownValue(SelectMediaType);
       changeDescriptionTitleValue(newTypeOfSave);
-      let numberOfDisplayedElements = filterMedia(newMediaType, newTypeOfSave);
+      const numberOfDisplayedElements = filterMedia(newMediaType, newTypeOfSave);
       if(!numberOfDisplayedElements)
         addEmptyLibraryWarning(RightmiddleDiv);
       else
@@ -60,7 +65,7 @@ async function addDropDownsEventListener(){
   });
 
   SelectSortType.addEventListener("dropdownChange",()=>{
-    let sortType = getDropdownValue(SelectSortType);
+    const sortType = getDropdownValue(SelectSortType);
     sortMediaELements(SortingCriteria[sortType]);
   });
 
@@ -109,35 +114,31 @@ function sortMediaELements(sortingType = SortingCriteria.alphabetical) {
 
 
 function changeDescriptionTitleValue(newTypeOfSave=typeOfSave){
-  let descriptionTitle = categoriDescription.querySelector("h1")
+  const descriptionTitle = categoriDescription.querySelector("h1")
   if(descriptionTitle)
     descriptionTitle.innerText = newTypeOfSave;
 }
 
 async function loadCachedMediaData(cachedData){
-  let containersData = cachedData?.containers_data;
-
+  const containersData = cachedData?.containers_data;
   if(containersData){
-    let lastLoadedPage = cachedData?.last_loaded_medias_page;
-
     SavedMedia.innerHTML = "";
-
-    let allMediaElements = [];
-    let allXremoveFromLibButtons = [];
-    let allContinueWatchingButton = [];
-
-    for(let mediaContainer of containersData){
+    const allMediaElements = [];
+    const allXremoveFromLibButtons = [];
+    const allContinueWatchingButton = [];
+    for(const mediaContainer of containersData){
       if(mediaContainer.id){
-        let containerDomElement = document.getElementById(mediaContainer.id);
-        if(containerDomElement && mediaContainer?.HTMLContent) containerDomElement.innerHTML = mediaContainer.HTMLContent;
-        allMediaElements.push(...Array.from(document.querySelectorAll(".div-MovieElement")))
-        allXremoveFromLibButtons.push(...Array.from(document.querySelectorAll(".btn-remove-from-library")));
-        allContinueWatchingButton.push(...Array.from(document.querySelectorAll(".continue-video-button")));
+        const containerDomElement = document.getElementById(mediaContainer.id);
+        if(!containerDomElement || !mediaContainer?.HTMLContent) continue;
+        containerDomElement.innerHTML = mediaContainer.HTMLContent;
+        allMediaElements.push(...document.querySelectorAll(".div-MovieElement"));
+        allXremoveFromLibButtons.push(...document.querySelectorAll(".btn-remove-from-library"));
+        allContinueWatchingButton.push(...document.querySelectorAll(".continue-video-button"));
       }
     }
     
     // recreate MediaElement Event Listeners
-    for(let mediaDomElement of allMediaElements){
+    for(const mediaDomElement of allMediaElements){
       if(mediaDomElement){
         const mediaId = mediaDomElement.getAttribute("mediaId");
         const mediaType = mediaDomElement.getAttribute("mediaType");
@@ -153,43 +154,34 @@ async function loadCachedMediaData(cachedData){
     }
 
     // recreate xremove Btns Event Listeners
-    for(let removeFromLibButton of allXremoveFromLibButtons){
-      let thisMediaElement = removeFromLibButton.parentElement;
-      if(thisMediaElement && removeFromLibButton) {
-        const mediaId = thisMediaElement.getAttribute("mediaId");
-        const mediaType = thisMediaElement.getAttribute("mediaType");
-        addEventListenerToRemoveFromLibraryButton(removeFromLibButton,mediaId,mediaType)
-      }
+    for(const removeFromLibButton of allXremoveFromLibButtons){
+      const thisMediaElement = removeFromLibButton?.parentElement;
+      if(!thisMediaElement) continue;
+      addEventListenerToRemoveFromLibraryButton(
+        removeFromLibButton,
+        thisMediaElement.getAttribute("mediaId"),
+        thisMediaElement.getAttribute("mediaType")
+      )
     }
 
     // recreate continue watching Btns Event Listeners
-    for(let continueWatchingBtn of allContinueWatchingButton){
-      let thisMediaElement = continueWatchingBtn.parentElement;
-      if(thisMediaElement && continueWatchingBtn) {
-        const mediaId = thisMediaElement.getAttribute("mediaId");
-        const mediaType = thisMediaElement.getAttribute("mediaType");
-        continueWatchingEventListener(continueWatchingBtn, {mediaId:mediaId,mediaType:mediaType,findInLib:true})
-      }
-    }
-  }
-}
-
-async function loadCachedDropDownValue(cachedData){
-  let dropDownsData = cachedData?.dropdowns_data;
-  if(dropDownsData){
-    for(let dropDownInfo of dropDownsData){
-      if(dropDownInfo.id){
-        let dropDownDomElement = document.getElementById(dropDownInfo.id);
-        if(dropDownDomElement && dropDownInfo?.cachedValue){
-          setDropdownValue(dropDownDomElement,dropDownInfo.cachedValue);
+    for(const continueWatchingBtn of allContinueWatchingButton){
+      const thisMediaElement = continueWatchingBtn?.parentElement;
+      if(!thisMediaElement) continue;
+      continueWatchingEventListener(
+        continueWatchingBtn,
+        {
+          mediaId:thisMediaElement.getAttribute("mediaId"),
+          mediaType:thisMediaElement.getAttribute("mediaType"),
+          findInLib:true
         }
-      }
+      )
     }
   }
 }
 
 async function loadMedia(){
-  let cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   const apiKey = await window.electronAPI.getAPIKEY();
 
   if(cachedMediaInfo){

@@ -141,36 +141,30 @@ function openMediaVideo(
   downloadPath,
   fileName,
   MagnetLink,
-  IMDB_ID,
-  backgroundImage,
+  ImdbId,
+  bgPath,
   episodeInfo,
   playerType
-){
-  const b64MagnetLink = btoa(MagnetLink);
-  const episodeNumber = episodeInfo?.episodeNumber;
-  const seasonNumber  = episodeInfo?.seasonNumber;
+) {
+  const {episodeNumber, seasonNumber} = episodeInfo ?? {};
 
-  return navigate(
-    `./videoPlayer/videoPlayer.html?` +
-    `MagnetLink=${b64MagnetLink}` +
-    `&downloadPath=${downloadPath}` +
-    `&fileName=${fileName}` +
-    `&TorrentIdentification=${TorrentIdentification}` +
-    `&MediaId=${MediaId}` +
-    `&MediaType=${MediaType}` +
-    `&ImdbId=${IMDB_ID}` +
-    `&bgPath=${backgroundImage}` +
-    `&episodeNumber=${episodeNumber}` +
-    `&seasonNumber=${seasonNumber}` + 
-    `&playerType=${playerType}`
-  );
+  const params = new URLSearchParams({
+    MagnetLink: btoa(MagnetLink), downloadPath,
+    fileName, TorrentIdentification,
+    MediaId, MediaType,
+    ImdbId, bgPath,
+    episodeNumber, seasonNumber,
+    playerType
+  });
+
+  return navigate(`./videoPlayer/videoPlayer.html?${params}`);
 }
 
 
 // ################################### PAGE CACHING ###################################
 
 function getCurrentPageCacheData(){
-  let currentPage = document.URL;
+  const currentPage = document.URL;
   switch(true){
 
     case (currentPage.includes("discoveryPage")):
@@ -197,7 +191,7 @@ function getCurrentPageCacheData(){
 }
 
 function getRightMiddleDivScrollValue(){
-  let RightMiddleDiv = document.getElementById("div-middle-right");
+  const RightMiddleDiv = document.getElementById("div-middle-right");
   if(!RightMiddleDiv) return {};
   return {
     "right_middle_div_top_scroll_value":RightMiddleDiv.scrollTop
@@ -205,9 +199,9 @@ function getRightMiddleDivScrollValue(){
 }
 
 async function getDiscoveryPageCacheData(){
-  let mediaSuggestionsContainer = document.getElementById("div-MediaSuggestions");
-  let containersData = await getContainersHTML([mediaSuggestionsContainer]);
-  let cacheData = {
+  const mediaSuggestionsContainer = document.getElementById("div-MediaSuggestions");
+  const containersData = await getContainersHTML([mediaSuggestionsContainer]);
+  const cacheData = {
     page:"discovery",
     "containers_data": containersData,
     "last_loaded_medias_page":numberOfLoadedPages,
@@ -218,11 +212,11 @@ async function getDiscoveryPageCacheData(){
 }
 
 async function getLibraryPageCacheData(){
-  let savedMediaContainer = document.getElementById("div-SavedMedia");
-  let pageDropDowns = document.querySelectorAll(".select-dropdown");
-  let containersData = savedMediaContainer ? await getContainersHTML([savedMediaContainer]) : null;
-  let dropDownsData = pageDropDowns ? await getDropDownCacheValue(Array.from(pageDropDowns)) : null;
-  let cacheData = {
+  const savedMediaContainer = document.getElementById("div-SavedMedia");
+  const pageDropDowns = document.querySelectorAll(".select-dropdown");
+  const containersData = savedMediaContainer ? await getContainersHTML([savedMediaContainer]) : null;
+  const dropDownsData = pageDropDowns ? await getDropDownCacheValue(Array.from(pageDropDowns)) : null;
+  const cacheData = {
     page:"library",
     "containers_data": containersData,
     "dropdowns_data":dropDownsData,
@@ -234,21 +228,27 @@ async function getLibraryPageCacheData(){
 }
 
 async function getContainersHTML(containersList){
-  let containersData = Array.from(containersList).map(container=> ({"id":container.id,"HTMLContent":container.innerHTML}));
+  const containersData = Array.from(containersList)
+    .map(container=> 
+      ({"id":container.id,"HTMLContent":container.innerHTML})
+    );
   return containersData;
 }
 
 async function getDropDownCacheValue(dropDowns){
-  let dropDownsData = Array.from(dropDowns).map(dropDown => ({"id":dropDown.id,"cachedValue":getDropdownValue(dropDown)}));
+  const dropDownsData = Array.from(dropDowns)
+    .map(dropDown => 
+      ({"id":dropDown.id,"cachedValue":getDropdownValue(dropDown)})
+    );
   return dropDownsData;
 }
 
 async function getProfilePageCacheData(){
-  let mediaSuggestionsContainer = document.getElementById("div-MediaSuggestions");
-  let containersData = await getContainersHTML([mediaSuggestionsContainer]);
-  let personInformationElement = document.getElementById("div-Person-description");
-  let personInformationHTML = personInformationElement ? personInformationElement.innerHTML : null;
-  let cacheData = {
+  const mediaSuggestionsContainer = document.getElementById("div-MediaSuggestions");
+  const containersData = await getContainersHTML([mediaSuggestionsContainer]);
+  const personInformationElement = document.getElementById("div-Person-description");
+  const personInformationHTML = personInformationElement ? personInformationElement.innerHTML : null;
+  const cacheData = {
     page:"profile",
     "containers_data": containersData,
     "person_information": personInformationHTML,
@@ -263,7 +263,7 @@ function getMovieDetailPageCacheData(){
 }
 
 function getDownloadCacheData(){
-  let downloadElementsContainers = document.querySelector(".download-categorie-container");
+  const downloadElementsContainers = document.querySelector(".download-categorie-container");
   return {
     page:"download",
     "download_container_top_scroll_value":downloadElementsContainers.scrollTop
@@ -275,22 +275,31 @@ function getSearchPageCacheData(){
 }
 
 async function loadCachedRightMiddleDivScrollValue(){
-  let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   if(cachedData){
     console.log("Loading Cached Information");
-    let RightmiddleDivScrollTopValue = cachedData.right_middle_div_top_scroll_value;
-    let RightmiddleDiv = document.getElementById("div-middle-right");
+    const RightmiddleDivScrollTopValue = cachedData.right_middle_div_top_scroll_value;
+    const RightmiddleDiv = document.getElementById("div-middle-right");
     RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
   }
 }
 
 async function loadCachedRightDivScrollValue(cachedData){
-  let RightmiddleDiv = document.getElementById("div-middle-right");
-  let RightmiddleDivScrollTopValue = cachedData?.right_middle_div_top_scroll_value;
+  const RightmiddleDiv = document.getElementById("div-middle-right");
+  const RightmiddleDivScrollTopValue = cachedData?.right_middle_div_top_scroll_value;
   if(RightmiddleDivScrollTopValue)
     RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
 }
 
+async function loadCachedDropDownValue(cachedData) {
+  for(const {id, cachedValue}  of cachedData?.dropdowns_data ?? []) {
+    if(!id) continue;
+    const dropDownDomElement = document.getElementById(id);
+    if(dropDownDomElement && cachedValue) {
+      setDropdownValue(dropDownDomElement,cachedValue);
+    }
+  }
+}
 
 // ################################### LAYOUT & RESIZE ###################################
 
@@ -301,7 +310,7 @@ function addSmoothTransition() {
 }
 
 function handlingMiddleRightDivResizing() {
-  let rightMiddleDiv = document.getElementById("div-middle-right");
+  const rightMiddleDiv = document.getElementById("div-middle-right");
   resizingRightMiddleDiv(rightMiddleDiv);
   window.addEventListener("resize",() => {
     resizingRightMiddleDiv(rightMiddleDiv);
@@ -310,7 +319,7 @@ function handlingMiddleRightDivResizing() {
 
 function resizingRightMiddleDiv(rightMiddleDiv){
   if(rightMiddleDiv){
-    let rightMiddleDivPosition = rightMiddleDiv.getBoundingClientRect().top;
+    const rightMiddleDivPosition = rightMiddleDiv.getBoundingClientRect().top;
     rightMiddleDiv.style.height = window.innerHeight - rightMiddleDivPosition  ;
   }
 }
@@ -325,9 +334,9 @@ function resizeMoviesPostersContainers(divsToResize) {
 };
 
 function CalculateMoviePostersContainer(divsToResize){
-  let middleLeftBarWidth = document.getElementById("div-middle-left").offsetWidth;
-  let marginValue = 40;
-  let newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-marginValue;
+  const middleLeftBarWidth = document.getElementById("div-middle-left").offsetWidth;
+  const marginValue = 40;
+  const newMoviesPostersContainerWidth = window.innerWidth - middleLeftBarWidth-marginValue;
   divsToResize.forEach(div => {
     div.style = `max-width:${newMoviesPostersContainerWidth}`;
   });
@@ -389,8 +398,8 @@ function handleNavigationButtonsHandler(focusFunction) {
       let index = focusable.indexOf(document.activeElement);
 
       if (index < 0) {
-        let currentlyHovered = document.querySelector("[tabindex='0']:hover");
-        let hoveredElementIndex = focusable.indexOf(currentlyHovered);
+        const currentlyHovered = document.querySelector("[tabindex='0']:hover");
+        const hoveredElementIndex = focusable.indexOf(currentlyHovered);
         if(hoveredElementIndex)
           index = hoveredElementIndex;
         else 
@@ -432,7 +441,7 @@ function getElementOnTopOffset(currentElementIndex, focusableElements) {
       const elementPrevElement = focusableElements?.[currentElementIndex - i];
 
       if (elementPrevElement) {
-        let xPosition = elementPrevElement.getBoundingClientRect().right;
+        const xPosition = elementPrevElement.getBoundingClientRect().right;
 
         if (xPosition  !== currentElementXPos) {
           topOffset ++;
@@ -479,12 +488,12 @@ function getElementOnBottomOffset(currentElementIndex, focusableElements) {
 }
 
 function setupNavigationBtnHandler() {
-  let moveRightBtns = document.querySelectorAll(".moveMovieElementsToTheRightBtn");
-  let moveLeftBtns = document.querySelectorAll(".moveMovieElementsToTheLeftBtn");
+  const moveRightBtns = document.querySelectorAll(".moveMovieElementsToTheRightBtn");
+  const moveLeftBtns = document.querySelectorAll(".moveMovieElementsToTheLeftBtn");
   moveRightBtns.forEach(btn => {
     btn.addEventListener("click",()=>{
-      let btnDivParent = btn.parentElement;
-      let MediaDiv = btnDivParent.querySelector(".div-hidingScrollBar");
+      const btnDivParent = btn.parentElement;
+      const MediaDiv = btnDivParent.querySelector(".div-hidingScrollBar");
       MediaDiv.scrollTo({
         top:0,
         left:MediaDiv.scrollLeft + 600,
@@ -494,8 +503,8 @@ function setupNavigationBtnHandler() {
   });
   moveLeftBtns.forEach(btn => {
     btn.addEventListener("click",()=>{
-      let btnDivParent = btn.parentElement;
-      let MediaDiv = btnDivParent.querySelector(".div-hidingScrollBar");
+      const btnDivParent = btn.parentElement;
+      const MediaDiv = btnDivParent.querySelector(".div-hidingScrollBar");
       MediaDiv.scrollTo({
         top:0,
         left:MediaDiv.scrollLeft - 600,
@@ -509,10 +518,10 @@ function setupNavigationBtnHandler() {
 // ################################### MEDIA ELEMENT CREATION ###################################
 
 function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,imageLoadingAnimation=true){
-  let mediaDomElement = document.createElement("div");
-  let mediaPosterContainer = document.createElement("div");
-  let mediaPosterElement = document.createElement("img");
-  let mediaNameElement = document.createElement("div");
+  const mediaDomElement = document.createElement("div");
+  const mediaPosterContainer = document.createElement("div");
+  const mediaPosterElement = document.createElement("img");
+  const mediaNameElement = document.createElement("div");
 
   mediaNameElement.innerHTML = `<p>${Title}</p>`;
 
@@ -555,7 +564,7 @@ function addEventListenerToMediaDomElementToOpenDetailPage(mediaDomElement,media
 function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,LibraryInformation){
   if(!MediaSearchResults?.length) throw new Error("No data was Fetched");
 
-  let tempArray = [];
+  const tempArray = [];
   MediaSearchResults.forEach(obj => {
     let Id = obj?.["id"] ?? "Unknown";
     let Title = obj?.["title"] ?? obj?.["name"] ?? "Unknown";
@@ -571,8 +580,8 @@ function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,Library
       else if(ThisMediaType === "person") PosterImage = "../assets/ProfileNotFound.png"
       else PosterImage = "../assets/PosterNotFound.png"
 
-      let mediaDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
-      let toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title,PosterImage)
+      const mediaDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
+      const toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title,PosterImage)
 
       if(ThisMediaType.toLowerCase() !== "person")
         mediaDomElement.appendChild(toggleInLibraryBtn);
@@ -611,13 +620,13 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
 
     PosterImage = normalizeRootUrl(PosterImage);
     ThisMediaTitle =  mediaInfo?.["name"] ?? mediaInfo?.["title"];
-    let targetIdentification = {MediaId:ThisMediaId,MediaType:ThisMediaType};
+    const targetIdentification = {MediaId:ThisMediaId,MediaType:ThisMediaType};
     updateLibraryElement(targetIdentification,{posterUrl:PosterImage, Title:ThisMediaTitle});
   }
 
-  let imageLoadingAnimation = true;
-  let movieDomElement = creatingTheBaseOfNewMediaElement(ThisMediaTitle, PosterImage, ThisMediaId, ThisMediaType,imageLoadingAnimation);
-  let removeFromLibraryButton = createRemoveFromWatchingLaterButton(ThisMediaId,ThisMediaType,IsInHomePage)
+  const imageLoadingAnimation = true;
+  const movieDomElement = creatingTheBaseOfNewMediaElement(ThisMediaTitle, PosterImage, ThisMediaId, ThisMediaType,imageLoadingAnimation);
+  const removeFromLibraryButton = createRemoveFromWatchingLaterButton(ThisMediaId,ThisMediaType,IsInHomePage)
 
   movieDomElement.setAttribute("saveType",ThisSaveType);
   movieDomElement.setAttribute("saveTime",ThisSaveTime);
@@ -626,7 +635,7 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
   movieDomElement.appendChild(removeFromLibraryButton);
 
   if(ThisSaveType.includes("Currently Watching")){
-    let continueVideoButton = createContinueWatchingButton(mediaEntryPoint);
+    const continueVideoButton = createContinueWatchingButton(mediaEntryPoint);
     movieDomElement.appendChild(continueVideoButton);
   }
 
@@ -648,7 +657,7 @@ function fetchMediaDataFromLibrary (apiKey,wholeLibraryInformation,SavedMedia,Ri
 
         setTimeout(()=>{
           RightmiddleDiv.innerHTML ="";
-          let WarningElement = DisplayWarningOrErrorForUser(err.message);
+          const WarningElement = DisplayWarningOrErrorForUser(err.message);
           WarningElement.style.paddingBottom = "1000px;";
           RightmiddleDiv.appendChild(WarningElement);
           RightmiddleDiv.style.opacity = 1;
@@ -662,7 +671,7 @@ function fetchMediaDataFromLibrary (apiKey,wholeLibraryInformation,SavedMedia,Ri
 function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
   const { downloadStatus, displayTitle, progress, totalSize, currentSize } = formatedDownloadInfo;
 
-  let MediaDownloadElement = document.createElement("div");
+  const MediaDownloadElement = document.createElement("div");
 
   const leftDiv = document.createElement("div");
   leftDiv.className = "left-div";
@@ -757,7 +766,7 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
 }
 
 function createTorrentElement(torrentBasicInfo, torrentAdvancedInfo) {
-  let [Quality, Title, Size, SeedersNumber] = torrentBasicInfo;
+  const [Quality, Title, Size, SeedersNumber] = torrentBasicInfo;
   const TorrentElement = document.createElement("div");
   TorrentElement.classList.add("div-TorrentMedia");
   TorrentElement.setAttribute("tabindex", "0");
@@ -806,7 +815,7 @@ function createTorrentElement(torrentBasicInfo, torrentAdvancedInfo) {
 }
 
 function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
-  let [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
+  const [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
        backgroundImage, episodeInfo, Size, Quality, Title] = torrentsInfo;
 
   TorrentElement.addEventListener("click",()=>{
@@ -816,9 +825,9 @@ function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
   // right click handeling
   TorrentElement.addEventListener("mousedown",(event)=>{
     if (event.button === 2) {
-      let mediaTitle = document.getElementById("h1-MovieTitle").innerText;
-      let mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
-      let DownloadTargetInfo = {
+      const mediaTitle = document.getElementById("h1-MovieTitle").innerText;
+      const mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
+      const DownloadTargetInfo = {
         IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
         Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
         fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
@@ -831,7 +840,7 @@ function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
 }
 
 function createContinueWatchingButton(mediaEntryPoint){
-  let continueVideoButton = document.createElement("button");
+  const continueVideoButton = document.createElement("button");
   continueVideoButton.classList.add("continue-video-button");
 
   fetch('../assets/icons/playVideo.svg')
@@ -918,7 +927,7 @@ async function updateLibraryElement(targetIdentification,updateValues) {
 }
 
 async function ToggleInLibrary(mediaId,mediaType,Title, posterUrl,typeOfSave) {
-  let toggleInLibraryElement = event.target;
+  const toggleInLibraryElement = event.target;
   
   if (event != null) {
     event.stopPropagation();
@@ -927,7 +936,7 @@ async function ToggleInLibrary(mediaId,mediaType,Title, posterUrl,typeOfSave) {
 
   if(toggleInLibraryElement.hasAttribute("pressed")){
     setAddToLibraryButtonToNormal(toggleInLibraryElement);
-    let MediaLibraryObjectIdentifiers = {
+    const MediaLibraryObjectIdentifiers = {
       MediaId:mediaId.toString(),
       MediaType:mediaType
     }
@@ -936,9 +945,9 @@ async function ToggleInLibrary(mediaId,mediaType,Title, posterUrl,typeOfSave) {
   }else{
     setAddToLibraryButtonToPressed(toggleInLibraryElement);
 
-    let libInfo = await loadLibraryInfo();
-    let SearchedMediaElement = libInfo.filter(item => (item.MediaId === mediaId && item.MediaType === mediaType));
-    let MediaElementDoesExist = SearchedMediaElement.length > 0;
+    const libInfo = await loadLibraryInfo();
+    const SearchedMediaElement = libInfo.filter(item => (item.MediaId === mediaId && item.MediaType === mediaType));
+    const MediaElementDoesExist = SearchedMediaElement.length > 0;
     let MediaLibraryObject;
 
     const currentEpochTime = Date.now().toString();
@@ -966,28 +975,28 @@ async function ToggleInLibrary(mediaId,mediaType,Title, posterUrl,typeOfSave) {
 }
 
 function removeMediaFromLibrary(removeFromLibraryButton,mediaId,mediaType){
-  let MediaLibraryObject = {
+  const MediaLibraryObject = {
     MediaId:mediaId.toString(),
     MediaType:mediaType
   }
 
-  let MediaElementsContainer = removeFromLibraryButton.parentElement;
-  let SaveDiv = MediaElementsContainer.parentElement;
+  const MediaElementsContainer = removeFromLibraryButton.parentElement;
+  const SaveDiv = MediaElementsContainer.parentElement;
   MediaElementsContainer.style.opacity = 0;
   MediaElementsContainer.remove();
 
-  let numberOfElementsLeftInLibrary = SaveDiv ? SaveDiv.querySelectorAll(".div-MovieElement").length : 0;
+  const numberOfElementsLeftInLibrary = SaveDiv ? SaveDiv.querySelectorAll(".div-MovieElement").length : 0;
 
   window.electronAPI.removeMediaFromLibrary(MediaLibraryObject);
   return numberOfElementsLeftInLibrary;
 }
 
 function createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title,posterUrl){
-  let toggleInLibraryBtn = document.createElement("button"); 
+  const toggleInLibraryBtn = document.createElement("button"); 
 
   toggleInLibraryBtn.classList.add("btn-toggle-in-library");
 
-  let mediaIsInLibrary = LibraryInformation.filter(libraryEntryPoint => 
+  const mediaIsInLibrary = LibraryInformation.filter(libraryEntryPoint => 
     (libraryEntryPoint.MediaId.toString() === Id.toString()) &&
     (libraryEntryPoint.MediaType.toString() === ThisMediaType.toString())).length;
 
@@ -1024,7 +1033,7 @@ function setAddToLibraryButtonToPressed(toggleInLibrary) {
 }
 
 function createRemoveFromWatchingLaterButton(Id,ThisMediaType,IsInHomePage){
-  let removeFromLibraryButton = document.createElement("button"); 
+  const removeFromLibraryButton = document.createElement("button"); 
   removeFromLibraryButton.innerHTML = xRemoveIcon;
   removeFromLibraryButton.classList.add("btn-remove-from-library");
   addEventListenerToRemoveFromLibraryButton(removeFromLibraryButton,Id,ThisMediaType,IsInHomePage)
@@ -1033,14 +1042,14 @@ function createRemoveFromWatchingLaterButton(Id,ThisMediaType,IsInHomePage){
 
 function addEventListenerToRemoveFromLibraryButton(removeFromLibraryButton,Id,ThisMediaType,IsInHomePage = false){
   removeFromLibraryButton.addEventListener("click",(event)=>{
-    let numberOfElementsLeftInLibrary = removeMediaFromLibrary(removeFromLibraryButton,Id,ThisMediaType);
+    const numberOfElementsLeftInLibrary = removeMediaFromLibrary(removeFromLibraryButton,Id,ThisMediaType);
 
     if(!numberOfElementsLeftInLibrary){
       if (!IsInHomePage) {
         addEmptyLibraryWarning(RightmiddleDiv)
 
       } else {
-        let continueWatchingElement = document.getElementById("continue-watching-categorie");
+        const continueWatchingElement = document.getElementById("continue-watching-categorie");
         if(continueWatchingElement)
           continueWatchingElement.style.display = "none";
       }
@@ -1055,7 +1064,7 @@ function addEventListenerToRemoveFromLibraryButton(removeFromLibraryButton,Id,Th
 // ################################### API / DATA FETCHING ###################################
 
 async function getMediaInfo(MediaId, MediaType, apiKey) {
-  let searchQuery = `https://api.themoviedb.org/3/${MediaType}/${MediaId}?api_key=${apiKey}`;
+  const searchQuery = `https://api.themoviedb.org/3/${MediaType}/${MediaId}?api_key=${apiKey}`;
   const res = await fetch(searchQuery);
   const mediaData = await res.json();
   if(mediaData.status_code === 7)
@@ -1078,13 +1087,13 @@ async function getPosterPath(imdbId, apiKey) {
 
 async function loadingAllSubs(id,episodeNumber,seasonNumber){
   try{
-    let url;
-    if (episodeNumber && seasonNumber) {
-      url = `https://sub.wyzie.ru/search?id=${id}&season=${episodeNumber}&episode=${seasonNumber}`;
-    } else {
-      url = `https://sub.wyzie.ru/search?id=${id}`;
-    }
-    const res = await fetch(url);
+    const params = new URLSearchParams({
+      id,
+      ...((episodeNumber && seasonNumber) && { season: seasonNumber, episode: episodeNumber })
+    });
+
+    const requestUrl = `https://sub.wyzie.ru/search?${params}` ;
+    const res = await fetch(requestUrl);
     
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
@@ -1102,9 +1111,9 @@ async function loadingAllSubs(id,episodeNumber,seasonNumber){
 // ################################### UI COMPONENTS & FEEDBACK ###################################
 
 function DisplayWarningOrErrorForUser(warningMessage,addRefreshButton = true) {
-  let WarningDiv = document.createElement("div");
-  let WarningMessage = document.createElement("span");
-  let RefreshButton = document.createElement("button");
+  const WarningDiv = document.createElement("div");
+  const WarningMessage = document.createElement("span");
+  const RefreshButton = document.createElement("button");
 
   WarningDiv.className = "div-WarningMessage";
   WarningMessage.className = "span-WarningMessage";
@@ -1113,8 +1122,8 @@ function DisplayWarningOrErrorForUser(warningMessage,addRefreshButton = true) {
   WarningMessage.innerHTML = warningMessage;
   RefreshButton.innerHTML = reloadIcon;
 
-  let leftDiv = document.getElementById("div-middle-left");
-  let leftDivWidth = leftDiv? leftDiv.offsetWidth : 0;
+  const leftDiv = document.getElementById("div-middle-left");
+  const leftDivWidth = leftDiv? leftDiv.offsetWidth : 0;
 
   WarningDiv.style.marginRight = `${leftDivWidth}px`;
 
@@ -1128,9 +1137,9 @@ function DisplayWarningOrErrorForUser(warningMessage,addRefreshButton = true) {
 }
 
 function addEmptyLibraryWarning(warningContainer){
-  let existingWarning = warningContainer.querySelector(".div-WarningMessage");
+  const existingWarning = warningContainer.querySelector(".div-WarningMessage");
   if(!existingWarning){
-    let WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty",false);
+    const WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty",false);
     warningContainer.appendChild(WarningElement);
   }else{
     existingWarning.style.display = "flex";
@@ -1138,14 +1147,14 @@ function addEmptyLibraryWarning(warningContainer){
 }
 
 function hideEmptyLibraryWarning(warningContainer){
-  let WarningElement = warningContainer.querySelector(".div-WarningMessage");
+  const WarningElement = warningContainer.querySelector(".div-WarningMessage");
   if(WarningElement){
     WarningElement.style.display = "none";
   }
 }
 
 function displayMessage(messageContent="hello") {
-  let messageDiv = document.getElementById("messageDiv");
+  const messageDiv = document.getElementById("messageDiv");
   messageDiv.style.right = 20;
   messageDiv.style.transition = "opacity 100ms";
   messageDiv.style.opacity = 1;
@@ -1198,8 +1207,8 @@ function addFloatingDivToDisplayFullTitle (MediaElement, elementToTrackQuerySele
 }
 
 function putTextIntoDiv(Div,textContent){
-  let textDiv = document.createElement("div");
-  let text = document.createElement("span");
+  const textDiv = document.createElement("div");
+  const text = document.createElement("span");
 
   textDiv.id = "div-text";
   text.id = "span-text";
@@ -1210,8 +1219,7 @@ function putTextIntoDiv(Div,textContent){
 }
 
 function setLeftButtonStyle(buttonId) {
-  let targetedButton = document.getElementById(buttonId);
-  let buttonIcon = targetedButton.querySelector(".icon");
+  const buttonIcon = document.querySelector(`#${buttonId} .icon`);
   buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
 }
 
@@ -1276,10 +1284,10 @@ function loadImageWithAnimation(imageContainer, imageElement, imagePath, alterna
 }
 
 function handleFullScreenIcon() {
-  let FullScreenIcon = "../assets/icons/fullscreen.png";
-  let UnFullScreenIcon = "../assets/icons/unfullscreen.png";
+  const FullScreenIcon = "../assets/icons/fullscreen.png";
+  const UnFullScreenIcon = "../assets/icons/unfullscreen.png";
 
-  let fullscreenButton = document.getElementById("img-fullscreen");
+  const fullscreenButton = document.getElementById("img-fullscreen");
   if (!window.screenTop && !window.screenY) 
     fullscreenButton?.setAttribute("src",UnFullScreenIcon);
   else
@@ -1287,9 +1295,9 @@ function handleFullScreenIcon() {
 }
 
 async function handleGoBackIcon(){
-  let goBackButton = document.querySelector("#btn-goBack");
-  let goBackIcon = goBackButton.querySelector("svg");
-  let canGoBack = await window.electronAPI.canGoBack();
+  const goBackButton = document.querySelector("#btn-goBack");
+  const goBackIcon = goBackButton.querySelector("svg");
+  const canGoBack = await window.electronAPI.canGoBack();
   if(canGoBack){
     goBackIcon.style.opacity = "1";
     goBackButton.style.cursor = "cursor";
@@ -1302,8 +1310,8 @@ async function handleGoBackIcon(){
 }
 
 async function fullscreenClicked(){
-  let isFullScreen = await window.electronAPI.toggleFullscreen();
-  let fullscreenImageElement = document.getElementById("img-fullscreen");
+  const isFullScreen = await window.electronAPI.toggleFullscreen();
+  const fullscreenImageElement = document.getElementById("img-fullscreen");
   if(isFullScreen == null) return;
   fullscreenImageElement.src = isFullScreen ? "../assets/icons/unfullscreen.png" : "../assets/icons/fullscreen.png";
 }
@@ -1413,7 +1421,9 @@ function setDropdownValue(dropdown, value) {
 }
 
 function getDropdownValue(dropdown) {
-  return dropdown.getAttribute('data-value') || dropdown.querySelector('.select-option').getAttribute('value');
+  return 
+    dropdown.getAttribute('data-value') ||
+    dropdown.querySelector('.select-option').getAttribute('value');
 }
 
 

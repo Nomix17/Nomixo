@@ -1,102 +1,93 @@
 let data = new URLSearchParams(window.location.search);
-let genreId = data.get("GenreId");
-let MediaType = data.get("MediaType") === "All" ? "movie" : data.get("MediaType");
-let SortBase = data.get("SortBase") === "Default" ? "popularity.desc" : data.get("SortBase"); 
+const genreId = data.get("GenreId");
+const MediaType = data.get("MediaType") === "All" ? "movie" : data.get("MediaType");
+const SortBase = data.get("SortBase") === "Default" ? "popularity.desc" : data.get("SortBase"); 
 
-let RightmiddleDiv = document.getElementById("div-middle-right");
-let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
-let loadingGif = document.getElementById("lds-dual-ring-container");
-let searchInput = document.getElementById("input-searchForMovie");
-let MediaSuggestions = document.getElementById("div-MediaSuggestions");
+const RightmiddleDiv = document.getElementById("div-middle-right");
+const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
+const loadingGif = document.getElementById("lds-dual-ring-container");
+const searchInput = document.getElementById("input-searchForMovie");
+const MediaSuggestions = document.getElementById("div-MediaSuggestions");
 
-let SelectMediaType = document.getElementById("select-type");
-let SelectGenre = document.getElementById("select-Genres");
-let SelectSortBase = document.getElementById("select-sort");
+const SelectMediaType = document.getElementById("select-type");
+const SelectGenre = document.getElementById("select-Genres");
+const SelectSortBase = document.getElementById("select-sort");
 
-let LibraryInformation = [];
-
-addSmoothTransition();
-setTimeout(() => { try { globalLoadingGif.style.opacity = "1" } catch (err) { console.log(err) } }, 100);
+setTimeout(() => {
+  try {
+    globalLoadingGif.style.opacity = "1" 
+  } catch (err) {
+    console.log(err) 
+  } 
+}, 100);
 
 async function fetchData(apiKey, genreId, ThisMediaType, page) {
-  let url = "";
+  const params = new URLSearchParams({
+    api_key: apiKey,
+    page:page,
+    sort_by: SortBase,
+    include_adult:false,
+    ...( genreId.toLowerCase() !== "all" && {with_genres: genreId})
+    // "vote_count.gte": 100,
+    // "popularity.gte": 10,
+  });
+  const requestUrl = `https://api.themoviedb.org/3/discover/${ThisMediaType}?${params}`;
 
-  if (genreId.toLowerCase() === "all") {
-    url = `https://api.themoviedb.org/3/discover/${ThisMediaType}?api_key=${apiKey}&page=${page}&sort_by=${SortBase}`;
-  } else {
-    const params = new URLSearchParams({
-      api_key: apiKey,
-      with_genres: genreId,
-      page:page,
-      // "vote_count.gte": 100,
-      // "popularity.gte": 10,
-      include_adult:false,
-      sort_by: SortBase,
-    });
-    url = `https://api.themoviedb.org/3/discover/${ThisMediaType}?${params}`;
+  const LibraryInformation = await loadLibraryInfo();
+  try {
+    const [GenreData] = await Promise.all([fetch(requestUrl).then(res => res.json())]);
+    if (GenreData?.total_results) {
+      insertMediaElements(GenreData.results, MediaSuggestions, ThisMediaType, LibraryInformation);
+      loadingGif.style.display = "none";
+    } else {
+      throw new Error("No results found for this genre<br> try a different category");
+    }
+  } catch (err) {
+    const WarningElement = DisplayWarningOrErrorForUser(err.message, false);
+    RightmiddleDiv.appendChild(WarningElement);
+    globalLoadingGif.remove();
+    RightmiddleDiv.style.opacity = 1;
   }
+}
 
-  if (!LibraryInformation.length) LibraryInformation = await loadLibraryInfo();
-  Promise.all([fetch(url).then(res => res.json())])
-    .then(GenreData => {
-      if(GenreData[0].total_results){
-        insertMediaElements(GenreData[0].results, MediaSuggestions, ThisMediaType, LibraryInformation);
-        loadingGif.style.display = "none";
-      }else{
-        throw new Error("No results found for this genre<br> try a different category");
-      }
-    })
-    .catch(err=>{
-      let WarningElement = DisplayWarningOrErrorForUser(err.message,false);
+async function loadGenres(apiKey) {
+  SelectGenre.innerHTML = '<div class="select-option" role="option" value="All">All</div>';
+  const requestUrl = `https://api.themoviedb.org/3/genre/${MediaType}/list?api_key=${apiKey}`;
+  try {
+    const [data] = await Promise.all([fetch(requestUrl).then(res => res.json())]);
+
+    if (parseInt(data.status_code) === 7)
+      throw new Error("We're having trouble loading data.</br>Please make sure your Authentication Key is valide!");
+
+    const GenresData = data.genres;
+    GenresData.forEach(GenreObj => {
+      let optionElement = document.createElement("div");
+      optionElement.className = "select-option";
+      optionElement.setAttribute('role', 'option');
+      optionElement.setAttribute('value', GenreObj.id);
+      optionElement.textContent = GenreObj.name;
+      SelectGenre.appendChild(optionElement);
+    });
+    
+    setDropdownValue(SelectGenre, genreId);
+
+    const currentGenre = GenresData.find(GObj => Number(GObj.id) === Number(genreId));
+    if(currentGenre) changeDescriptionTitleValue(currentGenre.name);
+
+  } catch(err) {
+    setTimeout(() => {
+      err.message = (err.message === "Failed to fetch") 
+        ? "We're having trouble loading data.</br>Please Check your connection and refresh!" 
+        : err.message;
+
+      RightmiddleDiv.innerHTML = "";
+      const WarningElement = DisplayWarningOrErrorForUser(err.message);
       RightmiddleDiv.appendChild(WarningElement);
       globalLoadingGif.remove();
       RightmiddleDiv.style.opacity = 1;
-    });
-}
-
-function loadGenres(apiKey) {
-  SelectGenre.innerHTML = '<div class="select-option" role="option" value="All">All</div>';
-
-  let url = `https://api.themoviedb.org/3/genre/${MediaType}/list?api_key=${apiKey}`;
-  if (MediaType === "All") url = `https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`;
-  
-  return fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      if (parseInt(data.status_code) === 7)
-        throw new Error("We're having trouble loading data.</br>Please make sure your Authentication Key is valide!");
-
-      let GenresData = data.genres;
-      GenresData.forEach(GenreObj => {
-        let optionElement = document.createElement("div");
-        optionElement.className = "select-option";
-        optionElement.setAttribute('role', 'option');
-        optionElement.setAttribute('value', GenreObj.id);
-        optionElement.textContent = GenreObj.name;
-        SelectGenre.appendChild(optionElement);
-      });
-      
-      setDropdownValue(SelectGenre, genreId);
-
-      const currentGenre = GenresData.find(GObj => Number(GObj.id) === Number(genreId));
-      if(currentGenre)
-        changeDescriptionTitleValue(currentGenre.name);
-
-    })
-    .catch(err => {
-      setTimeout(() => {
-        err.message = (err.message === "Failed to fetch") 
-          ? "We're having trouble loading data.</br>Please Check your connection and refresh!" 
-          : err.message;
-
-        console.error(err);
-        RightmiddleDiv.innerHTML = "";
-        let WarningElement = DisplayWarningOrErrorForUser(err.message);
-        RightmiddleDiv.appendChild(WarningElement);
-        globalLoadingGif.remove();
-        RightmiddleDiv.style.opacity = 1;
-      }, 800);
-    });
+    }, 800);
+    console.error(err);
+  };
 }
 
 async function loadMediaFromAPI(apiKey){
@@ -106,8 +97,7 @@ async function loadMediaFromAPI(apiKey){
 }
 
 function changeDescriptionTitleValue(titleValue){
-  let categoriDescription = document.querySelector(".div-categories-description");
-  let descriptionTitle = categoriDescription ? categoriDescription.querySelector("h1") : null;
+  const descriptionTitle = document.querySelector(".div-categories-description h1");
   if(descriptionTitle)
     descriptionTitle.innerText = titleValue;
 }
@@ -115,9 +105,9 @@ function changeDescriptionTitleValue(titleValue){
 function addDropDownsEventListener(){
   [SelectMediaType, SelectGenre, SelectSortBase].forEach(selectElement=>{
     selectElement.addEventListener("dropdownChange", () => {
-      let newGenreId = getDropdownValue(SelectGenre);
-      let newMediaType = getDropdownValue(SelectMediaType);
-      let sortBase = getDropdownValue(SelectSortBase);
+      const newGenreId = getDropdownValue(SelectGenre);
+      const newMediaType = getDropdownValue(SelectMediaType);
+      const sortBase = getDropdownValue(SelectSortBase);
       openDiscoveryPage(newGenreId, newMediaType, sortBase);
     });
   });
@@ -126,7 +116,7 @@ function addDropDownsEventListener(){
 let numberOfLoadedPages = 2;
 function detectWhenScrollsArriveAtTheEndOfAPage(apiKey){
   RightmiddleDiv.addEventListener('scroll', function () {
-    let middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
+    const middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
     if (RightmiddleDiv.scrollTop + middleRightDivHeight + 30 >= RightmiddleDiv.scrollHeight) {
       loadingGif.style.display = "flex";
       numberOfLoadedPages += 2;
@@ -137,31 +127,29 @@ function detectWhenScrollsArriveAtTheEndOfAPage(apiKey){
 }
 
 async function loadCachedMediaData(cachedData){
-  let containersData = cachedData?.containers_data;
-
-  if(containersData){
-    let lastLoadedPage = cachedData?.last_loaded_medias_page;
-    numberOfLoadedPages = lastLoadedPage ?? 2;
-
+  const containersData = cachedData?.containers_data;
+  if(containersData) {
     MediaSuggestions.innerHTML = "";
-
-    let allMediaElements = [];
-    let allToggleToLibButtons = [];
-    for(let mediaContainer of containersData){
-      if(mediaContainer.id){
-        let containerDomElement = document.getElementById(mediaContainer.id);
-        if(containerDomElement && mediaContainer?.HTMLContent) containerDomElement.innerHTML = mediaContainer.HTMLContent;
-        allMediaElements.push(...Array.from(document.querySelectorAll(".div-MovieElement")))
-        allToggleToLibButtons.push(...Array.from(document.querySelectorAll(".btn-toggle-in-library")));
+    const lastLoadedPage = cachedData?.last_loaded_medias_page;
+    numberOfLoadedPages = lastLoadedPage ?? 2;
+    const allMediaElements = [];
+    const allToggleToLibButtons = [];
+    for(const mediaContainer of containersData) {
+      if(mediaContainer.id) {
+        const containerDomElement = document.getElementById(mediaContainer.id);
+        if(!containerDomElement || !mediaContainer?.HTMLContent) continue;
+        containerDomElement.innerHTML = mediaContainer.HTMLContent;
+        allMediaElements.push(...containerDomElement.querySelectorAll(".div-MovieElement"));
+        allToggleToLibButtons.push(...containerDomElement.querySelectorAll(".btn-toggle-in-library"));
       }
     }
 
-    for(let mediaDomElement of allMediaElements){
-      if(mediaDomElement){
+    for(const mediaDomElement of allMediaElements) {
+      if(mediaDomElement) {
         const mediaId = mediaDomElement.getAttribute("mediaId");
         const mediaType = mediaDomElement.getAttribute("mediaType");
         const posterUrl = mediaDomElement.getAttribute("posterUrl");
-        if(mediaId && mediaType){
+        if(mediaId && mediaType) {
           const posterContainer = mediaDomElement.querySelector(".img-MoviePosterContainer");
           const posterElement = mediaDomElement.querySelector(".img-MoviePoster");
           loadImageWithAnimation(posterContainer,posterElement,posterUrl);
@@ -171,41 +159,25 @@ async function loadCachedMediaData(cachedData){
       }
     }
 
-    for(let toggleToLibButton of allToggleToLibButtons){
-      let thisMediaElement = toggleToLibButton.parentElement;
-      if(thisMediaElement && toggleToLibButton) {
-        const mediaId = thisMediaElement.getAttribute("mediaId");
-        const mediaType = thisMediaElement.getAttribute("mediaType");
-        addToggleToLibButtonEventListener(toggleToLibButton,mediaId,mediaType)
-      }
-    }
-
-  }
-}
-
-async function loadCachedDropDownValue(cachedData){
-  let dropDownsData = cachedData?.dropdowns_data;
-  if(dropDownsData){
-    for(let dropDownInfo of dropDownsData){
-      if(dropDownInfo.id){
-        let dropDownDomElement = document.getElementById(dropDownInfo.id);
-        if(dropDownDomElement && dropDownInfo?.cachedValue){
-          setDropdownValue(dropDownDomElement,dropDownInfo.cachedValue);
-        }
-      }
+    for(let toggleToLibButton of allToggleToLibButtons) {
+      const thisMediaElement = toggleToLibButton?.parentElement;
+      if(!thisMediaElement) continue;
+      addToggleToLibButtonEventListener(
+        toggleToLibButton,
+        thisMediaElement.getAttribute("mediaId"),
+        thisMediaElement.getAttribute("mediaType"),
+      );
     }
   }
 }
 
 async function loadMedia(apiKey){
-  let cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
-
+  const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   if(cachedMediaInfo){
     console.log("Loading Cached Information");
-    loadCachedMediaData(cachedMediaInfo);
-    loadCachedRightDivScrollValue(cachedMediaInfo);
-    loadCachedDropDownValue(cachedMediaInfo);
-
+    await loadCachedMediaData(cachedMediaInfo);
+    await loadCachedRightDivScrollValue(cachedMediaInfo);
+    await loadCachedDropDownValue(cachedMediaInfo);
   }else{
     loadMediaFromAPI(apiKey);
   }
@@ -213,7 +185,6 @@ async function loadMedia(apiKey){
 
 async function initPage(){
   const apiKey = await window.electronAPI.getAPIKEY();
-
   await loadMedia(apiKey);
   await loadGenres(apiKey);
 
@@ -233,7 +204,6 @@ function focusFunction(element) {
 }
 
 initPage();
-
 setupKeyPressesForInputElement(searchInput);
 handleNavigationButtonsHandler(focusFunction);
 setupKeyPressesHandler();
