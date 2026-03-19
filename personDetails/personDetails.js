@@ -1,26 +1,29 @@
-let RightmiddleDiv = document.getElementById("div-middle-right");
-let data = new URLSearchParams(window.location.search);
-let personId = data.get("personId");
-let MediaSuggestions = document.getElementById("div-MediaSuggestions")
-let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
+const RightmiddleDiv = document.getElementById("div-middle-right");
+const data = new URLSearchParams(window.location.search);
+const personId = data.get("personId");
+const MediaSuggestions = document.getElementById("div-MediaSuggestions")
+const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
-let LibraryInformation;
-
-addSmoothTransition();
-setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
+setTimeout(()=>{
+  try {
+    globalLoadingGif.style.opacity = "1"
+  } catch(err) {
+    console.log(err)
+  }
+},100);
 
 async function getPersonInfo(apiKey){
   return fetch(`https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}`)
   .then(PersonData => PersonData.json())
   .then(PersonInfo =>{
-    let Name = PersonInfo.name;
-    let ProfilePic = PersonInfo.profile_path
-    let Department = PersonInfo.known_for_department;
-    let Biography = PersonInfo.biography;
-    let ImdbId = PersonInfo.imdb_id; 
+    const Name = PersonInfo.name;
+    const ProfilePic = PersonInfo.profile_path
+    const Department = PersonInfo.known_for_department;
+    const Biography = PersonInfo.biography;
+    const ImdbId = PersonInfo.imdb_id; 
     document.title = Name +" - Discovery"; 
 
-    let personInformation = [Name, ProfilePic, Department, Biography, ImdbId];
+    const personInformation = [Name, ProfilePic, Department, Biography, ImdbId];
 
     insertPersonInformation(personInformation);
 
@@ -33,7 +36,7 @@ async function getPersonInfo(apiKey){
 
     setTimeout(()=>{
       RightmiddleDiv.innerHTML ="";
-      let WarningElement = DisplayWarningOrErrorForUser(err.message);
+      const WarningElement = DisplayWarningOrErrorForUser(err.message);
       RightmiddleDiv.appendChild(WarningElement);
       globalLoadingGif.remove();
       RightmiddleDiv.style.opacity = 1;
@@ -45,20 +48,20 @@ async function getPersonInfo(apiKey){
 }
 
 function insertPersonInformation(personInformation){
-  let [Name, ProfilePic, Department, Biography, ImdbId] = personInformation;
+  const [Name, ProfilePic, Department, Biography, ImdbId] = personInformation;
 
-  let personNameElement = document.getElementById("para-personName");
-  let personProfileElementContainer = document.getElementById("div-left-Person-description");
-  let personProfileElement = document.getElementById("img-personProfilePic");
-  let personDepartmentElement = document.getElementById("para-personDepartment");
-  let personBioElement = document.getElementById("bio-content");
+  const personNameElement = document.getElementById("para-personName");
+  const personProfileElementContainer = document.getElementById("div-left-Person-description");
+  const personProfileElement = document.getElementById("img-personProfilePic");
+  const personDepartmentElement = document.getElementById("para-personDepartment");
+  const personBioElement = document.getElementById("bio-content");
 
-  let personFullBioDiv = document.getElementById("full-bio-div");
-  let personProfileFullBioElement = personFullBioDiv.querySelector("#img-personProfilePic-full-bio");
-  let personNameFullBioElement = personFullBioDiv.querySelector("#full-bio-person-name");
-  let personFullBioParagraphElement = personFullBioDiv.querySelector("#full-bio-paragraph");
+  const personFullBioDiv = document.getElementById("full-bio-div");
+  const personProfileFullBioElement = personFullBioDiv.querySelector("#img-personProfilePic-full-bio");
+  const personNameFullBioElement = personFullBioDiv.querySelector("#full-bio-person-name");
+  const personFullBioParagraphElement = personFullBioDiv.querySelector("#full-bio-paragraph");
 
-  let imagePath = ProfilePic == null ? "../assets/ProfileNotFound.png" : "https://image.tmdb.org/t/p/w500/"+ProfilePic;
+  const imagePath = ProfilePic == null ? "../assets/ProfileNotFound.png" : "https://image.tmdb.org/t/p/w500/"+ProfilePic;
 
   personNameElement.innerText = Name;
   personNameFullBioElement.innerText = Name;
@@ -80,9 +83,7 @@ function insertPersonInformation(personInformation){
 }
 
 function hideBiography(){
-  const rightDescriptionDiv = document.getElementById("div-right-Person-description")
   document.querySelector(".bio-wrapper").style.display = "none"
-
 }
 
 function addDescriptionButtonsEventListener(){
@@ -122,73 +123,75 @@ function addDescriptionButtonsEventListener(){
 }
 
 async function fetchData(apiKey, personjob){
-  LibraryInformation = await loadLibraryInfo();
-  await fetch(`https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${apiKey}`).then(res=>res.json())
-    .then(MediaData => insertPersonFamousWorkIntoSuggestionDiv(MediaData, personjob,LibraryInformation));
+  const LibraryInformation = await loadLibraryInfo();
+  const res = await fetch(`https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${apiKey}`);
+  const MediaData = await res.json();
+  insertPersonFamousWorkIntoSuggestionDiv(MediaData, personjob,LibraryInformation);
   await loadCachedRightMiddleDivScrollValue();
   globalLoadingGif.remove();
   RightmiddleDiv.style.opacity = 1;
 }
 
 function insertPersonFamousWorkIntoSuggestionDiv(MediaData, personJob,LibraryInformation){
-  let GeneraleWorkData;
-  let CrewData = MediaData.crew;
-  let CastData = MediaData.cast;
-  if(personJob === "Acting") GeneraleWorkData = [...CastData,...CrewData];
-  else  GeneraleWorkData = [...CrewData,...CastData];
+  const GeneraleWorkData = 
+    (personJob === "Acting") 
+      ? [...MediaData.cast,...MediaData.crew] 
+      : [...MediaData.crew,...MediaData.cast];
 
   insertMediaElements(GeneraleWorkData,MediaSuggestions,undefined,LibraryInformation);
 }
 
 async function loadCachedMediaData(cachedData){
-  let containersData = cachedData?.containers_data;
-
+  const containersData = cachedData?.containers_data;
   if(containersData){
     MediaSuggestions.innerHTML = "";
-
-    let allMediaElements = [];
-    let allToggleToLibButtons = [];
-    for(let mediaContainer of containersData){
-      if(mediaContainer.id){
-        let containerDomElement = document.getElementById(mediaContainer.id);
-        if(containerDomElement && mediaContainer?.HTMLContent) containerDomElement.innerHTML = mediaContainer.HTMLContent;
-        allMediaElements.push(...Array.from(document.querySelectorAll(".div-MovieElement")))
-        allToggleToLibButtons.push(...Array.from(document.querySelectorAll(".btn-toggle-in-library")));
+    const allMediaElements = [];
+    const allToggleToLibButtons = [];
+    for(const mediaContainer of containersData) {
+      if(mediaContainer.id) {
+        const containerDomElement = document.getElementById(mediaContainer.id);
+        if(!containerDomElement || !mediaContainer?.HTMLContent) continue;
+        containerDomElement.innerHTML = mediaContainer.HTMLContent;
+        allMediaElements.push(...containerDomElement.querySelectorAll(".div-MovieElement"));
+        allToggleToLibButtons.push(...containerDomElement.querySelectorAll(".btn-toggle-in-library"));
       }
     }
 
-    for(let mediaDomElement of allMediaElements){
+    for(const mediaDomElement of allMediaElements){
       if(mediaDomElement){
         const mediaId = mediaDomElement.getAttribute("mediaId");
         const mediaType = mediaDomElement.getAttribute("mediaType");
         if(mediaId && mediaType)
-          addEventListenerToMediaDomElementToOpenDetailPage(mediaDomElement,mediaId,mediaType)
+          addEventListenerToMediaDomElementToOpenDetailPage(
+            mediaDomElement,
+            mediaId,
+            mediaType
+          )
       }
     }
 
-    for(let toggleToLibButton of allToggleToLibButtons){
-      let thisMediaElement = toggleToLibButton.parentElement;
-      if(thisMediaElement && toggleToLibButton) {
-        const mediaId = thisMediaElement.getAttribute("mediaId");
-        const mediaType = thisMediaElement.getAttribute("mediaType");
-        addToggleToLibButtonEventListener(toggleToLibButton,mediaId,mediaType)
-      }
+    for(const toggleToLibButton of allToggleToLibButtons) {
+      const thisMediaElement = toggleToLibButton?.parentElement;
+      if(!thisMediaElement) continue;
+      addToggleToLibButtonEventListener(
+        toggleToLibButton,
+        thisMediaElement.getAttribute("mediaId"),
+        thisMediaElement.getAttribute("mediaType"),
+      );
     }
-
   }
 }
 
 function loadCachedPersonInfo(cachedMediaInfo){
-  let personCachedInformation = cachedMediaInfo.person_information;
-  let personInformationDomElement = document.getElementById("div-Person-description")
+  const personCachedInformation = cachedMediaInfo.person_information;
+  const personInformationDomElement = document.getElementById("div-Person-description")
   if(personCachedInformation && personInformationDomElement){
     personInformationDomElement.innerHTML = personCachedInformation
-    let personBioElement = document.getElementById("para-personBiography");
   }
 }
 
 async function loadMedia(apiKey){
-  let cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
 
   if(cachedMediaInfo){
     console.log("Loading Cached Information");
@@ -196,7 +199,7 @@ async function loadMedia(apiKey){
     loadCachedRightDivScrollValue(cachedMediaInfo);
     loadCachedPersonInfo(cachedMediaInfo);
   }else{
-    let personDepartment = await getPersonInfo(apiKey,personId)
+    const personDepartment = await getPersonInfo(apiKey,personId)
     if(personDepartment)
       await fetchData(apiKey,personId,personDepartment); 
   }
@@ -214,7 +217,7 @@ initPage();
 setupKeyPressesHandler();
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
-let searchInput = document.getElementById("input-searchForMovie");
+const searchInput = document.getElementById("input-searchForMovie");
 searchInput.addEventListener("keypress",(event)=>{
   if(event.key === "Enter") openSearchPage();
 });
