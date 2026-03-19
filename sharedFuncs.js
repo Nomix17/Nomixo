@@ -1421,8 +1421,7 @@ function setDropdownValue(dropdown, value) {
 }
 
 function getDropdownValue(dropdown) {
-  return 
-    dropdown.getAttribute('data-value') ||
+  return dropdown.getAttribute('data-value') ||
     dropdown.querySelector('.select-option').getAttribute('value');
 }
 
