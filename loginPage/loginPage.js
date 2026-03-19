@@ -7,7 +7,7 @@ let loadingDiv = document.getElementById("lds-dual-ring-container");
 let loginText = document.getElementById("login-text");
 let getApiKeyFromWebSite = document.getElementById("get-api-key-from-website");
 
-const ExternelWebSiteUrl = "https://developer.themoviedb.org/docs/getting-started";
+const ExternalWebSiteUrl = "https://developer.themoviedb.org/docs/getting-started";
 
 submitButton.addEventListener("click", () => {
   let inputedApiKey = apiKeyInput.value;
@@ -55,7 +55,7 @@ toggleVisibilityButton.addEventListener("click", () => {
 });
 
 getApiKeyFromWebSite.addEventListener("click", () => {
-  window.electronAPI.openExternelLink(ExternelWebSiteUrl);
+  window.electronAPI.openExternalLink(ExternalWebSiteUrl);
 });
 
 function showWelcomeScreen() {

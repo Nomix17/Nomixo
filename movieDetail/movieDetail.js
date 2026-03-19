@@ -405,7 +405,7 @@ function addEventListenerToIMDB_Rating(IMDB_ID){
   const IMDB_RatingElement = document.getElementById("movie-rating-div");
   const imdbLink = `https://www.imdb.com/title/${IMDB_ID}`;
   IMDB_RatingElement.addEventListener("click",() => {
-    window.electronAPI.openExternelLink(imdbLink);
+    window.electronAPI.openExternalLink(imdbLink);
   });
 }
 

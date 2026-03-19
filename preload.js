@@ -54,6 +54,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   validateApiKey: (inputedApiKey)=> ipcRenderer.invoke("validate-api-key",inputedApiKey),
   saveApiKey: (apiKey) => ipcRenderer.invoke("save-api-key",apiKey),
 
-  openExternelLink: (url) => ipcRenderer.invoke("open-externel-link",url)
+  openExternalLink: (url) => ipcRenderer.invoke("open-external-link",url)
 });
 

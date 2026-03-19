@@ -213,7 +213,7 @@ function monitorDownloads() {
   monitoringProgress = true;
 }
 
-function refreshEnties() {
+function refreshEntries() {
   window.electronAPI.getDownloadProgress(async (data) => {
     let JsonData = data;
     if(JsonData?.Status === "NewDownload"){
@@ -378,7 +378,7 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
         MediaInfo.IMDB_ID,
         MediaInfo.bgImagePath,
         episodeInfo,
-        (index === 0) ? "externel" : "internel"
+        (index === 0) ? "external" : "internal"
       );
     });
   });
@@ -388,7 +388,7 @@ function createContextMenuDiv(totalSizeElement,MediaInfo) {
     hideContextMenu(menuDiv);
     
     const totalSizeElementContaint = totalSizeElement.innerHTML;
-    totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating subtitles`;
+    totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating poster`;
 
     const apiKey = await window.electronAPI.getAPIKEY().then();
     const posterFileName = await getPosterPath(MediaInfo.IMDB_ID, apiKey);
@@ -800,6 +800,6 @@ window.addEventListener("resize",()=>{
 setupKeyPressesHandler();
 loadDownloadMediaFromLib();
 handleDownloadCategoryUpdateFromMain();
-refreshEnties();
+refreshEntries();
 setLeftButtonStyle("btn-download");
 loadIconsDynamically();

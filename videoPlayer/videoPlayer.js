@@ -305,8 +305,8 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
   if(usingMagnet){
     let subs = await loadingAllSubs(mediaImdbId,seasonNumber,episodeNumber);
     subtitlesArray = subs;
-    if(playerType === "externel" || (fileIsMkv && playerType == null)){
-      // pass to externel Player
+    if(playerType === "external" || (fileIsMkv && playerType == null)){
+      // pass to external Player
       playVideoInMpv(true,Magnet,undefined,fileName,undefined,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs);
       
     }else{
@@ -337,8 +337,8 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     let subs = await window.electronAPI.loadLocalSubs(videoPath,identifyingElements);
     subtitlesArray = subs;
 
-    if(playerType === "externel" || (fileIsMkv && playerType == null)){
-      // pass to externel Player
+    if(playerType === "external" || (fileIsMkv && playerType == null)){
+      // pass to external Player
       playVideoInMpv(false,undefined,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,undefined);
 
     }else{

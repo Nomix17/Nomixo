@@ -261,7 +261,7 @@ async function loadSettings(){
   RightmiddleDiv.style.opacity = 1;
 }
 
-async function loadExternelSubConfigs(){
+async function loadExternalSubConfigs(){
   subConfigObj = await window.electronAPI.loadSubConfig();
 
   SubtitlesOnByDefaultExternal = !subConfigObj["no-sub"] ;
@@ -432,7 +432,7 @@ loadTheme();
 
 loadSettings();
 
-loadExternelSubConfigs();
+loadExternalSubConfigs();
 
 setupKeyPressesHandler();
 

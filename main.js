@@ -273,7 +273,7 @@ ipcMain.handle("open-filesystem-browser",async(event,currentPath)=>{
   return null
 });
 
-ipcMain.handle("open-externel-link",(event,url)=>{
+ipcMain.handle("open-external-link",(event,url)=>{
   shell.openExternal(url);
 });
 
