@@ -27,9 +27,8 @@ async function fetchData(apiKey, genreId, ThisMediaType, page) {
     page:page,
     sort_by: SortBase,
     include_adult:false,
-    ...( genreId.toLowerCase() !== "all" && {with_genres: genreId})
-    // "vote_count.gte": 100,
-    // "popularity.gte": 10,
+    "vote_count.gte": 2,
+    ...( genreId.toLowerCase() !== "all" && {with_genres: genreId}),
   });
   const requestUrl = `https://api.themoviedb.org/3/discover/${ThisMediaType}?${params}`;
 
