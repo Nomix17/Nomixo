@@ -22,10 +22,15 @@ setTimeout(() => {
 }, 100);
 
 async function fetchData(apiKey, genreId, ThisMediaType, page) {
+  const resolvedSortBy = 
+    MediaType === "tv"
+      ? SortBase.replace("primary_release_date", "first_air_date")
+      : SortBase;
+
   const params = new URLSearchParams({
     api_key: apiKey,
     page:page,
-    sort_by: SortBase,
+    sort_by: resolvedSortBy,
     include_adult:false,
     "vote_count.gte": 2,
     ...( genreId.toLowerCase() !== "all" && {with_genres: genreId}),
