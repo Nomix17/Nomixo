@@ -43,7 +43,7 @@
         "tar.gz"
       ],
       "category": "AudioVideo",
-      "icon": "dist/icons",
+      "icon": "icons",
       "maintainer": "Nomix17"
     },
     "win": {
