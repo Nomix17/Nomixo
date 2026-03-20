@@ -157,7 +157,7 @@ local user_opts = {
     thumbnail_border_radius = 3,           -- rounded corner radius for thumbnail border (0 to disable)
 
     -- Button hover effects
-    hover_effect = "size,glow,color",      -- active button hover effects: "glow", "size", "color"; can use multiple separated by commas
+    hover_effect = "glow,color",      -- active button hover effects: "glow", "size", "color"; can use multiple separated by commas
     hover_button_size = 108,               -- relative size of a hovered button if "size" effect is active
     button_glow_amount = 5,                -- glow intensity when "glow" hover effect is active
     hover_effect_for_sliders = true,       -- apply size hover effect to slider handles
