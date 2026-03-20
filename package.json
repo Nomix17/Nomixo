@@ -39,18 +39,14 @@
       }
     ],
     "linux": {
-      "target": [
-        "tar.gz"
-      ],
+      "target": ["tar.gz","deb","rpm"],
       "category": "AudioVideo",
-      "icon": "icons",
+      "icon": "logo/icon",
       "maintainer": "Nomix17"
     },
     "win": {
-      "target": [
-        "nsis"
-      ],
-      "icon": "dist/icons/icon.ico"
+      "target": ["nsis"],
+      "icon": "logo/icon.ico"
     }
   }
 }
