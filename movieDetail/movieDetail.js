@@ -131,7 +131,7 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
   SeasonDiv.id = "main-SeasonDiv";
   let episodes = data.episodes;
   episodes.forEach(episode =>{
-    let episodeImageUrl = "../assets/noEpisodeImageFound.png";
+    let episodeImageUrl = "../assets/noEpisodeImageFound.svg";
     if(episode.still_path)
       episodeImageUrl = `https://image.tmdb.org/t/p/w342/${episode.still_path}`;
 
@@ -153,7 +153,7 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
 
     let episodeImageElement = EpisodeElement.querySelector(".episode-image");
     let episodeImageElementContainer = EpisodeElement.querySelector(".episode-image-container");
-    loadImageWithAnimation(episodeImageElementContainer, episodeImageElement, episodeImageUrl,"../assets/noEpisodeImageFound.png");
+    loadImageWithAnimation(episodeImageElementContainer, episodeImageElement, episodeImageUrl,"../assets/noEpisodeImageFound.svg");
 
     let continueWatchingEpisode = (libraryInfo?.typeOfSave?.includes("Currently Watching") &&
       episode.season_number === libraryInfo["seasonNumber"] &&

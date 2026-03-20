@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1456 816" width="1456" height="816">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="1456" height="816" fill="#3a4352"/>
+  <text
+    x="120"
+    y="208"
+    dominant-baseline="middle"
+    font-family="'JetBrains Mono', monospace"
+    font-size="112"
+    font-weight="700"
+    fill="#ffffff"
+  >No Episode</text>
+  <text
+    x="728"
+    y="418"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="'JetBrains Mono', monospace"
+    font-size="112"
+    font-weight="700"
+    fill="#ffffff"
+  >Image</text>
+  <text
+    x="1336"
+    y="628"
+    text-anchor="end"
+    dominant-baseline="middle"
+    font-family="'JetBrains Mono', monospace"
+    font-size="112"
+    font-weight="700"
+    fill="#ffffff"
+  >Was Found</text>
+</svg>

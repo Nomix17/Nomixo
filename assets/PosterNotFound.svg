@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1050" width="700" height="1050">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="700" height="1050" fill="#3a4352"/>
+  <text
+    x="60"
+    y="280"
+    dominant-baseline="middle"
+    font-family="'JetBrains Mono', monospace"
+    font-size="108"
+    font-weight="700"
+    fill="#ffffff"
+    letter-spacing="-2"
+  >Poster</text>
+  <text
+    x="350"
+    y="525"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="'JetBrains Mono', monospace"
+    font-size="108"
+    font-weight="700"
+    fill="#ffffff"
+    letter-spacing="-2"
+  >Not</text>
+  <text
+    x="640"
+    y="770"
+    text-anchor="end"
+    dominant-baseline="middle"
+    font-family="'JetBrains Mono', monospace"
+    font-size="108"
+    font-weight="700"
+    fill="#ffffff"
+    letter-spacing="-2"
+  >Found</text>
+</svg>

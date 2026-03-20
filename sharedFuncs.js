@@ -577,8 +577,8 @@ function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,Library
       
       if(obj?.["poster_path"]) PosterImage = ("https://image.tmdb.org/t/p/w500/"+obj["poster_path"]).replace(/([^:]\/)\/+/g, '$1');
       else if(obj?.["profile_path"])  PosterImage = ("https://image.tmdb.org/t/p/w500/"+obj["profile_path"]).replace(/([^:]\/)\/+/g, '$1');
-      else if(ThisMediaType === "person") PosterImage = "../assets/ProfileNotFound.png"
-      else PosterImage = "../assets/PosterNotFound.png"
+      else if(ThisMediaType === "person") PosterImage = "../assets/ProfileNotFound.svg"
+      else PosterImage = "../assets/PosterNotFound.svg"
 
       const mediaDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
       const toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title,PosterImage)
@@ -616,7 +616,7 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
     PosterImage =  
         mediaInfo?.["poster_path"] 
         ? "https://image.tmdb.org/t/p/w500/"+mediaInfo["poster_path"] 
-        : "../assets/PosterNotFound.png";
+        : "../assets/PosterNotFound.svg";
 
     PosterImage = normalizeRootUrl(PosterImage);
     ThisMediaTitle =  mediaInfo?.["name"] ?? mediaInfo?.["title"];
@@ -1250,7 +1250,7 @@ function loadIconsDynamically() {
     });
 }
 
-function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "../assets/PosterNotFound.png") {
+function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "../assets/PosterNotFound.svg") {
   return new Promise((resolve) => {
     if (!imagePath) {
       imageElement.src = alternativeImage;
