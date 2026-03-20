@@ -21,10 +21,10 @@ local user_opts = {
     -- Language and display
     language = "en",                       -- set language (for available options, see: https://github.com/Samillion/ModernZ/blob/main/docs/TRANSLATIONS.md)
     icon_theme = "fluent",                 -- set icon theme. accepts "fluent" or "material"
-    font = "Montserrat Bold",              -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
+    font = "",              -- font for the OSC (default: mpv-osd-symbols or the one set in mpv.conf)
 
     idlescreen = true,                     -- show mpv logo when idle
-    window_top_bar = "auto",               -- show OSC window top bar: "auto", "yes", or "no" (borderless/fullscreen)
+    window_top_bar = "yes",                -- show OSC window top bar: "auto", "yes", or "no" (borderless/fullscreen)
     showwindowed = true,                   -- show OSC when windowed
     showfullscreen = true,                 -- show OSC when fullscreen
     showonpause = true,                    -- show OSC when paused
@@ -65,7 +65,7 @@ local user_opts = {
     timems = false,                        -- show timecodes with milliseconds
     unicodeminus = false,                  -- use the Unicode minus sign in remaining time
     time_format = "fixed",               -- "dynamic" or "fixed". dynamic shows MM:SS when possible, fixed always shows HH:MM:SS
-    time_font_size = 22,                   -- font size of the time display
+    time_font_size = 18,                   -- font size of the time display
 
     tooltip_font_size = 14,                -- tooltips font size
 
@@ -99,8 +99,10 @@ local user_opts = {
     info_button = false,                    -- show info button
     ontop_button = true,                   -- show window on top button
     screenshot_button = false,             -- show screenshot button
+    sub_delay_button = true,               -- show subtitle delay buttons (- and +)
     screenshot_flag = "subtitles",         -- flag for screenshot button: "subtitles", "video", "window", "each-frame"
                                            -- https://mpv.io/manual/master/#command-interface-screenshot-%3Cflags%3E
+    sub_delay_step = 0.1,                  -- subtitle delay step in seconds for the delay buttons
 
     download_button = true,                -- show download button on web videos (requires yt-dlp and ffmpeg)
     download_path = "~~desktop/mpv",       -- default download directory for videos (https://mpv.io/manual/master/#paths)
@@ -156,7 +158,7 @@ local user_opts = {
 
     -- Button hover effects
     hover_effect = "size,glow,color",      -- active button hover effects: "glow", "size", "color"; can use multiple separated by commas
-    hover_button_size = 115,               -- relative size of a hovered button if "size" effect is active
+    hover_button_size = 108,               -- relative size of a hovered button if "size" effect is active
     button_glow_amount = 5,                -- glow intensity when "glow" hover effect is active
     hover_effect_for_sliders = true,       -- apply size hover effect to slider handles
 
@@ -286,7 +288,7 @@ local icon_theme = {
             maximize = "\238\159\171",
             unmaximize = "\238\174\150",
             minimize = "\238\175\144",
-            close = "\239\141\169",
+            close = "\239\133\157",
         },
         audio = "\238\175\139",
         subtitle = "\238\175\141",
@@ -311,8 +313,8 @@ local icon_theme = {
             default = {"\238\172\138", "\238\172\138"}, -- second icon is mirrored in layout()
         },
 
-        fullscreen = "\239\133\160",
-        fullscreen_exit = "\239\133\166",
+        fullscreen = "\243\176\142\183",
+        fullscreen_exit = "\243\176\142\185",
         info = "\239\146\164",
         ontop_on = "\238\165\190",
         ontop_off = "\238\166\129",
@@ -325,7 +327,10 @@ local icon_theme = {
 
         zoom_in = "\238\186\142",
         zoom_out = "\238\186\143",
+        sub_delay_down = "\239\133\138",
+        sub_delay_up = "\239\134\157",
     },
+
     ["material"] = {
         iconfont = "Material Design Icons",
         window = {
@@ -371,6 +376,8 @@ local icon_theme = {
 
         zoom_in = '\243\176\155\173',
         zoom_out = '\243\176\155\172',
+        sub_delay_down = '\243\176\131\171',  -- minus icon
+        sub_delay_up = '\243\176\131\170',    -- plus icon
     },
 }
 
@@ -398,6 +405,8 @@ local language = {
         buffering = "Buffering",
         zoom_in = "Zoom In",
         zoom_out = "Zoom Out",
+        sub_delay_down = "Subtitle Delay -",
+        sub_delay_up = "Subtitle Delay +",
         download = "Download",
         download_in_progress = "Download in progress",
         downloading = "Downloading",
@@ -1636,9 +1645,12 @@ end
 
 -- Window Controls
 local function window_controls()
+    local padding_top = 10
+    local padding_side = 20
+
     local wc_geo = {
         x = 0,
-        y = 50,
+        y = 50 + padding_top,
         an = 1,
         w = osc_param.playresx,
         h = 50,
@@ -1647,10 +1659,10 @@ local function window_controls()
     local button_y = wc_geo.y - (wc_geo.h / 2)
     
     -- Left side: Close button
-    local left_geo = {x = 25, y = button_y, an = 5, w = 50, h = wc_geo.h}
+    local left_geo = {x = 25 + padding_side, y = button_y, an = 5, w = 50, h = wc_geo.h}
     
     -- Right side: Fullscreen button
-    local right_geo = {x = osc_param.playresx - 25, y = button_y, an = 5, w = 50, h = wc_geo.h}
+    local right_geo = {x = osc_param.playresx - 25 - padding_side, y = button_y, an = 5, w = 50, h = wc_geo.h}
     
     if user_opts.window_controls then
         -- Close button (left side)
@@ -1660,7 +1672,7 @@ local function window_controls()
         lo.button.hoverstyle = "{\\c&H" .. osc_color_convert(user_opts.windowcontrols_close_hover) .. "&" .. (contains(user_opts.hover_effect, "size") and string.format("\\fscx%s\\fscy%s", user_opts.hover_button_size, user_opts.hover_button_size) or "") .. "}"
         
         -- Add left control area
-        add_area("window-controls", get_hitbox_coords(0, wc_geo.y, wc_geo.an, 50, wc_geo.h))
+        add_area("window-controls", get_hitbox_coords(padding_side, wc_geo.y, wc_geo.an, 50, wc_geo.h))
         
         -- Fullscreen button (right side)
         if user_opts.fullscreen_button then
@@ -1670,14 +1682,14 @@ local function window_controls()
             lo.button.hoverstyle = "{\\c&H" .. osc_color_convert(user_opts.window_controls_color) .. "&" .. (contains(user_opts.hover_effect, "size") and string.format("\\fscx%s\\fscy%s", user_opts.hover_button_size, user_opts.hover_button_size) or "") .. "}"
             
             -- Add right control area
-            add_area("window-controls-right", get_hitbox_coords(osc_param.playresx - 50, wc_geo.y, wc_geo.an, 50, wc_geo.h))
+            add_area("window-controls-right", get_hitbox_coords(osc_param.playresx - 25 - padding_side, wc_geo.y, right_geo.an, 50, wc_geo.h))
         end
     end
     
     -- Window Title (centered between buttons)
     if user_opts.window_title then
-        local title_left_margin = 70
-        local title_right_margin = user_opts.fullscreen_button and 70 or 20
+        local title_left_margin = 70 + padding_side
+        local title_right_margin = (user_opts.fullscreen_button and 70 or 20) + padding_side
         lo = add_layout("windowtitle")
         lo.geometry = {x = title_left_margin, y = button_y + 14, an = 1, w = osc_param.playresx - title_left_margin - title_right_margin, h = wc_geo.h}
         lo.style = string.format("%s{\\clip(%f,%f,%f,%f)}", osc_styles.window_title, title_left_margin, wc_geo.y - wc_geo.h, osc_param.playresx - title_right_margin, wc_geo.y + wc_geo.h)
@@ -1873,6 +1885,19 @@ layouts["modern"] = function ()
     -- Subtitle button
     if subtitle_track then
         lo = add_layout("sub_track")
+        lo.geometry = {x = end_x, y = refY - 35, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.control_3
+        end_x = end_x - 45
+    end
+
+    -- Subtitle delay buttons
+    if subtitle_track and user_opts.sub_delay_button then
+        lo = add_layout("sub_delay_up")
+        lo.geometry = {x = end_x, y = refY - 35, an = 5, w = 24, h = 24}
+        lo.style = osc_styles.control_3
+        end_x = end_x - 45
+
+        lo = add_layout("sub_delay_down")
         lo.geometry = {x = end_x, y = refY - 35, an = 5, w = 24, h = 24}
         lo.style = osc_styles.control_3
         end_x = end_x - 45
@@ -2161,6 +2186,32 @@ local function osc_init()
     ne.eventresponder["wheel_down_press"] = command_callback(user_opts.sub_track_wheel_down_command)
     ne.eventresponder["wheel_up_press"] = command_callback(user_opts.sub_track_wheel_up_command)
     visible_min_width = visible_min_width + (ne.enabled and 100 or 0)
+
+    --sub_delay_down
+    ne = new_element("sub_delay_down", "button")
+    ne.enabled = sub_track_count > 0
+    ne.visible = (osc_param.playresx >= visible_min_width - outeroffset) and user_opts.sub_delay_button
+    ne.content = icons.sub_delay_down
+    ne.tooltip_style = osc_styles.tooltip
+    ne.tooltipF = user_opts.tooltip_hints and locale.sub_delay_down or ""
+    ne.eventresponder["mbtn_left_up"] = function()
+        local delay = mp.get_property_number("sub-delay", 0)
+        mp.commandv("osd-msg", "set", "sub-delay", string.format("%.2f", delay - user_opts.sub_delay_step))
+    end
+    visible_min_width = visible_min_width + (user_opts.sub_delay_button and ne.enabled and 100 or 0)
+
+    --sub_delay_up
+    ne = new_element("sub_delay_up", "button")
+    ne.enabled = sub_track_count > 0
+    ne.visible = (osc_param.playresx >= visible_min_width - outeroffset) and user_opts.sub_delay_button
+    ne.content = icons.sub_delay_up
+    ne.tooltip_style = osc_styles.tooltip
+    ne.tooltipF = user_opts.tooltip_hints and locale.sub_delay_up or ""
+    ne.eventresponder["mbtn_left_up"] = function()
+        local delay = mp.get_property_number("sub-delay", 0)
+        mp.commandv("osd-msg", "set", "sub-delay", string.format("%.2f", delay + user_opts.sub_delay_step))
+    end
+    visible_min_width = visible_min_width + (user_opts.sub_delay_button and ne.enabled and 100 or 0)
 
     -- vol_ctrl
     local vol_visible_offset = sub_offset + playlist_offset
@@ -2835,7 +2886,7 @@ local function process_event(source, what)
                 if user_opts.bottomhover then -- if enabled, only show osc if mouse is hovering at the bottom of the screen (where the UI elements are)
                     local top_hover = window_controls_enabled() and (user_opts.window_title or user_opts.window_controls)
                     if mouseY > osc_param.playresy - (user_opts.bottomhover_zone or 130)
-                    or ((user_opts.window_top_bar == "yes" or not (state.border and state.title_bar)) or state.fullscreen) and (mouseY < 40 and top_hover) then
+                    or (user_opts.window_top_bar == "yes" or not (state.border and state.title_bar) or state.fullscreen) and (mouseY < 40 and top_hover) then
                         show_osc()
                     else
                         state.touchtime = nil
@@ -2992,6 +3043,21 @@ local function render()
                 mp.enable_key_bindings("window-controls")
             else
                 mp.disable_key_bindings("window-controls")
+            end
+
+            if mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) then
+                mouse_over_osc = true
+            end
+        end
+    end
+
+    if osc_param.areas["window-controls-right"] then
+        for _,cords in ipairs(osc_param.areas["window-controls-right"]) do
+            if state.osc_visible then
+                set_virt_mouse_area(cords.x1, cords.y1, cords.x2, cords.y2, "window-controls-right")
+                mp.enable_key_bindings("window-controls-right")
+            else
+                mp.disable_key_bindings("window-controls-right")
             end
 
             if mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) then
@@ -3303,6 +3369,12 @@ mp.set_key_bindings({
 }, "window-controls", "force")
 mp.enable_key_bindings("window-controls")
 
+mp.set_key_bindings({
+    {"mbtn_left", function() process_event("mbtn_left", "up") end,
+                  function() process_event("mbtn_left", "down") end},
+}, "window-controls-right", "force")
+mp.enable_key_bindings("window-controls-right")
+
 local function always_on(val)
     if state.enabled then
         if val then
@@ -3526,4 +3598,5 @@ update_duration_watch()
 
 set_virt_mouse_area(0, 0, 0, 0, "input")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls")
+set_virt_mouse_area(0, 0, 0, 0, "window-controls-right")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls-title")
