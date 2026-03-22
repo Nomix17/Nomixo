@@ -1276,6 +1276,9 @@ function loadSubsFromSubDir(identifyingElements) {
   const downloadPath = identifyingElements.DownloadDir;
   let subsDirectory = path.join(downloadPath,`SUBS_${torrentId}`);
   try {
+    if(fs.existsSync(subsDirectory)){
+      throw new Error(`Subtitles aren't downloaded in: ${subsDirectory}`);
+    }
     return fs.readdirSync(subsDirectory).map(subFileName => {
       let displayName = subFileName.split("-")[0];
       return {
