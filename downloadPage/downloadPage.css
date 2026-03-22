@@ -29,7 +29,12 @@
   padding: 30px;
   border-radius: 20px;
 }
-
+.downloads-categorie .categorie-top-bar{
+  display: flex;
+  align-items: center;
+  justify-content:space-between;
+  width:100%;
+}
 .downloads-categorie .title-container {
   display: flex;
   align-items: center;
@@ -40,6 +45,24 @@
   flex-shrink: 0;
   margin: 10px 10px 10px 25px;
   font-size: 35px;
+}
+
+.downloads-categorie .categorie-controll {
+  background-color:rgba(255,255,255,0.01);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+  padding:10px;
+  font-size:1.2em;
+  margin-right:25px;
+  cursor:pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+.downloads-categorie .categorie-controll:hover {
+  background-color:rgba(255,255,255,0.08);
+}
+.downloads-categorie .categorie-controll:active {
+  background-color:rgba(255,255,255,0.01);
 }
 
 #download-done-div {

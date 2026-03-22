@@ -835,12 +835,50 @@ async function handlingDownloadCategorieChanging(categorieChangedTorrents) {
   updateDownloadUI();
 }
 
+function setupCategoryBtn() {
+  const queueAllDownloadBtn = pausedDownloadsDiv.querySelector("button");
+  const pauseAllDownloadBtn = queuedDownloadsDiv.querySelector("button");
+
+  queueAllDownloadBtn.addEventListener("click", async() => {
+    const libraryInfo = await window.electronAPI.loadDownloadLibraryInfo()
+    const pausedEntries = libraryInfo?.downloads
+      ?.filter(entry =>
+        entry.Status.toLowerCase() === "paused"
+      );
+    for(const entry of pausedEntries) {
+      if(entry?.torrentId != null) {
+        const res = await window.electronAPI.addTorrentToDownloadQueue(entry?.torrentId);
+        handlingDownloadCategorieChanging(res);
+      } else {
+        console.log("Failed to load torrent id");
+      }
+    }
+  });
+
+  pauseAllDownloadBtn.addEventListener("click", async() => {
+    const libraryInfo = await window.electronAPI.loadDownloadLibraryInfo()
+    const queuedEntries = libraryInfo?.downloads
+      ?.filter(entry =>
+        entry.Status.toLowerCase() === "queued"
+      );
+    for(const entry of queuedEntries) {
+      if(entry?.torrentId != null) {
+        const res = await window.electronAPI.removeTorrentFromDownloadQueue(entry.torrentId);
+        handlingDownloadCategorieChanging(res);
+      } else {
+        console.log("Failed to load torrent id");
+      }
+    }
+  });
+}
+
 window.addEventListener("resize",()=>{
   alignSizeDiv();
 });
 
 setupKeyPressesHandler();
 loadDownloadMediaFromLib();
+setupCategoryBtn();
 handleDownloadCategoryUpdateFromMain();
 refreshEntries();
 setLeftButtonStyle("btn-download");

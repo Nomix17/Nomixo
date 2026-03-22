@@ -566,6 +566,28 @@ ipcMain.handle("add-torrent-to-download-queue", async (event, torrentId) => {
   }
 });
 
+ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) => {
+  const target = downloadQueue.find(
+    el => el.torrentId === torrentId
+  );
+
+  if(target != null) {
+    downloadQueue = downloadQueue.filter(
+      el => el.torrentId !== torrentId
+    );
+    return [{
+      response: "paused",
+      torrentId:torrentId
+    }];
+
+  } else {
+    console.error("Queue does not contain torrent with Id:",torrentId);
+    return [{
+      response: "torrent not found in queue",
+      torrentId:torrentId
+    }];
+  }
+});
 // ======================= Download OTHER THINGS =======================
 
 ipcMain.handle("download-image",async(event,downloadPath, imageUrl) => {
