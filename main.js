@@ -17,7 +17,8 @@ let API_KEY = null;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const __configs = path.join(app.getPath('userData'),"configs");
-let __envfile = path.join(__configs,".env");
+const __envfile = path.join(__configs,".env");
+const __downloads = app.getPath('downloads');
 
 dotenv.config({path:__envfile});
 
@@ -70,6 +71,7 @@ if (!process.env.API_KEY) {
 
 } else {
   API_KEY = process.env.API_KEY;
+  initAppIdentity()
   openMainWindow();
 }
 
@@ -701,7 +703,10 @@ function loadSettings() {
       SubFontFamilyInternal: "Montserrat",
       SubColorInternal: "#ffffff",
       SubBackgroundColorInternal: "#000000",
-      SubBackgroundOpacityLevelInternal: 0
+      SubBackgroundOpacityLevelInternal: 0,
+      DefaultDownloadPath: __downloads,
+      rememberDownloadLocationByDefault: true,
+      DownloadSubtitlesByDefault: true 
     };
   }
 }
@@ -790,7 +795,10 @@ function initializeDataFiles(){
         "SubFontFamilyInternal": "Montserrat",
         "SubColorInternal": "#ffffff",
         "SubBackgroundColorInternal": "#000000",
-        "SubBackgroundOpacityLevelInternal": 0
+        "SubBackgroundOpacityLevelInternal": 0,
+        "DefaultDownloadPath": __downloads,
+        "rememberDownloadLocationByDefault": true,
+        "DownloadSubtitlesByDefault": true
       }
     );
     fs.writeFileSync(SettingsFilePath,defaultFileData);
