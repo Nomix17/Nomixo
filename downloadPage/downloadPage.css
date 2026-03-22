@@ -65,6 +65,12 @@
   background-color:rgba(255,255,255,0.01);
 }
 
+.downloads-categorie .categorie-controll.disabled {
+  pointer-events:none;
+  color:rgba(255,255,255,.4);
+  box-shadow: none;
+}
+
 #download-done-div {
   margin-bottom: 30px;
 }
@@ -91,10 +97,14 @@
   padding: 20px;
 }
 
-.empty-container {
+.empty-container-text {
   font-style: italic;
   font-size: 1.2em;
   color: rgba(var(--text-color), 0.8);
+}
+
+.empty-container-text.hidden {
+  display:none;
 }
 
 .download-media {

@@ -14,18 +14,15 @@ async function loadDownloadMediaFromLib() {
     }
   }
 
-  if(library.downloads.length === 0){
-    let RightmiddleDiv = document.getElementById("div-middle-right");
-    let MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
-    putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
-    RightmiddleDiv.style.opacity = 1;
-
-  }else{
+  if(library?.downloads?.length !== 0){
     if(!monitoringProgress){
       monitorDownloads();
       monitorErrors();
     }
   }
+
+  let RightmiddleDiv = document.getElementById("div-middle-right");
+  RightmiddleDiv.style.opacity = 1;
 
   updateDownloadUI();
   await loadCachedPageInfo();
@@ -688,29 +685,32 @@ function updateDownloadUI() {
 }
 
 function handleEmptyDownloadCategories() {
-  const categories = document.querySelectorAll(".downloads-categorie:not(#currently-downloading-div)");
-
-  for(const downloadCategorieDiv of categories){
-
-    let downloadElementsContainer = downloadCategorieDiv.querySelector(".movieContainer");
-    if(downloadElementsContainer.innerHTML.trim() === "") {
-      downloadCategorieDiv.style.display = "none";
-    } else {
-      downloadCategorieDiv.style.display = "block";
-
-    }
-  }
+  const categories = document.querySelectorAll(".downloads-categorie");
   
-  const currentlyDownloadingContainer = currentlyDownloadingDiv.querySelector(".movieContainer");
-  if(currentlyDownloadingContainer) {
-    if(currentlyDownloadingContainer.innerHTML.trim() === ""){
-      currentlyDownloadingContainer.innerHTML = `<p class="empty-container" id="nothing-is-downloading"> Nothing is downloading </p>`;
+  for(const downloadCategorieDiv of categories){
+    const container = downloadCategorieDiv.querySelector('.movieContainer');
+    const isEmpty = [...container.children].every(el => el.matches('p.empty-container-text'));
+    const emptyParagraph = downloadCategorieDiv.querySelector('.empty-container-text')
+    const elementCategoryControllBtn = downloadCategorieDiv.querySelector("button");
+    if(emptyParagraph)
+      emptyParagraph.classList.toggle('hidden', !isEmpty);
+    if(elementCategoryControllBtn)
+      elementCategoryControllBtn.classList.toggle("disabled", isEmpty);
+    downloadCategorieDiv.style.display = "block";
+
+    if(
+      isEmpty &&
+      downloadCategorieDiv.id === "currently-downloading-div"
+    )
       removeDownloadBackgroundDiv();
 
-    } else {
-      const nothingIsDownloadingElement = document.getElementById("nothing-is-downloading");
-      if(nothingIsDownloadingElement)
-        nothingIsDownloadingElement.remove();
+    if (
+      isEmpty && (
+        downloadCategorieDiv.id === "download-queue-div" ||
+        downloadCategorieDiv.id === "download-paused-div"
+      )
+    ) {
+      downloadCategorieDiv.style.display = "none";
     }
   }
 }
@@ -724,7 +724,6 @@ function updateElementsCounterForEachContainer() {
     const counterElement = downloadCategorieDiv.querySelector(".downloads-counter");
     counterElement.innerText = downloadingMedias.length;
   }
-
 }
 
 async function addBackgroundImageToDownloadingDiv(mediaElement, posterImage) {

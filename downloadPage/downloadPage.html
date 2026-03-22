@@ -71,7 +71,11 @@
                 <h1>Currently Downloading</h1>
                 <p class="downloads-counter"></p>
               </div>
-              <div class="movieContainer"></div>
+              <div class="movieContainer">
+                <p class="empty-container-text hidden">
+                  Nothing is downloading 
+                </p>
+              </div>
             </div>
 
             <div class="downloads-categorie" id="download-queue-div">
@@ -82,7 +86,11 @@
                 </div>
                 <button class="categorie-controll">Pause All</button>
               </div>
-              <div class="movieContainer"></div>
+              <div class="movieContainer">
+                <p class="empty-container-text hidden">
+                  Queue is empty
+                </p>
+              </div>
             </div>
             
             <div class="downloads-categorie" id="download-paused-div">
@@ -93,15 +101,23 @@
                 </div>
                 <button class="categorie-controll">Queue All</button>
               </div>
-              <div class="movieContainer"></div>
+              <div class="movieContainer">
+                <p class="empty-container-text hidden">
+                  No paused downloads
+                </p>
+              </div>
             </div>
-            
+
             <div class="downloads-categorie" id="download-done-div">
               <div class="title-container">
                 <h1>Completed Downloads</h1>
                 <p class="downloads-counter"></p>
               </div>
-              <div class="movieContainer"></div>
+              <div class="movieContainer">
+                <p class="empty-container-text hidden">
+                  No completed downloads
+                </p>
+              </div>
             </div>
           </div>
 
