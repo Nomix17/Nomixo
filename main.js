@@ -380,30 +380,7 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
 });
 
 ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
-  let startFromTime = await getLastestPlayBackPostion(metaData);
-
-  let subIdentifyingElements = {
-    IMDB_ID:metaData.mediaImdbId,
-    episodeNumber:metaData.episodeNumber,
-    seasonNumber:metaData.seasonNumber,
-    DownloadDir:metaData.downloadPath
-  };
-
-  let subsPaths = await loadSubsFromSubDir(subIdentifyingElements).map(sub=>sub.url);
-
-  MPVWorker = new Worker(MPVPlayerWorkerPath, {
-    workerData: {
-      typeOfPlay:"LocalFile",
-      metaData,
-      startFromTime,
-      subsPaths,
-      mpvConfigDirectory
-    },
-    type: 'module'
-  });
-
-  handleMpvWorker(metaData);
-  InVideoPlayerPage = true;
+  playVideoOverMpv(metaData);
 });
 
 // ======================= TORRENT DOWNLOADING =======================
@@ -1152,7 +1129,6 @@ async function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
   }
 }
 
-
 async function downloadImage(downloadDir, posterUrl) {
   fs.mkdirSync(downloadDir, { recursive: true });
   try {
@@ -1457,6 +1433,33 @@ async function getLastestPlayBackPostion(metaData){
 
 // ############################ MPV PLAYER RELATED ############################
 
+async function playVideoOverMpv(metaData) {
+  const startFromTime = await getLastestPlayBackPostion(metaData);
+
+  let subIdentifyingElements = {
+    IMDB_ID:metaData.mediaImdbId,
+    episodeNumber:metaData.episodeNumber,
+    seasonNumber:metaData.seasonNumber,
+    DownloadDir:metaData.downloadPath
+  };
+
+  let subsPaths = await loadSubsFromSubDir(subIdentifyingElements).map(sub=>sub.url);
+
+  MPVWorker = new Worker(MPVPlayerWorkerPath, {
+    workerData: {
+      typeOfPlay:"LocalFile",
+      metaData,
+      startFromTime,
+      subsPaths,
+      mpvConfigDirectory
+    },
+    type: 'module'
+  });
+
+  handleMpvWorker(metaData);
+  InVideoPlayerPage = true;
+}
+
 function handleMpvWorker(metaData){
 
   const ExitVideoPlayerPage = ()=>{
@@ -1536,7 +1539,7 @@ const handleMpvOutput = (data)=>{
       lastSecondBeforeQuit = 0;
     }
   }
-};
+}
 
 function updateLastSecondBeforeQuit(lastPbPosition,metaData){
   const LibraryInfo = getLibraryInfo();
