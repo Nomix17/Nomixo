@@ -486,6 +486,16 @@ ipcMain.handle("download-subtitles", async(event, mediaInfo, subsObjects) => {
   return {updated:subtitlesWhereUpdated};
 });
 
+ipcMain.handle("pause-torrent-download", async (event, torrentId) => {
+  const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
+  return await pauseTheDownloadingTorrent(targetTorrent, torrentId);
+});
+
+ipcMain.handle("continue-torrent-download", async (event, torrentId) => {
+  const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
+  return await continueDownload(targetTorrent, torrentId);
+});
+
 ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
   const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
   return targetTorrent
