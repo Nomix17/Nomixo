@@ -1,11 +1,12 @@
 const currentlyDownloadingDiv = document.getElementById("currently-downloading-div");
 const queuedDownloadsDiv  = document.getElementById("download-queue-div");
-const doneDownloadsDiv = document.getElementById("download-done-div");
 const pausedDownloadsDiv = document.getElementById("download-paused-div");
+const doneDownloadsDiv = document.getElementById("download-done-div");
+const libraryDumpPromise = window.electronAPI.loadDownloadLibraryInfo() 
 
 let monitoringProgress = false;
 async function loadDownloadMediaFromLib() {
-  let library = await window.electronAPI.loadDownloadLibraryInfo();
+  const library = await libraryDumpPromise;
 
   if(library != null){
     for(let mediaLibEntryPoint of library.downloads){
@@ -70,7 +71,6 @@ async function createDownloadElement(mediaLibEntryPoint) {
   makeSureBgImageIsDownloaded(mediaLibEntryPoint);
 
   let downloadCategorie;
-
   if (downloadStatus.toLowerCase() === "downloading" || downloadStatus.toLowerCase() === "loading") {
     downloadCategorie = currentlyDownloadingDiv;
     addBackgroundImageToDownloadingDiv(MediaDownloadElement,mediaLibEntryPoint?.posterPath);
@@ -198,8 +198,8 @@ function monitorDownloads() {
     CancelButton.innerHTML = xRemoveIcon;
 
     if(JsonData?.Status.toLowerCase() === "done"){
-      let library = await window.electronAPI.loadDownloadLibraryInfo();
-      let libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
+      const library = await libraryDumpPromise;
+      const libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
       let doneDownloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
       if(doneDownloadContainer)
         doneDownloadContainer.appendChild(TargetDownloadElement);
