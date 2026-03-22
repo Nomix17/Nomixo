@@ -39,9 +39,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   downloadTorrent: (torrentInformation,subsObjects) => ipcRenderer.invoke("download-torrent",torrentInformation,subsObjects),
   getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
-  addTorrentToDownloadQueue: (torrentId) => ipcRenderer.invoke("add-torrent-to-download-queue", (event, torrentId)),
   toggleTorrentDownload: (torrentId) => ipcRenderer.invoke("toggle-torrent-download", torrentId),
   cancelDownload: (mediaInfo) => ipcRenderer.invoke("cancel-torrent-download", mediaInfo),
+  addTorrentToDownloadQueue: (torrentId) => ipcRenderer.invoke("add-torrent-to-download-queue", (torrentId)),
   updateDownloadCategorie:(fn) => ipcRenderer.on("update-download-categorie",(event,data) => fn(data)),
 
   getMsgFromMainProcess: (fn)=> ipcRenderer.on("msg-from-main-process",(event,data)=>fn(data)),

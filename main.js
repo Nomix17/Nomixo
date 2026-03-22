@@ -486,6 +486,13 @@ ipcMain.handle("download-subtitles", async(event, mediaInfo, subsObjects) => {
   return {updated:subtitlesWhereUpdated};
 });
 
+ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
+  const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
+  return targetTorrent
+    ? await pauseTheDownloadingTorrent(targetTorrent, torrentId)
+    : await continueDownload(targetTorrent, torrentId);
+});
+
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
   const torrentId = mediaInfo.torrentId;
 
@@ -513,55 +520,6 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
   await removeFromDownloadLibrary(torrentId);
   
   return { success: true, torrentId };
-});
-
-ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
-  const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
-  if (!targetTorrent) {
-    const wholeDownloadLibrary = await loadDownloadLibrary();
-    const torrentInfo = wholeDownloadLibrary?.downloads?.find(element => element.torrentId === torrentId);
-    if (torrentInfo != null) {
-      torrentInfo["torrentId"] = torrentId;
-     
-      // pause every other torrent
-      let queuedTorrents = [];
-      try {
-        queuedTorrents = await addDownloadingTorrentToQueue();
-      } catch(err) {
-        console.error(err.message);
-        return [{responce:"failed",error:err.message,torrentId:torrentId}];
-      }
-
-      // start the requested download
-      try {
-        downloadTorrent(torrentInfo)
-        downloadQueue = downloadQueue.filter(ele => ele.torrentId != torrentId);
-      } catch(err) {
-        console.error(err.message);
-        await editDownloadLibraryElements([torrentInfo.torrentId], "Status", "Loading");
-        pauseDownloadingTorrent(targetTorrent,torrentId);
-        return [{responce:"failed",error:err.message,torrentId:torrentId}];
-      }
-      
-      return [{response: "continued", torrentId:torrentId},...queuedTorrents];
-
-    } else {
-      console.error("Empty download library, cannot continue download for",torrentId);
-      return [{response: "empty download library",torrentId:torrentId}];
-    }
-
-  } else {
-
-    try {
-      await pauseDownloadingTorrent(targetTorrent, torrentId);
-      downloadNextTorrentInQueue();
-    } catch(err) {
-      console.error(err.message);
-      return [{response:"failed",error:err.message,torrentId:torrentId}];
-    }
-
-    return [{response: "paused", torrentId:torrentId}];
-  }
 });
 
 ipcMain.handle("add-torrent-to-download-queue", async (event, torrentId) => {
@@ -1011,6 +969,83 @@ async function downloadTorrent(torrentInfo) {
   });
 }
 
+async function continueDownload(targetTorrent, torrentId) {
+  const wholeDownloadLibrary = await loadDownloadLibrary();
+  const torrentInfo = wholeDownloadLibrary?.downloads
+    ?.find(
+      element => element.torrentId === torrentId
+    );
+
+  if (torrentInfo != null) {
+    // pause every other torrent
+    let queuedTorrents = [];
+    try {
+      queuedTorrents = await addDownloadingTorrentToQueue();
+    } catch(err) {
+      console.error(err.message);
+      return [{
+        responce:"failed",
+        error:err.message,
+        torrentId:torrentId
+      }];
+    }
+
+    // start the requested download
+    try {
+      downloadTorrent(torrentInfo)
+      downloadQueue = downloadQueue
+        .filter(
+          ele => ele.torrentId != torrentId
+        );
+    } catch(err) {
+      console.error(err.message);
+      await editDownloadLibraryElements(
+        [torrentInfo.torrentId],
+        "Status",
+        "Loading"
+      );
+      pauseTargetedTorrent(targetTorrent,torrentId);
+      return [{
+        responce:"failed",
+        error:err.message,
+        torrentId:torrentId
+      }];
+    }
+    
+    return [
+      {
+        response: "continued",
+        torrentId:torrentId
+      },
+      ...queuedTorrents
+    ];
+
+  } else {
+    console.error("Empty download library, cannot continue download for",torrentId);
+    return [{
+      response: "empty download library",
+      torrentId:torrentId
+    }];
+  }
+}
+
+async function pauseTheDownloadingTorrent(targetTorrent, torrentId) {
+  try {
+    await pauseTargetedTorrent(targetTorrent, torrentId);
+    downloadNextTorrentInQueue();
+    return [{
+      response: "paused",
+      torrentId:torrentId
+    }];
+  } catch(err) {
+    console.error(err.message);
+    return [{
+      response:"failed",
+      error:err.message,
+      torrentId:torrentId
+    }];
+  }
+}
 
 function destroyDownloadingTorrent(torrent, torrentId){
   return new Promise((res,rej) => {
@@ -1044,7 +1079,7 @@ function deleteTorrentFromMediaHashMap(torrentId){
     delete downloadingMediaHashMap[torrentId];
 }
 
-async function pauseDownloadingTorrent(torrent, torrentId){
+async function pauseTargetedTorrent(torrent, torrentId){
   if(!torrent) {
     return new Error(`Failed to pause: ${torrent}`);
   }
@@ -1127,7 +1162,7 @@ async function addDownloadingTorrentToQueue(){
   for (const downloadingTorrent of currentlyDownloadingTorrents) {
     let torrentInstance = downloadingTorrent.torrentInstance;
     let torrentInfo = downloadingTorrent.torrentInfo;
-    let pausedTorrentId = await pauseDownloadingTorrent(torrentInstance, torrentInfo.torrentId)
+    let pausedTorrentId = await pauseTargetedTorrent(torrentInstance, torrentInfo.torrentId)
     queuedTorrents.push({response: "queued", torrentId:pausedTorrentId});
     if(!downloadQueue.find(ele => ele.torrentId === torrentInfo.torrentId))
       downloadQueue.push(torrentInfo);
