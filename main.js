@@ -1,4 +1,4 @@
-import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog, shell, screen} from "electron";
+import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog, shell, screen, Notification} from "electron";
 import Store from 'electron-store';
 import downloadMultipleSubs from "./downloadSubtitles.js";
 import { spawn } from "child_process";
@@ -690,7 +690,11 @@ ipcMain.handle("load-cached-data-from-history",(event,currentPageURL)=>{
 });
 
 
-// ################# functions ######################## 
+// ################# SYSTEM INTERACTION MANAGEMENT ######################## 
+ipcMain.on("send-system-notification",(event,title, message)=>{
+  sendSystemNotification(title, message);
+});
+
 
 // ########## SETTINGS RELATED #################
 
@@ -1583,4 +1587,21 @@ async function writeAPIKEYIntoEnvFile(apiKey){
   const fileContent = `API_KEY="${apiKey}"`;
   await fs.writeFileSync(__envfile,fileContent);
   return null;
+}
+
+// ################################### System Related ###################################
+function sendSystemNotification(title, message) {
+  const showNotification = () => {
+    new Notification({
+      title: title,
+      body: message
+    }).show();
+  };
+
+  if (app.isReady()) {
+    showNotification();
+  } else {
+    app.whenReady()
+      .then(showNotification);
+  }
 }
