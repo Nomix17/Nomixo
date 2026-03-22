@@ -232,7 +232,7 @@ function refreshEntries() {
 function handleCancelButton(mediaInfo,cancelDownloadButton) {
   if(cancelDownloadButton) {
     cancelDownloadButton.addEventListener("click",async () => {
-      await window.electronAPI.cancelDownload(mediaInfo);
+      window.electronAPI.cancelDownload(mediaInfo);
       let TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
       TargetDownloadElement.remove();
       let MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
