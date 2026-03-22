@@ -75,6 +75,11 @@ if (!process.env.API_KEY) {
   openMainWindow();
 }
 
+function initAppIdentity() {
+  app.setAppUserModelId("com.nomixo.app");
+  app.setName("Nomixo");
+}
+
 function openMainWindow(fileEntryPoint = "./home/mainPage.html") {
   if (!app.requestSingleInstanceLock()) {
     app.quit();
@@ -660,8 +665,8 @@ ipcMain.handle("load-cached-data-from-history",(event,currentPageURL)=>{
 
 
 // ################# SYSTEM INTERACTION MANAGEMENT ######################## 
-ipcMain.on("send-system-notification",(event,title, message)=>{
-  sendSystemNotification(title, message);
+ipcMain.on("send-system-notification", (event, options) => {
+  sendSystemNotification(options);
 });
 
 
@@ -776,6 +781,7 @@ function initializeDataFiles(){
         "DefaultDownloadPath": __downloads,
         "rememberDownloadLocationByDefault": true,
         "DownloadSubtitlesByDefault": true
+
       }
     );
     fs.writeFileSync(SettingsFilePath,defaultFileData);
@@ -925,9 +931,23 @@ async function downloadTorrent(torrentInfo) {
           
           torrentInfo["Status"] = "Done";
           updateElementDownloadLibrary(torrentInfo, downloadedDataLength,totalSize);
-          
+
           try {
             await destroyDownloadingTorrent(torrent, torrentInfo.torrentId);
+            const body = [
+              truncate(torrentInfo?.Title || 'Unknown title'),
+              torrentInfo?.Year,
+              torrentInfo?.Quality
+            ] .filter(Boolean)
+              .join(' • ')
+
+            const [torrentLibEntry] = await loadTargetFromDownloadLibrary(torrentInfo.torrentId);
+            sendSystemNotification({
+              title: "Download Complete",
+              body: body,
+              icon: torrentLibEntry.posterPath, 
+              onClick:() => playVideoOverMpv(torrentLibEntry)
+            });
             console.log(`Torrent cleaned up: ${torrentInfo.torrentId}`);
           } catch(err) {
             console.error(err.message);
@@ -963,7 +983,11 @@ async function downloadTorrent(torrentInfo) {
           WINDOW.webContents.send("download-progress-stream", jsonMessage);
           PipingStartTime = now;
 
-          console.log(`Downloading ${torrentInfo.dirName}: ${((downloadedDataLength / totalSize) * 100).toFixed(2)}%, ${(downloadSpeed / (1024)).toFixed(2)} Kb/s`);
+          console.log(
+            `Downloading ${torrentInfo.dirName}: ` +
+            `${((downloadedDataLength / totalSize) * 100).toFixed(2)}%, ` +
+            `${(downloadSpeed / 1024).toFixed(2)} KB/s`
+          );
         }
       });
     });
@@ -1310,16 +1334,20 @@ function insertNewInfoToLibrary(libraryFilePath, newData) {
   }
 }
 
-function loadFromLibrary(targetIdentification){
-  let LibraryInfo = getLibraryInfo();
+async function loadFromLibrary(targetIdentification){
+  let LibraryInfo = await getLibraryInfo();
   if(LibraryInfo.media.length){
     if(targetIdentification == null) return LibraryInfo.media;
-    let targetLibraryInfo = LibraryInfo.media.filter(element => element.MediaId === targetIdentification.MediaId && element.MediaType === targetIdentification.MediaType);
-    if(targetLibraryInfo.length) return targetLibraryInfo; 
-    return undefined
-  }else{
-    return undefined
+    let targetLibraryInfo = LibraryInfo.media.filter(
+      element =>
+        element.MediaId === targetIdentification.MediaId &&
+        element.MediaType === targetIdentification.MediaType
+    );
+    console.log(targetLibraryInfo);
+    if(targetLibraryInfo.length)
+      return targetLibraryInfo; 
   }
+  return undefined
 }
 
 async function removeFromLibrary(mediaInfo) {
@@ -1328,6 +1356,20 @@ async function removeFromLibrary(mediaInfo) {
     element => element.torrentId !== mediaInfo.torrentId
   );
   insertNewInfoToLibrary(libraryFilePath, LibraryInfo);
+}
+
+async function loadTargetFromDownloadLibrary(torrentId) {
+  let LibraryInfo = await loadDownloadLibrary();
+  if(LibraryInfo.downloads.length){
+    if(torrentId == null) return LibraryInfo.downloads;
+    let targetLibraryInfo = LibraryInfo.downloads.filter(
+      element =>
+        element.torrentId === torrentId
+    );
+    if(targetLibraryInfo.length)
+      return targetLibraryInfo; 
+  }
+  return undefined
 }
 
 async function removeFromDownloadLibrary(torrentId){
@@ -1434,6 +1476,7 @@ async function getLastestPlayBackPostion(metaData){
 // ############################ MPV PLAYER RELATED ############################
 
 async function playVideoOverMpv(metaData) {
+  console.log(`Playing ${metaData.Title} over Mpv`);
   const startFromTime = await getLastestPlayBackPostion(metaData);
 
   let subIdentifyingElements = {
@@ -1668,18 +1711,32 @@ async function writeAPIKEYIntoEnvFile(apiKey){
 }
 
 // ################################### System Related ###################################
-function sendSystemNotification(title, message) {
+function sendSystemNotification({
+  title = "Notification", body = "",
+  icon = null, onClick = null,
+  silent = false
+} = {}) {
   const showNotification = () => {
-    new Notification({
-      title: title,
-      body: message
-    }).show();
+    const notification = new Notification({
+      title, body, icon, silent
+    });
+    if (onClick) notification.on("click", onClick);
+    notification.show();
   };
 
-  if (app.isReady()) {
-    showNotification();
-  } else {
+  if (app.isReady()) showNotification();
+  else 
     app.whenReady()
       .then(showNotification);
-  }
+}
+
+// ################################### Utilities Related ###################################
+function formatSize(bytes) {
+  const gb = bytes / (1024 ** 3);
+  if (gb >= 1) return `${gb.toFixed(2)} GB`;
+  return `${(bytes / (1024 ** 2)).toFixed(2)} MB`;
+}
+
+function truncate(text, max = 40) {
+  return text.length > max ? text.slice(0, max) + "…" : text;
 }
