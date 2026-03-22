@@ -444,7 +444,11 @@ ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObject
 
       // download Subs
       try {
-        downloadSubs(subsObjects, torrentId, TorrentDownloadDir);
+        if(subsObjects != null) {
+          downloadSubs(subsObjects, torrentId, TorrentDownloadDir);
+        } else {
+          console.log("Subtitles Download Skipped");
+        }
       } catch (error) {
         reportDownloadError("Subtitles Download",torrentId,error);
         console.error(error);
@@ -481,18 +485,6 @@ ipcMain.handle("download-subtitles", async(event, mediaInfo, subsObjects) => {
   const subtitlesWhereUpdated = await downloadSubs(subsObjects, torrentId, TorrentDownloadDir);
   return {updated:subtitlesWhereUpdated};
 });
-
-function findFileInsideTorrent(torrent, targetFileName){
-  let filesPathsHashMap = {};
-  let files = torrent.files ?? [];
-  for(let fileInsideTorrent of files){
-    if (targetFileName === fileInsideTorrent.name) {
-      return fileInsideTorrent;
-    }
-    filesPathsHashMap[normaliseFileName(fileInsideTorrent.name)] = fileInsideTorrent;
-  }
-  return filesPathsHashMap[normaliseFileName(targetFileName)] ?? null;
-}
 
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
   const torrentId = mediaInfo.torrentId;
@@ -570,24 +562,41 @@ ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
 
     return [{response: "paused", torrentId:torrentId}];
   }
-
 });
 
-async function addDownloadingTorrentToQueue(){
-  const queuedTorrents = [];
+ipcMain.handle("add-torrent-to-download-queue", async (event, torrentId) => {
+  const wholeDownloadLibrary = await loadDownloadLibrary();
+  const targetTorrentInfo = 
+    wholeDownloadLibrary?.downloads?.find(
+      element => 
+        element.torrentId === torrentId
+    );
 
-  const currentlyDownloadingTorrents = Object.values(downloadingMediaHashMap);
-  for (const downloadingTorrent of currentlyDownloadingTorrents) {
-    let torrentInstance = downloadingTorrent.torrentInstance;
-    let torrentInfo = downloadingTorrent.torrentInfo;
-    let pausedTorrentId = await pauseDownloadingTorrent(torrentInstance, torrentInfo.torrentId)
-    queuedTorrents.push({response: "queued", torrentId:pausedTorrentId});
-    if(!downloadQueue.find(ele => ele.torrentId === torrentInfo.torrentId))
-      downloadQueue.push(torrentInfo);
+  if (targetTorrentInfo) {
+    const currentlyDownloadingTorrents = Object.values(downloadingMediaHashMap);
+    if(!currentlyDownloadingTorrents.length) {
+      downloadTorrent(targetTorrentInfo);
+      return [{
+        response: "continued",
+        torrentId:torrentId
+      }];
+
+    } else {
+      downloadQueue.push(targetTorrentInfo);
+      return [{
+        response: "queued",
+        torrentId:torrentId
+      }];
+    }
+     
+  } else {
+    console.error("Empty download library, cannot continue download for",torrentId);
+    return [{
+      response: "empty download library",
+      torrentId:torrentId
+    }];
   }
-
-  return queuedTorrents;
-}
+});
 
 // ======================= Download OTHER THINGS =======================
 
@@ -1022,6 +1031,7 @@ function downloadNextTorrentInQueue() {
       downloadTorrent(nextTorrent);
       WINDOW.webContents.send("update-download-categorie",[{response:"continued",torrentId:nextTorrent.torrentId}]);
     }
+    return nextTorrent?.torrentId;
   }
 }
 
@@ -1092,6 +1102,34 @@ function reportDownloadError(errorType, torrentId, err){
     torrentId: torrentId,
     err_msg: err
   });
+}
+
+function findFileInsideTorrent(torrent, targetFileName){
+  let filesPathsHashMap = {};
+  let files = torrent.files ?? [];
+  for(let fileInsideTorrent of files){
+    if (targetFileName === fileInsideTorrent.name) {
+      return fileInsideTorrent;
+    }
+    filesPathsHashMap[normaliseFileName(fileInsideTorrent.name)] = fileInsideTorrent;
+  }
+  return filesPathsHashMap[normaliseFileName(targetFileName)] ?? null;
+}
+
+async function addDownloadingTorrentToQueue(){
+  const queuedTorrents = [];
+
+  const currentlyDownloadingTorrents = Object.values(downloadingMediaHashMap);
+  for (const downloadingTorrent of currentlyDownloadingTorrents) {
+    let torrentInstance = downloadingTorrent.torrentInstance;
+    let torrentInfo = downloadingTorrent.torrentInfo;
+    let pausedTorrentId = await pauseDownloadingTorrent(torrentInstance, torrentInfo.torrentId)
+    queuedTorrents.push({response: "queued", torrentId:pausedTorrentId});
+    if(!downloadQueue.find(ele => ele.torrentId === torrentInfo.torrentId))
+      downloadQueue.push(torrentInfo);
+  }
+
+  return queuedTorrents;
 }
 
 // ############################ NAVIGATION RELATED ############################

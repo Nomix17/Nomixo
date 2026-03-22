@@ -86,10 +86,13 @@ async function createDownloadElement(mediaLibEntryPoint) {
 
   } else if(downloadStatus.toLowerCase() === "queued") {
     downloadCategorie = queuedDownloadsDiv;
+    MarkDownloadElementAsPaused(MediaDownloadElement, "Queued");
 
-  } else if(downloadStatus.toLowerCase() === "paused") {
+  } else {
     downloadCategorie = pausedDownloadsDiv;
     MarkDownloadElementAsPaused(MediaDownloadElement);
+    if(downloadStatus.toLowerCase() !== "paused")
+      console.log(downloadStatus, "Is Unknown Download Status");
   }
 
   handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
@@ -186,6 +189,7 @@ function monitorDownloads() {
 
     if(loadingIntervals?.[DownloadElementIdentifier]){
       removeLoadingAnimation(DownloadElementIdentifier,PausePlayButton,"Downloading")
+
     }
 
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
@@ -341,7 +345,44 @@ function setupContextMenuHandler(contextMenuButton, contextMenuDiv) {
   }
 }
 
-function createContextMenuDiv(totalSizeElement,MediaInfo) {
+async function createPausedDownloadsContextMenu(torrentId) {
+  const menuDiv = document.createElement("div");
+  menuDiv.classList.add("select-dropdown");
+
+  const addToQueue = document.createElement("div");
+  addToQueue.textContent = "Add to download queue";
+  addToQueue.classList.add("select-option");
+  
+  const cancelDownload = document.createElement("div");
+  cancelDownload.textContent = "Cancel the download";
+  cancelDownload.classList.add("select-option");
+
+  const library = await libraryDumpPromise;
+  const targetLibInfo = library?.downloads.find(element => element.torrentId === torrentId);
+
+  addToQueue.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    hideContextMenu(menuDiv);
+    if(targetLibInfo != null) {
+      const res = await window.electronAPI.addTorrentToDownloadQueue(torrentId);
+      await handlingDownloadCategorieChanging(res);
+    }
+  });
+
+  handleCancelButton(targetLibInfo,cancelDownload);
+  cancelDownload.addEventListener("click", async(e) => {
+    e.stopPropagation();
+    hideContextMenu(menuDiv);
+  });
+
+
+  menuDiv.appendChild(addToQueue);
+  menuDiv.appendChild(cancelDownload);
+
+  return menuDiv;
+}
+
+function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
   const menuDiv = document.createElement("div");
   menuDiv.classList.add("select-dropdown");
 
@@ -444,7 +485,6 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   let downloadedSizeElement = MediaDownloadElement.querySelector(".downloaded-size");
   let totalSizeElement = MediaDownloadElement.querySelector(".total-size");
   let rightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
-  let dragButton = MediaDownloadElement.querySelector(".drag-button");
   let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   CancelButton.remove();
@@ -454,13 +494,12 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   if (existingContextMenu) existingContextMenu.remove();
   
   let contextMenuButton = document.createElement("button");
-  let contextMenuDiv = createContextMenuDiv(totalSizeElement, MediaInfo);
+  let contextMenuDiv = createFinishedDownloadsContextMenu(totalSizeElement, MediaInfo);
   
   PercentageTextElement.style.display = "none";
   downloadSpeedElement.style.display = "none";
   progressBarElement.style.display = "none";
   downloadedSizeElement.style.display = "none";
-  if (dragButton) dragButton.remove();
   
   const playMediaButton = document.createElement("button");
   const deleteMediaButton = document.createElement("button");
@@ -584,14 +623,22 @@ function fillingDeleteOverlay(MediaInfo) {
     seasonEpisode.innerText = `S${MediaInfo.seasonNumber}-E${MediaInfo.episodeNumber}`;
 }
 
-function MarkDownloadElementAsPaused(MediaDownloadElement) {
-  let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
-  let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
-  let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
-  const dragButton = MediaDownloadElement.querySelector(".drag-button");
-  let elementId = MediaDownloadElement.id; 
+async function MarkDownloadElementAsPaused(MediaDownloadElement, newStatus="Paused") {
+  const PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
+  const downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
+  const oldContextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
+  const elementId = MediaDownloadElement.id;
 
-  if(dragButton) dragButton.remove();
+  if(oldContextMenuButton == null) {
+    const contextMenuButton = document.createElement("button");
+    contextMenuButton.classList.add("context-menu-button");
+    contextMenuButton.innerHTML = menuThreePoints;
+    const contextMenuDiv = await createPausedDownloadsContextMenu(elementId);
+    contextMenuButton.appendChild(contextMenuDiv);
+    setupContextMenuHandler(contextMenuButton, contextMenuDiv);
+    MediaDownloadElement.appendChild(contextMenuButton);
+  }
+
   downloadSpeedElement.innerHTML = "";
   PausePlayButton.innerHTML = playIcon;
 
@@ -599,20 +646,15 @@ function MarkDownloadElementAsPaused(MediaDownloadElement) {
     PausePlayButton.classList.remove("just-finished");
   }, 600);
 
-  removeLoadingAnimation(elementId,PausePlayButton,"Paused"); 
+  removeLoadingAnimation(elementId,PausePlayButton,newStatus); 
 }
 
 function MarkDownloadElementAsLoading(MediaDownloadElement) {
-  let PercentageTextElement = MediaDownloadElement.querySelector(".percentage");
-  let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
-  let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
-  let rightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
-  let elementId = MediaDownloadElement.id;
-  const dragButton = document.createElement("button")
-
-  dragButton.className = "drag-button";
-  dragButton.innerHTML = twoBarsIcon;
-  rightDiv.appendChild(dragButton);
+  const PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
+  const downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
+  const elementId = MediaDownloadElement.id;
+  const contextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
+  if(contextMenuButton != null) contextMenuButton.remove();
 
   PausePlayButton.innerHTML = pauseIcon;
   downloadSpeedElement.innerHTML = "loading"
@@ -755,12 +797,13 @@ async function handlingDownloadCategorieChanging(categorieChangedTorrents) {
       if(targetElement){
         if(res?.response  === "paused"){
           targetElementCategorie = pausedDownloadsDiv;
+          MarkDownloadElementAsPaused(targetElement);
         } else if(res?.response === "queued") {
           targetElementCategorie = queuedDownloadsDiv;
+          MarkDownloadElementAsPaused(targetElement, "Queued");
         }
-        MarkDownloadElementAsPaused(targetElement);
       }
-
+      SaveDownloadStatus(res?.response);
     } else if(res?.response  === "continued" && res?.torrentId){
       if(targetElement){
         MarkDownloadElementAsLoading(targetElement);
