@@ -49,7 +49,7 @@ let MPVWorker = null;
 let dontPlay = false; 
 let closeWindow = true;
 let InVideoPlayerPage = false;
-let mainzoomFactor = 1;
+let mainzoomFactor = 0.92;
 let subsPaths;
 let torrentInit;
 let pagesCachedHistory = {};
@@ -695,7 +695,7 @@ function loadSettings() {
     return JSON.parse(data);
   } catch (err) {
     return {
-      PageZoomFactor: 1,
+      PageZoomFactor: 0.92,
       TurnOnSubsByDefaultInternal: true,
       SubFontSizeInternal: 16,
       SubFontFamilyInternal: "Montserrat",
@@ -784,7 +784,7 @@ function initializeDataFiles(){
   if(!fs.existsSync(SettingsFilePath)){
     let defaultFileData = JSON.stringify(
       {
-        "PageZoomFactor": 1,
+        "PageZoomFactor": 0.92,
         "TurnOnSubsByDefaultInternal": true,
         "SubFontSizeInternal": 16,
         "SubFontFamilyInternal": "Montserrat",
