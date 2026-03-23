@@ -493,7 +493,19 @@ h1{
 
 .episode-image-container{
   border-radius:10px;
+  margin:0;
+  height:70px;
+  width:124px;
 }
+
+.episode-image-container .episode-image {
+  height: 70px;
+  width: 124px;
+  display: block;
+  transition: opacity 0.3s;
+  opacity: 1;
+}
+
 .div-episodes-element img{
   border-radius:10px;
   background-color:rgba(0,0,0,0);
@@ -509,6 +521,19 @@ h1{
   display:flex;
   flex-direction:column;
   justify-content:space-between;
+  max-width:50%;
+  width: fit-content; 
+  margin: 0 20px;
+}
+
+.div-episode-information .episode-name {
+  font-size:15px;
+}
+
+.div-episode-information .episode-airDate {
+  font-weight:bold;
+  font-size:11px;
+  margin-top:20px;
 }
 
 #div-globlaLoadingGif{
@@ -1002,4 +1027,9 @@ label {
   pointer-events: none;
   opacity:0;
   transition: opacity 0.3s ease;
+}
+
+.div-episodes-Element h4 {
+  margin:0;
+  padding:0;
 }

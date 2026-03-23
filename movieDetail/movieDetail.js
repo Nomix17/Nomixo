@@ -142,12 +142,12 @@ function insertEpisodesElements(apiKey,data,title,libraryInfo){
 
     EpisodeElement.innerHTML += `
       <h4>${episode.episode_number}</h4>
-        <div style="height:70px;width:124px" class="episode-image-container">
-          <img style="height:70px;width:124px" class="episode-image"></img>
-        </div>
-      <div style="max-width:50%;width: fit-content; " class="div-episode-information">
-        <p style="font-size:15px;">${episode.name}</p>
-        <p style="font-weight:bold;font-size:11px;margin-top:20px;">${episode.air_date}</p>
+      <div class="episode-image-container">
+        <img class="episode-image"></img>
+      </div>
+      <div class="div-episode-information">
+        <p class="episode-name">${episode.name}</p>
+        <p class="episode-airDate">${episode.air_date}</p>
       </div>
     `;
 
