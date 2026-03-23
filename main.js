@@ -1346,7 +1346,6 @@ async function loadFromLibrary(targetIdentification){
         element.MediaId === targetIdentification.MediaId &&
         element.MediaType === targetIdentification.MediaType
     );
-    console.log(targetLibraryInfo);
     if(targetLibraryInfo.length)
       return targetLibraryInfo; 
   }
