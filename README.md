@@ -29,4 +29,4 @@ Nomixo is a desktop streaming client built with Electron. It lets you search, br
 - [MPV](https://mpv.io/) — media playback engine
 - [TMDB](https://developer.themoviedb.org) — movie & TV metadata API
 - [Torrentio](https://torrentio.strem.fun) — torrent stream provider
-- Modified MPV enhancement OSC based on [modernz](https://github.com/Samillion/ModernZ) — adapted to fit Nomixo
+- [ModernZ](https://github.com/Samillion/ModernZ) — MPV OSC script, modified to fit Nomixo
