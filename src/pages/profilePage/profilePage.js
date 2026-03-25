@@ -61,7 +61,7 @@ function insertPersonInformation(personInformation){
   const personNameFullBioElement = personFullBioDiv.querySelector("#full-bio-person-name");
   const personFullBioParagraphElement = personFullBioDiv.querySelector("#full-bio-paragraph");
 
-  const imagePath = ProfilePic == null ? "../assets/ProfileNotFound.svg" : "https://image.tmdb.org/t/p/w500/"+ProfilePic;
+  const imagePath = ProfilePic == null ? "../../../assets/ProfileNotFound.svg" : "https://image.tmdb.org/t/p/w500/"+ProfilePic;
 
   personNameElement.innerText = Name;
   personNameFullBioElement.innerText = Name;

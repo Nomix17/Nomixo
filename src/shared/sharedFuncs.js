@@ -95,37 +95,37 @@ function goBack(){
 }
 
 function backToHome(){
-  return navigate("./home/mainPage.html");
+  return navigate("../pages/homePage/homePage.html");
 }
 
 function openDiscoveryPage(genreId = "All", MediaType = "All" , SortBase = "Default"){
-  return navigate(`./discovery/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}&SortBase=${SortBase}`);
+  return navigate(`../pages/discoveryPage/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}&SortBase=${SortBase}`);
 }
 
 function OpenLibaryPage(typeOfSave = "All"){
-  return navigate(`./libraryPage/libraryPage.html?typeOfSave=${typeOfSave}`);
+  return navigate(`../pages/libraryPage/libraryPage.html?typeOfSave=${typeOfSave}`);
 }
 
 function OpenDownloadPage(){
-  return navigate("./downloadPage/downloadPage.html");
+  return navigate("../pages/downloadPage/downloadPage.html");
 }
 
 function OpenSettingsPage(){
-  return navigate("./settingsPage/settingsPage.html");
+  return navigate("../pages/settingsPage/settingsPage.html");
 }
 
 function openProfilePage(personId){
-  return navigate(`./personDetails/personDetails.html?personId=${personId}`);
+  return navigate(`../pages/profilePage/profilePage.html?personId=${personId}`);
 }
 
 function openDetailPage(movieId, mediaType){
-  return navigate(`./movieDetail/movieDetail.html?MovieId=${movieId}&MediaType=${mediaType}`);
+  return navigate(`../pages/mediaDetailPage/mediaDetailPage.html?MovieId=${movieId}&MediaType=${mediaType}`);
 }
 
 function openSearchPage(){
   const searchKeyword = searchInput.value.trim();
   if(!searchKeyword) return;
-  return navigate(`./search/searchPage.html?search=${searchKeyword}`);
+  return navigate(`../pages/searchPage/searchPage.html?search=${searchKeyword}`);
 }
 
 async function navigate(newPath){
@@ -157,7 +157,7 @@ function openMediaVideo(
     playerType
   });
 
-  return navigate(`./videoPlayer/videoPlayer.html?${params}`);
+  return navigate(`../pages/playerPage/playerPage.html?${params}`);
 }
 
 
@@ -173,10 +173,10 @@ function getCurrentPageCacheData(){
     case (currentPage.includes("libraryPage")):
       return getLibraryPageCacheData();
 
-    case(currentPage.includes("personDetails")):
+    case(currentPage.includes("profilePage")):
       return getProfilePageCacheData();
 
-    case (currentPage.includes("movieDetail")):
+    case (currentPage.includes("mediaDetailPage")):
       return getMovieDetailPageCacheData();
 
     case (currentPage.includes("searchPage")):
@@ -577,8 +577,8 @@ function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,Library
       
       if(obj?.["poster_path"]) PosterImage = ("https://image.tmdb.org/t/p/w500/"+obj["poster_path"]).replace(/([^:]\/)\/+/g, '$1');
       else if(obj?.["profile_path"])  PosterImage = ("https://image.tmdb.org/t/p/w500/"+obj["profile_path"]).replace(/([^:]\/)\/+/g, '$1');
-      else if(ThisMediaType === "person") PosterImage = "../assets/ProfileNotFound.svg"
-      else PosterImage = "../assets/PosterNotFound.svg"
+      else if(ThisMediaType === "person") PosterImage = "../../../assets/ProfileNotFound.svg"
+      else PosterImage = "../../../assets/PosterNotFound.svg"
 
       const mediaDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
       const toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title,PosterImage)
@@ -616,7 +616,7 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
     PosterImage =  
         mediaInfo?.["poster_path"] 
         ? "https://image.tmdb.org/t/p/w500/"+mediaInfo["poster_path"] 
-        : "../assets/PosterNotFound.svg";
+        : "../../../assets/PosterNotFound.svg";
 
     PosterImage = normalizeRootUrl(PosterImage);
     ThisMediaTitle =  mediaInfo?.["name"] ?? mediaInfo?.["title"];
@@ -843,7 +843,7 @@ function createContinueWatchingButton(mediaEntryPoint){
   const continueVideoButton = document.createElement("button");
   continueVideoButton.classList.add("continue-video-button");
 
-  fetch('../assets/icons/playVideo.svg')
+  fetch('../../../assets/icons/playVideo.svg')
     .then(response => response.text())
     .then(svgText => {
       continueVideoButton.innerHTML = svgText;
@@ -1232,7 +1232,7 @@ function loadIconsDynamically() {
     handleGoBackIcon();
   });
 
-  fetch('../assets/icons/storage.svg')
+  fetch('../../../assets/icons/storage.svg')
     .then(response => response.text())
     .then(svgText => {
       document.querySelectorAll('.div-storageImage').forEach(element=>element.innerHTML = svgText);
@@ -1240,7 +1240,7 @@ function loadIconsDynamically() {
     .catch(err=>{
       console.error(err.message);
     });
-  fetch('../assets/icons/seeds.svg')
+  fetch('../../../assets/icons/seeds.svg')
     .then(response => response.text())
     .then(svgText => {
       document.querySelectorAll('.div-seedImage').forEach(element=>element.innerHTML = svgText);
@@ -1250,7 +1250,7 @@ function loadIconsDynamically() {
     });
 }
 
-function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "../assets/PosterNotFound.svg") {
+function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "../../../assets/PosterNotFound.svg") {
   return new Promise((resolve) => {
     if (!imagePath) {
       imageElement.src = alternativeImage;
@@ -1284,8 +1284,8 @@ function loadImageWithAnimation(imageContainer, imageElement, imagePath, alterna
 }
 
 function handleFullScreenIcon() {
-  const FullScreenIcon = "../assets/icons/fullscreen.png";
-  const UnFullScreenIcon = "../assets/icons/unfullscreen.png";
+  const FullScreenIcon = "../../../assets/icons/fullscreen.png";
+  const UnFullScreenIcon = "../../../assets/icons/unfullscreen.png";
 
   const fullscreenButton = document.getElementById("img-fullscreen");
   if (!window.screenTop && !window.screenY) 
@@ -1313,7 +1313,7 @@ async function fullscreenClicked(){
   const isFullScreen = await window.electronAPI.toggleFullscreen();
   const fullscreenImageElement = document.getElementById("img-fullscreen");
   if(isFullScreen == null) return;
-  fullscreenImageElement.src = isFullScreen ? "../assets/icons/unfullscreen.png" : "../assets/icons/fullscreen.png";
+  fullscreenImageElement.src = isFullScreen ? "../../../assets/icons/unfullscreen.png" : "../../../assets/icons/fullscreen.png";
 }
 
 

@@ -47,10 +47,10 @@ submitButton.addEventListener("click", () => {
 toggleVisibilityButton.addEventListener("click", () => {
   if (apiKeyInput.getAttribute("type") === "text") {
     apiKeyInput.setAttribute("type", "password");
-    toggleVisibilityButton.querySelector("img").src = "../assets/icons/openedEye.svg";
+    toggleVisibilityButton.querySelector("img").src = "../../../assets/icons/openedEye.svg";
   } else {
     apiKeyInput.setAttribute("type", "text");
-    toggleVisibilityButton.querySelector("img").src = "../assets/icons/closedEye.svg";
+    toggleVisibilityButton.querySelector("img").src = "../../../assets/icons/closedEye.svg";
   }
 });
 

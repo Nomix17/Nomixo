@@ -1,28 +1,27 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Library</title>
+    <title>Discovery</title>
+    <link rel="icon" href="../../../assets/icons/logo.png" type="image/x-icon">
+    <script src="../../shared/sharedFuncs.js" defer></script>
+    <script src="profilePage.js" defer></script>
     <link id="test" rel="stylesheet" href="theme://theme.css">
-    <link rel="icon" href="../assets/icons/logo.png" type="image/x-icon">
-    <script src="../sharedFuncs.js" defer></script>
-    <script src="libraryPage.js" defer></script>
-    <link rel="stylesheet" href="libraryPage.css">
-    <link rel="stylesheet" href="../home/mainPage.css">
-    <link rel="stylesheet" href="../home/loadingDiv.css">
-    <link rel="stylesheet" href="../home/dropDown.css">
-    <link rel="stylesheet" href="../home/WarningMessage.css">
-
+    <link rel="stylesheet" href="profilePage.css">
+    <link rel="stylesheet" href="../homePage/homePage.css">
+    <link rel="stylesheet" href="../homePage/WarningMessage.css">
+    <link rel="stylesheet" href="../homePage/loadingDiv.css">
   </head>
   
   <body>
+    <div id="messageDiv"><p></p></div>
     <div id="div-main">
-      <div id="messageDiv"><p></p></div>
       <div id="div-globlaLoadingGif" class="loader">
         <div class="dot dot1"></div>
         <div class="dot dot2"></div>
         <div class="dot dot3"></div>
         <div class="dot dot4"></div>
       </div>
+
       <!-- top div -->
       <div id="div-top">
         <!-- <div id="place-holder-top-div"></div> -->
@@ -39,6 +38,7 @@
              <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
             </svg>
           </button>
+
         </div>
         <button id="btn-fullscreen" onclick="fullscreenClicked()"><img id="img-fullscreen"</img></button>
       </div>
@@ -61,7 +61,7 @@
             </svg>
           </button>
 
-          <button class="btn-middle-left" id="btn-library" aria-label="Library">
+          <button class="btn-middle-left" id="btn-library" onclick="OpenLibaryPage()" aria-label="Library">
             <svg class="icon" viewBox="0 0 640 640">
               <path d="M192 64C156.7 64 128 92.7 128 128L128 544C128 555.5 134.2 566.2 144.2 571.8C154.2 577.4 166.5 577.3 176.4 571.4L320 485.3L463.5 571.4C473.4 577.3 485.7 577.5 495.7 571.8C505.7 566.1 512 555.5 512 544L512 128C512 92.7 483.3 64 448 64L192 64z"/>
             </svg>
@@ -82,48 +82,40 @@
     
         <!-- right div -->
         <div id="div-middle-right">
-          <div id="div-OptionsContainer">
- 
-            <div class="custom-select" id="custon-mediaType-dropdown">
-              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                All
-              </button>
-              <div class="select-dropdown" role="listbox" id="select-type">
-                <div class="select-option" role="option" value="all">All</div>
-                <div class="select-option" role="option" value="movie">Movies</div>
-                <div class="select-option" role="option" value="tv">Tv Shows</div>
+          <div id ="div-Person-description">
+            <div id="div-left-Person-description">
+              <img id="img-personProfilePic"></img>
+            </div>
+            <div id="div-right-Person-description">
+              <p id="para-personName"></p>
+              <p id="para-personDepartment"></p>
+              
+              <div id="biography-section">
+                <p id="Biography-Title">Biography</p>
+                <p id="biography-placeholder">No biography available</p>
+              </div>
+
+              <div class="bio-wrapper">
+                <div id="full-bio-overlay">
+                  <div id="full-bio-div">
+                    <img id="img-personProfilePic-full-bio"/>
+                    <div id="full-bio-rigth-div">
+                      <h1 id="full-bio-person-name"></h1>
+                      <p id="full-bio-paragraph"></p>
+                    </div>
+                    <button class="close-btn"></button>
+                  </div>
+                </div>
+                <div id="bio-content"></div>
+                <a href="#" id="bio-read-more" class="bio-btn">read more</a>
+              </div>
+      
               </div>
             </div>
-
-            <div class="custom-select" id="custon-saveType-dropdown">
-              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                All
-              </button>
-              <div class="select-dropdown" role="listbox" id="select-save">
-                <div class="select-option" role="option" value="All">All</div>
-                <div class="select-option" role="option" value="Watch Later">Watch Later</div>
-                <div class="select-option" role="option" value="Currently Watching">Currently Watching</div>
-              </div>
-            </div>
-
-
-        <div class="custom-select" id="custom-sortType-dropdown">
-          <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-            Sort items by
-          </button>
-          <div class="select-dropdown" role="listbox" id="select-sort">
-            <div class="select-option" role="option" value="alphabetical">A – Z</div>
-            <div class="select-option" role="option" value="newest">Newest First</div>
-            <div class="select-option" role="option" value="oldest">Oldest First</div>
+          <div class="div-categories-description">
+            <h1>Famous Work</h1>
           </div>
-        </div>
-
-
-        <div class="div-categories-description">
-          <h1></h1>
-        </div>
-         <div id="div-SavedMedia"></div>
-         </div>
+         <div id="div-MediaSuggestions"></div>
         </div>
       </div>
     </div>

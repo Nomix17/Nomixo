@@ -1,17 +1,14 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Discovery</title>
     <link id="test" rel="stylesheet" href="theme://theme.css">
-    <link rel="icon" href="../assets/icons/logo.png" type="image/x-icon">
-    <script src="discoveryPage.js" defer></script>
-    <script src="../sharedFuncs.js"></script>
-    <link rel="stylesheet" href="discoveryPage.css">
-    <link rel="stylesheet" href="../home/mainPage.css">
-    <link rel="stylesheet" href="../home/dropDown.css">
-    <link rel="stylesheet" href="../home/WarningMessage.css">
-    <link rel="stylesheet" href="../home/loadingDiv.css">
-
+    <script src="../../shared/sharedFuncs.js" defer></script>
+    <script src="homePage.js" defer></script>
+    <title>Nomixo</title>
+    <link rel="stylesheet" href="homePage.css">
+    <link rel="stylesheet" href="loadingDiv.css">
+    <link rel="stylesheet" href="WarningMessage.css">
+    <link rel="icon" href="../../../assets/icons/logo.png" type="image/x-icon">
   </head>
   
   <body>
@@ -23,7 +20,7 @@
         <div class="dot dot3"></div>
         <div class="dot dot4"></div>
       </div>
-
+      <!-- top div -->
       <div id="div-top">
         <!-- <div id="place-holder-top-div"></div> -->
         <button id="btn-goBack" onclick="goBack()">
@@ -33,28 +30,31 @@
         </button>
 
         <div id="div-input-container">
-          <input placeholder="Search movies, shows & people" id="input-searchForMovie"></input >
+          <input placeholder="Search movies, shows & people" type="text" spellcheck="false" id="input-searchForMovie" />
           <button id="btn-input-button" onclick="openSearchPage()">
             <svg class="icon" id="searchIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
              <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
             </svg>
           </button>
         </div>
-        <button id="btn-fullscreen" onclick="fullscreenClicked()"><img id="img-fullscreen"</img></button>
+        <button id="btn-fullscreen" onclick="fullscreenClicked()">
+          <img id="img-fullscreen" />
+        </button>
       </div>
       
       <!-- middle div --> 
       <div id="div-middle">
+
         <!-- left div -->
         <div id="div-middle-left">
-          <button class="btn-middle-left" id="btn-home" onclick="backToHome()" aria-label="Home">
+          <button class="btn-middle-left" id="btn-home" aria-label="Home">
             <svg class="icon" viewBox="0 0 24 24">
               <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z"/>
               <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z"/>
             </svg>
           </button>
 
-          <button class="btn-middle-left" id="btn-discover" aria-label="Discover">
+          <button class="btn-middle-left" id="btn-discover" onclick="openDiscoveryPage()" aria-label="Discover">
             <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
               <path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM370.7 389.1L226.4 444.6C207 452.1 187.9 433 195.4 413.6L250.9 269.3C254.2 260.8 260.8 254.2 269.3 250.9L413.6 195.4C433 187.9 452.1 207 444.6 226.4L389.1 370.7C385.9 379.2 379.2 385.8 370.7 389.1zM352 320C352 302.3 337.7 288 320 288C302.3 288 288 302.3 288 320C288 337.7 302.3 352 320 352C337.7 352 352 337.7 352 320z"/>
             </svg>
@@ -78,56 +78,72 @@
             </svg>
           </button>
         </div>
-    
+
         <!-- right div -->
         <div id="div-middle-right">
-          <div id="div-OptionsContainer">
-
-            <div class="custom-select">
-              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                Select an option
-              </button>
-              <div class="select-dropdown" role="listbox" id="select-type">
-                <div class="select-option" role="option" value="movie">Movie</div>
-                <div class="select-option" role="option" value="tv">Tv Show</div>
-              </div>
+          <div class="div-categories" id="continue-watching-categorie">
+            <div class="div-categories-description">
+              <h1>Continue Watching</h1> <button class="btnSeeAll" onclick="OpenLibaryPage('Currently Watching')">See All</button>
             </div>
-
-            <div class="custom-select">
-              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                Select an option
+            <div style="display:flex;flex-direction:row" class="movieElementsDiv">
+              <div class="div-hidingScrollBar" id="div-middle-right-continueWatching"></div>
+              <button class="movingArrowButton moveMovieElementsToTheLeftBtn">
+                <svg class="goRightIcon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+                </button>
+              <button class="movingArrowButton moveMovieElementsToTheRightBtn">
+                <svg class="goLeftIcon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6"/>
+                </svg>
               </button>
-              <div class="select-dropdown" role="listbox" id="select-Genres" value="All">
-                <div class="select-option" role="option" value="All">All</div>
-              </div>
             </div>
-
-            <div class="custom-select">
-              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                Select an option
-              </button>
-              <div class="select-dropdown" role="listbox" id="select-sort" value="popularity.desc">
-                <div class="select-option" role="option" value="popularity.desc">Most Popular</div>
-                <div class="select-option" role="option" value="primary_release_date.desc">Newest First</div>
-                <div class="select-option" role="option" value="vote_average.desc">Highest Rated</div>
-                <div class="select-option" role="option" value="vote_count.desc">Most Rated</div>
-                <div class="select-option" role="option" value="revenue.desc">Commercial Success</div>
-              </div>
-            </div>
-
           </div>
 
-          <div class="div-categories-description">
-            <h1>All</h1>
-          </div>
-          <div id="div-MediaSuggestions"></div>
+          <br>
 
-          <div id="lds-dual-ring-container">
-            <div class="lds-dual-ring"></div>
+          <div class="div-categories">
+            <div class="div-categories-description">
+              <h1>Movies - Popular</h1> <button onclick="openDiscoveryPage('All','movie')" class="btnSeeAll">See All</button>
+            </div>
+            <div style="display:flex;flex-direction:row" class="movieElementsDiv">
+              <div class="div-hidingScrollBar" id="div-middle-right-popularMovies"></div>
+              <button class="movingArrowButton moveMovieElementsToTheLeftBtn">
+                <svg class="goRightIcon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+                </button>
+              <button class="movingArrowButton moveMovieElementsToTheRightBtn">
+                <svg class="goLeftIcon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6"/>
+                </svg>
+              </button>
+            </div>
           </div>
-         </div>
+
+          <br>
+
+          <div class="div-categories">
+            <div class="div-categories-description">
+              <h1>Series - Popular</h1> <button onclick="openDiscoveryPage('All','tv')" class="btnSeeAll">See All</button>
+            </div>
+            <div style="display:flex;flex-direction:row" class="movieElementsDiv">
+              <div class="div-hidingScrollBar" id="div-middle-right-popularSeries"></div>
+              <button class="movingArrowButton moveMovieElementsToTheLeftBtn">
+                <svg class="goRightIcon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+                </button>
+              <button class="movingArrowButton moveMovieElementsToTheRightBtn">
+                <svg class="goLeftIcon" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </body>
-
 </html>

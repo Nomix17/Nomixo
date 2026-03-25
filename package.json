@@ -7,7 +7,7 @@
     "name": "Nomix17",
     "url": "https://github.com/Nomix17"
   },
-  "main": "main.js",
+  "main": "src/main/main.js",
   "scripts": {
     "dev": "electron .",
     "build": "electron-builder"
@@ -29,13 +29,18 @@
       "buildResources": "assets"
     },
     "files": [
-      "**/*",
-      "assets/**/*"
+      "src/**/*",
+      "assets/**/*",
+      "!assets/mpv/**/*",
+      "package.json"
     ],
     "extraResources": [
       {
-        "from": "mpvConfigs/",
-        "to": "mpvConfigs"
+        "from": "assets/mpv",
+        "to": "mpv",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "linux": {
@@ -45,7 +50,9 @@
       "maintainer": "Nomix17"
     },
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "logo/icon.ico"
     }
   }

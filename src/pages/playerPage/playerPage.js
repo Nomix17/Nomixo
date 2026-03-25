@@ -458,9 +458,9 @@ function TogglePauseUnpause(){
 function ChangePauseUnpauseIcons(paused){
   let PauseButtonImageElement = document.getElementById("img-PauseButton");
   if(paused)
-    PauseButtonImageElement.src="../assets/icons/BPause.png"
+    PauseButtonImageElement.src="../../../assets/icons/BPause.png"
   else
-    PauseButtonImageElement.src="../assets/icons/BPlay.png"
+    PauseButtonImageElement.src="../../../assets/icons/BPlay.png"
 }
 
 function toggleVolume(){
@@ -469,10 +469,10 @@ function toggleVolume(){
 }
 
 function updateVolumeIcons(){
-  if(VideoElement.volume <= 0.0 || VideoElement.muted) VolumeButton.children[0].src = "../assets/icons/BMute.png";
-  else if(VideoElement.volume <= 0.25) VolumeButton.children[0].src = "../assets/icons/BVolumeLow.png";
-  else if(VideoElement.volume <= 0.75) VolumeButton.children[0].src = "../assets/icons/BVolumeMid.png";
-  else if(VideoElement.volume > 0.75) VolumeButton.children[0].src = "../assets/icons/BVolumeControl.png";
+  if(VideoElement.volume <= 0.0 || VideoElement.muted) VolumeButton.children[0].src = "../../../assets/icons/BMute.png";
+  else if(VideoElement.volume <= 0.25) VolumeButton.children[0].src = "../../../assets/icons/BVolumeLow.png";
+  else if(VideoElement.volume <= 0.75) VolumeButton.children[0].src = "../../../assets/icons/BVolumeMid.png";
+  else if(VideoElement.volume > 0.75) VolumeButton.children[0].src = "../../../assets/icons/BVolumeControl.png";
 } 
 
 function hideSubDiv(event){
@@ -510,13 +510,13 @@ async function togglePIP(event){
 VideoElement.addEventListener("enterpictureinpicture", (event) => {
   VideoElement.style.display = "none";
   document.getElementById("picture-in-picture-indicator-text").style.display = "block";
-  document.getElementById("img-OpenPIP").src = "../assets/icons/closePIP.png";
+  document.getElementById("img-OpenPIP").src = "../../../assets/icons/closePIP.png";
 });
 
 VideoElement.addEventListener("leavepictureinpicture", (event) => {
   VideoElement.style.display = "block";
   document.getElementById("picture-in-picture-indicator-text").style.display = "none";
-  document.getElementById("img-OpenPIP").src = "../assets/icons/PIP.png";
+  document.getElementById("img-OpenPIP").src = "../../../assets/icons/PIP.png";
 });
 
 

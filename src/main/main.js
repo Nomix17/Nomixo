@@ -35,7 +35,7 @@ const videoCachePath = path.join(__configs,"video_cache");
 const postersDirPath = path.join(__configs,"posters");
 let defaultDownloadDir = path.join(__configs,"Downloads");
 
-const mpvConfigDirectory = path.join(__configs, 'mpvConfigs');
+const mpvConfigDirectory = path.join(__configs, 'mpv');
 const SubConfigFile = path.join(mpvConfigDirectory, 'mpv.conf');
 
 initializeDataFiles();
@@ -51,7 +51,6 @@ let dontPlay = false;
 let closeWindow = true;
 let InVideoPlayerPage = false;
 let mainzoomFactor = 0.92;
-let subsPaths;
 let torrentInit;
 let pagesCachedHistory = {};
 nativeTheme.themeSource = "dark";
@@ -67,7 +66,7 @@ let lastSecondBeforeQuit=0;
 
 if (!process.env.API_KEY) {
   console.error(`Missing TMDB API key. Please set API_KEY in your environment. or Add it to the file ${__envfile}`);
-  openMainWindow("./loginPage/loginPage.html");
+  openMainWindow("./src/pages/loginPage/loginPage.html");
 
 } else {
   API_KEY = process.env.API_KEY;
@@ -80,7 +79,7 @@ function initAppIdentity() {
   app.setName("Nomixo");
 }
 
-function openMainWindow(fileEntryPoint = "./home/mainPage.html") {
+function openMainWindow(fileEntryPoint = "./src/pages/homePage/homePage.html") {
   if (!app.requestSingleInstanceLock()) {
     app.quit();
     return;
@@ -112,7 +111,7 @@ function openMainWindow(fileEntryPoint = "./home/mainPage.html") {
 }
 
 
-const createMainWindow = async (entryPointPath = "./home/mainPage.html") => {
+const createMainWindow = async (entryPointPath = "./src/pages/homePage/homePage.html") => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
@@ -129,7 +128,7 @@ const createMainWindow = async (entryPointPath = "./home/mainPage.html") => {
     y,
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '../preload/preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -815,8 +814,8 @@ function initializeDataFiles(){
 
   if (!fs.existsSync(mpvConfigDirectory)) {
     const currentMpvConfPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'mpvConfigs')
-      : path.join(__dirname, 'mpvConfigs');
+      ? path.join(process.resourcesPath, 'mpv')
+      : path.join(__dirname, '../../assets/mpv');
 
     fs.cpSync(currentMpvConfPath, mpvConfigDirectory, { recursive: true });
   }
@@ -1289,7 +1288,7 @@ function loadSubsFromSubDir(identifyingElements) {
       }
     });
   } catch(err) {
-    console.log(err);
+    console.log(err.message);
     return [];
   }
 }
@@ -1488,7 +1487,7 @@ async function playVideoOverMpv(metaData) {
     DownloadDir:metaData.downloadPath
   };
 
-  let subsPaths = await loadSubsFromSubDir(subIdentifyingElements).map(sub=>sub.url);
+  const subsPaths = await loadSubsFromSubDir(subIdentifyingElements).map(sub=>sub.url);
 
   MPVWorker = new Worker(MPVPlayerWorkerPath, {
     workerData: {
