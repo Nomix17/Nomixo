@@ -23,6 +23,7 @@
     "electron-builder": "^26.8.1"
   },
   "build": {
+    "npmRebuild": false,
     "appId": "com.nomixo.app",
     "productName": "Nomixo",
     "directories": {
@@ -44,14 +45,19 @@
       }
     ],
     "linux": {
-      "target": ["tar.gz","deb","rpm"],
+      "target": [
+        "tar.gz",
+        "deb",
+        "rpm"
+      ],
       "category": "AudioVideo",
       "icon": "logo/icon",
       "maintainer": "Nomix17"
     },
     "win": {
       "target": [
-        "nsis"
+        "nsis",
+        "zip"
       ],
       "icon": "logo/icon.ico"
     }
