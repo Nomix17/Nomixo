@@ -16,7 +16,9 @@ let EpisodesContainer = document.getElementById("EpisodesContainer");
 TorrentMagnetContainer.classList.add("preloadingTorrent");
 
 let selectSeasonContainer = document.querySelector(".selectSeason-container");
-let selectElement = document.getElementById("select-Seasons");
+let selectSeason = document.getElementById("select-Seasons");
+const selectSave = document.getElementById("select-save");
+
 let toggleTorrentContainer = document.querySelector(".toggleButton");
 
 let serieEpisodeloadingDiv = document.getElementById("div-serieEpisodes-LoadingGif");
@@ -25,7 +27,7 @@ let movieMediaLoadingDiv = document.getElementById("div-movieMedias-LoadingGif")
 let divCastElement = document.getElementById("div-castInfos");
 let divDirectoryElement = document.getElementById("div-directorInfos");
 
-let addToLibraryButton = document.getElementById("bookmarkbtn");
+let addToLibraryButton = document.querySelector(".split-save-btn__main");
 
 let contextMenu = document.querySelector("#contextMenu");
 let DownloadOverlay = document.getElementById('downloadOverlay');
@@ -307,11 +309,10 @@ async function insertMediaInformation(data,apiKey){
     SerieContainer.style.display = "flex";
     for(let season of Seasons){
       let [newOption,seasonNumber] = createSeasonOptionElement(season);
-      selectElement.appendChild(newOption); 
+      selectSeason.appendChild(newOption); 
       loadAllEpisodesOfSeason(apiKey,movieId,seasonNumber,Title);
     }
 
-    dropDownInit(); // initialise seasons drop down
     addSeasonsDropDownEventListener()
 
   }else{
@@ -319,6 +320,7 @@ async function insertMediaInformation(data,apiKey){
     selectSeasonContainer.style.display = "none";
   }
 
+  dropDownInit();
   globalLoadingGif.remove();
 
   mainPageDiv.style.opacity = "1";
@@ -432,19 +434,37 @@ function createSeasonOptionElement(season){
 }
 
 function addSeasonsDropDownEventListener(){
-  selectElement.addEventListener("dropdownChange",()=>{
-    let newDropDownValue = getDropdownValue(selectElement);
+  selectSeason.addEventListener("dropdownChange",()=>{
+    let newDropDownValue = getDropdownValue(selectSeason);
     displayEpisodes(newDropDownValue);
   });
 }
 
+function addSaveDropDownEventListener() {
+  selectSave.addEventListener("dropdownChange",(event)=>{
+    let newDropDownValue = getDropdownValue(selectSave);
+    addToLibraryButton.setAttribute("pressed"," ");
+    addMediaToLibrary(newDropDownValue, true);
+    event.stopPropagation();
+  });
+}
+
 function addBackgroundImageToBody(backgroundImage){
-  if(backgroundImage !== "https://image.tmdb.org/t/p/original/null"){
-    document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
-    document.documentElement.style.backgroundRepeat = `no-repeat`;
-    document.documentElement.style.backgroundPosition = `center center`;
-    document.documentElement.style.backgroundSize = `cover`;
-    document.documentElement.style.backgroundAttachment = `fixed`;
+  if (backgroundImage !== "https://image.tmdb.org/t/p/original/null") {
+
+    const docStyle = document.documentElement.style;
+    docStyle.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
+    docStyle.backgroundRepeat = "no-repeat";
+    docStyle.backgroundPosition = "center center";
+    docStyle.backgroundSize = "cover";
+    docStyle.backgroundAttachment = "fixed";
+
+    const libraryControllDiv = document.querySelector('.split-save-btn').style;
+    libraryControllDiv.backgroundImage = `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('${backgroundImage}')`;
+    libraryControllDiv.backgroundRepeat = "no-repeat";
+    libraryControllDiv.backgroundPosition = "center center";
+    libraryControllDiv.backgroundSize = "cover";
+    libraryControllDiv.backgroundAttachment = "fixed";
   }
 }
 
@@ -575,10 +595,10 @@ function insertContinueWatchingButton(container,MediaLibraryInfo){
 function displayEpisodes(seasonIndex){
   let currentSeasonDiv = seasonsDivArray.find(div => parseInt(div.getAttribute("season_number")) === parseInt(seasonIndex));
   if(currentSeasonDiv){
-    selectElement.style.display = "block";
+    selectSeason.style.display = "block";
     EpisodesContainer.style.display = "block";
     EpisodesContainer.innerHTML = "";
-    setDropdownValue(selectElement,seasonIndex);
+    setDropdownValue(selectSeason,seasonIndex);
     EpisodesContainer.appendChild(currentSeasonDiv);
   }
 }
@@ -622,15 +642,12 @@ function resizeTorrentAndEpisodeElement(radio,DivElement){
   addSpaceToTopOfTorrentContainer();
 }
 
-function addMediaToLibrary(){
-  ToggleInLibrary(movieId,MediaType,GlobalTitle, undefined,"Watch Later");
-  if(addToLibraryButton.hasAttribute("pressed")){
-    setAddToLibraryButtonToPressed(addToLibraryButton);
-    addToLibraryButton.innerHTML+="Saved!";
-  }else{
-    setAddToLibraryButtonToNormal(addToLibraryButton);
-    addToLibraryButton.innerHTML+="Save To Library";
-  }
+function addMediaToLibrary(typeOfSave = "Watch Later", setAsPressed = false){
+  ToggleInLibrary(addToLibraryButton, movieId,MediaType,GlobalTitle, undefined,typeOfSave, setAsPressed);
+  addToLibraryButton.innerHTML += 
+    addToLibraryButton.hasAttribute("pressed") ?
+    typeOfSave ?? "Watch Later" 
+    : "Watch Later";
 }
 
 async function loadMediaEntryPointLibraryInfo(){
@@ -644,12 +661,14 @@ async function loadMediaEntryPointLibraryInfo(){
 
 async function handleLibraryButton(){
   let MediaLibraryInfo = await loadMediaEntryPointLibraryInfo();
-  if(MediaLibraryInfo?.[0]["typeOfSave"]?.includes("Watch Later")){
+  const typeOfSave = MediaLibraryInfo?.[0]?.typeOfSave;
+  if(typeOfSave != null){
     setAddToLibraryButtonToPressed(addToLibraryButton);
-    addToLibraryButton.innerHTML+="Saved!";
+    addToLibraryButton.innerHTML += typeOfSave.at(-1) ?? "Watch Later";
+
   }else{
     setAddToLibraryButtonToNormal(addToLibraryButton);
-    addToLibraryButton.innerHTML+="Save To Library";
+    addToLibraryButton.innerHTML += "Watch Later";
   }
 }
 
@@ -662,7 +681,6 @@ toggleTorrentContainer.addEventListener("click",(event)=>{
   let SeasonDiv = document.getElementById("main-SeasonDiv");
   handleEpisodeElementColoring(SeasonDiv,undefined) 
 });
-
 
 function addEventListenerWithArgs(element,event,handler,...args){
   const listener = e => handler(e,...args);
@@ -913,6 +931,8 @@ function focusFunction(element) {
   element.focus();
 }
 
+manageSaveDropDowns();
+addSaveDropDownEventListener();
 setupKeyPressesHandler();
 handleLibraryButton()
 fetchInformation();

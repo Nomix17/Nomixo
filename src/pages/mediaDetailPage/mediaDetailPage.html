@@ -60,13 +60,31 @@
             <h2>Summary</h2>
             <p class="infoText" id="p-summaryParagraph"></p>
           </div>
-          <div id="bottomButtonsDiv">
-            <button id="bookmarkbtn" class="btn-MovieDetailsButtons" onclick="addMediaToLibrary()">
-                <svg class="toggleButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                  <use href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/regular/bookmark.svg"></use>
-                </svg>Save To Library
+
+        <div id="bottomButtonsDiv">
+          <div class="split-save-btn">
+
+            <button class="split-save-btn__main" onclick="addMediaToLibrary()">
+              <svg class="toggleButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <use href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/regular/bookmark.svg"></use>
+              </svg>
+              Save To Library
             </button>
+
+            <span class="split-save-btn__divider"></span>
+
+            <div class="custom-select upward noResize" id="custon-save-dropdown">
+              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false"> </button>
+              <div class="select-dropdown" role="listbox" id="select-save">
+                <div class="select-option" role="option" value="Watch Later">Watch Later</div>
+                <div class="select-option" role="option" value="Currently Watching">Currently Watching</div>
+                <div class="select-option" role="option" value="Watched">Watched</div>
+              </div>
+            </div>
+
           </div>
+        </div>
+
         </div>
         <div style="display:none" id="div-serieEpisodes">
           <div class="selectSeason-container">
@@ -108,7 +126,6 @@
     <ul id="contextMenu" class="context-menu">
       <li id="DownloadOption">Download</li>
     </ul>
-
 
     <div class="overlay" id="downloadOverlay">
       <div class="download-container">

@@ -87,6 +87,17 @@ const menuThreePoints = `
   </svg>
 `;
 
+const saveToLib = `
+  <svg class="toggleButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+    <path d="M0 64C0 28.7 28.7 0 64 0L320 0c35.3 0 64 28.7 64 64l0 417.1c0 25.6-28.5 40.8-49.8 26.6L192 412.8 49.8 507.7C28.5 521.9 0 506.6 0 481.1L0 64zM64 48c-8.8 0-16 7.2-16 16l0 387.2 117.4-78.2c16.1-10.7 37.1-10.7 53.2 0L336 451.2 336 64c0-8.8-7.2-16-16-16L64 48z"/>
+  </svg>
+`;
+
+const savedToLib = `
+  <svg class="toggleButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+    <path d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z"/>
+  </svg>
+`;
 
 // ################################### NAVIGATION ###################################
 
@@ -926,50 +937,39 @@ async function updateLibraryElement(targetIdentification,updateValues) {
   }
 }
 
-async function ToggleInLibrary(mediaId,mediaType,Title, posterUrl,typeOfSave) {
-  const toggleInLibraryElement = event.target;
-  
-  if (event != null) {
-    event.stopPropagation();
-    event.preventDefault();
-  }
-
-  if(toggleInLibraryElement.hasAttribute("pressed")){
+async function ToggleInLibrary(toggleInLibraryElement, mediaId, mediaType, Title, posterUrl, typeOfSave, setAsPressed) {
+  if (toggleInLibraryElement.hasAttribute("pressed") && !setAsPressed) {
     setAddToLibraryButtonToNormal(toggleInLibraryElement);
     const MediaLibraryObjectIdentifiers = {
-      MediaId:mediaId.toString(),
-      MediaType:mediaType
-    }
+      MediaId: mediaId.toString(),
+      MediaType: mediaType
+    };
     window.electronAPI.removeMediaFromLibrary(MediaLibraryObjectIdentifiers);
 
-  }else{
+  } else {
     setAddToLibraryButtonToPressed(toggleInLibraryElement);
-
     const libInfo = await loadLibraryInfo();
     const SearchedMediaElement = libInfo.filter(item => (item.MediaId === mediaId && item.MediaType === mediaType));
     const MediaElementDoesExist = SearchedMediaElement.length > 0;
     let MediaLibraryObject;
-
     const currentEpochTime = Date.now().toString();
-
-    if(MediaElementDoesExist){
+    if (MediaElementDoesExist) {
       MediaLibraryObject = SearchedMediaElement[0];
-      MediaLibraryObject.typeOfSave.push(typeOfSave);
-      MediaLibraryObject.timefSave = currentEpochTime;
-    }else{
+      MediaLibraryObject.typeOfSave = [typeOfSave];
+      MediaLibraryObject.timeOfSave = currentEpochTime;
+    } else {
       MediaLibraryObject = {
-        MediaId:mediaId.toString(),
-        MediaType:mediaType,
-        timeOfSave:currentEpochTime,
-        typeOfSave:[typeOfSave],
-        Title:Title,
-        posterUrl:posterUrl,
-        episodesWatched:[],
-        lastPlaybackPosition:0,
-        timeWatched:0
-      }
+        MediaId: mediaId.toString(),
+        MediaType: mediaType,
+        timeOfSave: currentEpochTime,
+        typeOfSave: [typeOfSave],
+        Title: Title,
+        posterUrl: posterUrl,
+        episodesWatched: [],
+        lastPlaybackPosition: 0,
+        timeWatched: 0
+      };
     }
-
     window.electronAPI.addMediaToLibrary(MediaLibraryObject);
   }
 }
@@ -1007,10 +1007,11 @@ function createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title
   return toggleInLibraryBtn;
 }
 
-function addToggleToLibButtonEventListener(thistoggleinlibrarybtn,mediaId,mediaType,Title,posterUrl){
-  if(thistoggleinlibrarybtn){
-    thistoggleinlibrarybtn.addEventListener("click",(event)=>{
-      ToggleInLibrary(mediaId.toString(),mediaType,Title,posterUrl,"Watch Later");
+function addToggleToLibButtonEventListener(thistoggleinlibrarybtn, mediaId, mediaType, Title, posterUrl) {
+  if (thistoggleinlibrarybtn) {
+    thistoggleinlibrarybtn.addEventListener("click", (event) => {
+      const btn = event.currentTarget;
+      ToggleInLibrary(btn, mediaId.toString(), mediaType, Title, posterUrl, "Watch Later");
       event.stopPropagation();
       event.stopImmediatePropagation();
     });
@@ -1018,17 +1019,12 @@ function addToggleToLibButtonEventListener(thistoggleinlibrarybtn,mediaId,mediaT
 }
 
 function setAddToLibraryButtonToNormal(toggleInLibrary) {
-  toggleInLibrary.innerHTML = `<svg class="toggleButtonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                 <use href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/regular/bookmark.svg"></use>
-                               </svg>`;
+  toggleInLibrary.innerHTML = saveToLib;
   toggleInLibrary.removeAttribute("pressed");
 }
 
 function setAddToLibraryButtonToPressed(toggleInLibrary) {
-  toggleInLibrary.innerHTML = `            
-   <svg class="toggleButtonIcon" style="margin-left:7px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-    <path d="M64 0C28.7 0 0 28.7 0 64L0 480c0 11.5 6.2 22.2 16.2 27.8s22.3 5.5 32.2-.4L192 421.3 335.5 507.4c9.9 5.9 22.2 6.1 32.2 .4S384 491.5 384 480l0-416c0-35.3-28.7-64-64-64L64 0z"/>
-  </svg> `;
+  toggleInLibrary.innerHTML = savedToLib;
   toggleInLibrary.setAttribute("pressed"," ");
 }
 
@@ -1321,11 +1317,12 @@ async function fullscreenClicked(){
 
 function dropDownInit(){
   manageDropDowns();
-  setTimeout(syncDropdownWidths, 100);
+  syncDropdownWidths();
+  // setTimeout(syncDropdownWidths, 100);
 }
 
 function manageDropDowns() {
-  const customSelects = document.querySelectorAll('.custom-select');
+  const customSelects = document.querySelectorAll('.custom-select:not(#custon-save-dropdown)');
   
   customSelects.forEach(select => {
     const trigger = select.querySelector('.select-trigger');
@@ -1385,7 +1382,7 @@ function manageDropDowns() {
 }
 
 function syncDropdownWidths() {
-  const customSelects = document.querySelectorAll('.custom-select');
+  const customSelects = document.querySelectorAll('.custom-select:not(.noResize)');
   customSelects.forEach(select => {
     const trigger = select.querySelector('.select-trigger');
     const dropdown = select.querySelector('.select-dropdown');
@@ -1423,6 +1420,60 @@ function setDropdownValue(dropdown, value) {
 function getDropdownValue(dropdown) {
   return dropdown.getAttribute('data-value') ||
     dropdown.querySelector('.select-option').getAttribute('value');
+}
+
+function manageSaveDropDowns() {
+  const saveDropDown = document.getElementById('custon-save-dropdown');
+  
+  const trigger = saveDropDown.querySelector('.select-trigger');
+  const dropdown = saveDropDown.querySelector('.select-dropdown');
+  const options = saveDropDown.querySelectorAll('.select-option');
+  
+  const newTrigger = trigger.cloneNode(true);
+  trigger.parentNode.replaceChild(newTrigger, trigger);
+  
+  newTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = saveDropDown.classList.contains('is-open');
+    
+    saveDropDown.classList.remove('is-open');
+    
+    if (!isOpen) {
+      saveDropDown.classList.add('is-open');
+      newTrigger.setAttribute('aria-expanded', 'true');
+    }
+  });
+  
+  options.forEach(option => {
+    option.addEventListener('click', () => {
+      const value = option.getAttribute('value');
+      const text = option.textContent;
+
+      options.forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+      
+      dropdown.setAttribute('data-value', value);
+      
+      saveDropDown.classList.remove('is-open');
+      newTrigger.setAttribute('aria-expanded', 'false');
+      
+      const changeEvent = new CustomEvent('dropdownChange', { detail: { value, text } });
+      dropdown.dispatchEvent(changeEvent);
+    });
+  });
+  
+  newTrigger.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      newTrigger.click();
+    }
+  });
+ 
+  document.addEventListener('click', () => {
+    saveDropDown.classList.remove('is-open');
+    const trigger = saveDropDown.querySelector('.select-trigger');
+    trigger.setAttribute('aria-expanded', 'false');
+  });
 }
 
 

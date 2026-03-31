@@ -558,18 +558,6 @@ h1{
   bottom:0px;
   width:50%;
   margin-bottom:1%;
-  gap:10px;
-}
-
-#bookmarkbtn{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  max-width:180px;
-  height:49px;
-  border:1px solid white;
-  border-radius:26px;
-  padding-top:10px;
 }
 
 .toggleButtonIcon{
@@ -992,9 +980,6 @@ label {
   background-color:rgba(255, 255, 255, 0.1);
 }
 
-.custom-select{
-  margin-left:10px;
-}
 
 .div-NothingWasFound{
   display:flex;
@@ -1032,4 +1017,94 @@ label {
 .div-episodes-Element h4 {
   margin:0;
   padding:0;
+}
+
+.split-save-btn {
+  display: inline-flex;
+  border: 2px solid rgba(255, 255, 255, 20%);
+  border-radius: 40px;
+  backdrop-filter: blur(3px);
+  position: relative;
+  transition: background-color 0.3s ease, border 0.3s ease;
+}
+
+
+.split-save-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.split-save-btn:active {
+  border: 2px solid rgba(255, 255, 255, 100%);
+  background-color: rgba(255, 255, 255, 30%);
+}
+
+.split-save-btn__main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-radius: 40px 0 0 40px;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.split-save-btn__main:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.split-save-btn__main:active {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.split-save-btn__main .toggleButtonIcon {
+  width: 19px;
+  height: 19px;
+  fill: white;
+  margin: 0;
+  padding: 0;
+}
+
+.split-save-btn__divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 6px 0;
+  flex-shrink: 0;
+}
+
+.split-save-btn .custom-select {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  position: static;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+.split-save-btn .custom-select:hover {
+  background-color: transparent;
+}
+
+.split-save-btn .select-trigger {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 10px 25px 10px 8px;
+}
+
+.split-save-btn .select-dropdown {
+  position: absolute;
+  left: 50%;
+  right: auto;
+  bottom: calc(100% + 10px);
+  top: auto;
+  margin: 0;
+  transform: translateX(-50%) translateY(10px);
+}
+
+.split-save-btn .custom-select.upward.is-open .select-dropdown {
+  transform: translateX(-50%) translateY(0);
 }
