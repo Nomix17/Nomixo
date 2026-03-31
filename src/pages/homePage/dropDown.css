@@ -44,6 +44,14 @@
 .custom-select.is-open .select-trigger::after {
   transform: translateY(-25%) rotate(-135deg);
 }
+
+.custom-select.upward .select-trigger::after {
+  transform: translateY(-60%) rotate(45deg);
+}
+.custom-select.upward.is-open .select-trigger::after {
+  transform: translateY(-35%) rotate(225deg);
+}
+
 .select-trigger:hover {
   background-color: rgba(255, 255, 255, 30%);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -73,6 +81,17 @@
   display: none;
   box-sizing: border-box;
   margin-top:10px;
+}
+
+.custom-select.upward .select-dropdown {
+  top: auto;
+  bottom: calc(100% + 0px);
+  margin-top: 0;
+  margin-bottom: 10px;
+  transform: translateY(10px);
+}
+.custom-select.upward.is-open .select-dropdown {
+  transform: translateY(0);
 }
 
 .select-option {
