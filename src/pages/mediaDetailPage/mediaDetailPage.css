@@ -1025,6 +1025,7 @@ label {
   border-radius: 40px;
   backdrop-filter: blur(3px);
   position: relative;
+  padding: 3px 3px;
   transition: background-color 0.3s ease, border 0.3s ease;
 }
 
