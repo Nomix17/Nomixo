@@ -802,7 +802,7 @@ async function handlingDownloadCategorieChanging(categorieChangedTorrents) {
           MarkDownloadElementAsPaused(targetElement, "Queued");
         }
       }
-      SaveDownloadStatus(res?.response);
+      await SaveDownloadStatus(res?.response);
     } else if(res?.response  === "continued" && res?.torrentId){
       if(targetElement){
         MarkDownloadElementAsLoading(targetElement);
@@ -847,7 +847,7 @@ function setupCategoryBtn() {
     for(const entry of pausedEntries) {
       if(entry?.torrentId != null) {
         const res = await window.electronAPI.addTorrentToDownloadQueue(entry?.torrentId);
-        handlingDownloadCategorieChanging(res);
+        await handlingDownloadCategorieChanging(res);
       } else {
         console.log("Failed to load torrent id");
       }
@@ -863,7 +863,7 @@ function setupCategoryBtn() {
     for(const entry of queuedEntries) {
       if(entry?.torrentId != null) {
         const res = await window.electronAPI.removeTorrentFromDownloadQueue(entry.torrentId);
-        handlingDownloadCategorieChanging(res);
+        await handlingDownloadCategorieChanging(res);
       } else {
         console.log("Failed to load torrent id");
       }
