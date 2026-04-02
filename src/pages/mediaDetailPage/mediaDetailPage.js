@@ -405,8 +405,9 @@ function insertMediaGeneraleInformation(mediaBasicInfo){
 
 function addEventListenerToIMDB_Rating(IMDB_ID){
   const IMDB_RatingElement = document.getElementById("movie-rating-div");
-  const imdbLink = `https://www.imdb.com/title/${IMDB_ID}`;
   IMDB_RatingElement.addEventListener("click",() => {
+    const imdbLink = `https://www.imdb.com/title/${IMDB_ID}`;
+    console.log(`Opening IMDB link: ${imdbLink}`);
     window.electronAPI.openExternalLink(imdbLink);
   });
 }

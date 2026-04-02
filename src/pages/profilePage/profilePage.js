@@ -70,7 +70,9 @@ function insertPersonInformation(personInformation){
   personFullBioParagraphElement.innerText = Biography;
 
   personNameElement.addEventListener("click",()=>{
-    window.electronAPI.openExternalLink(`https://www.imdb.com/name/${ImdbId}/`);
+    const imdbLink = `https://www.imdb.com/name/${ImdbId}/`;
+    console.log(`Opening IMDB link: ${imdbLink}`);
+    window.electronAPI.openExternalLink(imdbLink);
   });
 
   if(!Biography || Biography.trim() === "")
