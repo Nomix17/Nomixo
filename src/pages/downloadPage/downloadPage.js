@@ -70,7 +70,7 @@ async function createDownloadElement(mediaLibEntryPoint) {
   let downloadCategorie;
   if (downloadStatus.toLowerCase() === "downloading" || downloadStatus.toLowerCase() === "loading") {
     downloadCategorie = currentlyDownloadingDiv;
-    addBackgroundImageToDownloadingDiv(MediaDownloadElement,mediaLibEntryPoint?.posterPath);
+    addBackgroundImageToDownloadingDiv(MediaDownloadElement,mediaLibEntryPoint?.bgImagePath ?? mediaLibEntryPoint?.posterPath);
 
     if (downloadStatus.toLowerCase() === "loading") {
       if(!loadingIntervals?.[mediaLibEntryPoint.torrentId])
@@ -646,7 +646,7 @@ async function MarkDownloadElementAsPaused(MediaDownloadElement, newStatus="Paus
   removeLoadingAnimation(elementId,PausePlayButton,newStatus); 
 }
 
-function MarkDownloadElementAsLoading(MediaDownloadElement) {
+async function MarkDownloadElementAsLoading(MediaDownloadElement) {
   const PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   const downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
   const elementId = MediaDownloadElement.id;
@@ -658,7 +658,12 @@ function MarkDownloadElementAsLoading(MediaDownloadElement) {
 
   addingLoadingAnimation(elementId,downloadSpeedElement,PausePlayButton);
   let posterImage = MediaDownloadElement.querySelector(".poster-img").src;
-  addBackgroundImageToDownloadingDiv(MediaDownloadElement,posterImage);
+  const targetTorrentInfo = (await libraryDumpPromise)?.downloads
+    .find(el => el.torrentId === elementId);
+  addBackgroundImageToDownloadingDiv(
+    MediaDownloadElement,
+    targetTorrentInfo?.bgImagePath ?? posterImage
+  );
 }
 
 function monitorErrors() {
@@ -731,7 +736,6 @@ async function addBackgroundImageToDownloadingDiv(mediaElement, posterImage) {
   if(mediaElement && posterImage && posterImage.trim() !== "") {
     let backgroundImageDiv = document.createElement("div");
     backgroundImageDiv.className = "currently-downloading-background-div";
-
     backgroundImageDiv.classList.remove("shown");   
     await makeSureImageIsLoaded(posterImage);
     backgroundImageDiv.style.backgroundImage = `url('${posterImage}')`;
