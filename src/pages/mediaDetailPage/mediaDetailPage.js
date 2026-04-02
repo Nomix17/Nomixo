@@ -450,22 +450,18 @@ function addSaveDropDownEventListener() {
   });
 }
 
-function addBackgroundImageToBody(backgroundImage){
+function addBackgroundImageToBody(backgroundImage) {
   if (backgroundImage !== "https://image.tmdb.org/t/p/original/null") {
+    const applyBackground = (styleObj, opacity) => {
+      styleObj.backgroundImage = `linear-gradient(rgba(0,0,0,${opacity}), rgba(0,0,0,${opacity})), url('${backgroundImage}')`;
+      styleObj.backgroundRepeat = "no-repeat";
+      styleObj.backgroundPosition = "center center";
+      styleObj.backgroundSize = "cover";
+      styleObj.backgroundAttachment = "fixed";
+    };
 
-    const docStyle = document.documentElement.style;
-    docStyle.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}')`;
-    docStyle.backgroundRepeat = "no-repeat";
-    docStyle.backgroundPosition = "center center";
-    docStyle.backgroundSize = "cover";
-    docStyle.backgroundAttachment = "fixed";
-
-    const libraryControllDiv = document.querySelector('.split-save-btn').style;
-    libraryControllDiv.backgroundImage = `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('${backgroundImage}')`;
-    libraryControllDiv.backgroundRepeat = "no-repeat";
-    libraryControllDiv.backgroundPosition = "center center";
-    libraryControllDiv.backgroundSize = "cover";
-    libraryControllDiv.backgroundAttachment = "fixed";
+    applyBackground(document.documentElement.style, 0.6);
+    applyBackground(document.querySelector('.split-save-btn').style, 0.8);
   }
 }
 

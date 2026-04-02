@@ -1057,10 +1057,6 @@ label {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.split-save-btn__main:active {
-  background-color: rgba(255, 255, 255, 0.25);
-}
-
 .split-save-btn__main .toggleButtonIcon {
   width: 19px;
   height: 19px;
