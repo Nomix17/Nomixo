@@ -184,9 +184,8 @@ function monitorDownloads() {
     let calculatedDownloadSpeedInKB = (JsonData.DownloadSpeed / (1024)).toFixed(2);
     let calculatedDownloadSpeedInMB = (calculatedDownloadSpeedInKB / 1024).toFixed(2);
 
-    if(loadingIntervals?.[DownloadElementIdentifier]){
+    if(loadingIntervals?.[DownloadElementIdentifier]) {
       removeLoadingAnimation(DownloadElementIdentifier,PausePlayButton,"Downloading")
-
     }
 
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
@@ -797,6 +796,7 @@ async function handlingDownloadCategorieChanging(categorieChangedTorrents) {
     let targetElementCategorie;
 
     if((res?.response  === "paused" || res?.response === "queued") && res?.torrentId){
+      await SaveDownloadStatus(res.torrentId, res?.response);
       if(targetElement){
         if(res?.response  === "paused"){
           targetElementCategorie = pausedDownloadsDiv;
@@ -806,7 +806,6 @@ async function handlingDownloadCategorieChanging(categorieChangedTorrents) {
           MarkDownloadElementAsPaused(targetElement, "Queued");
         }
       }
-      await SaveDownloadStatus(res?.response);
     } else if(res?.response  === "continued" && res?.torrentId){
       if(targetElement){
         MarkDownloadElementAsLoading(targetElement);
@@ -828,12 +827,12 @@ async function handlingDownloadCategorieChanging(categorieChangedTorrents) {
         targetElementCategorie = pausedDownloadsDiv;
       }
     }
-
     const targetElementContainer = targetElementCategorie.querySelector(".movieContainer");
-    if(targetElementContainer){
+    if(targetElementContainer && targetElement){
       targetElementContainer.appendChild(targetElement);
+    } else {
+      console.error("Cannot find Download Element with Id:", res?.torrentId);
     }
-
   }
   updateDownloadUI();
 }
