@@ -14,6 +14,7 @@ import path from "path";
 import fs from 'fs';
 
 let API_KEY = null;
+let wyzieAPI_KEY = null;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const __configs = path.join(app.getPath('userData'),"configs");
@@ -70,6 +71,7 @@ if (!process.env.API_KEY) {
 
 } else {
   API_KEY = process.env.API_KEY;
+  wyzieAPI_KEY = process.env.Wyzie_API_KEY;
   initAppIdentity()
   openMainWindow();
 }
@@ -284,6 +286,7 @@ ipcMain.handle("open-external-link",(event,url)=>{
 });
 
 ipcMain.handle("get-api-key",() => API_KEY);
+ipcMain.handle("get-wyzie-api-key",() => wyzieAPI_KEY);
 
 ipcMain.handle("validate-api-key",async(event,inputedApiKey)=>{
   let responce = await validateApiKey(inputedApiKey);

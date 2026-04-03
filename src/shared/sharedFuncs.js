@@ -1087,8 +1087,8 @@ async function loadingAllSubs(id,episodeNumber,seasonNumber){
       id,
       ...((episodeNumber && seasonNumber) && { season: seasonNumber, episode: episodeNumber })
     });
-
-    const requestUrl = `https://sub.wyzie.ru/search?${params}` ;
+    const WYZIE_API_KEY = await window.electronAPI.getWyzieAPIKey();
+    const requestUrl = `https://sub.wyzie.ru/search?${params}&key=${WYZIE_API_KEY}`;
     const res = await fetch(requestUrl);
     
     if (!res.ok) {

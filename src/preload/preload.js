@@ -14,7 +14,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   toggleFullscreen: () => ipcRenderer.invoke("request-fullscreen"),
   openFileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-filesystem-browser",currentPath),
   getAPIKEY: () => ipcRenderer.invoke("get-api-key"),
-  
+  getWyzieAPIKey : () => ipcRenderer.invoke("get-wyzie-api-key"),
+
   applySettings: (SettingsObj) => ipcRenderer.invoke("apply-settings", SettingsObj),
   applyTheme: (ThemeObj) => ipcRenderer.send("apply-theme",ThemeObj),
   applySubConfig: (JsonSubConfig) => ipcRenderer.send("apply-sub-config",JsonSubConfig),
