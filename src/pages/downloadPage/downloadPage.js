@@ -427,7 +427,7 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
     const totalSizeElementContaint = totalSizeElement.innerHTML;
     totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating poster`;
 
-    const apiKey = await window.electronAPI.getAPIKEY().then();
+    const apiKey = await window.electronAPI.getTMDBAPIKEY().then();
     const posterFileName = await getPosterPath(MediaInfo.IMDB_ID, apiKey);
     const res = await window.electronAPI.downloadImage(MediaInfo.downloadPath, `https://image.tmdb.org/t/p/w500/${posterFileName}`);
 

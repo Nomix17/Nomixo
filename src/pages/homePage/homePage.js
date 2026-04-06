@@ -14,7 +14,7 @@ setTimeout(()=>{
 },100);
 
 async function loadMovies(){
-  const apiKey = await window.electronAPI.getAPIKEY().then();
+  const apiKey = await window.electronAPI.getTMDBAPIKEY().then();
   const LibraryInformation = await loadLibraryInfo();
 
   try {

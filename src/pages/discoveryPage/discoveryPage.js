@@ -188,7 +188,7 @@ async function loadMedia(apiKey){
 }
 
 async function initPage(){
-  const apiKey = await window.electronAPI.getAPIKEY();
+  const apiKey = await window.electronAPI.getTMDBAPIKEY();
   await loadMedia(apiKey);
   await loadGenres(apiKey);
 

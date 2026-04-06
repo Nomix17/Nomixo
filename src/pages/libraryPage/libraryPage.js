@@ -182,7 +182,7 @@ async function loadCachedMediaData(cachedData){
 
 async function loadMedia(){
   const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
-  const apiKey = await window.electronAPI.getAPIKEY();
+  const apiKey = await window.electronAPI.getTMDBAPIKEY();
 
   if(cachedMediaInfo){
     console.log("Loading Cached Information");

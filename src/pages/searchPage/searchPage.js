@@ -11,7 +11,6 @@ setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(
 
 const params = new URLSearchParams(window.location.search);
 let searchKeyword = params.get("search");
-const apiKey = window.electronAPI.getAPIKEY();
 
 document.title = searchKeyword +" - Nomixo";
 searchInput.value = searchKeyword;
@@ -19,7 +18,7 @@ let searchQuery = searchKeyword.replaceAll(" ","%20");
 let LibraryInformation;
 
 async function loadData(){
-  const apiKey = await window.electronAPI.getAPIKEY();
+  const apiKey = await window.electronAPI.getTMDBAPIKEY();
   LibraryInformation = await loadLibraryInfo();
   loadSearchInformation(apiKey);
 }

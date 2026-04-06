@@ -13,8 +13,8 @@ import http from 'http';
 import path from "path";
 import fs from 'fs';
 
-let API_KEY = null;
-let wyzieAPI_KEY = null;
+let TMDB_API_KEY = null;
+let Wyzie_API_KEY = null;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const __configs = path.join(app.getPath('userData'),"configs");
@@ -65,13 +65,13 @@ let lastSecondBeforeQuit=0;
 
 // ======================= WINDOW MANAGER =======================
 
-if (!process.env.API_KEY) {
-  console.error(`Missing TMDB API key. Please set API_KEY in your environment. or Add it to the file ${__envfile}`);
+if (!process.env.TMDB_API_KEY) {
+  console.error(`Missing TMDB API key. Please set TMDB_API_KEY in your environment. or Add it to the file ${__envfile}`);
   openMainWindow("./src/pages/loginPage/loginPage.html");
 
 } else {
-  API_KEY = process.env.API_KEY;
-  wyzieAPI_KEY = process.env.Wyzie_API_KEY;
+  TMDB_API_KEY = process.env.TMDB_API_KEY;
+  Wyzie_API_KEY = process.env.Wyzie_API_KEY;
   initAppIdentity()
   openMainWindow();
 }
@@ -285,18 +285,24 @@ ipcMain.handle("open-external-link",(event,url)=>{
   shell.openExternal(url);
 });
 
-ipcMain.handle("get-api-key",() => API_KEY);
-ipcMain.handle("get-wyzie-api-key",() => wyzieAPI_KEY);
+ipcMain.handle("get-tmdb-api-key",() => TMDB_API_KEY);
+ipcMain.handle("get-wyzie-api-key",() => Wyzie_API_KEY);
 
-ipcMain.handle("validate-api-key",async(event,inputedApiKey)=>{
-  let responce = await validateApiKey(inputedApiKey);
+ipcMain.handle("validate-tmdb-api-key",async(event, inputedApiKey)=>{
+  let responce = await validateTMDBApiKey(inputedApiKey);
   return responce;
 });
 
-ipcMain.handle("save-api-key",async(event,apiKey)=>{
-  API_KEY = apiKey;
-  let done = await writeAPIKEYIntoEnvFile(apiKey);
-  return done;
+ipcMain.handle("validate-wyzie-api-key",async(event, inputedApiKey)=>{
+  let responce = await validateWyzieApiKey(inputedApiKey);
+  return responce;
+});
+
+ipcMain.handle("save-api-key",async(event,apiKeys)=>{
+  TMDB_API_KEY = apiKeys["TMDB_API_KEY"];
+  Wyzie_API_KEY = apiKeys["Wyzie_API_KEY"];
+  const saved = await writeAPIKEYIntoEnvFile(apiKeys);
+  return saved;
 });
 
 // ======================= VIDEO STREAMING =======================
@@ -1687,7 +1693,7 @@ const languageDict = {
 
 // ################################### API KEY MANAGEMENT ###################################
 
-async function validateApiKey(apiKey) {
+async function validateTMDBApiKey(apiKey) {
   try {
     const res = await fetch(
       `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}`
@@ -1695,23 +1701,56 @@ async function validateApiKey(apiKey) {
 
     return {
       type: "verify-api-key",
-      responce: res.ok ? "api-key-valid" : "api-key-not-valid",
+      response: 
+        res.status === 403 || res.status === 401
+        ? "api-key-not-valid"
+        : "api-key-valid" 
     };
   } catch {
     return {
       type: "verify-api-key",
-      responce: "no-internet-connection",
+      response: "no-internet-connection",
     };
   }
 }
 
-async function writeAPIKEYIntoEnvFile(apiKey){
-  if(!fs.existsSync(__configs)){
-    fs.mkdirSync(__configs, { recursive: true });
+async function validateWyzieApiKey(apiKey) {
+  try {
+    const res = await fetch(
+      `https://sub.wyzie.ru/search?id=tt1375666&key=${apiKey}`
+    );
+
+    return {
+      type: "verify-api-key",
+      response: 
+        res.status === 403 || res.status === 401
+        ? "api-key-not-valid" 
+        : "api-key-valid"
+    };
+
+  } catch {
+    return {
+      type: "verify-api-key",
+      response: "no-internet-connection",
+    };
   }
-  const fileContent = `API_KEY="${apiKey}"`;
-  await fs.writeFileSync(__envfile,fileContent);
-  return null;
+}
+
+async function writeAPIKEYIntoEnvFile(apiKeys){
+  try {
+    if(!fs.existsSync(__configs)){
+      fs.mkdirSync(__configs, { recursive: true });
+    }
+    const fileContent = `
+      TMDB_API_KEY="${apiKeys["TMDB_API_KEY"]}"\n
+      Wyzie_API_KEY="${apiKeys["Wyzie_API_KEY"]}"
+    `;
+    await fs.writeFileSync(__envfile,fileContent);
+    return true;
+  } catch(err) {
+    console.error(err.message);
+    return false;
+  }
 }
 
 // ################################### System Related ###################################

@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   toggleFullscreen: () => ipcRenderer.invoke("request-fullscreen"),
   openFileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-filesystem-browser",currentPath),
-  getAPIKEY: () => ipcRenderer.invoke("get-api-key"),
+  getTMDBAPIKEY: () => ipcRenderer.invoke("get-tmdb-api-key"),
   getWyzieAPIKey : () => ipcRenderer.invoke("get-wyzie-api-key"),
 
   applySettings: (SettingsObj) => ipcRenderer.invoke("apply-settings", SettingsObj),
@@ -56,7 +56,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   loadPageCachedDataFromHistory: (currentPageURL) => ipcRenderer.invoke("load-cached-data-from-history",currentPageURL),
 
-  validateApiKey: (inputedApiKey)=> ipcRenderer.invoke("validate-api-key",inputedApiKey),
+  validateTMDBApiKey: (inputedApiKey)=> ipcRenderer.invoke("validate-tmdb-api-key",inputedApiKey),
+  validateWyzieApiKey: (inputedApiKey)=> ipcRenderer.invoke("validate-wyzie-api-key",inputedApiKey),
+
   saveApiKey: (apiKey) => ipcRenderer.invoke("save-api-key",apiKey),
 
   openExternalLink: (url) => ipcRenderer.invoke("open-external-link",url),

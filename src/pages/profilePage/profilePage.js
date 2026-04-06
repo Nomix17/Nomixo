@@ -209,7 +209,7 @@ async function loadMedia(apiKey){
 }
 
 async function initPage(){
-  const apiKey = await window.electronAPI.getAPIKEY();
+  const apiKey = await window.electronAPI.getTMDBAPIKEY();
   loadMedia(apiKey);
   globalLoadingGif.remove();
   RightmiddleDiv.style.opacity = 1;

@@ -331,6 +331,9 @@ body, html {
 }
 #place-holder-top-div,
 #btn-fullscreen{
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width:55px;
   height:55px;
   background-color: rgba(0,0,0,0%) ;

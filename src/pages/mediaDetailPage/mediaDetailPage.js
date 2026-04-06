@@ -42,7 +42,7 @@ if(MediaType === "movie") TorrentContainer.style.display = "block";
 let seasonsDivArray = [];
 
 async function fetchInformation(){
-  const apiKey = await window.electronAPI.getAPIKEY();
+  const apiKey = await window.electronAPI.getTMDBAPIKEY();
   const results = await Promise.allSettled([
     loadMovieInformation(apiKey),
     loadCastInformation(apiKey)
@@ -768,7 +768,7 @@ document.addEventListener("mousedown", event => {
 });
 
 async function showDownloadInfoInputDiv(DownloadTargetInfo){
-  const apiKey = await window.electronAPI.getAPIKEY();
+  const apiKey = await window.electronAPI.getTMDBAPIKEY();
   let [defaultPath, rememberDownloadLocation, DownloadSubtitles] = await loadDownloadSettings();
   let MediaPosterContainer = DownloadOverlay.querySelector("#mediaPoster");
   let MediaPosterElement = DownloadOverlay.querySelector("#mediaPosterImg");
@@ -865,7 +865,7 @@ async function loadLogoImage(movieLanguage,apiKey){
 }
 
 async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles){
-  const apiKey = await window.electronAPI.getAPIKEY();
+  const apiKey = await window.electronAPI.getTMDBAPIKEY();
   let userDownloadPath = document.getElementById("downloadPath")?.value;
   let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   DownloadTargetInfo["posterUrl"] = `https://image.tmdb.org/t/p/w500${posterPath}`;
