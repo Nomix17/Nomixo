@@ -309,8 +309,44 @@
                 <td class="toCenter"><input id="input-TextColorExternal" type="color"/></td>
               </tr>
             </table>
-          </div>
 
+            <h1>API Keys</h1>
+            <div class="api-key-inputs-div">
+              <div class="api-key-input-container">
+                <h2>TMDB API</h2>
+                <div class="input-wrapper">
+                  <input type="password" placeholder="TMDB Api Key" class="api-key-input tmdb" readonly/>
+                  <button class="edit-btn"></button>
+                </div>
+                <div class="verify-btn-wrapper">
+                  <button class="verify-btn">Verify</button>
+                  <p class="response-message-p"></p>
+                </div>
+                <p class="hint">
+                  <button class="link-btn" id="tmdb-get-key">
+                    Get a Key ↗
+                  </button>
+                </p>
+              </div>
+              <div class="api-key-input-container">
+                <h2>Wyzie API</h2>
+                <div class="input-wrapper">
+                  <input type="password" placeholder="Wyzie Api Key" class="api-key-input wyzie" readonly/>
+                  <button class="edit-btn"></button>
+                </div>
+                <div class="verify-btn-wrapper">
+                  <button class="verify-btn">Verify</button>
+                  <p class="response-message-p"></p>
+                </div>
+                <p class="hint">
+                  <button class="link-btn" id="wyzie-get-key">
+                    Get a Key ↗
+                  </button>
+                </p>
+              </div>
+            </div>
+
+          </div>
           <div id="div-ApplyButton">
             <button id="btn-applySettings">Apply</button>
           </div>

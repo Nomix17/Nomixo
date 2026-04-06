@@ -43,6 +43,39 @@ let FontSizeExternalExternal = 24;
 let FontFamilyExternal = "monospace";
 let TextColorExternal = "white";
 
+let TMDB_API_KEY = null;
+let Wyzie_API_KEY = null;
+
+async function loadApiKeys() {
+  TMDB_API_KEY = await window.electronAPI.getTMDBAPIKEY();
+  document.querySelector(".api-key-input.tmdb").value = 
+    TMDB_API_KEY != null &&
+    TMDB_API_KEY !== "undefined" 
+      ? TMDB_API_KEY 
+      : "";
+
+  Wyzie_API_KEY = await window.electronAPI.getWyzieAPIKey();
+  document.querySelector(".api-key-input.wyzie").value =
+    Wyzie_API_KEY != null &&
+    Wyzie_API_KEY !== "undefined"
+      ? Wyzie_API_KEY
+      : "";
+}
+
+async function saveApiKeys() {
+  if(
+    TMDB_API_KEY != null &&
+    Wyzie_API_KEY != null && 
+    TMDB_API_KEY.trim() !== "" &&
+    Wyzie_API_KEY.trim() !== ""
+  ) {
+
+    await window.electronAPI.saveApiKey( {
+      "TMDB_API_KEY":TMDB_API_KEY,
+      "Wyzie_API_KEY":Wyzie_API_KEY
+    });
+  }
+}
 
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll("input").forEach(inputElement=>{
@@ -84,6 +117,7 @@ ApplyButton.addEventListener("click",()=>{
     displayMessage("new settings were saved.");
     somethingChanged = false;
   }
+  saveApiKeys();
 });
 
 (function(){
@@ -425,25 +459,92 @@ function commitFontSizeExternal(){
 }
 
 // calling functions
-
 addSmoothTransition();
-
 loadTheme();
-
 loadSettings();
-
 loadExternalSubConfigs();
-
+loadApiKeys();
 setupKeyPressesHandler();
-
 setLeftButtonStyle("btn-settings");
-
 loadIconsDynamically();
-
 handlingMiddleRightDivResizing();
 
 window.addEventListener("keydown",(event)=>{
   if(event.key === "Enter"){
     ApplyButton.click();
   }
+});
+
+document.querySelectorAll(".edit-btn").forEach(btn => {
+  btn.innerHTML = editIcon;
+  btn.addEventListener("click", (event) => {
+    const parent = event.target.parentElement;
+    const keyInput = parent.querySelector(".api-key-input");
+    keyInput.readOnly = !keyInput.readOnly;
+    btn.innerHTML = 
+      keyInput.readOnly 
+      ? editIcon 
+      : checkIcon;
+
+    keyInput.type = 
+      keyInput.type === "password" 
+      ? "text" 
+      : "password";
+  });
+});
+
+document.querySelectorAll(".verify-btn").forEach(btn => {
+  btn.addEventListener("click", async(event) => {
+    const parent = event.target.parentElement.parentElement;
+    const keyInput = parent.querySelector(".api-key-input");
+    const responseMessageP  = parent.querySelector(".response-message-p");
+
+    if(keyInput?.value.trim() === "") return;
+    btn.classList.add("loading");
+
+    const res = 
+      keyInput.classList.contains("tmdb") 
+        ? await window.electronAPI.validateTMDBApiKey(keyInput?.value)
+      : keyInput.classList.contains("wyzie")
+        ? await window.electronAPI.validateWyzieApiKey(keyInput?.value)
+        : null;
+
+    btn.classList.remove("loading");
+
+    if(res.response === "api-key-valid") {
+      if (keyInput.classList.contains("tmdb")) TMDB_API_KEY = keyInput.value;
+      else if (keyInput.classList.contains("wyzie")) Wyzie_API_KEY = keyInput.value;
+
+      btn.classList.add("success");
+      setTimeout(() => {
+        btn.classList.remove("success");
+      },1000);
+      somethingChanged = true;
+    } else {
+      btn.classList.add("failed");
+      responseMessageP.innerText = 
+        res.response === "api-key-not-valid" 
+          ? "Invalid API key"
+        : res.response === "no-internet-connection"
+          ? "No internet connection"
+        : "Something Went Wrong";
+
+      responseMessageP.style.opacity = "1";
+      setTimeout(() => {
+        btn.classList.remove("failed");
+        responseMessageP.style.opacity = "0";
+      },1500);
+    }
+  });
+});
+
+document.querySelectorAll(".link-btn").forEach(btn => {
+  btn.addEventListener("click",() => {
+    const URL = 
+      btn.id === "tmdb-get-key"
+        ? "https://developer.themoviedb.org/docs/getting-started"
+        : "https://sub.wyzie.io/redeem"
+
+    window.electronAPI.openExternalLink(URL);
+  });
 });
