@@ -371,8 +371,11 @@ function insertLogoTitleInformation(logoFileName,Title){
     let logoImage = `https://image.tmdb.org/t/p/original/${logoFileName}`;
     logoTitleElement.src = logoImage;
     textTitleElement.style.display = "none";
-  }else
+    addInspectBackdropImage(logoTitleContainer);
+  } else {
     logoTitleContainer.style.display = "none";
+    addInspectBackdropImage(textTitleElement);
+  }
 
   textTitleElement.innerText = Title;
 }
@@ -409,6 +412,28 @@ function addEventListenerToIMDB_Rating(IMDB_ID){
     const imdbLink = `https://www.imdb.com/title/${IMDB_ID}`;
     console.log(`Opening IMDB link: ${imdbLink}`);
     window.electronAPI.openExternalLink(imdbLink);
+  });
+}
+
+function addInspectBackdropImage(titleElement) {
+  const toggleBackdropInspection = (inspect) => {
+    const mainDiv = document.getElementById("div-main");
+    mainDiv.style.opacity = inspect ? "0" : "1";
+    mainDiv.inert = inspect;
+  }
+  titleElement.addEventListener("click", () => {
+    toggleBackdropInspection(true);
+    setTimeout(() => {
+      const restore = () => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleBackdropInspection(false);
+        document.removeEventListener("keydown", restore);
+        document.removeEventListener("click", restore);
+      };
+      document.addEventListener("keydown", restore, { once: true });
+      document.addEventListener("click", restore, { once: true });
+    }, 100);
   });
 }
 
@@ -450,16 +475,16 @@ function addSaveDropDownEventListener() {
   });
 }
 
+function applyBackground(styleObj, opacity) {
+  styleObj.backgroundImage = `linear-gradient(rgba(0,0,0,${opacity}), rgba(0,0,0,${opacity})), url('${backgroundImage}')`;
+  styleObj.backgroundRepeat = "no-repeat";
+  styleObj.backgroundPosition = "center center";
+  styleObj.backgroundSize = "cover";
+  styleObj.backgroundAttachment = "fixed";
+}
+
 function addBackgroundImageToBody(backgroundImage) {
   if (backgroundImage !== "https://image.tmdb.org/t/p/original/null") {
-    const applyBackground = (styleObj, opacity) => {
-      styleObj.backgroundImage = `linear-gradient(rgba(0,0,0,${opacity}), rgba(0,0,0,${opacity})), url('${backgroundImage}')`;
-      styleObj.backgroundRepeat = "no-repeat";
-      styleObj.backgroundPosition = "center center";
-      styleObj.backgroundSize = "cover";
-      styleObj.backgroundAttachment = "fixed";
-    };
-
     applyBackground(document.documentElement.style, 0.6);
     applyBackground(document.querySelector('.split-save-btn').style, 0.8);
   }
