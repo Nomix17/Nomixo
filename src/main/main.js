@@ -1112,11 +1112,12 @@ function destroyDownloadingTorrent(torrent, torrentId){
   });
 }
 
-function downloadNextTorrentInQueue() {
+async function downloadNextTorrentInQueue() {
   if(downloadQueue.length){
     const nextTorrent = downloadQueue.shift();
     if (nextTorrent?.torrentId) {
       downloadTorrent(nextTorrent);
+      await editDownloadLibraryElements([nextTorrent.torrentId], "Status","Downloading");
       WINDOW.webContents.send("update-download-categorie",[{response:"continued",torrentId:nextTorrent.torrentId}]);
     }
     return nextTorrent?.torrentId;
@@ -1396,7 +1397,7 @@ function loadDownloadLibrary(){
   }
 }
 
-async function insertNewDownloadEntryPoint(torrentInfo,Status="Loading"){
+async function insertNewDownloadEntryPoint(torrentInfo,Status="Loading") {
   let downloadLib = await loadDownloadLibrary();
 
   // Find existing entry or create new one
@@ -1404,7 +1405,7 @@ async function insertNewDownloadEntryPoint(torrentInfo,Status="Loading"){
     item => item.torrentId === torrentInfo.torrentId
   );
 
-  if(existingIndex === -1){
+  if(existingIndex === -1) {
     let posterDownloadPath = torrentInfo?.downloadPath 
        ? path.join(torrentInfo.downloadPath, "POSTERS") 
        : postersDirPath;
@@ -1426,6 +1427,9 @@ async function insertNewDownloadEntryPoint(torrentInfo,Status="Loading"){
     await insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
 
     console.log("Creating Download Library Entry Point for: "+torrentInfo.torrentId);
+  } else {
+    console.log("Editing Download Status of: " + torrentInfo.torrentId);
+    await editDownloadLibraryElements([torrentInfo.torrentId], "Status", Status);
   }
 }
 
