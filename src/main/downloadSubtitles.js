@@ -1,4 +1,5 @@
 import {createWriteStream,existsSync,mkdirSync,unlinkSync} from "fs";
+import {log} from "./debugging.js";
 import {get} from "https";
 import {join} from "path";
 
@@ -39,7 +40,7 @@ function downloadSub(downloadDirectory,subsObjects,SubObj){
     let fileFullPath = join(downloadDirectory,fileName);
 
     if(existsSync(fileFullPath)){
-      console.log(`Skip: ${fileFullPath}`);
+      log.info(`Skip: ${fileFullPath}`);
       return res(fileFullPath);
     }
 
@@ -50,13 +51,13 @@ function downloadSub(downloadDirectory,subsObjects,SubObj){
         response.resume();
         file.destroy();
         if(existsSync(fileFullPath)) unlinkSync(fileFullPath);
-        console.error(`Failed to download ${fileFullPath}`);
+        log.error(`Failed to download ${fileFullPath}`);
         return rej(new Error("download failed "+fileFullPath));
       }
 
       response.pipe(file);
       file.on("finish",()=>{
-        console.log(`Done Downloading ${fileFullPath}`);
+        log.success(`Done Downloading ${fileFullPath}`);
         res(fileFullPath);
       });
     });
@@ -64,13 +65,13 @@ function downloadSub(downloadDirectory,subsObjects,SubObj){
     request.on("error",err=>{
       file.destroy();
       if(existsSync(fileFullPath)) unlinkSync(fileFullPath);
-      console.error(`Failed to download ${fileFullPath}`);
+      log.info(`Failed to download ${fileFullPath}`);
       rej(err);
     });
 
     file.on("error",err=>{
       if(existsSync(fileFullPath)) unlinkSync(fileFullPath);
-      console.error(`Failed to download ${fileFullPath}`);
+      log.error(`Failed to download ${fileFullPath}`);
       rej(err);
     });
   });

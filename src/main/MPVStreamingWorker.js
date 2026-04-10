@@ -1,4 +1,5 @@
 import downloadMultipleSubs from "./downloadSubtitles.js";
+import {log} from "./debugging.js";
 import {spawn} from "child_process";
 import {parentPort, workerData} from "worker_threads";
 import WebTorrent from 'webtorrent';
@@ -16,7 +17,7 @@ let webTorrentClient = null;
 function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDirectory,mpvConfigDirectory){
   return new Promise((resolve, reject) => {
 
-    console.log("\nLoading Torrent:",metaData?.fileName)
+    log.info("\nLoading Torrent:",metaData?.fileName)
     webTorrentClient = new WebTorrent();
     const torrent = webTorrentClient.add(metaData.Magnet, {path: videoCachePath},async(torrent) => {
 
@@ -63,7 +64,7 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
           const percentage = ((downloaded / file.length) * 100).toFixed(2);
         });
         stream.on('error', (err) => {
-          console.error('Stream error:', err);
+          log.error('Stream error:', err);
         });
         res.on('close', () => {
           stream.destroy();
@@ -76,7 +77,7 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
         try{
           const port = expressServer.address().port;
           const url = `http://localhost:${port}/video`;
-          console.log(`Streaming URL: ${url}`);
+          log.info(`Streaming URL: ${url}`);
 
           let subsId = generateUniqueId(
             `${metaData.mediaImdbId}-${metaData.episodeNumber ?? "undefined"}-${metaData.seasonNumber ?? "undefined"}`
@@ -90,7 +91,7 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
           runMpvProcess(url,mpvConfigDirectory,startFromTime,subsPaths)
 
         }catch(error){
-          console.error(error.message);
+          log.error(error.message);
           reject(error);
         }
       });
@@ -98,7 +99,7 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
   
     torrent.on('error', async (err) => {
       const errorMsg = `Torrent error: ${err.message}`;
-      console.error(errorMsg);
+      log.error(errorMsg);
       parentPort.postMessage({
         type: "status",
         message: "Torrent Fetching Error",
@@ -119,7 +120,7 @@ async function PlayLocalVideo(metaData,startFromTime,subsPaths,mpvConfigDirector
       else
         throw(new Error(`Cannot Find File Named:<br> ${metaData.fileName}`));
     }catch(err){
-      console.error(err);
+      log.error(err);
       reject(err);
     }
   });
@@ -139,14 +140,14 @@ function runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,
   mpvProcess = spawn('mpv', childProcessArguments);
 
   mpvProcess.on('close', async () => {
-    console.log('MPV process closed');
+    log.info('MPV process closed');
     await cleanup();
     if(onClose) onClose();
     parentPort.postMessage({type:"status",message:"Playback done"});
   });
 
   mpvProcess.on("error", async err => {
-    console.error('MPV process error:', err);
+    log.error('MPV process error:', err);
     await cleanup();
     if(onError) onError(err);
     parentPort.postMessage({type:"status",message:"Playback error"});
@@ -189,21 +190,21 @@ function loadSubsFromSubDir(downloadPath,TorrentId){
     let subFolder = path.join(downloadPath,`SUBS_${TorrentId}`);
     return fs.readdirSync(subFolder).map(fileName => path.join(subFolder,fileName));
   }catch(err){
-    console.error(err.message);
+    log.error(err.message);
     return [];
   }
 }
 
 async function cleanup(){
-  console.log('Starting cleanup...');
+  log.info('Starting cleanup...');
   
   if(mpvProcess) {
     try {
       mpvProcess.kill('SIGTERM');
       mpvProcess = null;
-      console.log('MPV killed');
+      log.info('MPV killed');
     } catch(err) {
-      console.error('Failed to kill mpv:', err);
+      log.error('Failed to kill mpv:', err);
     }
   }
   
@@ -212,7 +213,7 @@ async function cleanup(){
       await Promise.race([
         new Promise((resolve) => {
           expressServer.close(() => {
-            console.log('Express server closed');
+            log.info('Express server closed');
             resolve();
           });
         }),
@@ -220,21 +221,21 @@ async function cleanup(){
       ]);
       expressServer = null;
     } catch(err) {
-      console.error('Failed to close server:', err);
+      log.error('Failed to close server:', err);
     }
   }
   
   if(webTorrentClient) {
     try {
       webTorrentClient.destroy();
-      console.log('WebTorrent client destroy initiated');
+      log.info('WebTorrent client destroy initiated');
       webTorrentClient = null;
     } catch(err) {
-      console.error('Failed to destroy torrent client:', err);
+      log.error('Failed to destroy torrent client:', err);
     }
   }
   
-  console.log('Worker cleanup complete');
+  log.info('Worker cleanup complete');
 }
 
 const normaliseFileName = (fileName)=>{
@@ -243,7 +244,7 @@ const normaliseFileName = (fileName)=>{
 
 parentPort.on('message', async (msg) => {
   if(msg.type === 'shutdown') {
-    console.log("\nWorker received shutdown signal");
+    log.info("\nWorker received shutdown signal");
     await cleanup();
   }
 });
