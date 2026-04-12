@@ -434,7 +434,7 @@ h1{
   margin:1vh 0 5vh 1vh;
   border-radius: 20px;
   min-height: 150px;
-  transition: backdrop-filter 0.4s ease, box-shadow 0.4s ease;
+  transition: filter 0.15s linear;
 }
 
 #h1-MovieTitle {
@@ -453,12 +453,10 @@ h1{
 }
 
 #div-MovieLogoTitleContainer:hover {
-  background-color: rgba(255, 255, 255, 0.01);
-  backdrop-filter: blur(10px);
-    box-shadow:
-    0 1px 2px  rgba(0, 0, 0, 0.30),
-    0 4px 8px  rgba(0, 0, 0, 0.25),
-    0 16px 32px rgba(0, 0, 0, 0.20);
+  filter:
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.40))
+    drop-shadow(0 0 8px rgba(255, 255, 255, 0.30))
+    drop-shadow(0 0 16px rgba(255, 255, 255, 0.15));
 }
 
 #img-IMDBlogo{
