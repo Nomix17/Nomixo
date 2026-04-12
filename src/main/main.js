@@ -849,7 +849,7 @@ function initializeDataFiles(){
 async function getTrackers() {
   try{
     const urls = [
-      'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt',
+      'https://cdn.jsdelivr.net/gh/ngosang/trackerslist@master/trackers_best.txt',
     ];
 
     const results = await Promise.all(urls.map(u => fetch(u).then(r => r.text())));
@@ -857,10 +857,13 @@ async function getTrackers() {
       .flatMap(text => text.trim().split('\n\n'))
       .filter(Boolean);
 
-    log.info(`Loaded ${trackers.length} trackers`);
+    log.success(`Loaded ${trackers.length} trackers`);
     return trackers;
   } catch(err) {
-    log.warn(err);
+    log.warn(
+      `Failed to load ngosang trackers list, falling back to preset trackers.\n` +
+      `Reason: ${err.message ?? err}`
+    );
     return [
       'udp://tracker.opentrackr.org:1337/announce',
       'udp://open.demonii.com:1337/announce',
@@ -961,7 +964,7 @@ async function downloadTorrent(torrentInfo) {
           } catch(err) {
             log.error(err.message);
           }
-
+          log.success(`Download completed: ${torrentInfo.torrentId})`);
           WINDOW.webContents.send("download-progress-stream", jsonMessage);
 
           downloadNextTorrentInQueue();
