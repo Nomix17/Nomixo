@@ -438,7 +438,10 @@ h1{
 }
 
 #h1-MovieTitle {
+  margin:5vh 0 5vh 1vh;
   display:inline-flex;
+  transition: filter 0.15s linear;
+  cursor: pointer;
 }
 
 #img-MovieLogoTitle {
@@ -452,6 +455,7 @@ h1{
   cursor: pointer;
 }
 
+#h1-MovieTitle:hover,
 #div-MovieLogoTitleContainer:hover {
   filter:
     drop-shadow(0 0 2px rgba(255, 255, 255, 0.40))
