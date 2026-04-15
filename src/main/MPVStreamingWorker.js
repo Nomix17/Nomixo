@@ -14,7 +14,15 @@ let mpvProcess = null;
 let expressServer = null;
 let webTorrentClient = null;
 
-function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDirectory,mpvConfigDirectory){
+function StreamTorrent (
+  metaData,
+  subsObjects,
+  startFromTime,
+  videoCachePath,
+  subDirectory,
+  mpvConfigDirectory,
+  mpvWindowConfigs
+){
   return new Promise((resolve, reject) => {
 
     log.info("\nLoading Torrent:",metaData?.fileName)
@@ -84,11 +92,17 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
           );
 
           // download Subtitles
-          let tmpSubDir = path.join(subDirectory,`SUB_${subsId}`);
-          let downloadResponce = await downloadMultipleSubs(tmpSubDir,subsObjects);
-          let subsPaths = downloadResponce.filter(responce => responce.status === "success").map(responce => responce.file);
+          const tmpSubDir = path.join(subDirectory,`SUB_${subsId}`);
+          const downloadResponce = await downloadMultipleSubs(tmpSubDir,subsObjects);
+          const subsPaths = downloadResponce
+            .filter(responce => responce.status === "success")
+            .map(responce => responce.file);
 
-          runMpvProcess(url,mpvConfigDirectory,startFromTime,subsPaths)
+          runMpvProcess(
+            url,mpvConfigDirectory,
+            startFromTime,subsPaths,
+            mpvWindowConfigs
+          );
 
         }catch(error){
           log.error(error.message);
@@ -111,12 +125,22 @@ function StreamTorrent(metaData,subsObjects,startFromTime,videoCachePath,subDire
   });
 }
 
-async function PlayLocalVideo(metaData,startFromTime,subsPaths,mpvConfigDirectory){
+async function PlayLocalVideo(
+  metaData,
+  startFromTime,
+  subsPaths,
+  mpvConfigDirectory,
+  mpvWindowConfigs
+) {
   return new Promise((resolve, reject) => {
     try{
       let videoFullPath = findFile(metaData.downloadPath, metaData.fileName);
       if(videoFullPath)
-        runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,resolve,reject);
+        runMpvProcess(
+          videoFullPath,mpvConfigDirectory,
+          startFromTime,subsPaths,
+          mpvWindowConfigs,resolve,reject
+        );
       else
         throw(new Error(`Cannot Find File Named:<br> ${metaData.fileName}`));
     }catch(err){
@@ -126,18 +150,36 @@ async function PlayLocalVideo(metaData,startFromTime,subsPaths,mpvConfigDirector
   });
 }
 
-function runMpvProcess(videoFullPath,mpvConfigDirectory,startFromTime,subsPaths,onClose,onError){
+function runMpvProcess(
+  videoFullPath,
+  mpvConfigDirectory,
+  startFromTime,
+  subsPaths,
+  mpvWindowConfigs,
+  onClose,
+  onError
+) {
   let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
-  let childProcessArguments = [
-      videoFullPath,
-      "--fullscreen",
-      "--keep-open=yes",
-      `--config-dir=${mpvConfigDirectory}`,
-      `--start=${startFromTime}`,
-      ...subsArgument
+  const childProcessArguments = [
+    videoFullPath,
+    "--keep-open=yes",
+    `--config-dir=${mpvConfigDirectory}`,
+    `--start=${startFromTime}`,
+    `--geometry=${mpvWindowConfigs.geometry}`,
+    `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}`,
+    `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`,
+    ...subsArgument
   ]; 
 
   mpvProcess = spawn('mpv', childProcessArguments);
+  log.info("Launching mpv with options:\n"+
+    `--keep-open=yes\n`+
+    `--config-dir=${mpvConfigDirectory}\n`+
+    `--start=${startFromTime}\n`+
+    `--geometry=${mpvWindowConfigs.geometry}\n`+
+    `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}\n`+
+    `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`
+  );
 
   mpvProcess.on('close', async () => {
     log.info('MPV process closed');
@@ -188,7 +230,8 @@ function findFile(dir, filename) {
 function loadSubsFromSubDir(downloadPath,TorrentId){
   try{
     let subFolder = path.join(downloadPath,`SUBS_${TorrentId}`);
-    return fs.readdirSync(subFolder).map(fileName => path.join(subFolder,fileName));
+    return fs.readdirSync(subFolder)
+      .map(fileName => path.join(subFolder,fileName));
   }catch(err){
     log.error(err.message);
     return [];
@@ -249,26 +292,40 @@ parentPort.on('message', async (msg) => {
   }
 });
 
-if(workerData.typeOfPlay === "StreamTorrent"){
-  StreamTorrent(workerData.metaData,workerData.subsObjects, workerData.startFromTime,workerData.videoCachePath, workerData.subDirectory,workerData.mpvConfigDirectory)
-    .catch(async (err) => {
-      parentPort.postMessage({
-        type: "status",
-        message: "Torrent Fetching Error",
-        error: err.message
-      });
-      await cleanup();
+if(workerData.typeOfPlay === "StreamTorrent") {
+  StreamTorrent(
+    workerData.metaData,
+    workerData.subsObjects,
+    workerData.startFromTime,
+    workerData.videoCachePath,
+    workerData.subDirectory,
+    workerData.mpvConfigDirectory,
+    workerData.mpvWindowConfigs
+  )
+  .catch(async (err) => {
+    parentPort.postMessage({
+      type: "status",
+      message: "Torrent Fetching Error",
+      error: err.message
     });
+    await cleanup();
+  });
 
-}else if(workerData.typeOfPlay === "LocalFile"){
-  PlayLocalVideo(workerData.metaData, workerData.startFromTime,workerData.subsPaths,workerData.mpvConfigDirectory)
-    .catch(async (err) => {
-      parentPort.postMessage({
-        type: "status",
-        message: "Playback error",
-        error: err.message
-      });
-      await cleanup();
+} else if(workerData.typeOfPlay === "LocalFile") {
+  PlayLocalVideo(
+    workerData.metaData,
+    workerData.startFromTime,
+    workerData.subsPaths,
+    workerData.mpvConfigDirectory,
+    workerData.mpvWindowConfigs
+  )
+  .catch(async (err) => {
+    parentPort.postMessage({
+      type: "status",
+      message: "Playback error",
+      error: err.message
     });
+    await cleanup();
+  });
 }
 

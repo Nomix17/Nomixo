@@ -1494,7 +1494,7 @@ async function getLastestPlayBackPostion(metaData){
 // ############################ MPV PLAYER RELATED ############################
 
 async function playVideoOverMpv(metaData) {
-  log.info(`Playing ${metaData.Title} over Mpv`);
+  log.info(`Playing ${metaData.fileName} over Mpv`);
   const startFromTime = await getLastestPlayBackPostion(metaData);
 
   let subIdentifyingElements = {
@@ -1504,7 +1504,18 @@ async function playVideoOverMpv(metaData) {
     DownloadDir:metaData.downloadPath
   };
 
-  const subsPaths = await loadSubsFromSubDir(subIdentifyingElements).map(sub=>sub.url);
+  const [ windowWidth, windowHeight ] = WINDOW.getSize()
+  const [ windowPosX, windowPosY ] = WINDOW.getPosition()
+  const windowIsFullScreened = WINDOW.isFullScreen();
+  const windowIsMaximized = WINDOW.isMaximized();
+  const windowGeometry =
+    windowIsFullScreened || windowIsMaximized
+      ? "70%x70%"
+      : `${windowWidth}x${windowHeight}+${windowPosX}+${windowPosY}`;
+
+  const subsPaths =
+    await loadSubsFromSubDir(subIdentifyingElements)
+    .map(sub=>sub.url);
 
   MPVWorker = new Worker(MPVPlayerWorkerPath, {
     workerData: {
@@ -1512,7 +1523,12 @@ async function playVideoOverMpv(metaData) {
       metaData,
       startFromTime,
       subsPaths,
-      mpvConfigDirectory
+      mpvConfigDirectory,
+      mpvWindowConfigs: {
+        geometry: windowGeometry,
+        fullscreened: windowIsFullScreened,
+        maximized: windowIsMaximized
+      }
     },
     type: 'module'
   });
