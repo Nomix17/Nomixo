@@ -667,8 +667,8 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
   if(!shiftingArrows) {
     const upArrow = document.createElement("button");
     const downArrow = document.createElement("button");
-    upArrow.classList.add("btn-arrow");
-    downArrow.classList.add("btn-arrow");
+    upArrow.classList.add("btn-arrow", "up-arrow");
+    downArrow.classList.add("btn-arrow", "down-arrow");
     upArrow.innerHTML = upArrowIcon;
     downArrow.innerHTML = downArrowIcon;
 
@@ -731,6 +731,7 @@ function reorderDownloadQueue(newOrder, animateTransition=true) {
     log.error(error.message);
   }
 
+  updateDownloadUI();
 }
 
 function animateReorder(elements, beforePositions) {
@@ -756,6 +757,19 @@ function animateReorder(elements, beforePositions) {
   });
 }
 
+function disableBorderArrowBtnsForQueuedEls() {
+  const queuedEls = queuedDownloadsDiv.querySelectorAll(".movieContainer .download-media");
+  if(!queuedEls.length) return;
+  queuedEls.forEach( el =>
+    el.querySelectorAll(".btn-arrow").forEach(arrowEl => {
+      arrowEl.classList.remove("disabled");
+    })
+  );
+
+  const topUpArrow = queuedEls[0].querySelector(".up-arrow");
+  const bottomDownArrow = queuedEls[queuedEls.length - 1].querySelector(".down-arrow");
+  bottomDownArrow.classList.add("disabled");
+  topUpArrow.classList.add("disabled");
 }
 
 function monitorErrors() {
@@ -779,6 +793,7 @@ async function loadCachedPageInfo() {
 function updateDownloadUI() {
   handleEmptyDownloadCategories();
   updateElementsCounterForEachContainer();
+  disableBorderArrowBtnsForQueuedEls();
 }
 
 function handleEmptyDownloadCategories() {
