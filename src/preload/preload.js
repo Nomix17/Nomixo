@@ -46,7 +46,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   cancelDownload: (mediaInfo) => ipcRenderer.invoke("cancel-torrent-download", mediaInfo),
   addTorrentToDownloadQueue: (torrentId) => ipcRenderer.invoke("add-torrent-to-download-queue", torrentId),
   removeTorrentFromDownloadQueue: (torrentId) => ipcRenderer.invoke("remove-torrent-from-download-queue", torrentId),
+  shiftDownloadQueueElement: (movedTorrentId, offset) => ipcRenderer.invoke("shift-download-queue-element", movedTorrentId, offset),
   updateDownloadCategorie:(fn) => ipcRenderer.on("update-download-categorie",(event,data) => fn(data)),
+  getDownloadQueueList: () => ipcRenderer.invoke("get-download-queue-list"),
 
   getMsgFromMainProcess: (fn)=> ipcRenderer.on("msg-from-main-process",(event,data)=>fn(data)),
   getFetchingTorrentErrors: (fn)=> ipcRenderer.on("torrent-fetching-error",(event,data)=>fn(data)),

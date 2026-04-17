@@ -581,6 +581,31 @@ ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) =>
     }];
   }
 });
+
+ipcMain.handle("shift-download-queue-element", (event, movedTorrentId, offset) => {
+  const currentTorrentIndex = downloadQueue
+    .findIndex(ele => ele.torrentId === movedTorrentId);
+
+  if(currentTorrentIndex !== -1) {
+    const torrentElement = downloadQueue[currentTorrentIndex];
+    downloadQueue.splice(currentTorrentIndex,1);
+    downloadQueue.splice(currentTorrentIndex+offset, 0, torrentElement);
+    log.info("Reordering Download Queue");
+  } else {
+    log.error(
+      `Cannot find torrent Element in download queue by id: ${movedTorrentId}`
+    );
+  }
+
+  return downloadQueue
+    .map(el => el.torrentId);
+});
+
+ipcMain.handle("get-download-queue-list", (event) => {
+  return downloadQueue
+    .map(el => el.torrentId);
+});
+
 // ======================= Download OTHER THINGS =======================
 
 ipcMain.handle("download-image",async(event,downloadPath, imageUrl) => {

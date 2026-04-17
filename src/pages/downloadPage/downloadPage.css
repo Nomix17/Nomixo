@@ -222,8 +222,27 @@
 
 .download-movie-right-div {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   height: 100%;
+  gap:10px;
+}
+
+.download-movie-right-div .btn-arrow {
+  background-color: transparent;
+  padding: 10px;
+  border-radius: 10px;
+  border:none;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  background-color: rgba(255,255,255,0.08);
+}
+
+.download-movie-right-div .btn-arrow:hover {
+  background-color: rgba(255,255,255,0.2);
+}
+
+.download-movie-right-div .btn-arrow:active {
+  transform: scale(0.9);
 }
 
 .left-div {

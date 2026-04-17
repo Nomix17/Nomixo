@@ -10,8 +10,10 @@ async function loadDownloadMediaFromLib() {
 
   if(library != null){
     for(let mediaLibEntryPoint of library.downloads){
-        createDownloadElement(mediaLibEntryPoint);
+      createDownloadElement(mediaLibEntryPoint);
     }
+    const queueList = await window.electronAPI.getDownloadQueueList();
+    reorderDownlaodQueue(queueList);
   }
 
   if(library?.downloads?.length !== 0){
@@ -83,7 +85,7 @@ async function createDownloadElement(mediaLibEntryPoint) {
 
   } else if(downloadStatus.toLowerCase() === "queued") {
     downloadCategorie = queuedDownloadsDiv;
-    MarkDownloadElementAsPaused(MediaDownloadElement, "Queued");
+    MarkDownloadElementAsQueued(MediaDownloadElement);
 
   } else {
     downloadCategorie = pausedDownloadsDiv;
@@ -185,7 +187,8 @@ function monitorDownloads() {
     let calculatedDownloadSpeedInMB = (calculatedDownloadSpeedInKB / 1024).toFixed(2);
 
     if(loadingIntervals?.[DownloadElementIdentifier]) {
-      removeLoadingAnimation(DownloadElementIdentifier,PausePlayButton,"Downloading")
+      removeLoadingAnimation(DownloadElementIdentifier,PausePlayButton);
+      SaveDownloadStatus(DownloadElementIdentifier, "Downloading");
     }
 
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
@@ -263,11 +266,10 @@ function addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlayButton) 
   },500);
 }
 
-async function removeLoadingAnimation(torrentId,PausePlayButton,NewStatus) {
+async function removeLoadingAnimation(torrentId,PausePlayButton) {
   PausePlayButton.classList.remove("requesting-continue-download");
   clearInterval(loadingIntervals[torrentId]);
   delete loadingIntervals[torrentId];
-  await SaveDownloadStatus(torrentId, NewStatus);
 }
 
 async function SaveDownloadStatus(torrentId, Status) {
@@ -619,7 +621,7 @@ function fillingDeleteOverlay(MediaInfo) {
     seasonEpisode.innerText = `S${MediaInfo.seasonNumber}-E${MediaInfo.episodeNumber}`;
 }
 
-async function MarkDownloadElementAsPaused(MediaDownloadElement, newStatus="Paused") {
+async function MarkDownloadElementAsIdle(MediaDownloadElement) {
   const PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   const downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
   const oldContextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
@@ -642,7 +644,46 @@ async function MarkDownloadElementAsPaused(MediaDownloadElement, newStatus="Paus
     PausePlayButton.classList.remove("just-finished");
   }, 600);
 
-  removeLoadingAnimation(elementId,PausePlayButton,newStatus); 
+  removeLoadingAnimation(elementId,PausePlayButton); 
+}
+
+async function MarkDownloadElementAsPaused(MediaDownloadElement) {
+  const elementId = MediaDownloadElement.id;
+  SaveDownloadStatus(elementId, "Paused");
+
+  MarkDownloadElementAsIdle(MediaDownloadElement);
+  const shiftingArrows = MediaDownloadElement.querySelectorAll(".btn-arrow");
+  shiftingArrows.forEach(el => el.remove());
+}
+
+async function MarkDownloadElementAsQueued(MediaDownloadElement) {
+  const elementId = MediaDownloadElement.id;
+  SaveDownloadStatus(elementId, "Queued");
+
+  MarkDownloadElementAsIdle(MediaDownloadElement);
+  const shiftingArrows = MediaDownloadElement.querySelector(".btn-arrow");
+  const downloadMovieRightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
+  if(!shiftingArrows) {
+    const upArrow = document.createElement("button");
+    const downArrow = document.createElement("button");
+    upArrow.classList.add("btn-arrow");
+    downArrow.classList.add("btn-arrow");
+    upArrow.innerHTML = upArrowIcon;
+    downArrow.innerHTML = downArrowIcon;
+
+    [upArrow,downArrow].forEach((el, elIndex) => {
+      el.addEventListener("click", async () => {
+        const newOrder = 
+          await window.electronAPI.shiftDownloadQueueElement (
+            elementId,
+            (elIndex * 2) - 1 // either 1 or -1
+          );
+        reorderDownlaodQueue(newOrder);
+      });
+    });
+
+    downloadMovieRightDiv.append(upArrow, downArrow);
+  }
 }
 
 async function MarkDownloadElementAsLoading(MediaDownloadElement) {
@@ -651,6 +692,8 @@ async function MarkDownloadElementAsLoading(MediaDownloadElement) {
   const elementId = MediaDownloadElement.id;
   const contextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
   if(contextMenuButton != null) contextMenuButton.remove();
+  const shiftingArrows = MediaDownloadElement.querySelectorAll(".btn-arrow");
+  shiftingArrows.forEach(el => el.remove());
 
   PausePlayButton.innerHTML = pauseIcon;
   downloadSpeedElement.innerHTML = "loading"
@@ -663,6 +706,21 @@ async function MarkDownloadElementAsLoading(MediaDownloadElement) {
     MediaDownloadElement,
     targetTorrentInfo?.bgImagePath ?? posterImage
   );
+}
+
+function reorderDownlaodQueue(newOrder) {
+  try {
+    const queuedElements = newOrder.map(elId => {
+      const queuedEl = document.getElementById(elId);
+      if(!queuedEl)
+        throw new Error("Cannot Found Media with ID: ", elId);
+      return queuedEl;
+    });
+    const queuedMediaContainer = queuedDownloadsDiv.querySelector(".movieContainer");
+    queuedMediaContainer.append(...queuedElements);
+  } catch(error) {
+    log.error(error.message);
+  }
 }
 
 function monitorErrors() {
@@ -795,21 +853,24 @@ async function handlingDownloadCategorieChanging(categorieChangedTorrents) {
     let targetElement = document.getElementById(res?.torrentId);
     let targetElementCategorie;
 
-    if((res?.response  === "paused" || res?.response === "queued") && res?.torrentId){
-      await SaveDownloadStatus(res.torrentId, res?.response);
+    if(res?.response  === "paused" && res?.torrentId) {
       if(targetElement){
-        if(res?.response  === "paused"){
-          targetElementCategorie = pausedDownloadsDiv;
-          MarkDownloadElementAsPaused(targetElement);
-        } else if(res?.response === "queued") {
-          targetElementCategorie = queuedDownloadsDiv;
-          MarkDownloadElementAsPaused(targetElement, "Queued");
-        }
+        targetElementCategorie = pausedDownloadsDiv;
+        MarkDownloadElementAsPaused(targetElement);
       }
+      await SaveDownloadStatus(res.torrentId, res?.response);
+
+    } else if(res?.response === "queued" && res?.torrentId) {
+      if(targetElement){
+        targetElementCategorie = queuedDownloadsDiv;
+        MarkDownloadElementAsQueued(targetElement);
+      }
+      await SaveDownloadStatus(res.torrentId, res?.response);
+
     } else if(res?.response  === "continued" && res?.torrentId){
       if(targetElement){
-        MarkDownloadElementAsLoading(targetElement);
         targetElementCategorie = currentlyDownloadingDiv;
+        MarkDownloadElementAsLoading(targetElement);
       }
       await SaveDownloadStatus(res.torrentId, "Loading");
 
