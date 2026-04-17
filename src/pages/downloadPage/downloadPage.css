@@ -222,9 +222,14 @@
 
 .download-movie-right-div {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
   gap:10px;
+}
+
+.download-movie-right-div.up-side-down {
+  flex-direction: column;
+  padding-right:10px;
 }
 
 .download-movie-right-div .btn-arrow {

@@ -13,7 +13,7 @@ async function loadDownloadMediaFromLib() {
       createDownloadElement(mediaLibEntryPoint);
     }
     const queueList = await window.electronAPI.getDownloadQueueList();
-    reorderDownlaodQueue(queueList);
+    reorderDownloadQueue(queueList, false);
   }
 
   if(library?.downloads?.length !== 0){
@@ -663,6 +663,7 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
   MarkDownloadElementAsIdle(MediaDownloadElement);
   const shiftingArrows = MediaDownloadElement.querySelector(".btn-arrow");
   const downloadMovieRightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
+  downloadMovieRightDiv.classList.add("up-side-down");
   if(!shiftingArrows) {
     const upArrow = document.createElement("button");
     const downArrow = document.createElement("button");
@@ -678,7 +679,7 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
             elementId,
             (elIndex * 2) - 1 // either 1 or -1
           );
-        reorderDownlaodQueue(newOrder);
+        reorderDownloadQueue(newOrder);
       });
     });
 
@@ -708,19 +709,53 @@ async function MarkDownloadElementAsLoading(MediaDownloadElement) {
   );
 }
 
-function reorderDownlaodQueue(newOrder) {
+function reorderDownloadQueue(newOrder, animateTransition=true) {
   try {
-    const queuedElements = newOrder.map(elId => {
-      const queuedEl = document.getElementById(elId);
-      if(!queuedEl)
-        throw new Error("Cannot Found Media with ID: ", elId);
-      return queuedEl;
+    const queuedElContainer = queuedDownloadsDiv.querySelector(".movieContainer");
+    const reordedEls = newOrder.map(elId => {
+      const targetEl = document.getElementById(elId);
+      if (!targetEl)
+        throw new Error(`Cannot find media with ID: ${elId}`);
+      return targetEl;
     });
-    const queuedMediaContainer = queuedDownloadsDiv.querySelector(".movieContainer");
-    queuedMediaContainer.append(...queuedElements);
-  } catch(error) {
+
+    const oldPosition = new Map(
+      reordedEls.map(el => [el, el.getBoundingClientRect()])
+    );
+
+    queuedElContainer.append(...reordedEls);
+    if(animateTransition)
+      animateReorder(reordedEls, oldPosition);
+
+  } catch (error) {
     log.error(error.message);
   }
+
+}
+
+function animateReorder(elements, beforePositions) {
+  elements.forEach(el => {
+    const before = beforePositions.get(el);
+    const after = el.getBoundingClientRect();
+
+    const delta = {
+      x: before.left - after.left,
+      y: before.top  - after.top,
+    };
+
+    const hasMoved = delta.x !== 0 || delta.y !== 0;
+    if (!hasMoved) return;
+
+    el.animate(
+      [
+        { transform: `translate(${delta.x}px, ${delta.y}px)` },
+        { transform: "translate(0, 0)" },
+      ],
+      { duration: 300, easing: "ease-in-out" }
+    );
+  });
+}
+
 }
 
 function monitorErrors() {
