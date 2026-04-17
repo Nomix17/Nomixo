@@ -502,15 +502,34 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
   // remove it from download
   const targetTorrent = downloadingMediaHashMap?.[torrentId]?.torrentInstance;
   if (targetTorrent) {
-    await new Promise((resolve) => {
-      targetTorrent.destroy(() => {
-        deleteTorrentFromMediaHashMap(torrentId);
-        log.info(`Torrent cancelled: ${torrentId}`);
-        resolve();
-      });
+    if(downloadQueue[0] != null)
+      WINDOW.webContents.send(
+        "update-download-categorie",
+        [{ response:"continued", torrentId:downloadQueue[0]?.torrentId }]
+      );
+
+    await new Promise((resolve,reject) => {
+      try {
+        targetTorrent.destroy(() => {
+          deleteTorrentFromMediaHashMap(torrentId);
+          log.info(`Torrent cancelled: ${torrentId}`);
+          resolve();
+        });
+      } catch(error) {
+        log.error(error.message);
+        if(downloadQueue[0] != null)
+          WINDOW.webContents.send(
+            "update-download-categorie",
+            [{ response:"paused", torrentId:downloadQueue[0]?.torrentId }]
+          );
+        reject();
+      }
     });
   }
-  
+
+  downloadQueue = downloadQueue
+    .filter(element => element.torrentId !== torrentId)
+
   // Remove the download directory
   const downloadPath = mediaInfo.downloadPath;
   if (downloadPath && fs.existsSync(downloadPath)) {
@@ -518,10 +537,9 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
     log.info(`Removed directory: ${downloadPath}`);
   }
 
-  downloadQueue = downloadQueue.filter(element => element.torrentId !== torrentId)
-
   await removeFromDownloadLibrary(torrentId);
-  
+  await downloadNextTorrentInQueue();
+
   return { success: true, torrentId };
 });
 
@@ -1832,3 +1850,8 @@ function formatSize(bytes) {
 function truncate(text, max = 40) {
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
+
+process.on('unhandledRejection', (reason) => {
+  if (reason?.name === 'AbortError') return;
+  log.error('Unhandled rejection:', reason);
+});

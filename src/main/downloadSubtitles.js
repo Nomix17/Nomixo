@@ -65,7 +65,7 @@ function downloadSub(downloadDirectory,subsObjects,SubObj){
     request.on("error",err=>{
       file.destroy();
       if(existsSync(fileFullPath)) unlinkSync(fileFullPath);
-      log.info(`Failed to download ${fileFullPath}`);
+      log.error(`Failed to download ${fileFullPath}`);
       rej(err);
     });
 
