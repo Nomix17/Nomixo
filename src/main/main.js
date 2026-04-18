@@ -1466,7 +1466,13 @@ async function insertNewDownloadEntryPoint(torrentInfo,Status="Loading") {
     downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
     downloadImage(posterDownloadPath,torrentInfo?.posterUrl);
 
-    let newEntry = {...torrentInfo, posterPath: posterPath ?? "undefined", bgImagePath: bgImagePath ?? "undefined", Status:Status};
+    const newEntry = {
+      ...torrentInfo,
+      posterPath: posterPath ?? "undefined",
+      bgImagePath: bgImagePath ?? "undefined",
+      Status:Status,
+      StatusUpdateTime: Date.now()
+    };
     downloadLib.downloads.push(newEntry);
 
     const jsonMessage = { Status: "NewDownload" }
@@ -1485,6 +1491,8 @@ async function editDownloadLibraryElements(torrentsIds,key,value){
   for(let torrentId of torrentsIds){
     for(let index=0 ; index < downloadLibraryInfo.downloads.length ; index++){
       if(downloadLibraryInfo.downloads[index].torrentId === torrentId){
+        if(key === "Status")
+          downloadLibraryInfo.downloads[index]["StatusUpdateTime"] = Date.now();
         downloadLibraryInfo.downloads[index][key] = value;
         break; 
       }

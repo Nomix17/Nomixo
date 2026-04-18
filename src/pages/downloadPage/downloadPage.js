@@ -9,7 +9,12 @@ async function loadDownloadMediaFromLib() {
   const library = await libraryDumpPromise;
 
   if(library != null){
-    for(let mediaLibEntryPoint of library.downloads){
+    const sortedLib = library.downloads
+      .sort((item1, item2) =>
+        (item1?.["StatusUpdateTime"] ?? 0) - (item2?.["StatusUpdateTime"] ?? 0)
+      );
+
+    for(let mediaLibEntryPoint of sortedLib){
       createDownloadElement(mediaLibEntryPoint);
     }
     const queueList = await window.electronAPI.getDownloadQueueList();
@@ -273,7 +278,9 @@ function removeLoadingAnimation(torrentId,PausePlayButton) {
 }
 
 async function SaveDownloadStatus(torrentId, Status) {
-  await window.electronAPI.editElementInDownloadLibraryInfo(torrentId, "Status", Status);
+  await window.electronAPI.editElementInDownloadLibraryInfo(
+    torrentId, "Status", Status
+  );
 }
 
 function alignSizeDiv() {
