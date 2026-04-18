@@ -387,6 +387,13 @@ async function createPausedDownloadsContextMenu(torrentId) {
   return menuDiv;
 }
 
+async function removePausedDownloadsContextMenu(MediaDownloadElement) {
+  const contextMenu = MediaDownloadElement.querySelector(".context-menu-button");
+  const contextBtn = document.querySelector(".select-dropdown");
+  if(contextMenu) contextMenu.remove();
+  if(contextBtn) contextBtn.remove();
+}
+
 function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
   const menuDiv = document.createElement("div");
   menuDiv.classList.add("select-dropdown");
@@ -631,18 +638,7 @@ function fillingDeleteOverlay(MediaInfo) {
 async function MarkDownloadElementAsIdle(MediaDownloadElement) {
   const PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   const downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
-  const oldContextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
   const elementId = MediaDownloadElement.id;
-
-  if(oldContextMenuButton == null) {
-    const contextMenuButton = document.createElement("button");
-    contextMenuButton.classList.add("context-menu-button");
-    contextMenuButton.innerHTML = menuThreePoints;
-    const contextMenuDiv = await createPausedDownloadsContextMenu(elementId);
-    contextMenuButton.appendChild(contextMenuDiv);
-    setupContextMenuHandler(contextMenuButton, contextMenuDiv);
-    MediaDownloadElement.appendChild(contextMenuButton);
-  }
 
   downloadSpeedElement.innerHTML = "";
   PausePlayButton.innerHTML = playIcon;
@@ -659,6 +655,18 @@ async function MarkDownloadElementAsPaused(MediaDownloadElement) {
   SaveDownloadStatus(elementId, "Paused");
 
   MarkDownloadElementAsIdle(MediaDownloadElement);
+  const oldContextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
+
+  if(oldContextMenuButton == null) {
+    const contextMenuButton = document.createElement("button");
+    contextMenuButton.classList.add("context-menu-button");
+    contextMenuButton.innerHTML = menuThreePoints;
+    const contextMenuDiv = await createPausedDownloadsContextMenu(elementId);
+    contextMenuButton.appendChild(contextMenuDiv);
+    setupContextMenuHandler(contextMenuButton, contextMenuDiv);
+    MediaDownloadElement.appendChild(contextMenuButton);
+  }
+
   const shiftingArrows = MediaDownloadElement.querySelectorAll(".btn-arrow");
   shiftingArrows.forEach(el => el.remove());
 }
@@ -668,6 +676,8 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
   SaveDownloadStatus(elementId, "Queued");
 
   MarkDownloadElementAsIdle(MediaDownloadElement);
+  removePausedDownloadsContextMenu(MediaDownloadElement);
+
   const shiftingArrows = MediaDownloadElement.querySelector(".btn-arrow");
   const downloadMovieRightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
   downloadMovieRightDiv.classList.add("up-side-down");
@@ -735,7 +745,7 @@ function reorderDownloadQueue(newOrder, animateTransition=true) {
       animateReorder(reordedEls, oldPosition);
 
   } catch (error) {
-    log.error(error.message);
+    console.error(error.message);
   }
 
   updateDownloadUI();
