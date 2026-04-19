@@ -499,6 +499,8 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   let rightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
   let CancelButton = MediaDownloadElement.querySelector(".cancel-button");
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
+  const downloadMovieRightDiv = MediaDownloadElement.querySelector(".download-movie-right-div");
+
   CancelButton.remove();
   PausePlayButton.remove();
 
@@ -512,7 +514,8 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   downloadSpeedElement.style.display = "none";
   progressBarElement.style.display = "none";
   downloadedSizeElement.style.display = "none";
-  
+
+  downloadMovieRightDiv.classList.remove("up-side-down");
   const playMediaButton = document.createElement("button");
   const deleteMediaButton = document.createElement("button");
   playMediaButton.classList.add("play-button");
