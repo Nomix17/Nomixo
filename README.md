@@ -3,11 +3,11 @@
   <h1>Nomixo</h1>
   <p><strong>A free, open-source desktop streaming client for Movies, TV Shows, and Anime.</strong></p>
 
-  ![Version](https://img.shields.io/github/v/release/Nomix17/Nomixo?color=4F8EF7&leabel=version&logo=github&logoColor=white)
-  ![Electron](https://img.shields.io/badge/Electron-2C2E3B?logo=electron&logoColor=9FEAF9)
-  ![Node](https://img.shields.io/badge/Node.js-v18+-235A32?logo=nodedotjs&logoColor=6BBF47)
-  ![MPV](https://img.shields.io/badge/MPV-Player-6A0DAD?logo=mpv&logoColor=white)
-  ![License](https://img.shields.io/badge/License-GPL--3.0--NC-C0392B?logoColor=white)
+  [![Version](https://img.shields.io/github/v/release/Nomix17/Nomixo?color=4F8EF7&leabel=version&logo=github&logoColor=white)](https://github.com/Nomix17/Nomixo/releases)
+  [![Electron](https://img.shields.io/badge/Electron-2C2E3B?logo=electron&logoColor=9FEAF9)](https://www.electronjs.org)
+  [![Node](https://img.shields.io/badge/Node.js-v18+-235A32?logo=nodedotjs&logoColor=6BBF47)](https://nodejs.org)
+  [![MPV](https://img.shields.io/badge/MPV-Player-6A0DAD?logo=mpv&logoColor=white)](https://mpv.io)
+  [![License](https://img.shields.io/badge/License-GPL--3.0--NC-C0392B?logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 </div>
 
