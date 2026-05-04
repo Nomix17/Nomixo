@@ -1,8 +1,3 @@
-#div-main {
-  height: 100vh;
-  opacity: var(--dont-Smooth-transition-between-pages);
-  flex-direction: column;
-}
 ::-webkit-scrollbar{
    background: rgba(0,0,0,0%);
    cursor: default;
@@ -67,12 +62,28 @@ p{
   background-color:rgba(0,0,0,0%);
   border:none;
 }
+#div-main {
+  height: 100vh;
+  flex-direction: column;
+}
 #div-top{
   padding: 18px;
 }
 #div-middle{
   padding-left:70px;
+  opacity: var(--dont-Smooth-transition-between-pages);
 }
+#div-middle * {
+  pointer-events: none !important;
+}
+#div-middle.activate {
+  opacity:1;
+  pointer-events: auto !important;
+}
+#div-middle.activate * {
+  pointer-events: auto !important;
+}
+
 #btn-fullscreen{
   display:flex;
   justify-content:center;

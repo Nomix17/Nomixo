@@ -6,9 +6,9 @@ let backgroundImage;
 let IMDB_ID;
 let GlobalTitle = null;
 
-let mainPageDiv = document.getElementById("div-main");
-let TorrentContainer = document.getElementById("div-TorrentContainer");
-let SerieContainer = document.getElementById("div-serieEpisodes");
+const middleDiv = document.getElementById("div-middle");
+const TorrentContainer = document.getElementById("div-TorrentContainer");
+const SerieContainer = document.getElementById("div-serieEpisodes");
 
 let TorrentMagnetContainer = document.getElementById("div-movieMedias");
 let EpisodesContainer = document.getElementById("EpisodesContainer");
@@ -52,7 +52,7 @@ async function fetchInformation(){
     let middleDiv = document.getElementById("div-middle");
     document.documentElement.classList.add("fetchingFailed");
     middleDiv.innerHTML = "";
-    mainPageDiv.style.opacity = "1";
+    middleDiv.classList.add("activate");
     setTimeout(() => {
       let WarningElement = DisplayWarningOrErrorForUser("We're having trouble loading data.</br>Please Check your connection and retry!");
       middleDiv.appendChild(WarningElement);
@@ -323,7 +323,7 @@ async function insertMediaInformation(data,apiKey){
   dropDownInit();
   globalLoadingGif.remove();
 
-  mainPageDiv.style.opacity = "1";
+  middleDiv.classList.add("activate");
 }
 
 async function extractMediaInfoFromApiResponse(apiKey,data){
