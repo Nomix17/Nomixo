@@ -292,7 +292,7 @@ async function loadSettings(){
   inputBackgroundColorInternal.value = BackgroundColorInternal;
   applySelectedColor(ColorInputsWithAlphaValue)
 
-  RightmiddleDiv.style.opacity = 1;
+  RightmiddleDiv.classList.add("activate");
 }
 
 async function loadExternalSubConfigs(){

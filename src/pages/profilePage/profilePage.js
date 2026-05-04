@@ -39,7 +39,7 @@ async function getPersonInfo(apiKey){
       const WarningElement = DisplayWarningOrErrorForUser(err.message);
       RightmiddleDiv.appendChild(WarningElement);
       globalLoadingGif.remove();
-      RightmiddleDiv.style.opacity = 1;
+      RightmiddleDiv.classList.add("activate");
     },800);
 
     console.error(err);
@@ -131,7 +131,7 @@ async function fetchData(apiKey, personjob){
   insertPersonFamousWorkIntoSuggestionDiv(MediaData, personjob,LibraryInformation);
   await loadCachedRightMiddleDivScrollValue();
   globalLoadingGif.remove();
-  RightmiddleDiv.style.opacity = 1;
+  RightmiddleDiv.classList.add("activate");
 }
 
 function insertPersonFamousWorkIntoSuggestionDiv(MediaData, personJob,LibraryInformation){
@@ -212,7 +212,7 @@ async function initPage(){
   const apiKey = await window.electronAPI.getTMDBAPIKEY();
   loadMedia(apiKey);
   globalLoadingGif.remove();
-  RightmiddleDiv.style.opacity = 1;
+  RightmiddleDiv.classList.add("activate");
 }
 
 initPage();

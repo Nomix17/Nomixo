@@ -33,7 +33,7 @@ async function loadMovies(){
     checkIfDivShouldHaveMoveToRightOrLeftButton([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
 
     globalLoadingGif.remove();
-    RightmiddleDiv.style.opacity = 1;
+    RightmiddleDiv.classList.add("activate");
 
   } catch(err) {
     err.message = 

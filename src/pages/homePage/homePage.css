@@ -190,6 +190,20 @@ body, html {
   opacity: var(--dont-Smooth-transition-between-pages);
   transition: opacity 0.5s ease;
   padding-bottom:1%;
+  pointer-events: none !important;
+}
+
+#div-middle-right * {
+  pointer-events: none !important;
+}
+
+#div-middle-right.activate {
+  opacity:1;
+  pointer-events: auto !important;
+}
+
+#div-middle-right.activate * {
+  pointer-events: auto !important;
 }
 
 #div-middle-right-continueWatching,

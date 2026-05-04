@@ -35,7 +35,7 @@ function loadSearchInformation(apiKey){
       if(Number(data.status_code) === 7) throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");
       if(Number(data.total_results) === 0) throw new Error(`Cannot Found Any Media Named: ${searchKeyword}`)
 
-      RightmiddleDiv.style.opacity = 1;
+      RightmiddleDiv.classList.add("activate");
       insertResultsElement(data);
       if(MoviesRecommandationDiv.innerHTML.trim() === "") document.getElementById("MoviesRecommandationsContainer").remove();
       if(SeriesRecommandationDiv.innerHTML.trim() === "") document.getElementById("SeriesRecommandationsContainer").remove();
@@ -56,7 +56,7 @@ function loadSearchInformation(apiKey){
     let WarningElement = DisplayWarningOrErrorForUser(err.message,displayRefreshButton);
     RightmiddleDiv.appendChild(WarningElement);
     globalLoadingGif.remove();
-    RightmiddleDiv.style.opacity = 1;
+    RightmiddleDiv.classList.add("activate");
 
     console.error(err)
   });

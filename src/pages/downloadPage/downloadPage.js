@@ -29,7 +29,8 @@ async function loadDownloadMediaFromLib() {
   }
 
   let RightmiddleDiv = document.getElementById("div-middle-right");
-  RightmiddleDiv.style.opacity = 1;
+  RightmiddleDiv.classList.add("activate");
+
 
   updateDownloadUI();
   await loadCachedPageInfo();
@@ -107,7 +108,7 @@ async function createDownloadElement(mediaLibEntryPoint) {
   alignSizeDiv();
 
   let RightmiddleDiv = document.getElementById("div-middle-right");
-  RightmiddleDiv.style.opacity = 1;
+  RightmiddleDiv.classList.add("activate");
 }
 
 async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement) {

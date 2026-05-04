@@ -50,7 +50,7 @@ async function fetchData(apiKey, genreId, ThisMediaType, page) {
     const WarningElement = DisplayWarningOrErrorForUser(err.message, false);
     RightmiddleDiv.appendChild(WarningElement);
     globalLoadingGif.remove();
-    RightmiddleDiv.style.opacity = 1;
+    RightmiddleDiv.classList.add("activate");
   }
 }
 
@@ -88,7 +88,7 @@ async function loadGenres(apiKey) {
       const WarningElement = DisplayWarningOrErrorForUser(err.message);
       RightmiddleDiv.appendChild(WarningElement);
       globalLoadingGif.remove();
-      RightmiddleDiv.style.opacity = 1;
+      RightmiddleDiv.classList.add("activate");
     }, 800);
     console.error(err);
   };
@@ -198,7 +198,7 @@ async function initPage(){
   addDropDownsEventListener();
 
   globalLoadingGif.remove();
-  RightmiddleDiv.style.opacity = 1;
+  RightmiddleDiv.classList.add("activate");
 
   detectWhenScrollsArriveAtTheEndOfAPage(apiKey);
 }

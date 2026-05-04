@@ -209,7 +209,7 @@ async function initPage(){
   filterMedia(getDropdownValue(SelectMediaType), getDropdownValue(SelectSaveType));
 
   globalLoadingGif.remove()
-  RightmiddleDiv.style.opacity = 1;
+  RightmiddleDiv.classList.add("activate");
 }
 
 function focusFunction(element) {
