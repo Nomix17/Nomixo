@@ -192,7 +192,14 @@ function runMpvProcess(
   });
 
   mpvProcess.on("error", async err => {
-    log.error('MPV process error:', err);
+    if (err.code === "ENOENT") {
+      const errMsg = "mpv not found. Install it or set its path in settings.";
+      log.error(errMsg);
+      err = new Error(errMsg);
+    } else {
+      log.error('MPV process error:', err);
+    }
+
     await cleanup();
     if(onError) onError(err);
     parentPort.postMessage({type:"status",message:"Playback error"});
