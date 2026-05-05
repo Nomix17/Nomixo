@@ -8,6 +8,7 @@ import crypto from "crypto";
 import express from "express";
 import mime from "mime";
 import path from "path";
+import os from 'os';
 import fs from "fs";
 
 let mpvProcess = null;
@@ -159,7 +160,9 @@ function runMpvProcess(
   onClose,
   onError
 ) {
-  let subsArgument = subsPaths.map(path => `--sub-file=${path.replaceAll(" ","\ ")}`);
+  const subsArgument = subsPaths.map(path => `--sub-file=${path}`);
+  const mpvExecutable = findMpvExecutable();
+
   const childProcessArguments = [
     videoFullPath,
     "--keep-open=yes",
@@ -171,7 +174,7 @@ function runMpvProcess(
     ...subsArgument
   ]; 
 
-  mpvProcess = spawn('mpv', childProcessArguments);
+  mpvProcess = spawn(mpvExecutable, childProcessArguments);
   log.info("Launching mpv with options:\n"+
     `--keep-open=yes\n`+
     `--config-dir=${mpvConfigDirectory}\n`+
@@ -329,3 +332,25 @@ if(workerData.typeOfPlay === "StreamTorrent") {
   });
 }
 
+function findMpvExecutable() {
+  if (os.platform() !== 'win32') return 'mpv';
+
+  const commonPaths = [
+    'C:\\Program Files\\mpv\\mpv.exe',
+    'C:\\Program Files (x86)\\mpv\\mpv.exe',
+    path.join(os.homedir(), 'AppData', 'Local', 'Programs', 'mpv', 'mpv.exe'),
+    path.join(os.homedir(), 'scoop', 'apps', 'mpv', 'current', 'mpv.exe'),
+    'C:\\tools\\mpv\\mpv.exe',
+    path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Packages', 'mpv.exe'),
+  ];
+
+  for (const candidate of commonPaths) {
+    if (fs.existsSync(candidate)) {
+      log.info(`Found mpv at: ${candidate}`);
+      return candidate;
+    }
+  }
+
+  log.warn('mpv not found in common locations, falling back to PATH');
+  return 'mpv.exe';
+}
