@@ -671,7 +671,6 @@ function monitorMsgFromMainProcess(){
       let request = msg.request;
         if(request ===  "exit_video_player")
           window.electronAPI.goBack();
-
     }
   });
 }

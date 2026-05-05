@@ -3,7 +3,6 @@ import {log} from "./debugging.js";
 import {spawn} from "child_process";
 import {parentPort, workerData} from "worker_threads";
 import WebTorrent from 'webtorrent';
-import {fileURLToPath} from "url";
 import crypto from "crypto";
 import express from "express";
 import mime from "mime";
@@ -15,7 +14,7 @@ let mpvProcess = null;
 let expressServer = null;
 let webTorrentClient = null;
 
-function StreamTorrent (
+function StreamTorrent(
   metaData,
   subsObjects,
   startFromTime,
@@ -23,22 +22,22 @@ function StreamTorrent (
   subDirectory,
   mpvConfigDirectory,
   mpvWindowConfigs
-){
+) {
   return new Promise((resolve, reject) => {
 
-    log.info("\nLoading Torrent:",metaData?.fileName)
+    log.info("\nLoading Torrent:", metaData?.fileName);
     webTorrentClient = new WebTorrent();
-    const torrent = webTorrentClient.add(metaData.Magnet, {path: videoCachePath},async(torrent) => {
+    const torrent = webTorrentClient.add(metaData.Magnet, {path: videoCachePath}, async (torrent) => {
 
       console.log("\nTorrent Files:-----------------------------------------------------");
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
 
       const file = torrent.files.find(f =>
-        (normaliseFileName(metaData?.fileName) ===  normaliseFileName(f.name))
+        normaliseFileName(metaData?.fileName) === normaliseFileName(f.name)
       );
 
-      if (!file){
+      if (!file) {
         const errorMsg = "No suitable video file was found";
         parentPort.postMessage({
           type: "status",
@@ -67,11 +66,6 @@ function StreamTorrent (
         });
 
         const stream = file.createReadStream({ start, end });
-        let downloaded = 0;
-        stream.on("data", chunk => {
-          downloaded += chunk.length;
-          const percentage = ((downloaded / file.length) * 100).toFixed(2);
-        });
         stream.on('error', (err) => {
           log.error('Stream error:', err);
         });
@@ -82,36 +76,35 @@ function StreamTorrent (
         stream.pipe(res);
       });
 
-      expressServer = app.listen(0, async() => {
-        try{
+      expressServer = app.listen(0, async () => {
+        try {
           const port = expressServer.address().port;
           const url = `http://localhost:${port}/video`;
           log.info(`Streaming URL: ${url}`);
 
-          let subsId = generateUniqueId(
+          const subsId = generateUniqueId(
             `${metaData.mediaImdbId}-${metaData.episodeNumber ?? "undefined"}-${metaData.seasonNumber ?? "undefined"}`
           );
 
-          // download Subtitles
-          const tmpSubDir = path.join(subDirectory,`SUB_${subsId}`);
-          const downloadResponce = await downloadMultipleSubs(tmpSubDir,subsObjects);
+          const tmpSubDir = path.join(subDirectory, `SUB_${subsId}`);
+          const downloadResponce = await downloadMultipleSubs(tmpSubDir, subsObjects);
           const subsPaths = downloadResponce
             .filter(responce => responce.status === "success")
             .map(responce => responce.file);
 
           runMpvProcess(
-            url,mpvConfigDirectory,
-            startFromTime,subsPaths,
+            url, mpvConfigDirectory,
+            startFromTime, subsPaths,
             mpvWindowConfigs
           );
 
-        }catch(error){
+        } catch (error) {
           log.error(error.message);
           reject(error);
         }
       });
     });
-  
+
     torrent.on('error', async (err) => {
       const errorMsg = `Torrent error: ${err.message}`;
       log.error(errorMsg);
@@ -134,17 +127,17 @@ async function PlayLocalVideo(
   mpvWindowConfigs
 ) {
   return new Promise((resolve, reject) => {
-    try{
-      let videoFullPath = findFile(metaData.downloadPath, metaData.fileName);
-      if(videoFullPath)
+    try {
+      const videoFullPath = findFile(metaData.downloadPath, metaData.fileName);
+      if (videoFullPath)
         runMpvProcess(
-          videoFullPath,mpvConfigDirectory,
-          startFromTime,subsPaths,
-          mpvWindowConfigs,resolve,reject
+          videoFullPath, mpvConfigDirectory,
+          startFromTime, subsPaths,
+          mpvWindowConfigs, resolve, reject
         );
       else
-        throw(new Error(`Cannot Find File Named:<br> ${metaData.fileName}`));
-    }catch(err){
+        throw new Error(`Cannot Find File Named:<br> ${metaData.fileName}`);
+    } catch (err) {
       log.error(err);
       reject(err);
     }
@@ -172,43 +165,56 @@ function runMpvProcess(
     `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}`,
     `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`,
     ...subsArgument
-  ]; 
+  ];
+
+  let errorOccurred = false;
 
   mpvProcess = spawn(mpvExecutable, childProcessArguments);
-  log.info("Launching mpv with options:\n"+
-    `--keep-open=yes\n`+
-    `--config-dir=${mpvConfigDirectory}\n`+
-    `--start=${startFromTime}\n`+
-    `--geometry=${mpvWindowConfigs.geometry}\n`+
-    `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}\n`+
+  log.info("Launching mpv with options:\n" +
+    `--keep-open=yes\n` +
+    `--config-dir=${mpvConfigDirectory}\n` +
+    `--start=${startFromTime}\n` +
+    `--geometry=${mpvWindowConfigs.geometry}\n` +
+    `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}\n` +
     `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`
   );
 
-  mpvProcess.on('close', async () => {
-    log.info('MPV process closed');
+  mpvProcess.on("error", async (err) => {
+    errorOccurred = true;
+
+    const errMsg = err.code === "ENOENT"
+      ? "MPV not found. Install it or set its path in settings"
+      : `MPV process error: ${err.message}`;
+
+    log.error(errMsg);
     await cleanup();
-    if(onClose) onClose();
-    parentPort.postMessage({type:"status",message:"Playback done"});
+
+    parentPort.postMessage({
+      type: "status",
+      message: "Playback error",
+      error: errMsg
+    });
+
+    if (onError) onError(new Error(errMsg));
   });
 
-  mpvProcess.on("error", async err => {
-    if (err.code === "ENOENT") {
-      const errMsg = "mpv not found. Install it or set its path in settings.";
-      log.error(errMsg);
-      err = new Error(errMsg);
-    } else {
-      log.error('MPV process error:', err);
-    }
+  mpvProcess.on('close', async (code) => {
+    if (errorOccurred) return;
 
+    log.info(`MPV process closed (exit code ${code})`);
     await cleanup();
-    if(onError) onError(err);
-    parentPort.postMessage({type:"status",message:"Playback error"});
+
+    parentPort.postMessage({ type: "status", message: "Playback done" });
+    if (onClose) onClose();
   });
 
-  [mpvProcess.stdout,mpvProcess.stderr].forEach(dataPipe => {
-    dataPipe.on('data', (data)=>{
-      const output = data.toString();
-      parentPort.postMessage({type:"status",message:"Mpv output data",data:output});
+  [mpvProcess.stdout, mpvProcess.stderr].forEach(dataPipe => {
+    dataPipe.on('data', (data) => {
+      parentPort.postMessage({
+        type: "status",
+        message: "Mpv output data",
+        data: data.toString()
+      });
     });
   });
 }
@@ -220,7 +226,7 @@ function generateUniqueId(seed) {
 }
 
 function findFile(dir, filename) {
-  if(!fs.existsSync(dir)) return null;
+  if (!fs.existsSync(dir)) return null;
   const filesPathsHashMap = {};
   const files = fs.readdirSync(dir);
   for (const file of files) {
@@ -237,31 +243,31 @@ function findFile(dir, filename) {
   return filesPathsHashMap[normaliseFileName(filename)] ?? null;
 }
 
-function loadSubsFromSubDir(downloadPath,TorrentId){
-  try{
-    let subFolder = path.join(downloadPath,`SUBS_${TorrentId}`);
+function loadSubsFromSubDir(downloadPath, TorrentId) {
+  try {
+    const subFolder = path.join(downloadPath, `SUBS_${TorrentId}`);
     return fs.readdirSync(subFolder)
-      .map(fileName => path.join(subFolder,fileName));
-  }catch(err){
+      .map(fileName => path.join(subFolder, fileName));
+  } catch (err) {
     log.error(err.message);
     return [];
   }
 }
 
-async function cleanup(){
+async function cleanup() {
   log.info('Starting cleanup...');
-  
-  if(mpvProcess) {
+
+  if (mpvProcess) {
     try {
       mpvProcess.kill('SIGTERM');
       mpvProcess = null;
       log.info('MPV killed');
-    } catch(err) {
+    } catch (err) {
       log.error('Failed to kill mpv:', err);
     }
   }
-  
-  if(expressServer) {
+
+  if (expressServer) {
     try {
       await Promise.race([
         new Promise((resolve) => {
@@ -273,36 +279,36 @@ async function cleanup(){
         new Promise((resolve) => setTimeout(resolve, 500))
       ]);
       expressServer = null;
-    } catch(err) {
+    } catch (err) {
       log.error('Failed to close server:', err);
     }
   }
-  
-  if(webTorrentClient) {
+
+  if (webTorrentClient) {
     try {
       webTorrentClient.destroy();
       log.info('WebTorrent client destroy initiated');
       webTorrentClient = null;
-    } catch(err) {
+    } catch (err) {
       log.error('Failed to destroy torrent client:', err);
     }
   }
-  
+
   log.info('Worker cleanup complete');
 }
 
-const normaliseFileName = (fileName)=>{
-  return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase()
-}
+const normaliseFileName = (fileName) => {
+  return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase();
+};
 
 parentPort.on('message', async (msg) => {
-  if(msg.type === 'shutdown') {
-    log.info("\nWorker received shutdown signal");
+  if (msg.type === 'shutdown') {
+    log.info("Worker received shutdown signal");
     await cleanup();
   }
 });
 
-if(workerData.typeOfPlay === "StreamTorrent") {
+if (workerData.typeOfPlay === "StreamTorrent") {
   StreamTorrent(
     workerData.metaData,
     workerData.subsObjects,
@@ -321,7 +327,7 @@ if(workerData.typeOfPlay === "StreamTorrent") {
     await cleanup();
   });
 
-} else if(workerData.typeOfPlay === "LocalFile") {
+} else if (workerData.typeOfPlay === "LocalFile") {
   PlayLocalVideo(
     workerData.metaData,
     workerData.startFromTime,
