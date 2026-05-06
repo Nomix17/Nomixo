@@ -266,9 +266,20 @@ ipcMain.handle("get-full-video-path",async(event,dirPath,fileName)=>{
   return await findFile(dirPath,fileName);
 });
 
-ipcMain.handle("open-filesystem-browser",async(event,currentPath)=>{
+ipcMain.handle("open-directory-filesystem-browser",async(event,currentPath)=>{
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ['openDirectory'],
+    defaultPath: currentPath
+  });
+  if (!canceled) {
+    return filePaths[0];
+  }
+  return null
+});
+
+ipcMain.handle("open-file-filesystem-browser",async(event,currentPath)=>{
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openFile'],
     defaultPath: currentPath
   });
   if (!canceled) {

@@ -12,7 +12,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   PlayVideoOverMpv: (metaData) => ipcRenderer.invoke('play-video-over-mpv',metaData),
 
   toggleFullscreen: () => ipcRenderer.invoke("request-fullscreen"),
-  openFileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-filesystem-browser",currentPath),
+  openDirectory_FileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-directory-filesystem-browser",currentPath),
+  openFile_FileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-file-filesystem-browser",currentPath),
   getTMDBAPIKEY: () => ipcRenderer.invoke("get-tmdb-api-key"),
   getWyzieAPIKey : () => ipcRenderer.invoke("get-wyzie-api-key"),
 

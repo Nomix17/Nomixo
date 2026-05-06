@@ -870,7 +870,7 @@ function setupDownloadDivEvents(DownloadTargetInfo) {
   // handle browsing fs button
   browseButton.addEventListener("click", async (event) => {
     let pathInputElement = document.getElementById("downloadPath");
-    let dirPath = await window.electronAPI.openFileSystemBrowser(pathInputElement.value);
+    let dirPath = await window.electronAPI.openDirectory_FileSystemBrowser(pathInputElement.value);
     if(dirPath) pathInputElement.value = dirPath;
   });
 }
