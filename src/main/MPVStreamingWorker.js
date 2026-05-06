@@ -160,7 +160,7 @@ function runMpvProcess(
 ) {
   const subsArgument = subsPaths.map(path => `--sub-file=${path}`);
   const isWindows = os.platform() === 'win32';
-  const mpvExecutable = MpvExecPath ?? (isWindows ? 'mpv.exe' : 'mpv');
+  const mpvExecutable = (MpvExecPath ?? (isWindows ? 'mpv.exe' : 'mpv')).trim().replace(/\/$/, '');
 
   const childProcessArguments = [
     videoFullPath,
@@ -188,7 +188,7 @@ function runMpvProcess(
   mpvProcess.on("error", async (err) => {
     errorOccurred = true;
 
-    const errMsg = err.code === "ENOENT"
+    const errMsg = err.code === "ENOENT" || err.code === "ENOTDIR"
       ? "MPV not found. Install it or set its path in settings"
       : `MPV process error: ${err.message}`;
 
@@ -344,10 +344,14 @@ if (workerData.typeOfPlay === "StreamTorrent") {
     workerData.mpvWindowConfigs
   )
   .catch(async (err) => {
+    const errMsg = err.code === "ENOENT" || err.code === "ENOTDIR"
+      ? "MPV not found. Install it or set its path in settings."
+      : err.message;
+
     parentPort.postMessage({
       type: "status",
       message: "Playback error",
-      error: err.message
+      error: errMsg
     });
     await cleanup();
   });
