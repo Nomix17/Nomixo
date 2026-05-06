@@ -90,7 +90,15 @@ Pre-built installers are available on the [**Releases page**](https://github.com
 | `Nomixo-vX.X.X-Windows-Installer-x64.exe` | NSIS Installer |
 | `Nomixo-vX.X.X-Windows-Portable-x64.zip` | Portable ZIP |
 
-> ⚠️ **MPV is still required** regardless of how you install Nomixo. Install it from [mpv.io](https://mpv.io/installation/) before launching the app.
+
+> ⚠️ **MPV is still required** regardless of how you install Nomixo.
+>
+> | Platform | Download |
+> |---|---|
+> | Windows (x64) | [SourceForge – 64-bit builds](https://sourceforge.net/projects/mpv-player-windows/files/64bit/) |
+> | Other platforms | [mpv.io/installation](https://mpv.io/installation/) |
+>
+> After downloading, extract the archive and either add the folder to your system **PATH** or configure the executable path in Nomixo's Settings.
 
 
 ## Requirements
