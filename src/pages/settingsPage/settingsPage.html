@@ -271,7 +271,22 @@
           <div class="border"></div>
 
           <h1>External Player</h1>
-          <div id="div-PlayerSubtitlesExternal">
+          <div id="div-ExternalPlayerSettings">
+            <h2>Setup Settings</h2>
+            <table>
+              <td>
+                <div class="input-container">
+                  <h2>Executable Path</h2>
+                  <div class="input-wrapper">
+                    <input id="input-mpv-exec-path" spellcheck="false" placeholder="Enter executable path…"/>
+                  </div>
+                  <div class="verify-btn-wrapper">
+                    <button class="browse-btn">Browse</button>
+                    <p class="response-message-p"></p>
+                  </div>
+                </div>
+              </td>
+            <table>
             <h2>Subtitles</h2>
             <table>
               <tr>
@@ -316,14 +331,9 @@
               </tr>
             </table>
 
-            <div id="div-mpv">
-              <h2>Executable Path</h2>
-              <input id="input-mpv-exec-path" spellcheck="false" placeholder="Enter Executable path"/>
-            </div>
-
             <h1>API Keys</h1>
             <div class="api-key-inputs-div">
-              <div class="api-key-input-container">
+              <div class="input-container">
                 <h2>TMDB API</h2>
                 <div class="input-wrapper">
                   <input type="password" placeholder="TMDB Api Key" class="api-key-input tmdb" readonly/>
@@ -339,7 +349,7 @@
                   </button>
                 </p>
               </div>
-              <div class="api-key-input-container">
+              <div class="input-container">
                 <h2>Wyzie API</h2>
                 <div class="input-wrapper">
                   <input type="password" placeholder="Wyzie Api Key" class="api-key-input wyzie" readonly/>

@@ -487,20 +487,19 @@ window.addEventListener("keydown",(event)=>{
 
 document.querySelectorAll(".edit-btn").forEach(btn => {
   btn.innerHTML = editIcon;
-  btn.addEventListener("click", (event) => {
-    const parent = event.target.parentElement;
+  btn.addEventListener("click", () => {
+    const parent = btn.closest(".input-wrapper");
     const keyInput = parent.querySelector(".api-key-input");
     keyInput.readOnly = !keyInput.readOnly;
-    btn.innerHTML = 
-      keyInput.readOnly 
-      ? editIcon 
-      : checkIcon;
-
-    keyInput.type = 
-      keyInput.type === "password" 
-      ? "text" 
-      : "password";
+    btn.innerHTML = keyInput.readOnly ? editIcon : checkIcon;
+    keyInput.type = keyInput.type === "password" ? "text" : "password";
   });
+});
+
+document.querySelector(".browse-btn")
+.addEventListener("click", async (event) => {
+  const execPath = await window.electronAPI.openFile_FileSystemBrowser(inputMpvExecPath.value);
+  if(execPath) inputMpvExecPath.value = execPath;
 });
 
 document.querySelectorAll(".verify-btn").forEach(btn => {
