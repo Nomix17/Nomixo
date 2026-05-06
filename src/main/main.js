@@ -12,6 +12,7 @@ import express from "express";
 import mime from "mime";
 import http from 'http';
 import path from "path";
+import os from 'os';
 import fs from 'fs';
 
 let TMDB_API_KEY = null;
@@ -140,7 +141,7 @@ const createMainWindow = async (entryPointPath = "./src/pages/homePage/homePage.
   WINDOW.setMenuBarVisibility(false);
   WINDOW.loadFile(entryPointPath);
 
-  let defaultSettings = loadSettings();
+  const defaultSettings = await loadSettings();
   mainzoomFactor = defaultSettings.PageZoomFactor;
   let settingDefaultDownloadingPath = defaultSettings?.defaultDownloadPath;
   if (settingDefaultDownloadingPath != null)
@@ -164,26 +165,20 @@ const createMainWindow = async (entryPointPath = "./src/pages/homePage/homePage.
 
 //      ================ SETTINGS & THEME ================
 
-ipcMain.handle("load-settings",() => {
-  return new Promise((resolve, reject) => {
-    try{
-      let settingsObj = loadSettings();
-      resolve(settingsObj);
-    }catch{
-      reject("Something Went Wrong When Loading Settings!");
-    }
-  });
+ipcMain.handle("load-settings", async () => {
+  try {
+    return await loadSettings();
+  } catch {
+    throw new Error("Something Went Wrong When Loading Settings!");
+  }
 });
 
 ipcMain.handle("load-theme",()=>{
-  return new Promise((resolve,reject) => {
-    try{
-      let themeObj = loadTheme();
-      resolve(themeObj);
-    }catch{
-      reject("Something Went Wrong When Loading Theme!");
-    }
-  });
+  try {
+    return loadTheme();
+  } catch {
+    throw new Error("Something Went Wrong When Loading Theme!");
+  }
 });
 
 ipcMain.handle("load-sub", ()=>{
@@ -376,8 +371,10 @@ ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
 ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
   let startFromTime = await getLastestPlayBackPostion(metaData);
 
+  const { MpvExecPath } = await loadSettings();
   MPVWorker = new Worker(MPVPlayerWorkerPath, {
     workerData: {
+      MpvExecPath: MpvExecPath,
       typeOfPlay:"StreamTorrent",
       metaData,
       subsObjects,
@@ -724,12 +721,19 @@ ipcMain.on("send-system-notification", (event, options) => {
 
 // ########## SETTINGS RELATED #################
 
-function loadSettings() {
+async function loadSettings() {
   try {
     const data = fs.readFileSync(SettingsFilePath, 'utf-8');
-    if(data.trim() === "" || !("TurnOnSubsByDefaultInternal" in JSON.parse(data))) throw new Error("empty Settings File");
-    return JSON.parse(data);
+    if(data.trim() === "" || !("TurnOnSubsByDefaultInternal" in JSON.parse(data)))
+      throw new Error("empty Settings File");
+   
+    const JData = JSON.parse(data);
+    if(JData?.MpvExecPath == null || JData?.MpvExecPath.trim() == "")
+      JData.MpvExecPath = await findMpvExecPath();
+
+    return JData;
   } catch (err) {
+    log.error(err.message);
     return {
       PageZoomFactor: 0.92,
       TurnOnSubsByDefaultInternal: true,
@@ -740,12 +744,13 @@ function loadSettings() {
       SubBackgroundOpacityLevelInternal: 0,
       DefaultDownloadPath: __downloads,
       rememberDownloadLocationByDefault: true,
-      DownloadSubtitlesByDefault: true 
+      DownloadSubtitlesByDefault: true,
+      MpvExecPath: await findMpvExecPath()
     };
   }
 }
 
-function loadTheme(){
+function loadTheme() {
   try{
     let ThemeObj = {theme:[]};
     let savedTheme = fs.readFileSync(ThemeFilePath, "utf-8");
@@ -768,7 +773,7 @@ function loadTheme(){
   }
 }
 
-function loadSubConfigs(){
+function loadSubConfigs() {
   let JsonConfig = {};
   let mpvConfig = fs.readFileSync(SubConfigFile,"utf-8");
   let lines = mpvConfig.split("\n");
@@ -885,6 +890,62 @@ function initializeDataFiles(){
     `;
     fs.writeFileSync(SubConfigFile,defaultFileData);
   }
+}
+
+async function resolveMpvExecFromPATH() {
+  const isWindows = os.platform() === 'win32';
+  const whichCommand = isWindows ? 'where' : 'which';
+  return new Promise((resolve) => {
+    const process = spawn(whichCommand, ['mpv'], { encoding: 'utf8' });
+    let stdout = '';
+    process.stdout.on('data', (data) => stdout += data.toString());
+    process.on('close', (code) => {
+      if (code !== 0 || !stdout.trim()) {
+        log.warn('mpv not found in PATH');
+        return resolve(null);
+      }
+      const result = stdout.trim().split('\n')[0].trim();
+      log.info(`Found mpv at: ${result}`);
+      resolve(result);
+    });
+    process.on('error', () => {
+      log.warn('mpv not found in PATH');
+      resolve(null);
+    });
+  });
+}
+
+async function findMpvExecPath() {
+  const mpvExecPath = await resolveMpvExecFromPATH();
+  if (mpvExecPath) return mpvExecPath;
+
+  const knownPaths = 
+    os.platform() === 'win32' 
+    ? [
+      'C:\\Program Files\\mpv\\mpv.exe',
+      'C:\\Program Files (x86)\\mpv\\mpv.exe',
+      path.join(os.homedir(), 'AppData', 'Local', 'Programs', 'mpv', 'mpv.exe'),
+      path.join(os.homedir(), 'scoop', 'apps', 'mpv', 'current', 'mpv.exe'),
+      'C:\\tools\\mpv\\mpv.exe',
+      path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Packages', 'mpv.exe'),
+    ] 
+    : [
+      '/usr/bin/mpv',
+      '/usr/local/bin/mpv',
+      '/snap/bin/mpv',
+      '/flatpak/exports/bin/mpv',
+      path.join(os.homedir(), '.local/bin/mpv'),
+    ];
+
+  for (const candidate of knownPaths) {
+    if (fs.existsSync(candidate)) {
+      log.info(`Found mpv at: ${candidate}`);
+      return candidate;
+    }
+  }
+
+  log.warn(`Mpv executable Path not found anywere`);
+  return null;
 }
 
 // ########## DOWLOAD RELATED #################
@@ -1568,8 +1629,10 @@ async function playVideoOverMpv(metaData) {
     await loadSubsFromSubDir(subIdentifyingElements)
     .map(sub=>sub.url);
 
+  const { MpvExecPath } = await loadSettings();
   MPVWorker = new Worker(MPVPlayerWorkerPath, {
     workerData: {
+      MpvExecPath: MpvExecPath,
       typeOfPlay:"LocalFile",
       metaData,
       startFromTime,

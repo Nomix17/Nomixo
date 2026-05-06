@@ -458,3 +458,37 @@ input[type="range"] {
   z-index: 1;
   transform: translateZ(0); /* Force GPU rendering */
 }
+
+#div-mpv {
+  display:flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between ;
+  margin: 40px 180px 40px 80px;
+  gap:50px;
+}
+
+#div-mpv h2 {
+  margin:0;
+}
+
+#div-mpv input {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 45px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: rgba(var(--input-backgroundColor));
+  border: 0.5px solid rgba(255,255,255,0.2);
+  color: white;
+  font-size: 16px;
+  font-family: monospace;
+  letter-spacing: 0.03em;
+  outline: none;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+
+#div-mpv input:focus {
+  border-color: rgba(255,255,255,0.2);
+  box-shadow: 0 0 0 2px rgba(128, 128, 128, 0.1);
+}

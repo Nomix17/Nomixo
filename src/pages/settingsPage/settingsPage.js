@@ -1,30 +1,30 @@
-let RightmiddleDiv = document.getElementById("div-middle-right");
-let ZoomFactorInput = document.getElementById("input-ZoomFactor");
-let ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
-let ApplyButton = document.getElementById("btn-applySettings");
+const RightmiddleDiv = document.getElementById("div-middle-right");
+const ZoomFactorInput = document.getElementById("input-ZoomFactor");
+const ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
+const ApplyButton = document.getElementById("btn-applySettings");
 
 // Internal Player
-let toggleButtonInternal = document.getElementById("toggleDefaultSubtitlesInternal");
-let increaseFontSizeInternalButton = document.getElementById("btn-increaseFontSizeInternal"); 
-let FontSizeInternalInput = document.getElementById("p-fontSizeInternal");
-let decreaseFontSizeInternalButton = document.getElementById("btn-decreaseFontSizeInternal"); 
-let increaseBackgroundOpacityInternalButton = document.getElementById("btn-increaseOpacityInternal"); 
-let backgroundOpacityInternalInput = document.getElementById("p-OpacityInternal");
-let decreaseBackgroundOpacityInternalButton = document.getElementById("btn-decreaseOpacityInternal"); 
-let CurrentFontInternal = document.getElementById("currrectFontInternal");
-let DropDownFontMenuInternal = document.getElementById("dropDownMenu-Font-Internal");
-let inputTextColorInternal = document.getElementById("input-TextColorInternal");
-let inputBackgroundColorInternal = document.getElementById("input-BackgroundColorInternal");
+const toggleButtonInternal = document.getElementById("toggleDefaultSubtitlesInternal");
+const increaseFontSizeInternalButton = document.getElementById("btn-increaseFontSizeInternal"); 
+const FontSizeInternalInput = document.getElementById("p-fontSizeInternal");
+const decreaseFontSizeInternalButton = document.getElementById("btn-decreaseFontSizeInternal"); 
+const increaseBackgroundOpacityInternalButton = document.getElementById("btn-increaseOpacityInternal"); 
+const backgroundOpacityInternalInput = document.getElementById("p-OpacityInternal");
+const decreaseBackgroundOpacityInternalButton = document.getElementById("btn-decreaseOpacityInternal"); 
+const CurrentFontInternal = document.getElementById("currrectFontInternal");
+const DropDownFontMenuInternal = document.getElementById("dropDownMenu-Font-Internal");
+const inputTextColorInternal = document.getElementById("input-TextColorInternal");
+const inputBackgroundColorInternal = document.getElementById("input-BackgroundColorInternal");
 
 //External Player
-let toggleButtonExternal = document.getElementById("toggleDefaultSubtitlesExternal");
-let increaseFontSizeExternalButton = document.getElementById("btn-increaseFontSizeExternal"); 
-let FontSizeExternalInput = document.getElementById("p-fontSizeExternal");
-let decreaseFontSizeExternalButton = document.getElementById("btn-decreaseFontSizeExternal"); 
-let CurrentFontExternal = document.getElementById("currrectFontExternal");
-let DropDownFontMenuExternal = document.getElementById("dropDownMenu-Font");
-let inputTextColorExternal = document.getElementById("input-TextColorExternal");
-
+const toggleButtonExternal = document.getElementById("toggleDefaultSubtitlesExternal");
+const increaseFontSizeExternalButton = document.getElementById("btn-increaseFontSizeExternal"); 
+const FontSizeExternalInput = document.getElementById("p-fontSizeExternal");
+const decreaseFontSizeExternalButton = document.getElementById("btn-decreaseFontSizeExternal"); 
+const CurrentFontExternal = document.getElementById("currrectFontExternal");
+const DropDownFontMenuExternal = document.getElementById("dropDownMenu-Font");
+const inputTextColorExternal = document.getElementById("input-TextColorExternal");
+const inputMpvExecPath = document.getElementById("input-mpv-exec-path");
 
 let ZoomFactorValue=1;
 let somethingChanged = false;
@@ -42,6 +42,7 @@ let SubtitlesOnByDefaultExternal = false;
 let FontSizeExternalExternal = 24;
 let FontFamilyExternal = "monospace";
 let TextColorExternal = "white";
+let MpvExecPath = "";
 
 let TMDB_API_KEY = null;
 let Wyzie_API_KEY = null;
@@ -212,6 +213,10 @@ inputTextColorExternal.addEventListener("input",(event)=>{
   TextColorExternal = inputTextColorExternal.value;
 });
 
+inputMpvExecPath.addEventListener("input", (event) => {
+  MpvExecPath = inputMpvExecPath.value;
+});
+
 FontSizeExternalInput.addEventListener("blur",(event) => {commitFontSizeExternal()});
 FontSizeExternalInput.addEventListener("keypress",(event) => {
   if(event.key === "Enter")
@@ -269,7 +274,7 @@ async function loadSettings(){
 
   // load zoom factor value
   ZoomFactorValue = SettingsObj.PageZoomFactor;
-  ZoomFactorInput.value =   ZoomFactorValue*50;
+  ZoomFactorInput.value = ZoomFactorValue*50;
   setFloatingZoomFactorDiv(ZoomFactorValue);
 
   // load Internal player sub settings
@@ -281,6 +286,8 @@ async function loadSettings(){
   BackgroundColorInternal = SettingsObj.SubBackgroundColorInternal;
   OpacityInternal = SettingsObj.SubBackgroundOpacityLevelInternal;
 
+  MpvExecPath = SettingsObj?.MpvExecPath ?? "";
+
   supressInputEventListener = true;
   if(SubtitlesOnByDefaultInternal) toggleButtonInternal.click();
   supressInputEventListener = false;
@@ -290,6 +297,8 @@ async function loadSettings(){
   CurrentFontInternal.innerText = FontFamilyInternal;
   inputTextColorInternal.value = TextColorInternal;
   inputBackgroundColorInternal.value = BackgroundColorInternal;
+
+  inputMpvExecPath.value = MpvExecPath;
   applySelectedColor(ColorInputsWithAlphaValue)
 
   RightmiddleDiv.classList.add("activate");
@@ -346,7 +355,8 @@ function getSettings(){
     SubFontFamilyInternal: FontFamilyInternal,
     SubColorInternal: TextColorInternal,
     SubBackgroundColorInternal: BackgroundColorInternal,
-    SubBackgroundOpacityLevelInternal: OpacityInternal
+    SubBackgroundOpacityLevelInternal: OpacityInternal,
+    MpvExecPath: MpvExecPath
   }
 }
 

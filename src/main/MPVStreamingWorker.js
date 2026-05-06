@@ -15,6 +15,7 @@ let expressServer = null;
 let webTorrentClient = null;
 
 function StreamTorrent(
+  MpvExecPath,
   metaData,
   subsObjects,
   startFromTime,
@@ -93,6 +94,7 @@ function StreamTorrent(
             .map(responce => responce.file);
 
           runMpvProcess(
+            MpvExecPath,
             url, mpvConfigDirectory,
             startFromTime, subsPaths,
             mpvWindowConfigs
@@ -120,6 +122,7 @@ function StreamTorrent(
 }
 
 async function PlayLocalVideo(
+  MpvExecPath,
   metaData,
   startFromTime,
   subsPaths,
@@ -131,6 +134,7 @@ async function PlayLocalVideo(
       const videoFullPath = findFile(metaData.downloadPath, metaData.fileName);
       if (videoFullPath)
         runMpvProcess(
+          MpvExecPath,
           videoFullPath, mpvConfigDirectory,
           startFromTime, subsPaths,
           mpvWindowConfigs, resolve, reject
@@ -145,6 +149,7 @@ async function PlayLocalVideo(
 }
 
 function runMpvProcess(
+  MpvExecPath,
   videoFullPath,
   mpvConfigDirectory,
   startFromTime,
@@ -154,7 +159,8 @@ function runMpvProcess(
   onError
 ) {
   const subsArgument = subsPaths.map(path => `--sub-file=${path}`);
-  const mpvExecutable = findMpvExecutable();
+  const isWindows = os.platform() === 'win32';
+  const mpvExecutable = MpvExecPath ?? (isWindows ? 'mpv.exe' : 'mpv');
 
   const childProcessArguments = [
     videoFullPath,
@@ -310,6 +316,7 @@ parentPort.on('message', async (msg) => {
 
 if (workerData.typeOfPlay === "StreamTorrent") {
   StreamTorrent(
+    workerData.MpvExecPath,
     workerData.metaData,
     workerData.subsObjects,
     workerData.startFromTime,
@@ -329,6 +336,7 @@ if (workerData.typeOfPlay === "StreamTorrent") {
 
 } else if (workerData.typeOfPlay === "LocalFile") {
   PlayLocalVideo(
+    workerData.MpvExecPath,
     workerData.metaData,
     workerData.startFromTime,
     workerData.subsPaths,
@@ -343,27 +351,4 @@ if (workerData.typeOfPlay === "StreamTorrent") {
     });
     await cleanup();
   });
-}
-
-function findMpvExecutable() {
-  if (os.platform() !== 'win32') return 'mpv';
-
-  const commonPaths = [
-    'C:\\Program Files\\mpv\\mpv.exe',
-    'C:\\Program Files (x86)\\mpv\\mpv.exe',
-    path.join(os.homedir(), 'AppData', 'Local', 'Programs', 'mpv', 'mpv.exe'),
-    path.join(os.homedir(), 'scoop', 'apps', 'mpv', 'current', 'mpv.exe'),
-    'C:\\tools\\mpv\\mpv.exe',
-    path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Packages', 'mpv.exe'),
-  ];
-
-  for (const candidate of commonPaths) {
-    if (fs.existsSync(candidate)) {
-      log.info(`Found mpv at: ${candidate}`);
-      return candidate;
-    }
-  }
-
-  log.warn('mpv not found in common locations, falling back to PATH');
-  return 'mpv.exe';
 }
