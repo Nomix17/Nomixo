@@ -955,7 +955,7 @@ async function findMpvExecPath() {
     }
   }
 
-  log.warn(`Mpv executable Path not found anywere`);
+  log.warn(`Mpv executable Path not found anywhere`);
   return null;
 }
 
