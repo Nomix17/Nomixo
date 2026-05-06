@@ -211,10 +211,12 @@ DropDownFontMenuExternal.addEventListener("mousedown",(event)=>{
 
 inputTextColorExternal.addEventListener("input",(event)=>{
   TextColorExternal = inputTextColorExternal.value;
+  somethingChanged = true;
 });
 
 inputMpvExecPath.addEventListener("input", (event) => {
   MpvExecPath = inputMpvExecPath.value;
+  somethingChanged = true;
 });
 
 FontSizeExternalInput.addEventListener("blur",(event) => {commitFontSizeExternal()});
@@ -499,7 +501,11 @@ document.querySelectorAll(".edit-btn").forEach(btn => {
 document.querySelector(".browse-btn")
 .addEventListener("click", async (event) => {
   const execPath = await window.electronAPI.openFile_FileSystemBrowser(inputMpvExecPath.value);
-  if(execPath) inputMpvExecPath.value = execPath;
+  if(execPath) {
+    inputMpvExecPath.value = execPath;
+    MpvExecPath = execPath;
+  }
+  somethingChanged = true;
 });
 
 document.querySelectorAll(".verify-btn").forEach(btn => {
