@@ -380,7 +380,16 @@ ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
 });
 
 ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
-  let startFromTime = await getLastestPlayBackPostion(metaData);
+  const startFromTime = await getLastestPlayBackPostion(metaData);
+
+  const [ windowWidth, windowHeight ] = WINDOW.getSize()
+  const [ windowPosX, windowPosY ] = WINDOW.getPosition()
+  const windowIsFullScreened = WINDOW.isFullScreen();
+  const windowIsMaximized = WINDOW.isMaximized();
+  const windowGeometry =
+    windowIsFullScreened || windowIsMaximized
+      ? "70%x70%"
+      : `${windowWidth}x${windowHeight}+${windowPosX}+${windowPosY}`;
 
   const { MpvExecPath } = await loadSettings();
   MPVWorker = new Worker(MPVPlayerWorkerPath, {
@@ -392,7 +401,12 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
       startFromTime,
       videoCachePath,
       subDirectory,
-      mpvConfigDirectory
+      mpvConfigDirectory,
+      mpvWindowConfigs: {
+        geometry: windowGeometry,
+        fullscreened: windowIsFullScreened,
+        maximized: windowIsMaximized
+      }
     },
     type: 'module'
   });
