@@ -1651,8 +1651,8 @@ async function playVideoOverMpv(metaData) {
       : `${windowWidth}x${windowHeight}+${windowPosX}+${windowPosY}`;
 
   const subsPaths =
-    await loadSubsFromSubDir(subIdentifyingElements)
-    .map(sub=>sub.url);
+    (await loadSubsFromSubDir(subIdentifyingElements))
+    .map(sub => sub.url);
 
   const { MpvExecPath } = await loadSettings();
   MPVWorker = new Worker(MPVPlayerWorkerPath, {
