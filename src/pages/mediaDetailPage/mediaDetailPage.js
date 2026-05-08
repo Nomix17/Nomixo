@@ -57,7 +57,7 @@ async function fetchInformation(){
       let WarningElement = DisplayWarningOrErrorForUser("We're having trouble loading data.</br>Please Check your connection and retry!");
       middleDiv.appendChild(WarningElement);
       globalLoadingGif.remove();
-      middleDiv.style.opacity = 1;
+      middleDiv.classList.add("activate");
     }, 800);
   }
 }
