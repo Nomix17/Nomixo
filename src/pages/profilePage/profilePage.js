@@ -4,14 +4,7 @@ const personId = data.get("personId");
 const MediaSuggestions = document.getElementById("div-MediaSuggestions")
 const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
-setTimeout(()=>{
-  try {
-    globalLoadingGif.style.opacity = "1"
-  } catch(err) {
-    console.log(err)
-  }
-},100);
-
+globalLoadingGif.style.opacity = "1"
 async function getPersonInfo(apiKey){
   return fetch(`https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}`)
   .then(PersonData => PersonData.json())
@@ -130,8 +123,6 @@ async function fetchData(apiKey, personjob){
   const MediaData = await res.json();
   insertPersonFamousWorkIntoSuggestionDiv(MediaData, personjob,LibraryInformation);
   await loadCachedRightMiddleDivScrollValue();
-  globalLoadingGif.remove();
-  RightmiddleDiv.classList.add("activate");
 }
 
 function insertPersonFamousWorkIntoSuggestionDiv(MediaData, personJob,LibraryInformation){
@@ -210,7 +201,7 @@ async function loadMedia(apiKey){
 
 async function initPage(){
   const apiKey = await window.electronAPI.getTMDBAPIKEY();
-  loadMedia(apiKey);
+  await loadMedia(apiKey);
   globalLoadingGif.remove();
   RightmiddleDiv.classList.add("activate");
 }
