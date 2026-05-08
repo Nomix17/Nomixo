@@ -9,3 +9,8 @@
   overflow-x: auto;
   box-sizing: border-box;
 }
+
+.div-categories-description {
+  display: flex;
+  margin-top:16.6px;
+}

@@ -1,49 +1,49 @@
 h1 {
-  font-size: 35px;
-  margin: 10px 10px 10px 25px;
+  font-size: 32.2px;
+  margin: 9.2px 9.2px 9.2px 23px;
 }
 
 h2 {
-  font-size: 25px;
-  margin: 40px 10px 10px 80px;
+  font-size: 23px;
+  margin: 36.8px 9.2px 9.2px 73.6px;
 }
 
 h4 {
   width: 85%;
-  font-size: 25px;
+  font-size: 23px;
   font-weight: normal;
   border: none;
-  margin: 20px 0 50px 120px;
+  margin: 18.4px 0 46px 110.4px;
 }
 
 td {
   width: 85%;
-  font-size: 25px;
+  font-size: 23px;
   font-weight: normal;
   border: none;
-  margin: 10px 0px 10px 0px;
+  margin: 9.2px 0px 9.2px 0px;
 }
 
 p {
   border-radius: 5px;
-  padding: 5px;
-  margin: 5px;
-  font-size: 25px;
+  padding: 4.6px;
+  margin: 4.6px;
+  font-size: 23px;
 }
 
 table {
-  border-spacing: 50px;
-  margin: 0px 70px;
+  border-spacing: 46px;
+  margin: 0px 64.4px;
 }
 
 output {
   opacity: 0;
   transition: opacity 0.2s ease;
-  bottom: -43px;
+  bottom: -39.56px;
   position: absolute;
   background-color: rgba(255, 255, 255, 0.1);
-  font-size: 15px;
-  padding: 8px 10px;
+  font-size: 13.8px;
+  padding: 7.36px 9.2px;
   border-radius: 10px;
   transform: translateX(-50%);
 }
@@ -57,27 +57,27 @@ output {
 }
 
 #div-middle-right {
-  padding: 20px 0px 40px 0px;
+  padding: 18.4px 0px 36.8px 0px;
   opacity: var(--dont-Smooth-transition-between-pages);
 }
 
 #div-ApplyButton {
-  margin-top: 100px;
+  margin-top: 92px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 #btn-applySettings {
-  width: 120px;
-  height: 50px;
+  width: 110.4px;
+  height: 46px;
   transform: translateZ(0);
   border-radius: 10px;
   border: none;
   background-color: rgba(255, 255, 255, 0.05);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
-  font-size: 25px;
-  margin-bottom: 50px;
+  font-size: 23px;
+  margin-bottom: 46px;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
 }
@@ -93,14 +93,14 @@ output {
 
 #input-ZoomFactor {
   accent-color: rgba(var(--secondary-color));
-  margin: 0px 120px;
+  margin: 0px 110.4px;
 }
 
 #input-ZoomFactor::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 18.4px;
+  height: 18.4px;
   background: rgba(var(--secondary-color));
   border: 2px solid white;
   border-radius: 50%;
@@ -122,23 +122,23 @@ output {
 #p-OpacityInternal {
   text-align: center;
   border-radius: 5px;
-  padding: 5px;
-  margin: 5px;
-  font-size: 25px;
+  padding: 4.6px;
+  margin: 4.6px;
+  font-size: 23px;
   background-color: transparent;
-  width: 80px;
+  width: 73.6px;
   border: none;
 }
 
 #input-mpv-exec-path {
   width: 100%;
-  height: 45px;
-  padding: 0 12px;
-  border-radius: 8px;
+  height: 41.4px;
+  padding: 0 11.04px;
+  border-radius: 7.36px;
   background: rgba(var(--input-backgroundColor));
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   color: white;
-  font-size: 16px;
+  font-size: 14.72px;
   font-family: monospace;
   letter-spacing: 0.03em;
   outline: none;
@@ -154,20 +154,21 @@ output {
 .api-key-inputs-div {
   display: flex;
   flex-direction: column;
-  padding: 40px 10px 10px 120px;
-  gap: 36px;
+  padding: 36.8px 9.2px 9.2px 110.4px;
+  gap: 33.12px;
   box-sizing: border-box;
 }
+
 .input-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11.04px;
   width: 100%;
 }
 
 .input-container h2 {
-  margin: 0 10px 0 0;
-  font-size: 25px;
+  margin: 0 9.2px 0 0;
+  font-size: 23px;
   font-weight: normal;
   white-space: nowrap;
   flex-shrink: 0;
@@ -181,13 +182,13 @@ output {
 .input-container input {
   flex: 1 1 0;
   min-width: 0;
-  height: 45px;
-  padding: 0 12px;
-  border-radius: 8px;
+  height: 41.4px;
+  padding: 0 11.04px;
+  border-radius: 7.36px;
   background: rgba(var(--input-backgroundColor));
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   color: white;
-  font-size: 16px;
+  font-size: 14.72px;
   font-family: monospace;
   letter-spacing: 0.03em;
   outline: none;
@@ -210,14 +211,14 @@ output {
 }
 
 .input-container .edit-btn {
-  width: 31px;
-  height: 31px;
+  width: 28.52px;
+  height: 28.52px;
   top: 50%;
-  right: 10px;
+  right: 9.2px;
   position: absolute;
   transform: translateY(-50%);
   border: none;
-  border-radius: 8px;
+  border-radius: 7.36px;
   cursor: pointer;
 }
 
@@ -241,17 +242,17 @@ output {
 
 .input-container .browse-btn,
 .input-container .verify-btn {
-  padding: 0 14px;
-  border-radius: 8px;
+  padding: 0 12.88px;
+  border-radius: 7.36px;
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   background-color: rgba(255, 255, 255, 0.05);
-  font-size: 13px;
+  font-size: 11.96px;
   font-weight: 500;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.12s, transform 0.1s;
-  height: 43px;
-  width: 100px;
+  height: 39.56px;
+  width: 92px;
   color: white;
 }
 
@@ -263,6 +264,7 @@ output {
 .input-container .verify-btn:hover {
   background: transparent;
 }
+
 .input-container .browse-btn:active,
 .input-container .verify-btn:active {
   transform: scale(0.98);
@@ -288,9 +290,9 @@ output {
 .verify-btn.loading::after {
   content: "";
   display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin-left: 8px;
+  width: 9.2px;
+  height: 9.2px;
+  margin-left: 7.36px;
   border: 1.5px solid currentColor;
   border-top-color: transparent;
   border-radius: 50%;
@@ -313,8 +315,8 @@ output {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -60%) rotate(45deg);
-  width: 6px;
-  height: 11px;
+  width: 5.52px;
+  height: 10.12px;
   border-right: 2px solid #4ade80;
   border-bottom: 2px solid #4ade80;
 }
@@ -335,7 +337,7 @@ output {
   left: 50%;
   transform: translate(-50%, -50%);
   color: #f87171;
-  font-size: 14px;
+  font-size: 12.88px;
 }
 
 .response-message-p {
@@ -344,7 +346,7 @@ output {
   left: 50%;
   transform: translate(-50%, 0%);
   opacity: 0;
-  font-size: 11px;
+  font-size: 10.12px;
   color: red;
   font-family: monospace;
   white-space: nowrap;
@@ -357,7 +359,7 @@ output {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 14px;
+  font-size: 12.88px;
   color: rgba(255, 255, 255, 0.28);
   text-align: center;
 }
@@ -369,7 +371,7 @@ output {
   background: none;
   border: none;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 12.88px;
   color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
   padding: 0;
@@ -385,9 +387,9 @@ output {
 }
 
 .btn-changeNum {
-  width: 35px;
-  height: 30px;
-  border-radius: 5px;
+  width: 32.2px;
+  height: 27.6px;
+  border-radius: 4.6px;
   border: 1px solid #605f5f;
   background-color: #14161b;
 }
@@ -402,7 +404,7 @@ output {
 }
 
 .border {
-  margin: 20px auto;
+  margin: 18.4px auto;
   content: "";
   width: 97%;
   border-top: 1px solid rgba(var(--div-containers-borders-color));
@@ -416,12 +418,11 @@ output {
   text-align: center;
 }
 
-
 input[type="color"] {
   -webkit-appearance: none;
   border: none;
-  width: 100px;
-  height: 40px;
+  width: 92px;
+  height: 36.8px;
   overflow: hidden;
   padding: 0;
   background: none;
@@ -456,7 +457,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .alphaRangeValue {
   -webkit-appearance: none;
-  height: 10px;
+  height: 9.2px;
   background: linear-gradient(
     to right,
     rgba(0, 0, 0, 0),
@@ -465,9 +466,9 @@ input[type="range"]::-webkit-slider-thumb {
   );
   border-radius: 4px;
   border: 1px solid black;
-  width: 98px;
+  width: 90.16px;
   padding: 0 1px;
-  margin-top: 3px;
+  margin-top: 2.76px;
 }
 
 .alphaRangeValue::-webkit-slider-thumb {

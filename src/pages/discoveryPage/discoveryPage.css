@@ -2,24 +2,21 @@
   transition:opacity 0.1s ease;
 }
 #div-MediaSuggestions{
-  padding:6px;
+  padding:5.52px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(184px, 1fr));
   gap: 10px;
 }
-
 #div-OptionsContainer{
   display:flex;
   flex-direction:row;
-  margin-top:35px;
+  margin-top:28px;
 }
-
 .loader{
   position:fixed;
   opacity:0;
   z-index:2000;
 }
-
 #lds-dual-ring-container {
   display: none;
   justify-content: center;
@@ -31,17 +28,17 @@
 }
 .lds-dual-ring {
   display: inline-block;
-  width: 80px;
-  height: 80px;
+  width: 73.6px;
+  height: 73.6px;
 }
 .lds-dual-ring:after {
   content: " ";
   display: block;
-  width: 44px;
-  height: 44px;
-  margin: 8px;
+  width: 40.48px;
+  height: 40.48px;
+  margin: 7.36px;
   border-radius: 50%;
-  border: 6.4px solid currentColor;
+  border: 5.89px solid currentColor;
   border-color: currentColor transparent currentColor transparent;
   animation: lds-dual-ring 1.2s linear infinite;
 }
@@ -54,9 +51,8 @@
   }
 }
 .div-categories-description{
-  padding:25px 20px 20px 20px!important;
+  padding:23px 18.4px 18.4px 18.4px!important;
 }
 .div-categories-description h1{
   margin:0px !important;
-
 }

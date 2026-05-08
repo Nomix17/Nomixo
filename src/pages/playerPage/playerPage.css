@@ -39,12 +39,10 @@ html::-webkit-scrollbar{
 
 ::-webkit-scrollbar{
   background: rgba(0,0,0,0%);
-  width:5px;
-  height:5px;
+  width:4.5px;
+  height:4.5px;
 }
 
-#btn-fullscreen,
-#btn-goBack,
 #btn-PauseButton,
 #btn-OpenSubtitle,
 #btn-OpenPIP,
@@ -52,8 +50,8 @@ html::-webkit-scrollbar{
   display:flex;
   justify-content:center;
   align-items:center;
-  width:55px;
-  height:55px;
+  width:49.5px;
+  height:49.5px;
   background-color: rgba(0,0,0,0%);
   border:none;
   border-radius:10px;
@@ -67,12 +65,20 @@ html::-webkit-scrollbar{
 }
 
 #btn-goBack{
-  width:50px;
-  height:50px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:45px;
+  height:45px;
+  background-color:  rgba(0,0,0,0%);
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
   padding-right:10px;
 }
 
-#btn-goBack svg{
+#btn-goBack svg {
+  width: 110%;
   transform:scale(1.1);
 }
 
@@ -81,11 +87,25 @@ html::-webkit-scrollbar{
 #img-OpenSubtitle,
 #img-OpenPIP,
 #img-VolumeButton {
-  width:68%;
-  height:68%;
+  width:69%;
+  height:69%;
   background-color: rgba(0,0,0,0%);
   object-fit: contain;
   cursor:pointer;
+}
+
+#btn-fullscreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width:45px;
+  height:45px;
+  background-color: rgba(0,0,0,0%) ;
+  border:none;
+  border-radius:10px;
+}
+#img-fullscreen {
+  width:80%;
 }
 
 #btn-fullscreen:hover,
@@ -98,10 +118,10 @@ html::-webkit-scrollbar{
 }
 #btn-OpenSubtitle,
 #btn-OpenPIP{
-  margin-right:10px;
+  margin-right:9px;
 }
 #img-OpenPIP{
-  margin-top:4px;
+  margin-top:3.6px;
   width:66%;
   height:66%;
 }
@@ -124,7 +144,6 @@ html::-webkit-scrollbar{
   width: 100%;
 }
 
-/* Updated top bar styling to match mainPage */
 #div-topButtonsContainer {
   top: 0;
   display: flex;
@@ -133,9 +152,9 @@ html::-webkit-scrollbar{
   width: 100%;
   backdrop-filter: blur(3px);
   background-color: rgba(0,0,0,40%);
-  height: 80px;
+  height: 73.6px;
   box-sizing: border-box;
-  padding: 18px;
+  padding: 16.5px;
   z-index: 10;
 }
 
@@ -148,7 +167,7 @@ html::-webkit-scrollbar{
 
 #div-bottomButtonsContainer {
   bottom:150%;
-  padding:20px 20px 10px 20px;
+  padding:18px 18px 9px 18px;
 }
 
 #div-videoContainer{
@@ -182,7 +201,7 @@ video{
   left:50%;
   transform: translate(-50%,-50%);
   font-weight:600;
-  font-size:30px;
+  font-size:27px;
   color:rgba(var(--text-color),0.7);
 }
 
@@ -190,7 +209,7 @@ video{
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   padding:0;
   margin:0;
 }
@@ -204,12 +223,12 @@ video{
   justify-content:center;
   flex-direction: row;
   align-items:center;
-  margin-bottom:10px;
+  margin-bottom:9px;
 }
 #input-videoSlider{
   accent-color:rgba(var(--secondary-color)); 
   width:100%;
-  margin:0px 10px 0px 10px;
+  margin:0px 9px 0px 9px;
 }
 
 #input-volumeSlider{
@@ -219,9 +238,9 @@ video{
 #p-videoPosition,
 #p-videoDuration{
   font-weight:bold;
-  font-size:20px;
+  font-size:18px;
   color:rgb(var(--text-color));
-  padding:0px 5px 0px 5px;
+  padding:0px 4.5px 0px 4.5px;
   margin:0px;
 }
 #div-rightSide{
@@ -232,7 +251,7 @@ video{
 #div-Subtitles{
   background-color:rgba(0,0,0,0%);
   position:absolute;
-  bottom:10px;
+  bottom:9px;
   left:50%;
   transform: translate(-50%);
   color:rgb(var(--text-color));
@@ -242,8 +261,8 @@ video{
     -1px  1px 0 black,
      1px  1px 0 black;
   z-index:1;
-  margin:10px;
-  font-size: 30px;
+  margin:9px;
+  font-size: 27px;
 }
 
 #div-SomethingWentWrong{
@@ -254,10 +273,10 @@ video{
   flex-direction:column;
   background-color:rgba(var(--primary-color),1);
   color: rgba(var(--text-color),0.5);
-  font-size:18px;
+  font-size:16.2px;
   font-weight:600;
-  padding:30px;
+  padding:27px;
   border-radius:20px;
-  width:400px;
-  min-height:200px;
+  width:360px;
+  min-height:180px;
 }

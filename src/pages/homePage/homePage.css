@@ -82,7 +82,7 @@ html{
 
 body, html {
   font-family: "Montserrat", 'Cairo', 'Noto Sans Arabic', sans-serif;
-  font-size:14px;
+  font-size:12.88px;
   margin: 0;
   padding: 0;
   height: 100%;
@@ -103,10 +103,10 @@ body, html {
   padding-bottom:10px;
 }
 .div-categories-description h1{
-  font-size:35px;
+  font-size:32.2px;
   padding:0;
   margin-left:25px;
-  margin-top:11px;
+  margin-top:11.6px;
 }
 
 #div-main {
@@ -122,9 +122,9 @@ body, html {
   align-items:center;
   width: 100%;
   background-color:transparent;
-  height: 80px;
+  height: 73.6px;
   box-sizing: border-box;
-  padding: 18px;
+  padding: 16.5px;
   border-bottom:1px solid rgba(var(--div-containers-borders-color));
   z-index:10;
 }
@@ -140,12 +140,12 @@ body, html {
   display:flex;
   flex-direction: column;
   justify-content:flex-start;
-  width: 80px;
+  width: 73px;
   align-items: center;
   height:100%;
   background-color: transparent;
   box-sizing: border-box;
-  padding: 20px 15px 20px 20px;
+  padding: 20px 13.8px 18.4px 18.4px;
   gap:9vh;
   z-index:5;
 }
@@ -154,8 +154,8 @@ body, html {
   border-radius:10px;
   text-align:center;
   border:none;
-  width:55px;
-  height:55px;
+  width:50px;
+  height:50px;
   cursor:pointer;
 }
 
@@ -230,20 +230,20 @@ body, html {
   flex-direction: column;
   margin-right:10px;
   pointer-events: auto;
-  height: 404px;
-  width: 202px;
+  height: 371.68px;
+  width: 185.84px;
 }
 
 .img-MoviePosterContainer{
-  width: 202px;
-  height: 310px;
+  width: 185.84px;
+  height: 285.2px;
   border-radius: 15px;
   cursor:pointer;
 }
 
 .img-MoviePoster {
-  width: 202px;
-  height: 310px;
+  width: 185.84px;
+  height: 285.2px;
   border-radius: 15px;
   border: 3px solid rgba(255,255,255,0%);
   position: static; 
@@ -258,7 +258,7 @@ body, html {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size:17px;
+  font-size:15.64px;
   cursor:pointer;
 }
 
@@ -287,10 +287,10 @@ body, html {
 }
 
 #input-searchForMovie{
-  font-size:16px;
-  padding:10px 16px;
-  min-width:500px;
-  height:50px;
+  font-size:14.72px;
+  padding:10px 19px;
+  min-width:410px;
+  height:45px;
   background-color: rgba(var(--input-backgroundColor));
   border:2px solid rgba(255,255,255,30%);
   border-radius:100px 0 0 100px;
@@ -314,8 +314,8 @@ body, html {
   display:flex;
   justify-content:center;
   align-items:center;
-  width:50px;
-  height:50px;
+  width:45px;
+  height:45px;
   background-color: rgba(var(--input-backgroundColor));
   border:2px solid rgba(255,255,255,30%);
   border-radius:0 100px 100px 0;
@@ -331,7 +331,7 @@ body, html {
   display:flex;
   justify-content:center;
   align-items:center;
-  font-size:17px; 
+  font-size:15.64px; 
   background-color:  rgba(255,255,255,0%);
   border:none;
   border-radius:10px;
@@ -348,15 +348,15 @@ body, html {
   display: flex;
   justify-content: center;
   align-items: center;
-  width:55px;
-  height:55px;
+  width:45px;
+  height:44.8px;
   background-color: rgba(0,0,0,0%) ;
   border:none;
   border-radius:10px;
 }
 #img-fullscreen{
   background-color:  rgba(0,0,0,0%);
-  width:68%;
+  width:80%;
 }
 
 #btn-goBack:hover,
@@ -448,7 +448,7 @@ input::selection {
 
 
 .continue-video-button {
-  bottom: 55%;
+  bottom: 56%;
   right: 50%;
   width: 73px;
   height: 73px;
@@ -535,8 +535,8 @@ input::selection {
   background-color:transparent;
   border:none;
   border-radius:100%;
-  width:70px;
-  height:70px;
+  width:64.4px;
+  height:64.4px;
   padding:0;
   bottom:51%;
   transform:translateY(30%);
@@ -567,12 +567,13 @@ input::selection {
   display:flex;
   justify-content:center;
   align-items:center;
-  width:50px;
-  height:50px;
+  width:45px;
+  height:44.8px;
   background-color:  rgba(0,0,0,0%);
   border:none;
   border-radius:10px;
   cursor:pointer;
+  padding-top:2px;
   padding-right:10px;
 }
 #btn-goBack svg{
@@ -611,7 +612,7 @@ input::selection {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 #messageDiv p{
-  font-size:16px;
+  font-size:14.72px;
   font-weight:500;
   margin: 0;
   line-height: 1.5;
@@ -641,7 +642,7 @@ input::selection {
   width:150px;
   white-space: nowrap;
   overflow: hidden;
-  font-size:17px;
+  font-size:15.64px;
   cursor:pointer;
   text-overflow: ellipsis;
   transition: transform 0.1s linear;
