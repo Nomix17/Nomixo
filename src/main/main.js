@@ -318,7 +318,7 @@ ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
   return new Promise((resolve, reject) => {
     InVideoPlayerPage = true;
 
-    log.info("\nLoading Torrent:",fileName);
+    log.info("Loading Torrent:",fileName);
     if (!fs.existsSync(videoCachePath)) {
       fs.mkdirSync(videoCachePath, { recursive: true });
     }
@@ -1025,7 +1025,7 @@ async function downloadTorrent(torrentInfo) {
 
     torrent.on("ready", () => {
      
-      log.info("\nDownload Target: " + torrentInfo?.fileName);
+      log.info("Download Target: " + torrentInfo?.fileName);
       console.log("\nTorrent Files:-----------------------------------------------------");
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
