@@ -502,3 +502,27 @@ input[type="range"]::-webkit-slider-thumb {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+#div-PlayerSubtitlesInternal .select-trigger,
+#div-ExternalPlayerSettings .select-trigger {
+  font-size: 15px;
+  text-align: center;
+  padding-left: 36.8px;
+}
+
+#div-PlayerSubtitlesInternal .select-option,
+#div-ExternalPlayerSettings .select-option {
+  font-size: 13px;
+  text-align: center;
+  padding-right: 1rem;
+}
+
+#div-PlayerSubtitlesInternal .select-option:last-child,
+#div-ExternalPlayerSettings .select-option:last-child {
+  border-bottom: none;
+}
+
+#div-PlayerSubtitlesInternal .select-option.selected,
+#div-ExternalPlayerSettings .select-option.selected {
+  background: rgba(255, 255, 255, 0.12);
+}

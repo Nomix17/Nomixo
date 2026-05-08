@@ -11,7 +11,6 @@ const decreaseFontSizeInternalButton = document.getElementById("btn-decreaseFont
 const increaseBackgroundOpacityInternalButton = document.getElementById("btn-increaseOpacityInternal"); 
 const backgroundOpacityInternalInput = document.getElementById("p-OpacityInternal");
 const decreaseBackgroundOpacityInternalButton = document.getElementById("btn-decreaseOpacityInternal"); 
-const CurrentFontInternal = document.getElementById("currrectFontInternal");
 const DropDownFontMenuInternal = document.getElementById("dropDownMenu-Font-Internal");
 const inputTextColorInternal = document.getElementById("input-TextColorInternal");
 const inputBackgroundColorInternal = document.getElementById("input-BackgroundColorInternal");
@@ -21,7 +20,6 @@ const toggleButtonExternal = document.getElementById("toggleDefaultSubtitlesExte
 const increaseFontSizeExternalButton = document.getElementById("btn-increaseFontSizeExternal"); 
 const FontSizeExternalInput = document.getElementById("p-fontSizeExternal");
 const decreaseFontSizeExternalButton = document.getElementById("btn-decreaseFontSizeExternal"); 
-const CurrentFontExternal = document.getElementById("currrectFontExternal");
 const DropDownFontMenuExternal = document.getElementById("dropDownMenu-Font");
 const inputTextColorExternal = document.getElementById("input-TextColorExternal");
 const inputMpvExecPath = document.getElementById("input-mpv-exec-path");
@@ -159,9 +157,8 @@ decreaseBackgroundOpacityInternalButton.addEventListener("click",()=>{
   somethingChanged = true;
 });
 
-DropDownFontMenuInternal.addEventListener("mousedown",(event)=>{
-  FontFamilyInternal = event.target.innerText;
-  CurrentFontInternal.innerText = FontFamilyInternal;
+DropDownFontMenuInternal.addEventListener("dropdownChange",(event)=>{
+  FontFamilyInternal = event.detail.value;
   somethingChanged = true;
 });
 
@@ -203,9 +200,8 @@ decreaseFontSizeExternalButton.addEventListener("click",()=>{
   somethingChanged = true;
 });
 
-DropDownFontMenuExternal.addEventListener("mousedown",(event)=>{
-  FontFamilyExternal = event.target.innerText;
-  CurrentFontExternal.innerText = FontFamilyExternal;
+DropDownFontMenuExternal.addEventListener("dropdownChange",(event)=>{
+  FontFamilyExternal = event.detail.value;
   somethingChanged = true;
 });
 
@@ -296,7 +292,7 @@ async function loadSettings(){
 
   FontSizeInternalInput.value = FontSizeInternal+"px";
   backgroundOpacityInternalInput.value = OpacityInternal+"%";
-  CurrentFontInternal.innerText = FontFamilyInternal;
+  setDropdownValue(DropDownFontMenuInternal, FontFamilyInternal);
   inputTextColorInternal.value = TextColorInternal;
   inputBackgroundColorInternal.value = BackgroundColorInternal;
 
@@ -319,7 +315,7 @@ async function loadExternalSubConfigs(){
   supressInputEventListener = false;
 
   FontSizeExternalInput.value = FontSizeExternal+"px";
-  CurrentFontExternal.innerText = FontFamily;
+  setDropdownValue(DropDownFontMenuExternal, FontFamily);
   inputTextColorExternal.value = TextColor;
   applySelectedColor(ColorInputsWithAlphaValue)
 }
@@ -480,6 +476,7 @@ setupKeyPressesHandler();
 setLeftButtonStyle("btn-settings");
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
+dropDownInit();
 
 window.addEventListener("keydown",(event)=>{
   if(event.key === "Enter"){
