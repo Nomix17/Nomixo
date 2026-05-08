@@ -1303,15 +1303,16 @@ function loadImageWithAnimation(imageContainer, imageElement, imagePath, alterna
   });
 }
 
-function handleFullScreenIcon() {
+async function handleFullScreenIcon() {
   const FullScreenIcon = "../../../assets/icons/fullscreen.png";
   const UnFullScreenIcon = "../../../assets/icons/unfullscreen.png";
-
   const fullscreenButton = document.getElementById("img-fullscreen");
-  if (!window.screenTop && !window.screenY) 
-    fullscreenButton?.setAttribute("src",UnFullScreenIcon);
-  else
+  const isFullscreened = await electronAPI.getFullscreenState();
+
+  if (!isFullscreened)
     fullscreenButton?.setAttribute("src",FullScreenIcon);
+  else
+    fullscreenButton?.setAttribute("src",UnFullScreenIcon);
 }
 
 async function handleGoBackIcon(){

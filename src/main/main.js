@@ -262,6 +262,11 @@ ipcMain.handle("request-fullscreen",()=>{
   return WINDOW.isFullScreen();
 });
 
+ipcMain.handle("get-fullscreen-status",(event)=>{
+  const win = BrowserWindow.fromWebContents(event.sender);
+  return win ? win.isFullScreen() : false;
+});
+
 ipcMain.handle("get-full-video-path",async(event,dirPath,fileName)=>{
   return await findFile(dirPath,fileName);
 });
