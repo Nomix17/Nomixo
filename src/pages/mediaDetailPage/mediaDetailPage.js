@@ -617,7 +617,6 @@ function insertContinueWatchingButton(container,MediaLibraryInfo){
 function displayEpisodes(seasonIndex){
   let currentSeasonDiv = seasonsDivArray.find(div => parseInt(div.getAttribute("season_number")) === parseInt(seasonIndex));
   if(currentSeasonDiv){
-    selectSeason.style.display = "block";
     EpisodesContainer.style.display = "block";
     EpisodesContainer.innerHTML = "";
     setDropdownValue(selectSeason,seasonIndex);
