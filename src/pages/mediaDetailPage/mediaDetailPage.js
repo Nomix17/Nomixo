@@ -247,7 +247,10 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
     const mediaTorrentRes = await fetch(url);
     mediaTorrentInformation = await mediaTorrentRes.json();
     insertTorrentInfoElement(mediaTorrentInformation,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo);
-  
+    const scrollValue = await getCachedTorrentsScrollValue();
+    TorrentMagnetContainer.scrollTop = scrollValue;
+      // TorrentMagnetContainer.classList.remove("preloadingTorrent");
+
 
   } catch (error) {
     console.error(error);
@@ -578,7 +581,6 @@ function insertTorrentInfoElement(data,MediaId,MediaType,MediaLibraryInfo,episod
       }
     });
 
-    TorrentMagnetContainer.classList.remove("preloadingTorrent");
     if(TorrentMagnetContainer.innerHTML.trim() === "")
       throw new Error("No Useful Results Were found !");
 
@@ -950,6 +952,22 @@ function focusFunction(element) {
   }
 
   element.focus();
+}
+
+async function loadCachedEpisodesScrollValue() {
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const episodesContainerTopScroll = cachedData?.serie_episodes_scroll_value;
+  if(!episodesContainerTopScroll) return;
+}
+async function getCachedTorrentsScrollValue() {
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const torrentContainerTopScroll = cachedData?.torrent_container_scroll_value;
+  return torrentContainerTopScroll;
+}
+async function loadCachedSeasonNumber() {
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const seasonNumber = cachedData?.loaded_season;
+  if(!seasonNumber) return;
 }
 
 manageSaveDropDowns();
