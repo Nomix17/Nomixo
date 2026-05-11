@@ -225,12 +225,46 @@ function getCurrentPageCacheData(){
   }
 }
 
-function getRightMiddleDivScrollValue(){
+function getRightMiddleDivScrollValue() {
   const RightMiddleDiv = document.getElementById("div-middle-right");
   if(!RightMiddleDiv) return {};
   return {
     "right_middle_div_top_scroll_value":RightMiddleDiv.scrollTop
   };
+}
+
+function getMediaSuggestionsScrollValue() {
+  const rightMiddleDiv = document.getElementById("div-middle-right");
+  const suggestionsDiv = document.querySelectorAll(".div-MovieElement");
+  return getNumberOfItemsInRow(Array.from(suggestionsDiv)) * rightMiddleDiv.scrollTop;
+}
+
+function getNumberOfItemsInRow(items) {
+  const currentElement = items?.[0];
+  let numberOfItems = 0;
+
+  if (currentElement) {
+    const currentElementYPos = currentElement.getBoundingClientRect().top;
+    for(let i = 0 ;; i++) {
+      const elementNextElement = items?.[i];
+
+      if (elementNextElement) {
+        const yPosition = elementNextElement.getBoundingClientRect().top;
+
+        if (yPosition  === currentElementYPos) {
+          numberOfItems ++;
+          
+        } else {
+          return numberOfItems;
+        }
+
+      } else {
+        break;
+      }
+    }
+  }
+ 
+  return numberOfItems;
 }
 
 async function getDiscoveryPageCacheData(){
@@ -240,7 +274,7 @@ async function getDiscoveryPageCacheData(){
     page:"discovery",
     "containers_data": containersData,
     "last_loaded_medias_page":numberOfLoadedPages,
-    ...getRightMiddleDivScrollValue(),
+    "media_suggestions_top_scroll_value": getMediaSuggestionsScrollValue(),
   };
 
   return cacheData;
@@ -319,11 +353,18 @@ async function loadCachedRightMiddleDivScrollValue(){
   }
 }
 
-async function loadCachedRightDivScrollValue(cachedData){
+function loadCachedRightDivScrollValue(cachedData){
   const RightmiddleDiv = document.getElementById("div-middle-right");
   const RightmiddleDivScrollTopValue = cachedData?.right_middle_div_top_scroll_value;
   if(RightmiddleDivScrollTopValue)
     RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
+}
+
+function loadCachedSuggestionsDivScrollValue(cachedData) {
+  const rightMiddleDiv = document.getElementById("div-middle-right");
+  const suggestionsDiv = document.querySelectorAll(".div-MovieElement");
+  const scrollValue = cachedData?.media_suggestions_top_scroll_value;
+  rightMiddleDiv.scrollTop = scrollValue / getNumberOfItemsInRow(Array.from(suggestionsDiv));
 }
 
 async function loadCachedDropDownValue(cachedData) {
@@ -1526,4 +1567,19 @@ function removeAllArgsFromPath(path) {
 
 function base64Id(str) {
   return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function getItemSize(item) {
+  const rect = item.getBoundingClientRect();
+  const style = getComputedStyle(item);
+
+  const marginTop = parseFloat(style.marginTop);
+  const marginBottom = parseFloat(style.marginBottom);
+  const marginLeft = parseFloat(style.marginLeft);
+  const marginRight = parseFloat(style.marginRight);
+
+  return {
+    width: rect.width  + marginLeft + marginRight,
+    height: rect.height + marginTop  + marginBottom,
+  };
 }

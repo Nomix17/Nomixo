@@ -180,7 +180,7 @@ async function loadMedia(apiKey){
   if(cachedMediaInfo){
     console.log("Loading Cached Information");
     await loadCachedMediaData(cachedMediaInfo);
-    await loadCachedRightDivScrollValue(cachedMediaInfo);
+    await loadCachedSuggestionsDivScrollValue(cachedMediaInfo);
     await loadCachedDropDownValue(cachedMediaInfo);
   }else{
     loadMediaFromAPI(apiKey);
