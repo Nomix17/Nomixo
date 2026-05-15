@@ -234,20 +234,14 @@ async function fetchTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
   let mediaTorrentInformation;
 
   try {
-    const mediaExternalIdsRes = await fetch(`https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/external_ids?api_key=${apiKey}`);
-    const mediaExternalIdsData = await mediaExternalIdsRes.json();
-    IMDB_ID = mediaExternalIdsData?.imdb_id;
-    if(IMDB_ID == null || IMDB_ID.trim() == "") throw new Error("No Results Were found !");
-    addEventListenerToIMDB_Rating(IMDB_ID)
+    IMDB_ID = await getIMDB_ID(MediaTypeForSearch, movieId, apiKey);
     let url = (MediaType === "tv") 
       ? `https://torrentio.strem.fun/stream/series/${IMDB_ID}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`
       : `https://torrentio.strem.fun/stream/movie/${IMDB_ID}.json`;
 
-
     const mediaTorrentRes = await fetch(url);
-    mediaTorrentInformation = await mediaTorrentRes.json();
-    insertTorrentInfoElement(mediaTorrentInformation,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo);
-  
+    const mediaTorrentInformation = await mediaTorrentRes.json();
+    renderMediaTorrent(mediaTorrentInformation,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo);
 
   } catch (error) {
     console.error(error);
@@ -295,9 +289,10 @@ async function insertMediaInformation(data,apiKey){
 
   GlobalTitle = Title;
   document.title = Title;
-  addBackgroundImageToBody(backgroundImage)
+  addBackgroundImageToBody(backgroundImage);
+  addImdbRatingEventListener(apiKey);
+  insertLogoTitleInformation(logoFileName,Title);
 
-  insertLogoTitleInformation(logoFileName,Title)
   let mediaGeneraleInfo = [Duration,ReleaseYear,Rating,Summary];
   insertMediaGeneraleInformation(mediaGeneraleInfo);
   insertGenresOfMedia(Genres);
@@ -406,10 +401,12 @@ function insertMediaGeneraleInformation(mediaBasicInfo){
   mediaSummaryElement.innerText = summaryExist ? Summary : "No Summary available" ;
 }
 
-function addEventListenerToIMDB_Rating(IMDB_ID){
+async function addImdbRatingEventListener(apiKey) {
+  let MediaTypeForSearch = MediaType === "anime" ? "tv" :MediaType;
   const IMDB_RatingElement = document.getElementById("movie-rating-div");
-  IMDB_RatingElement.addEventListener("click",() => {
-    const imdbLink = `https://www.imdb.com/title/${IMDB_ID}`;
+  const imdb_id = await getIMDB_ID(MediaTypeForSearch, movieId, apiKey);
+  IMDB_RatingElement.addEventListener("click", async() => {
+    const imdbLink = `https://www.imdb.com/title/${imdb_id}`;
     console.log(`Opening IMDB link: ${imdbLink}`);
     window.electronAPI.openExternalLink(imdbLink);
   });
