@@ -841,8 +841,8 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
   return MediaDownloadElement;
 }
 
-function createTorrentElement(torrentBasicInfo, torrentAdvancedInfo) {
-  const [Quality, Title, Size, SeedersNumber] = torrentBasicInfo;
+function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
+  const [Quality, Title, Size, SeedersNumber] = torrentInfoToDisplay;
   const TorrentElement = document.createElement("div");
   TorrentElement.classList.add("div-TorrentMedia");
   TorrentElement.setAttribute("tabindex", "0");

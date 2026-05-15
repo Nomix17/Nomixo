@@ -127,6 +127,13 @@ p{
   min-height: 0; 
 }
 
+#main-SeasonDiv {
+  background-color: transparent;
+}
+#main-SeasonDiv.continue_wathing_episode {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 #div-movieDetails {
   flex: 1;
   height: 100%;
