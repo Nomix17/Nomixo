@@ -1,51 +1,45 @@
 const data = new URLSearchParams(window.location.search);
-let movieId = data.get("MovieId");
-let MediaType = data.get("MediaType");
+const MediaId = data.get("MovieId");
+const MediaType = data.get("MediaType");
+const apiKeyPromise = window.electronAPI.getTMDBAPIKEY();
+const IMDB_IDPromise = getIMDB_ID();
 
 let backgroundImage;
-let IMDB_ID;
 let GlobalTitle = null;
 
 const middleDiv = document.getElementById("div-middle");
 const TorrentContainer = document.getElementById("div-TorrentContainer");
 const SerieContainer = document.getElementById("div-serieEpisodes");
 
-let TorrentMagnetContainer = document.getElementById("div-movieMedias");
-let EpisodesContainer = document.getElementById("EpisodesContainer");
+const TorrentMagnetContainer = document.getElementById("div-movieMedias");
+const EpisodesContainer = document.getElementById("EpisodesContainer");
 
-TorrentMagnetContainer.classList.add("preloadingTorrent");
-
-let selectSeasonContainer = document.querySelector(".selectSeason-container");
-let selectSeason = document.getElementById("select-Seasons");
+const selectSeasonContainer = document.querySelector(".selectSeason-container");
+const selectSeason = document.getElementById("select-Seasons");
 const selectSave = document.getElementById("select-save");
 
-let toggleTorrentContainer = document.querySelector(".toggleButton");
+const toggleTorrentContainer = document.querySelector(".toggleButton");
 
-let serieEpisodeloadingDiv = document.getElementById("div-serieEpisodes-LoadingGif");
-let movieMediaLoadingDiv = document.getElementById("div-movieMedias-LoadingGif");
+const divCastElement = document.getElementById("div-castInfos");
+const divDirectoryElement = document.getElementById("div-directorInfos");
 
-let divCastElement = document.getElementById("div-castInfos");
-let divDirectoryElement = document.getElementById("div-directorInfos");
+const addToLibraryButton = document.querySelector(".split-save-btn__main");
 
-let addToLibraryButton = document.querySelector(".split-save-btn__main");
+const contextMenu = document.querySelector("#contextMenu");
+const DownloadOverlay = document.getElementById('downloadOverlay');
 
-let contextMenu = document.querySelector("#contextMenu");
-let DownloadOverlay = document.getElementById('downloadOverlay');
+const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
-let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
-setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.error(err)}},100);
-
+TorrentMagnetContainer.classList.add("preloadingTorrent");
 EpisodesContainer.style.cursor = 'default';
-
 if(MediaType === "movie") TorrentContainer.style.display = "block";
 
-let seasonsDivArray = [];
+const seasonsDivArray = [];
 
 async function pageInit() {
-  const apiKey = await window.electronAPI.getTMDBAPIKEY();
   const results = await Promise.allSettled([
-    loadMovieInformation(apiKey),
-    loadCastInformation(apiKey)
+    loadMovieInformation(),
+    loadCastInformation()
   ]);
 
   if (results[0].status === "rejected") {
@@ -64,15 +58,15 @@ async function pageInit() {
   }
 }
 
-async function loadMovieInformation(apiKey) {
+async function loadMovieInformation() {
   try {
-    const MediaTypeForSearch = MediaType === "anime" ? "tv" : MediaType;
-    const url = `https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}?api_key=${apiKey}`;
+    const apiKey = await apiKeyPromise;
+    const url = `https://api.themoviedb.org/3/${MediaType}/${MediaId}?api_key=${apiKey}`;
     const res = await fetch(url);
     const mediaInfo = await res.json();
-    renderMediaPage(mediaInfo,apiKey);
+    renderMediaPage(mediaInfo);
     if(MediaType === "movie") {
-      await fetchMediaTorrent(apiKey,movieId,MediaType); 
+      await fetchMediaTorrent(); 
     }
   } catch(err) {
     console.error(err);
@@ -80,10 +74,10 @@ async function loadMovieInformation(apiKey) {
   }
 }
 
-async function loadCastInformation(apiKey) {
+async function loadCastInformation() {
   try {
-    const MediaTypeForSearch = MediaType === "anime" ? "tv" : MediaType;
-    const url = `https://api.themoviedb.org/3/${MediaTypeForSearch}/${movieId}/credits?api_key=${apiKey}`;
+    const apiKey = await apiKeyPromise;
+    const url = `https://api.themoviedb.org/3/${MediaType}/${MediaId}/credits?api_key=${apiKey}`;
     const res = await fetch(url);
     const castData = await res.json();
     renderCastInfomation(castData);
@@ -93,7 +87,6 @@ async function loadCastInformation(apiKey) {
     throw err;
   }
 }
-
 
 function noInfoFounded() {
   noCastInfoFounded();
@@ -114,13 +107,14 @@ function noDirectorInfoFounded() {
   NoDirectorInfoFounded.classList.add("case-info-unavailable");
 }
 
-async function loadAllEpisodesOfSeason(apiKey,series_id,season_number,title) {
+async function loadAllEpisodesOfSeason(season_number,title) {
   try {
+    const apiKey = await apiKeyPromise;
     const libraryInfo = await loadMediaEntryPointLibraryInfo();
-    const url = `https://api.themoviedb.org/3/tv/${series_id}/season/${season_number}?api_key=${apiKey}`;
+    const url = `https://api.themoviedb.org/3/tv/${MediaId}/season/${season_number}?api_key=${apiKey}`;
     const res = await fetch(url);
     const episodesData = await res.json();
-    await renderEpisodes(apiKey,episodesData,title,libraryInfo?.[0]);
+    await renderEpisodes(episodesData,title,libraryInfo?.[0]);
     displaySeason(1);
   } catch(err) {
     console.error(err.message)
@@ -132,7 +126,7 @@ async function loadAllEpisodesOfSeason(apiKey,series_id,season_number,title) {
   }
 }
 
-function renderEpisodes(apiKey,data,title,libraryInfo) {
+function renderEpisodes(data,title,libraryInfo) {
   const SeasonDiv = document.createElement("div");
   SeasonDiv.id = "main-SeasonDiv";
 
@@ -150,11 +144,13 @@ function renderEpisodes(apiKey,data,title,libraryInfo) {
       episode.episode_number === libraryInfo["episodeNumber"]);
 
     if(isContinueWatching){
+      const continueWatchingBtn = createContinueWatchingBtn(libraryInfo);
       EpisodeElement.classList.add("continue_wathing_episode");
-      createContinueWatchingBtn(EpisodeElement,libraryInfo);
+      EpisodeElement.appendChild(continueWatchingBtn)
+      EpisodeElement.style.backgroundColor ="rgba(255, 255, 255, 0.1)"; 
     }
 
-    createEpisodeEventListeners(apiKey, SeasonDiv, EpisodeElement, episode);
+    createEpisodeEventListeners(SeasonDiv, EpisodeElement, episode);
     SeasonDiv.appendChild(EpisodeElement);
     seasonsDivArray.push(SeasonDiv);
   });
@@ -184,7 +180,7 @@ function createEpisodeElement(episodeInfo, episodeImgUrl) {
   return EpisodeElement;
 }
 
-function createEpisodeEventListeners(apiKey, SeasonDiv, EpisodeElement, episodeInfo) {
+function createEpisodeEventListeners(SeasonDiv, EpisodeElement, episodeInfo) {
   EpisodeElement.addEventListener("mouseenter",() => {
     EpisodeElement.classList.add("episode_hovered")
   });
@@ -219,13 +215,10 @@ function createEpisodeEventListeners(apiKey, SeasonDiv, EpisodeElement, episodeI
           <div class="dot dot4"></div>
         </div>`;
 
-      fetchMediaTorrent (
-        apiKey, movieId,
-        MediaType, {
-          seasonNumber:String(episodeInfo.season_number).padStart(2,"0"),
-          episodeNumber:String(episodeInfo.episode_number).padStart(2,"0")
-        }
-      );
+      fetchMediaTorrent ({
+        seasonNumber:String(episodeInfo.season_number).padStart(2,"0"),
+        episodeNumber:String(episodeInfo.episode_number).padStart(2,"0")
+      });
     } catch(error) {
       console.error(error)
     }
@@ -243,19 +236,18 @@ function handleEpisodeElementColoring(DivContainer, currentEpisodeElement) {
   });
 }
 
-async function fetchMediaTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
-  let MediaTypeForSearch = MediaType === "anime" ? "tv" :MediaType;
+async function fetchMediaTorrent(episodeInfo={}) {
   let libraryInfo = await loadMediaEntryPointLibraryInfo();
 
   try {
-    IMDB_ID = await getIMDB_ID(MediaTypeForSearch, movieId, apiKey);
-    let url = (MediaType === "tv") 
-      ? `https://torrentio.strem.fun/stream/series/${IMDB_ID}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`
-      : `https://torrentio.strem.fun/stream/movie/${IMDB_ID}.json`;
+    const imdb_id = await IMDB_IDPromise;
+    const url = (MediaType === "tv") 
+      ? `https://torrentio.strem.fun/stream/series/${imdb_id}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`
+      : `https://torrentio.strem.fun/stream/movie/${imdb_id}.json`;
 
     const mediaTorrentRes = await fetch(url);
     const mediaTorrentInformation = await mediaTorrentRes.json();
-    renderMediaTorrent(mediaTorrentInformation,MediaId,MediaTypeForSearch,libraryInfo?.[0],episodeInfo);
+    renderMediaTorrent(mediaTorrentInformation, libraryInfo?.[0],episodeInfo);
 
   } catch (error) {
     console.error(error);
@@ -270,7 +262,7 @@ async function fetchMediaTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
       : "Failed To Fetch Torrents, Please try again";
 
     if (!isNoResultsError) {
-      const refreshButton = createRefreshTorrentBtn(apiKey, MediaId, MediaType);
+      const refreshButton = createRefreshTorrentBtn();
       nothingWasFoundDiv.appendChild(refreshButton);
     }
 
@@ -280,9 +272,10 @@ async function fetchMediaTorrent(apiKey,MediaId,MediaType,episodeInfo={}) {
   }
 }
 
-async function getIMDB_ID(MediaType, MovieId, apiKey) {
+async function getIMDB_ID() {
+  const apiKey = await apiKeyPromise;
   const mediaExternalIdsRes = await fetch(
-    `https://api.themoviedb.org/3/${MediaType}/${MovieId}/external_ids?api_key=${apiKey}`
+    `https://api.themoviedb.org/3/${MediaType}/${MediaId}/external_ids?api_key=${apiKey}`
   );
   const mediaExternalIdsData = await mediaExternalIdsRes.json();
   const imdb_id = mediaExternalIdsData?.imdb_id
@@ -292,7 +285,7 @@ async function getIMDB_ID(MediaType, MovieId, apiKey) {
   return imdb_id;
 }
 
-function createRefreshTorrentBtn(apiKey, MediaId, MediaType) {
+function createRefreshTorrentBtn() {
   const refreshButton = document.createElement("button");
   refreshButton.className = "btn-refreshAfterWarningMessage";
   refreshButton.innerHTML = reloadIcon;
@@ -306,24 +299,23 @@ function createRefreshTorrentBtn(apiKey, MediaId, MediaType) {
       </div>`;
 
     setTimeout(() => {
-      fetchMediaTorrent(apiKey,MediaId,MediaType);
+      fetchMediaTorrent();
     },1000);
   });
   return refreshButton;
 }
 
-
-async function renderMediaPage(data,apiKey) {
-  let [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons] = 
-    await extractMediaInfoFromApiResponse(apiKey,data);
+async function renderMediaPage(data) {
+  const [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons] = 
+    await extractMediaInfoFromApiResponse(data);
 
   GlobalTitle = Title;
   document.title = Title;
   addBackgroundImageToBody(backgroundImage);
-  addImdbRatingEventListener(apiKey);
+  addImdbRatingEventListener();
   insertLogoTitleInformation(logoFileName,Title);
 
-  let mediaGeneraleInfo = [Duration,ReleaseYear,Rating,Summary];
+  const mediaGeneraleInfo = [Duration,ReleaseYear,Rating,Summary];
   insertMediaGeneraleInformation(mediaGeneraleInfo);
   insertGenresOfMedia(Genres);
 
@@ -332,10 +324,10 @@ async function renderMediaPage(data,apiKey) {
 
   if(Seasons){
     SerieContainer.style.display = "flex";
-    for(let season of Seasons){
-      let [newOption,seasonNumber] = createSeasonOptionElement(season);
+    for(const season of Seasons) {
+      const [newOption,seasonNumber] = createSeasonOptionElement(season);
       selectSeason.appendChild(newOption); 
-      loadAllEpisodesOfSeason(apiKey,movieId,seasonNumber,Title);
+      loadAllEpisodesOfSeason(seasonNumber,Title);
     }
 
     addSeasonsDropDownEventListener()
@@ -351,7 +343,7 @@ async function renderMediaPage(data,apiKey) {
   middleDiv.classList.add("activate");
 }
 
-async function extractMediaInfoFromApiResponse(apiKey,data){
+async function extractMediaInfoFromApiResponse(data){
   const Title = data?.title ?? data?.name ?? "Unknown";
   const Duration = data?.runtime
     ? `${data.runtime} min`
@@ -380,17 +372,15 @@ async function extractMediaInfoFromApiResponse(apiKey,data){
     ? `https://image.tmdb.org/t/p/original/${data.backdrop_path}` 
     : "Unknown";
 
-  const logoFileName = await loadLogoImage(mediaOriginalLanguage,apiKey);
-
+  const logoFileName = await loadLogoImage(mediaOriginalLanguage);
   const Seasons = data?.seasons ?? 0;
-
   return [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons];
 }
 
 function insertLogoTitleInformation(logoFileName,Title){
-  let logoTitleContainer = document.getElementById("div-MovieLogoTitleContainer");
-  let textTitleElement = document.getElementById("h1-MovieTitle");
-  let logoTitleElement = document.getElementById("img-MovieLogoTitle");
+  const logoTitleContainer = document.getElementById("div-MovieLogoTitleContainer");
+  const textTitleElement = document.getElementById("h1-MovieTitle");
+  const logoTitleElement = document.getElementById("img-MovieLogoTitle");
 
   if(logoFileName){
     let logoImage = `https://image.tmdb.org/t/p/original/${logoFileName}`;
@@ -406,13 +396,13 @@ function insertLogoTitleInformation(logoFileName,Title){
 }
 
 function insertMediaGeneraleInformation(mediaBasicInfo) {
-  let mediaDurationElement = document.getElementById("p-movieDuration");
-  let mediaYearOfReleaseElement = document.getElementById("p-movieYearOfRelease");
-  let mediaRatingElement = document.getElementById("p-movieRating");
-  let mediaSummaryElement = document.getElementById("p-summaryParagraph");
-  let imdbLogoElement = document.getElementById("img-IMDBlogo");
+  const mediaDurationElement = document.getElementById("p-movieDuration");
+  const mediaYearOfReleaseElement = document.getElementById("p-movieYearOfRelease");
+  const mediaRatingElement = document.getElementById("p-movieRating");
+  const mediaSummaryElement = document.getElementById("p-summaryParagraph");
+  const imdbLogoElement = document.getElementById("img-IMDBlogo");
 
-  let [Duration,ReleaseYear,Rating,Summary] = mediaBasicInfo;
+  const [Duration,ReleaseYear,Rating,Summary] = mediaBasicInfo;
   let summaryExist = true;
   if(!Duration) mediaDurationElement.style.display = "none";
   if(!ReleaseYear) mediaYearOfReleaseElement.style.display = "none";
@@ -431,10 +421,9 @@ function insertMediaGeneraleInformation(mediaBasicInfo) {
   mediaSummaryElement.innerText = summaryExist ? Summary : "No Summary available" ;
 }
 
-async function addImdbRatingEventListener(apiKey) {
-  let MediaTypeForSearch = MediaType === "anime" ? "tv" :MediaType;
+async function addImdbRatingEventListener() {
   const IMDB_RatingElement = document.getElementById("movie-rating-div");
-  const imdb_id = await getIMDB_ID(MediaTypeForSearch, movieId, apiKey);
+  const imdb_id = await IMDB_IDPromise;
   IMDB_RatingElement.addEventListener("click", async() => {
     const imdbLink = `https://www.imdb.com/title/${imdb_id}`;
     console.log(`Opening IMDB link: ${imdbLink}`);
@@ -465,9 +454,9 @@ function addInspectBackdropImage(titleElement) {
 }
 
 function insertGenresOfMedia(Genres){
-  let DivGenresContainer = document.getElementById("div-genresInfos");
+  const DivGenresContainer = document.getElementById("div-genresInfos");
   for(let genre of Genres){
-    let newGenreElement = document.createElement("button");
+    const newGenreElement = document.createElement("button");
     newGenreElement.onclick = ()=>{openDiscoveryPage(genre.id,MediaType)};
     newGenreElement.classList.add("btn-MovieDetailsButtons");
     newGenreElement.innerText = genre.name;
@@ -476,9 +465,9 @@ function insertGenresOfMedia(Genres){
 }
 
 function createSeasonOptionElement(season){
-  let name = season.name;
-  let seasonNumber = season.season_number;
-  let newOption = document.createElement("div");
+  const name = season.name;
+  const seasonNumber = season.season_number;
+  const newOption = document.createElement("div");
   newOption.classList.add("select-option");
   newOption.setAttribute("role","option");
   newOption.setAttribute("value",seasonNumber);
@@ -486,16 +475,16 @@ function createSeasonOptionElement(season){
   return [newOption,seasonNumber];
 }
 
-function addSeasonsDropDownEventListener(){
+function addSeasonsDropDownEventListener() {
   selectSeason.addEventListener("dropdownChange",()=>{
-    let newDropDownValue = getDropdownValue(selectSeason);
+    const newDropDownValue = getDropdownValue(selectSeason);
     displaySeason(newDropDownValue);
   });
 }
 
 function addSaveDropDownEventListener() {
   selectSave.addEventListener("dropdownChange",(event)=>{
-    let newDropDownValue = getDropdownValue(selectSave);
+    const newDropDownValue = getDropdownValue(selectSave);
     addToLibraryButton.setAttribute("pressed"," ");
     addMediaToLibrary(newDropDownValue, true);
     event.stopPropagation();
@@ -544,9 +533,9 @@ function renderCastInfomation(data) {
   }
 
   const loadedDirectors = [];
-  for(let directorObject of DirectorsObjects) {
+  for(const directorObject of DirectorsObjects) {
     if(!loadedDirectors.includes(directorObject.id)) {
-      let newDirectorElement = document.createElement("button");
+      const newDirectorElement = document.createElement("button");
       newDirectorElement.onclick = ()=>{openProfilePage(directorObject.id)};
       newDirectorElement.id = directorObject.id;
       newDirectorElement.classList.add("btn-MovieDetailsButtons");
@@ -558,9 +547,9 @@ function renderCastInfomation(data) {
   }
 
   const loadedCast = [];
-  for(let castObject of MainCastObjects) {
+  for(const castObject of MainCastObjects) {
     if(!loadedCast.includes(castObject.id)) {
-      let newCastElement = document.createElement("button");
+      const newCastElement = document.createElement("button");
       newCastElement.onclick = ()=>{openProfilePage(castObject.id)};
       newCastElement.id = castObject.id;
       newCastElement.classList.add("btn-MovieDetailsButtons");
@@ -579,15 +568,16 @@ function renderCastInfomation(data) {
   }
 }
 
-function renderMediaTorrent(data, MediaId, MediaType, MediaLibraryInfo, episodeInfo = {}) {
+async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
   TorrentMagnetContainer.innerHTML = "";
   addSpaceToTopOfTorrentContainer();
+  const imdb_id = await IMDB_IDPromise;
 
   data.streams.forEach(torrentInfo => {
     const { quality, title, size, seedersNumber, fileName, magnetLink } = parseTorrentInfo(torrentInfo);
     if (parseInt(seedersNumber) && fileName.trim() !== "") {
       const infoToDisplay = [quality, title, size, seedersNumber];
-      const advancedInfo = [MediaId, MediaType, fileName, magnetLink, IMDB_ID,
+      const advancedInfo = [MediaId, MediaType, fileName, magnetLink, imdb_id,
                             backgroundImage, episodeInfo, size, quality, title];
       const torrentElement = createTorrentElement(infoToDisplay, advancedInfo);
 
@@ -610,6 +600,80 @@ function renderMediaTorrent(data, MediaId, MediaType, MediaLibraryInfo, episodeI
   loadIconsDynamically();
 }
 
+function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
+  const [Quality, Title, Size, SeedersNumber] = torrentInfoToDisplay;
+  const TorrentElement = document.createElement("div");
+  TorrentElement.classList.add("div-TorrentMedia");
+  TorrentElement.setAttribute("tabindex", "0");
+  TorrentElement.style.marginBottom = "5px";
+
+  const qualityDiv = document.createElement("div");
+  qualityDiv.classList.add("div-MediaQuality");
+
+  const qualityP = document.createElement("p");
+  qualityP.textContent = Quality;
+  qualityDiv.appendChild(qualityP);
+
+  const descriptionDiv = document.createElement("div");
+  descriptionDiv.classList.add("div-MediaDescription");
+
+  const titleP = document.createElement("p");
+  titleP.textContent = Title;
+
+  const infoDiv = document.createElement("div");
+  infoDiv.classList.add("torrent-info-div");
+
+  const storageIcon = document.createElement("div");
+  storageIcon.classList.add("div-storageImage");
+
+  const seedIcon = document.createElement("div");
+  seedIcon.classList.add("div-seedImage");
+
+  const sizeText = document.createTextNode(` ${Size} \u00A0\u00A0`);
+  const seedText = document.createTextNode(` ${SeedersNumber}`);
+
+  infoDiv.appendChild(storageIcon);
+  infoDiv.appendChild(sizeText);
+  infoDiv.appendChild(seedIcon);
+  infoDiv.appendChild(seedText);
+
+  descriptionDiv.appendChild(titleP);
+  descriptionDiv.appendChild(infoDiv);
+
+  TorrentElement.appendChild(qualityDiv);
+  TorrentElement.appendChild(descriptionDiv);
+
+  addTorrentElementEventListener(TorrentElement,torrentAdvancedInfo);
+  addFloatingDivToDisplayFullTitle(TorrentElement, ".div-MediaDescription p");
+
+  return TorrentElement;
+}
+
+function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
+  const [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
+       backgroundImage, episodeInfo, Size, Quality, Title] = torrentsInfo;
+
+  TorrentElement.addEventListener("click",()=>{
+    openMediaVideo(undefined,MediaId,MediaType,undefined,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
+  });
+ 
+  // right click handeling
+  TorrentElement.addEventListener("mousedown",(event)=>{
+    if (event.button === 2) {
+      const mediaTitle = document.getElementById("h1-MovieTitle").innerText;
+      const mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
+      const DownloadTargetInfo = {
+        IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
+        Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
+        fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
+        seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
+      };
+      setupDownloadDivEvents(DownloadTargetInfo);
+      handleRightClicksForTorrentElement(DownloadTargetInfo);
+    }
+  });
+}
+
 function parseTorrentInfo(torrentInfo) {
   const fullTitle = torrentInfo.title.replace(/\n+/g, "");
   const title = fullTitle.split("👤")[0].split("\n")[0].replace(/\n+/g, "");
@@ -622,37 +686,10 @@ function parseTorrentInfo(torrentInfo) {
   return { title, quality, hash, seedersNumber, size, fileName, magnetLink };
 }
 
-function createContinueWatchingBtn(container,MediaLibraryInfo) {
-  let continueVideoButton = document.createElement("button");
-  continueVideoButton.classList.add("continue-video-button");
-
-  fetch('../../../assets/icons/playVideo.svg')
-    .then(response => response.text())
-    .then(svgText => {
-      continueVideoButton.innerHTML = svgText;
-      addContrastForPlayIcon();
-    })
-  .catch(err=>{
-    console.error(err.message);
-  });
-
-  let episodeInfo = {"seasonNumber":MediaLibraryInfo.seasonNumber, "episodeNumber":MediaLibraryInfo.episodeNumber}
-
-  continueVideoButton.addEventListener("click",()=>{
-    openMediaVideo(MediaLibraryInfo.TorrentIdentification,MediaLibraryInfo.MediaId, MediaLibraryInfo.MediaType,
-      MediaLibraryInfo.Magnet,MediaLibraryInfo.mediaImdbId,MediaLibraryInfo.bgImagePath,episodeInfo);
-
-    event.preventDefault();
-    event.stopPropagation();
-  });
-
-  container.appendChild(continueVideoButton);
-  container.style.backgroundColor ="rgba(255, 255, 255, 10%)";
-}
-
-
 function displaySeason(seasonIndex) {
-  let currentSeasonDiv = seasonsDivArray.find(div => parseInt(div.getAttribute("season_number")) === parseInt(seasonIndex));
+  const currentSeasonDiv = seasonsDivArray.find(div => 
+    parseInt(div.getAttribute("season_number")) === parseInt(seasonIndex)
+  );
   if(currentSeasonDiv){
     EpisodesContainer.style.display = "block";
     EpisodesContainer.innerHTML = "";
@@ -660,15 +697,14 @@ function displaySeason(seasonIndex) {
     EpisodesContainer.appendChild(currentSeasonDiv);
   }
 }
+
 async function getDefaultRatio() {
-  let systemSettings = await window.electronAPI.loadSettings();
-  let defaultRatio = systemSettings?.defaultDivRadio;
-  if(defaultRatio == null) defaultRatio = 0.3;
-  return defaultRatio;
+  const systemSettings = await window.electronAPI.loadSettings();
+  return systemSettings?.defaultDivRadio ?? 0.3;
 }
 
 async function handleDivsResize() {
-  let defaultRatio = await getDefaultRatio();
+  const defaultRatio = await getDefaultRatio();
 
   resizeTorrentAndEpisodeElement(defaultRatio,EpisodesContainer);
   resizeTorrentAndEpisodeElement(defaultRatio,TorrentMagnetContainer);
@@ -701,24 +737,23 @@ function resizeTorrentAndEpisodeElement(radio,DivElement) {
 }
 
 function addMediaToLibrary(typeOfSave = "Watch Later", setAsPressed = false) {
-  ToggleInLibrary(addToLibraryButton, movieId,MediaType,GlobalTitle, undefined,typeOfSave, setAsPressed);
+  ToggleInLibrary(addToLibraryButton, MediaId, MediaType, GlobalTitle, undefined,typeOfSave, setAsPressed);
   addToLibraryButton.innerHTML += 
     addToLibraryButton.hasAttribute("pressed") ?
     typeOfSave ?? "Watch Later" 
     : "Watch Later";
 }
 
-async function loadMediaEntryPointLibraryInfo() {
-  let MediaLibraryInfo = await window.electronAPI.loadMediaLibraryInfo({MediaId:movieId, MediaType:MediaType})
+function loadMediaEntryPointLibraryInfo() {
+  return window.electronAPI.loadMediaLibraryInfo({MediaId:MediaId, MediaType:MediaType})
     .catch((err)=>{
       console.error(err);
       return [];
     });
-  return MediaLibraryInfo;
 }
 
 async function handleLibraryButton() {
-  let MediaLibraryInfo = await loadMediaEntryPointLibraryInfo();
+  const MediaLibraryInfo = await loadMediaEntryPointLibraryInfo();
   const typeOfSave = MediaLibraryInfo?.[0]?.typeOfSave;
   if(typeOfSave != null){
     setAddToLibraryButtonToPressed(addToLibraryButton);
@@ -736,7 +771,7 @@ toggleTorrentContainer.addEventListener("click",(event)=>{
   toggleTorrentContainer.style.pointerEvents = "none";
 
   // clearing the coloring of all the episode Elements
-  let SeasonDiv = document.getElementById("main-SeasonDiv");
+  const SeasonDiv = document.getElementById("main-SeasonDiv");
   handleEpisodeElementColoring(SeasonDiv,undefined) 
 });
 
@@ -745,18 +780,13 @@ function addEventListenerWithArgs(element,event,handler,...args) {
   element.addEventListener(event,listener);
   return listener;
 }
-function removeEventListenerWithArgs(element,event,listener) {
-  element.removeEventListener(event,listener);
-}
-
 
 function isMouseOnDiv(div) {
-    const rect = div.getBoundingClientRect();
-    const x = event.clientX;
-    const y = event.clientY;
-    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  const rect = div.getBoundingClientRect();
+  const x = event.clientX;
+  const y = event.clientY;
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 }
-
 
 function isOnLeftBorder(event,ToResizeDiv) {
   const rect = ToResizeDiv.getBoundingClientRect();
@@ -772,12 +802,12 @@ function dragResizeDiv(ToResizeDiv) {
   ToResizeDiv.addEventListener("mousedown",(event)=>{
     const onLeftBorder = isOnLeftBorder(event,ToResizeDiv);
     if(onLeftBorder){
-      let listener = addEventListenerWithArgs(window,"mousemove",moveDiv,ToResizeDiv);
+      const listener = addEventListenerWithArgs(window,"mousemove",moveDiv,ToResizeDiv);
       window.addEventListener("mouseup",async()=>{
-        let systemSettings = await window.electronAPI.loadSettings();
+        const systemSettings = await window.electronAPI.loadSettings();
         systemSettings["defaultDivRadio"] = calculatingDivRadio(ToResizeDiv);
         await window.electronAPI.applySettings(systemSettings);
-        removeEventListenerWithArgs(window,"mousemove",listener);
+        window.removeEventListener("mousemove",listener);
       },{once:true});
     }
   });
@@ -788,16 +818,15 @@ function calculatingDivRadio(DivElement) {
 }
 
 function moveDiv(event,ToResizeDiv) {
-  let leftBorderPos = ToResizeDiv.getBoundingClientRect().left;
-  let mousePos = event.clientX; 
+  const leftBorderPos = ToResizeDiv.getBoundingClientRect().left;
+  const mousePos = event.clientX; 
   ToResizeDiv.style.maxWidth = parseInt(ToResizeDiv.style.maxWidth) + leftBorderPos-mousePos+"px";
   ToResizeDiv.style.minWidth = parseInt(ToResizeDiv.style.minWidth) + leftBorderPos-mousePos+"px";
 }
 
 function addSpaceToTopOfTorrentContainer() {
-  let selectSeasonContainer = document.querySelector(".selectSeason-container");
-  let dummyDiv = document.getElementById("dummyDiv");
-  let selectSeasonContainerHeight = selectSeasonContainer.offsetHeight;
+  const dummyDiv = document.getElementById("dummyDiv");
+  const selectSeasonContainerHeight = selectSeasonContainer.offsetHeight;
 
   if(selectSeasonContainerHeight > 0){
     dummyDiv.style.height = selectSeasonContainerHeight+"px";
@@ -809,9 +838,12 @@ function addSpaceToTopOfTorrentContainer() {
 }
 
 function handleRightClicksForTorrentElement(DownloadTargetInfo) {
-  let DownloadOption = contextMenu.querySelector("#DownloadOption");
+  const DownloadOption = contextMenu.querySelector("#DownloadOption");
 
-  DownloadOption.addEventListener("mousedown",()=>showDownloadInfoInputDiv(DownloadTargetInfo),{once:true});
+  DownloadOption.addEventListener("mousedown",() => {
+    showDownloadInfoInputDiv(DownloadTargetInfo),
+    {once:true}
+  });
 
   contextMenu.style.top = event.pageY + "px";
   contextMenu.style.left = event.pageX + "px";
@@ -823,23 +855,18 @@ function handleRightClicksForTorrentElement(DownloadTargetInfo) {
   event.stopPropagation();
 }
 
-document.addEventListener("mousedown", event => {
-  contextMenu.style.display = "none";
-  dontGoBack = false;
-});
-
 async function showDownloadInfoInputDiv(DownloadTargetInfo) {
-  const apiKey = await window.electronAPI.getTMDBAPIKEY();
-  let [defaultPath, rememberDownloadLocation, DownloadSubtitles] = await loadDownloadSettings();
-  let MediaPosterContainer = DownloadOverlay.querySelector("#mediaPoster");
-  let MediaPosterElement = DownloadOverlay.querySelector("#mediaPosterImg");
-  let MediaTitleElement = DownloadOverlay.querySelector("#mediaTitle");
-  let SeasonEpisodeElement = DownloadOverlay.querySelector("#season-episode");
-  let MediaYearTextElement = DownloadOverlay.querySelector("#mediaYear");
-  let MediaSizeAResolutionTextElement = DownloadOverlay.querySelector("#mediaSize");
-  let downloadPathInput = DownloadOverlay.querySelector("#downloadPath");
-  let rememberPathCheckbox = DownloadOverlay.querySelector("#rememberPath");
-  let addSubtitlesCheckbox = DownloadOverlay.querySelector("#addSubtitles");
+  const apiKey = await apiKeyPromise;
+  const [defaultPath, rememberDownloadLocation, DownloadSubtitles] = await loadDownloadSettings();
+  const MediaPosterContainer = DownloadOverlay.querySelector("#mediaPoster");
+  const MediaPosterElement = DownloadOverlay.querySelector("#mediaPosterImg");
+  const MediaTitleElement = DownloadOverlay.querySelector("#mediaTitle");
+  const SeasonEpisodeElement = DownloadOverlay.querySelector("#season-episode");
+  const MediaYearTextElement = DownloadOverlay.querySelector("#mediaYear");
+  const MediaSizeAResolutionTextElement = DownloadOverlay.querySelector("#mediaSize");
+  const downloadPathInput = DownloadOverlay.querySelector("#downloadPath");
+  const rememberPathCheckbox = DownloadOverlay.querySelector("#rememberPath");
+  const addSubtitlesCheckbox = DownloadOverlay.querySelector("#addSubtitles");
 
 
   MediaTitleElement.innerText = DownloadTargetInfo.Title;
@@ -854,37 +881,26 @@ async function showDownloadInfoInputDiv(DownloadTargetInfo) {
 
   DownloadOverlay.classList.add('active');
   dontGoBack = true;
-  let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
+  const posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   loadImageWithAnimation(MediaPosterContainer, MediaPosterElement, `https://image.tmdb.org/t/p/w185${posterPath}`);
 }
 
+function freshClone(El) {
+  const clone = El.cloneNode(true);
+  El.parentNode.replaceChild(clone, El);
+  return clone;
+}
+
 function setupDownloadDivEvents(DownloadTargetInfo) {
-  let cancelButton = DownloadOverlay.querySelector("#cancelBtn");
-  let closeBtn = DownloadOverlay.querySelector("#closeBtn");
-  let downloadButton = DownloadOverlay.querySelector("#downloadBtn");
-  let browseButton = DownloadOverlay.querySelector("#browseBtn");
-  let downloadPathInput = DownloadOverlay.querySelector("#downloadPath");
-  let rememberPathCheckbox = DownloadOverlay.querySelector("#rememberPath");
-  let addSubtitlesCheckbox = DownloadOverlay.querySelector("#addSubtitles");
-  
-  // Clone and replace elements to remove all event listeners
-  const cancelButtonNew = cancelButton.cloneNode(true);
-  cancelButton.parentNode.replaceChild(cancelButtonNew, cancelButton);
-  
-  const closeBtnNew = closeBtn.cloneNode(true);
-  closeBtn.parentNode.replaceChild(closeBtnNew, closeBtn);
-  
-  const downloadButtonNew = downloadButton.cloneNode(true);
-  downloadButton.parentNode.replaceChild(downloadButtonNew, downloadButton);
-  
-  const browseButtonNew = browseButton.cloneNode(true);
-  browseButton.parentNode.replaceChild(browseButtonNew, browseButton);
+  const downloadPathInput = DownloadOverlay.querySelector("#downloadPath");
+  const rememberPathCheckbox = DownloadOverlay.querySelector("#rememberPath");
+  const addSubtitlesCheckbox = DownloadOverlay.querySelector("#addSubtitles");
   
   // Update references to the new elements
-  cancelButton = cancelButtonNew;
-  closeBtn = closeBtnNew;
-  downloadButton = downloadButtonNew;
-  browseButton = browseButtonNew;
+  const cancelButton = freshClone(DownloadOverlay.querySelector("#cancelBtn"));
+  const closeBtn = freshClone(DownloadOverlay.querySelector("#closeBtn"));
+  const downloadButton = freshClone(DownloadOverlay.querySelector("#downloadBtn"));
+  const browseButton = freshClone(DownloadOverlay.querySelector("#browseBtn"));
   
   // handle closing and canceling buttons event listener
   [cancelButton, closeBtn].forEach((btn) => {
@@ -897,7 +913,6 @@ function setupDownloadDivEvents(DownloadTargetInfo) {
   downloadButton.addEventListener("click", async (event) => {
     event.stopPropagation();
     event.preventDefault();
-    console.log(DownloadTargetInfo);
     DownloadTorrent(DownloadTargetInfo, addSubtitlesCheckbox.checked);
     await saveDownloadSettings(downloadPathInput.value, addSubtitlesCheckbox.checked, rememberPathCheckbox.checked);
     DownloadOverlay.classList.remove('active');
@@ -905,48 +920,60 @@ function setupDownloadDivEvents(DownloadTargetInfo) {
   
   // handle browsing fs button
   browseButton.addEventListener("click", async (event) => {
-    let pathInputElement = document.getElementById("downloadPath");
-    let dirPath = await window.electronAPI.openDirectory_FileSystemBrowser(pathInputElement.value);
+    const pathInputElement = document.getElementById("downloadPath");
+    const dirPath = await window.electronAPI.openDirectory_FileSystemBrowser(pathInputElement.value);
     if(dirPath) pathInputElement.value = dirPath;
   });
 }
 
-async function loadLogoImage(movieLanguage,apiKey) {
-  const res = await fetch(
-    `https://api.themoviedb.org/3/${MediaType}/${movieId}/images?api_key=${apiKey}`
-  );
-
-  const data = await res.json();
-
-  let originalLanguageLogos = data?.logos.filter(imageObj => imageObj?.iso_639_1 === movieLanguage) ;
-  let englishLogos = data?.logos.filter(imageObj => imageObj?.iso_639_1 === "en");
-
-  let titleLogo = englishLogos?.[0]?.file_path ?? originalLanguageLogos?.[0]?.file_path ?? null;
-  return titleLogo;
-}
-
 async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles) {
-  const apiKey = await window.electronAPI.getTMDBAPIKEY();
-  let userDownloadPath = document.getElementById("downloadPath")?.value;
-  let posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
+  const apiKey = await apiKeyPromise;
+  const userDownloadPath = document.getElementById("downloadPath")?.value;
+  const posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   DownloadTargetInfo["posterUrl"] = `https://image.tmdb.org/t/p/w500${posterPath}`;
   DownloadTargetInfo["bgImageUrl"] = backgroundImage;
   DownloadTargetInfo["userDownloadPath"] = userDownloadPath;
-  let subsObjects = [];
-  if(downloadSubtitles){
-    subsObjects = await loadingAllSubs(DownloadTargetInfo.IMDB_ID,DownloadTargetInfo.episodeNumber,DownloadTargetInfo.seasonNumber);
-  }
+  const subsObjects = 
+    (downloadSubtitles) 
+    ? await loadingAllSubs(
+      DownloadTargetInfo.IMDB_ID,
+      DownloadTargetInfo.episodeNumber,
+      DownloadTargetInfo.seasonNumber
+    ) : [];
 
   window.electronAPI.downloadTorrent([DownloadTargetInfo],subsObjects);
 }
 
-async function loadDownloadSettings() {
-  const Settings = await window.electronAPI.loadSettings();
-  return [Settings?.["DefaultDownloadPath"],Settings?.["rememberDownloadLocationByDefault"],Settings?.["DownloadSubtitlesByDefault"]];
+async function loadLogoImage(movieLanguage) {
+  const apiKey = await apiKeyPromise;
+  const res = await fetch(
+    `https://api.themoviedb.org/3/${MediaType}/${MediaId}/images?api_key=${apiKey}`
+  );
+  const data = await res.json();
+  const originalLanguageLogos = data?.logos.filter(imageObj => imageObj?.iso_639_1 === movieLanguage) ;
+  const englishLogos = data?.logos.filter(imageObj => imageObj?.iso_639_1 === "en");
+  return (
+    englishLogos?.[0]?.file_path ??
+    originalLanguageLogos?.[0]?.file_path ??
+    null
+  );
 }
 
-async function saveDownloadSettings(DefaultDownloadPath, DownloadSubtitlesByDefault, rememberDownloadLocationByDefault) {
-  let Settings = await window.electronAPI.loadSettings();
+async function loadDownloadSettings() {
+  const Settings = await window.electronAPI.loadSettings();
+  return [
+    Settings?.["DefaultDownloadPath"],
+    Settings?.["rememberDownloadLocationByDefault"],
+    Settings?.["DownloadSubtitlesByDefault"]
+  ];
+}
+
+async function saveDownloadSettings(
+  DefaultDownloadPath,
+  DownloadSubtitlesByDefault,
+  rememberDownloadLocationByDefault
+) {
+  const Settings = await window.electronAPI.loadSettings();
   Settings["rememberDownloadLocationByDefault"] = rememberDownloadLocationByDefault;
   Settings["DownloadSubtitlesByDefault"] = DownloadSubtitlesByDefault;
   if(rememberDownloadLocationByDefault)
@@ -954,13 +981,6 @@ async function saveDownloadSettings(DefaultDownloadPath, DownloadSubtitlesByDefa
 
   window.electronAPI.applySettings(Settings);
 }
-
-window.addEventListener("keydown",(event)=>{
-  if(event.key === "Escape"){
-    contextMenu.style.display = "none";
-    DownloadOverlay.classList.remove('active');
-  }
-});
 
 function focusFunction(element) {
   if (element.classList.contains("div-episodes-Element")) {
@@ -989,6 +1009,26 @@ function focusFunction(element) {
   element.focus();
 }
 
+document.addEventListener("mousedown", event => {
+  contextMenu.style.display = "none";
+  dontGoBack = false;
+});
+
+window.addEventListener("keydown",(event)=>{
+  if(event.key === "Escape"){
+    contextMenu.style.display = "none";
+    DownloadOverlay.classList.remove('active');
+  }
+});
+
+function triggerLoadingGif() {
+  setTimeout(() => {
+    try{globalLoadingGif.style.opacity = "1"}
+    catch(err){console.error(err)}
+  },100);
+}
+
+triggerLoadingGif();
 manageSaveDropDowns();
 addSaveDropDownEventListener();
 setupKeyPressesHandler();

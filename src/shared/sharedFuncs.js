@@ -670,7 +670,7 @@ function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,Library
 
       }else{
         if(ThisMediaType.toLowerCase() === "movie") MediaContainer[0].append(mediaDomElement);
-        else if(ThisMediaType.toLowerCase() === "tv" || ThisMediaType.toLowerCase() === "anime" ) MediaContainer[1].append(mediaDomElement);
+        else if(ThisMediaType.toLowerCase() === "tv") MediaContainer[1].append(mediaDomElement);
         else if(ThisMediaType.toLowerCase() === "person") MediaContainer[2].append(mediaDomElement);
         else MediaContainer[3].append(mediaDomElement);
 
@@ -711,7 +711,7 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
   movieDomElement.appendChild(removeFromLibraryButton);
 
   if(ThisSaveType.includes("Currently Watching")){
-    const continueVideoButton = createContinueWatchingButton(mediaEntryPoint);
+    const continueVideoButton = createContinueWatchingBtn(mediaEntryPoint);
     movieDomElement.appendChild(continueVideoButton);
   }
 
@@ -841,81 +841,7 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
   return MediaDownloadElement;
 }
 
-function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
-  const [Quality, Title, Size, SeedersNumber] = torrentInfoToDisplay;
-  const TorrentElement = document.createElement("div");
-  TorrentElement.classList.add("div-TorrentMedia");
-  TorrentElement.setAttribute("tabindex", "0");
-  TorrentElement.style.marginBottom = "5px";
-
-  const qualityDiv = document.createElement("div");
-  qualityDiv.classList.add("div-MediaQuality");
-
-  const qualityP = document.createElement("p");
-  qualityP.textContent = Quality;
-  qualityDiv.appendChild(qualityP);
-
-  const descriptionDiv = document.createElement("div");
-  descriptionDiv.classList.add("div-MediaDescription");
-
-  const titleP = document.createElement("p");
-  titleP.textContent = Title;
-
-  const infoDiv = document.createElement("div");
-  infoDiv.classList.add("torrent-info-div");
-
-  const storageIcon = document.createElement("div");
-  storageIcon.classList.add("div-storageImage");
-
-  const seedIcon = document.createElement("div");
-  seedIcon.classList.add("div-seedImage");
-
-  const sizeText = document.createTextNode(` ${Size} \u00A0\u00A0`);
-  const seedText = document.createTextNode(` ${SeedersNumber}`);
-
-  infoDiv.appendChild(storageIcon);
-  infoDiv.appendChild(sizeText);
-  infoDiv.appendChild(seedIcon);
-  infoDiv.appendChild(seedText);
-
-  descriptionDiv.appendChild(titleP);
-  descriptionDiv.appendChild(infoDiv);
-
-  TorrentElement.appendChild(qualityDiv);
-  TorrentElement.appendChild(descriptionDiv);
-
-  addTorrentElementEventListener(TorrentElement,torrentAdvancedInfo);
-  addFloatingDivToDisplayFullTitle(TorrentElement, ".div-MediaDescription p");
-
-  return TorrentElement;
-}
-
-function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
-  const [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
-       backgroundImage, episodeInfo, Size, Quality, Title] = torrentsInfo;
-
-  TorrentElement.addEventListener("click",()=>{
-    openMediaVideo(undefined,MediaId,MediaType,undefined,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
-  });
- 
-  // right click handeling
-  TorrentElement.addEventListener("mousedown",(event)=>{
-    if (event.button === 2) {
-      const mediaTitle = document.getElementById("h1-MovieTitle").innerText;
-      const mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
-      const DownloadTargetInfo = {
-        IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
-        Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
-        fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
-        seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
-      };
-      setupDownloadDivEvents(DownloadTargetInfo);
-      handleRightClicksForTorrentElement(DownloadTargetInfo);
-    }
-  });
-}
-
-function createContinueWatchingButton(mediaEntryPoint){
+function createContinueWatchingBtn(mediaEntryPoint){
   const continueVideoButton = document.createElement("button");
   continueVideoButton.classList.add("continue-video-button");
 
