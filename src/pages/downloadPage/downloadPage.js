@@ -78,7 +78,11 @@ async function createDownloadElement(mediaLibEntryPoint) {
   let downloadCategorie;
   if (downloadStatus.toLowerCase() === "downloading" || downloadStatus.toLowerCase() === "loading") {
     downloadCategorie = currentlyDownloadingDiv;
-    addBackgroundImageToDownloadingDiv(MediaDownloadElement,mediaLibEntryPoint?.bgImagePath ?? mediaLibEntryPoint?.posterPath);
+    addBackgroundImageToDownloadingDiv(
+      MediaDownloadElement,
+      mediaLibEntryPoint?.bgImagePath ??
+      mediaLibEntryPoint?.posterPath
+    );
 
     if (downloadStatus.toLowerCase() === "loading") {
       if(!loadingIntervals?.[mediaLibEntryPoint.torrentId])
@@ -726,7 +730,8 @@ async function MarkDownloadElementAsLoading(MediaDownloadElement) {
     .find(el => el.torrentId === elementId);
   addBackgroundImageToDownloadingDiv(
     MediaDownloadElement,
-    targetTorrentInfo?.bgImagePath ?? posterImage
+    targetTorrentInfo?.bgImagePath ??
+    posterImage
   );
 }
 
