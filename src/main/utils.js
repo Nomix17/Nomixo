@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { app, Notification } from 'electron';
 import {log} from "./debugging.js";
 
 export function generateUniqueId(seed) {
@@ -39,11 +38,12 @@ export function sanitizeUrl(urlString) {
   return u.toString();
 }
 
-export function sendSystemNotification({
+export async function sendSystemNotification({
   title = "Notification", body = "",
   icon = null, onClick = null,
   silent = false
 } = {}) {
+  const { app, Notification } = await import('electron');
   const showNotification = () => {
     const notification = new Notification({ title, body, icon, silent });
     if (onClick) notification.on("click", onClick);
