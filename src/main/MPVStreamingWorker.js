@@ -1,9 +1,13 @@
-import downloadMultipleSubs from "./downloadSubtitles.js";
+import SubDownloadManager from "./SubDownloadManager.js";
+import {
+  generateUniqueId,
+  findFile,
+  normaliseFileName
+} from "./utils.js";
 import {log} from "./debugging.js";
 import {spawn} from "child_process";
 import {parentPort, workerData} from "worker_threads";
 import WebTorrent from 'webtorrent';
-import crypto from "crypto";
 import express from "express";
 import mime from "mime";
 import path from "path";
@@ -88,10 +92,10 @@ function StreamTorrent(
           );
 
           const tmpSubDir = path.join(subDirectory, `SUB_${subsId}`);
-          const downloadResponce = await downloadMultipleSubs(tmpSubDir, subsObjects);
-          const subsPaths = downloadResponce
-            .filter(responce => responce.status === "success")
-            .map(responce => responce.file);
+          const downloadResponse = await SubDownloadManager.downloadMultipleSubs(tmpSubDir, subsObjects);
+          const subsPaths = downloadResponse
+            .filter(response => response.status === "success")
+            .map(response => response.file);
 
           runMpvProcess(
             MpvExecPath,
@@ -225,41 +229,6 @@ function runMpvProcess(
   });
 }
 
-function generateUniqueId(seed) {
-  const hash = crypto.createHash('sha256');
-  hash.update(seed);
-  return hash.digest('hex');
-}
-
-function findFile(dir, filename) {
-  if (!fs.existsSync(dir)) return null;
-  const filesPathsHashMap = {};
-  const files = fs.readdirSync(dir);
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) {
-      const result = findFile(fullPath, filename);
-      if (result) return result;
-    } else if (file === filename) {
-      return fullPath;
-    }
-    filesPathsHashMap[normaliseFileName(file)] = fullPath;
-  }
-  return filesPathsHashMap[normaliseFileName(filename)] ?? null;
-}
-
-function loadSubsFromSubDir(downloadPath, TorrentId) {
-  try {
-    const subFolder = path.join(downloadPath, `SUBS_${TorrentId}`);
-    return fs.readdirSync(subFolder)
-      .map(fileName => path.join(subFolder, fileName));
-  } catch (err) {
-    log.error(err.message);
-    return [];
-  }
-}
-
 async function cleanup() {
   log.info('Starting cleanup...');
 
@@ -302,10 +271,6 @@ async function cleanup() {
 
   log.info('Worker cleanup complete');
 }
-
-const normaliseFileName = (fileName) => {
-  return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase();
-};
 
 parentPort.on('message', async (msg) => {
   if (msg.type === 'shutdown') {

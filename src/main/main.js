@@ -1,15 +1,29 @@
 import {BrowserWindow, app, nativeTheme, ipcMain, protocol, dialog, shell, screen, Notification} from "electron";
 import Store from 'electron-store';
-import downloadMultipleSubs from "./downloadSubtitles.js";
-import { log } from "./debugging.js";
-import { spawn } from "child_process";
-import { Worker } from 'worker_threads';
+import SubDownloadManager from "./SubDownloadManager.js";
+import TorrentDownloadManager from "./TorrentDownloadManager.js";
+import {Paths, FilesManager} from "./FilesManager.js";
+import { 
+  generateUniqueId,
+  normaliseFileName, findFile,
+  sendSystemNotification,
+  downloadImage
+} from './utils.js';
+
+import {
+  loadDownloadStorage,
+  loadLibraryStorage,
+  editDownloadStorageEntry,
+  getLibraryEntry,
+  overwriteStorageFile,
+} from "./storageManagement.js";
+
+import {log} from "./debugging.js";
+import {spawn} from "child_process";
+import {Worker} from 'worker_threads';
 import WebTorrent from 'webtorrent';
-import { fileURLToPath} from "url";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import express from "express";
-import mime from "mime";
 import http from 'http';
 import path from "path";
 import os from 'os';
@@ -17,33 +31,11 @@ import fs from 'fs';
 
 let TMDB_API_KEY = null;
 let Wyzie_API_KEY = null;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const __configs = path.join(app.getPath('userData'),"configs");
-const __envfile = path.join(__configs,".env");
-const __downloads = app.getPath('downloads');
 
-dotenv.config({path:__envfile});
+dotenv.config({path:Paths.__envfile});
 
-// ======================= PATHS =======================
-
-const SettingsFilePath = path.join(__configs, 'settings.json');
-const ThemeFilePath = path.join(__configs, 'Theme.css');
-const libraryFilePath = path.join(__configs, "library.json");
-const downloadLibraryFilePath = path.join(__configs, "downloads.json");
-const MPVPlayerWorkerPath = path.join(__dirname, 'MPVStreamingWorker.js');
-
-const subDirectory="/tmp/tempSubs";
-const videoCachePath = path.join(__configs,"video_cache");
-const postersDirPath = path.join(__configs,"posters");
-let defaultDownloadDir = path.join(__configs,"Downloads");
-
-const mpvConfigDirectory = path.join(__configs, 'mpv');
-const SubConfigFile = path.join(mpvConfigDirectory, 'mpv.conf');
-
-initializeDataFiles();
-
-// ======================= GLOBALS =======================
+let torrentDownloadManager = null;
+FilesManager.initializeDataFiles();
 
 let WINDOW;
 const store = new Store();
@@ -54,21 +46,17 @@ let dontPlay = false;
 let closeWindow = true;
 let InVideoPlayerPage = false;
 let mainzoomFactor = 0.92;
-let torrentInit;
 let pagesCachedHistory = {};
 nativeTheme.themeSource = "dark";
 
 // torrent trackers
-let downloadQueue = [];
-const downloadingMediaHashMap = {};
 let StreamClient;
-const DownloadClient = new WebTorrent();
 let lastSecondBeforeQuit=0;
 
 // ======================= WINDOW MANAGER =======================
 
 if (!process.env.TMDB_API_KEY) {
-  log.warn(`Missing TMDB API key. Please set TMDB_API_KEY in your environment. or Add it to the file ${__envfile}`);
+  log.warn(`Missing TMDB API key. Please set TMDB_API_KEY in your environment. or Add it to the file ${Paths.__envfile}`);
   openMainWindow("./src/pages/loginPage/loginPage.html");
 
 } else {
@@ -96,7 +84,7 @@ function openMainWindow(fileEntryPoint = "./src/pages/homePage/homePage.html") {
 
   app.on("ready", () => {
     protocol.handle("theme", async () => {
-      const css = await fs.promises.readFile(ThemeFilePath, "utf8");
+      const css = await fs.promises.readFile(Paths.ThemeFilePath, "utf8");
       return new Response(css, {
         headers: { "content-type": "text/css", "cache-control": "no-store" },
       });
@@ -132,11 +120,12 @@ const createMainWindow = async (entryPointPath = "./src/pages/homePage/homePage.
     y,
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/preload.js'),
+      preload: path.join(Paths.__dirname, '../preload/preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
   });
+  torrentDownloadManager = new TorrentDownloadManager(WINDOW)
 
   WINDOW.setMenuBarVisibility(false);
   WINDOW.loadFile(entryPointPath);
@@ -145,7 +134,7 @@ const createMainWindow = async (entryPointPath = "./src/pages/homePage/homePage.
   mainzoomFactor = defaultSettings.PageZoomFactor;
   let settingDefaultDownloadingPath = defaultSettings?.defaultDownloadPath;
   if (settingDefaultDownloadingPath != null)
-    defaultDownloadDir = settingDefaultDownloadingPath;
+    Paths.defaultSystemDownloadDir = settingDefaultDownloadingPath;
 
   WINDOW.once('ready-to-show', () => {
     WINDOW.webContents.setZoomFactor(mainzoomFactor);
@@ -194,7 +183,7 @@ ipcMain.handle("apply-settings",async(event, SettingsObj) => {
   FullSettings.PageZoomFactor = Math.max(0.1,FullSettings.PageZoomFactor);
   webContents.setZoomFactor(FullSettings.PageZoomFactor);
   mainzoomFactor = FullSettings.PageZoomFactor;
-  fs.writeFileSync(SettingsFilePath, JSON.stringify(FullSettings, null, 2), (err) => {
+  fs.writeFileSync(Paths.SettingsFilePath, JSON.stringify(FullSettings, null, 2), (err) => {
     if(err) log.error(err)
     return err;
   });
@@ -208,7 +197,7 @@ ipcMain.on("apply-theme",(event, ThemeObj) =>{
     ${formatedThemeObj.join(";\n")}
   ;}`;
 
-  fs.writeFile(ThemeFilePath,themeFileContent, (err)=>{
+  fs.writeFile(Paths.ThemeFilePath,themeFileContent, (err)=>{
     if(err) log.error(err)
   });
 });
@@ -233,7 +222,7 @@ ipcMain.on("change-page", (event,newPageURL,currentPageURL,cacheData) => {
   if (WINDOW) {
     const webContents = event.sender;
     const [filePath, query] = newPageURL.split('?');
-    const fullPath = path.join(__dirname, filePath);
+    const fullPath = path.join(Paths.__dirname, filePath);
     const url = `file://${fullPath}${query ? '?' + query : ''}`;
     savePageCachedDataToHistory(currentPageURL,cacheData);
 
@@ -313,8 +302,13 @@ ipcMain.handle("validate-wyzie-api-key",async(event, inputedApiKey)=>{
 ipcMain.handle("save-api-key",async(event,apiKeys)=>{
   TMDB_API_KEY = apiKeys["TMDB_API_KEY"];
   Wyzie_API_KEY = apiKeys["Wyzie_API_KEY"];
-  const saved = await writeAPIKEYIntoEnvFile(apiKeys);
-  return saved;
+  try {
+    await FilesManager.writeAPIKEYIntoEnvFile(apiKeys);
+  } catch(err) {
+    log.error(err.message);
+    return false;
+  }
+  return true;
 });
 
 // ======================= VIDEO STREAMING =======================
@@ -324,11 +318,11 @@ ipcMain.handle('get-video-url', async (event, magnet,fileName) => {
     InVideoPlayerPage = true;
 
     log.info("Loading Torrent:",fileName);
-    if (!fs.existsSync(videoCachePath)) {
-      fs.mkdirSync(videoCachePath, { recursive: true });
+    if (!fs.existsSync(Paths.videoCachePath)) {
+      fs.mkdirSync(Paths.videoCachePath, { recursive: true });
     }
     const client = new WebTorrent();
-    const torrent = client.add(magnet,{path: videoCachePath});
+    const torrent = client.add(magnet,{path: Paths.videoCachePath});
     StreamClient = torrent;
     torrent.on('ready', () => {
       torrent.deselect(0, torrent.pieces.length - 1, false);
@@ -397,16 +391,16 @@ ipcMain.handle('play-torrent-over-mpv', async (event,metaData,subsObjects) => {
       : `${windowWidth}x${windowHeight}+${windowPosX}+${windowPosY}`;
 
   const { MpvExecPath } = await loadSettings();
-  MPVWorker = new Worker(MPVPlayerWorkerPath, {
+  MPVWorker = new Worker(Paths.MPVPlayerWorkerPath, {
     workerData: {
       MpvExecPath: MpvExecPath,
       typeOfPlay:"StreamTorrent",
       metaData,
       subsObjects,
       startFromTime,
-      videoCachePath,
-      subDirectory,
-      mpvConfigDirectory,
+      videoCachePath: Paths.videoCachePath,
+      subDirectory: Paths.subDirectory,
+      mpvConfigDirectory: Paths.mpvConfigDirectory,
       mpvWindowConfigs: {
         geometry: windowGeometry,
         fullscreened: windowIsFullScreened,
@@ -426,228 +420,51 @@ ipcMain.handle('play-video-over-mpv', async(event,metaData) => {
 
 // ======================= TORRENT DOWNLOADING =======================
 
-ipcMain.handle("download-torrent", async (event, torrentsInformation, subsObjects) => {
-  const results = [];
-  
-  for (const torrentInfo of torrentsInformation) {
-    try {
-      // Determine download path
-      let userDownloadPath = torrentInfo?.userDownloadPath;
-      if (userDownloadPath) {
-        defaultDownloadDir = userDownloadPath;
-      }
-
-      const MAX_LENGTH = 200;
-
-      if (torrentInfo.dirName.length > MAX_LENGTH) {
-        const dirId = generateUniqueId(torrentInfo.dirName);
-        const prefix = torrentInfo.dirName.slice(0, 120);
-        
-        let newName = prefix;
-
-        if (torrentInfo.seasonNumber && torrentInfo.episodeNumber) {
-          newName += `-S${torrentInfo.seasonNumber}E${torrentInfo.episodeNumber}`;
-        }
-
-        torrentInfo.dirName = `${newName}-${dirId}`;
-      }
-
-      const TorrentDownloadDir = path.join(defaultDownloadDir, torrentInfo.dirName);
-      fs.mkdirSync(TorrentDownloadDir, { recursive: true });
-      
-      const torrentId = generateUniqueId(
-        `${torrentInfo.IMDB_ID}-${torrentInfo.episodeNumber ?? "undefined"}-${torrentInfo.seasonNumber ?? "undefined"}-${TorrentDownloadDir}`
-      );
-
-      torrentInfo["torrentId"] = torrentId;
-      torrentInfo["downloadPath"] = TorrentDownloadDir;
-
-      // download Subs
-      try {
-        if(subsObjects != null) {
-          downloadSubs(subsObjects, torrentId, TorrentDownloadDir);
-        } else {
-          log.warn("Subtitles Download Skipped");
-        }
-      } catch (error) {
-        reportDownloadError("Subtitles Download",torrentId,error);
-        log.error(error);
-      }
-
-      // download the torrent
-      try {
-        const clientIsBusy = DownloadClient.torrents.length;
-        if(!clientIsBusy){
-          await downloadTorrent(torrentInfo);
-          results.push({ success: true, torrentId });
-        }else{
-          insertNewDownloadEntryPoint(torrentInfo,"Queued");
-          if(!downloadQueue.find(ele => ele.torrentId === torrentInfo.torrentId))
-            downloadQueue.push(torrentInfo);
-        }
-      } catch (error) {
-        reportDownloadError("Torrent Download",torrentId,error);
-        log.error(error);
-        results.push({ success: false, error: error.message, torrentId });
-      }
-
-    } catch (err) {
-      log.error(`Error processing torrent:`, err);
-      results.push({ success: false, error: err.message });
-    }
-  }
-  return results;
+ipcMain.handle("download-torrent", async (event, torrentsEntries, subsObjects) => {
+  return torrentDownloadManager.scheduleTorrentDownloads(torrentsEntries, subsObjects);
 });
 
-ipcMain.handle("download-subtitles", async(event, mediaInfo, subsObjects) => {
-  const torrentId = mediaInfo.torrentId;
-  const TorrentDownloadDir = mediaInfo.downloadPath;
-  const subtitlesWhereUpdated = await downloadSubs(subsObjects, torrentId, TorrentDownloadDir);
-  return {updated:subtitlesWhereUpdated};
+ipcMain.handle("download-subtitles", async(event, torrentEntry, subsObjects) => {
+  try {
+    await SubDownloadManager.downloadSubs(subsObjects, torrentEntry.torrentId, torrentEntry.downloadPath);
+  } catch(err) {
+    log.error("Failed To Download Subtitles", torrentEntry.torrentId + ":", err.message);
+    return {updated:false};
+  }
+  return {updated:true};
 });
 
 ipcMain.handle("pause-torrent-download", async (event, torrentId) => {
-  const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
-  return await pauseTheDownloadingTorrent(targetTorrent, torrentId);
+  return await torrentDownloadManager.pauseTorrentDownload(torrentId);
 });
 
 ipcMain.handle("continue-torrent-download", async (event, torrentId) => {
-  const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
-  return await continueDownload(targetTorrent, torrentId);
+  return await torrentDownloadManager.continueTorrentDownload(torrentId);
 });
 
 ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
-  const targetTorrent = downloadingMediaHashMap[torrentId]?.torrentInstance;
-  return targetTorrent
-    ? await pauseTheDownloadingTorrent(targetTorrent, torrentId)
-    : await continueDownload(targetTorrent, torrentId);
+  console.log(torrentId);
+  return await torrentDownloadManager.toggleTorrentDownload(torrentId);
 });
 
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
-  const torrentId = mediaInfo.torrentId;
-
-  // remove it from download
-  const targetTorrent = downloadingMediaHashMap?.[torrentId]?.torrentInstance;
-  if (targetTorrent) {
-    if(downloadQueue[0] != null)
-      WINDOW.webContents.send(
-        "update-download-categorie",
-        [{ response:"continued", torrentId:downloadQueue[0]?.torrentId }]
-      );
-
-    await new Promise((resolve,reject) => {
-      try {
-        targetTorrent.destroy(() => {
-          deleteTorrentFromMediaHashMap(torrentId);
-          log.info(`Torrent cancelled: ${torrentId}`);
-          resolve();
-        });
-      } catch(error) {
-        log.error(error.message);
-        if(downloadQueue[0] != null)
-          WINDOW.webContents.send(
-            "update-download-categorie",
-            [{ response:"paused", torrentId:downloadQueue[0]?.torrentId }]
-          );
-        reject();
-      }
-    });
-  }
-
-  downloadQueue = downloadQueue
-    .filter(element => element.torrentId !== torrentId)
-
-  // Remove the download directory
-  const downloadPath = mediaInfo.downloadPath;
-  if (downloadPath && fs.existsSync(downloadPath)) {
-    await fs.promises.rm(downloadPath, { recursive: true, force: true });
-    log.info(`Removed directory: ${downloadPath}`);
-  }
-
-  await removeFromDownloadLibrary(torrentId);
-  await downloadNextTorrentInQueue();
-
-  return { success: true, torrentId };
+  return await torrentDownloadManager.cancelTorrentDownload(mediaInfo);
 });
 
 ipcMain.handle("add-torrent-to-download-queue", async (event, torrentId) => {
-  const wholeDownloadLibrary = await loadDownloadLibrary();
-  const targetTorrentInfo = 
-    wholeDownloadLibrary?.downloads?.find(
-      element => 
-        element.torrentId === torrentId
-    );
-
-  if (targetTorrentInfo) {
-    const currentlyDownloadingTorrents = Object.values(downloadingMediaHashMap);
-    if(!currentlyDownloadingTorrents.length) {
-      downloadTorrent(targetTorrentInfo);
-      return [{
-        response: "continued",
-        torrentId:torrentId
-      }];
-
-    } else {
-      downloadQueue.push(targetTorrentInfo);
-      return [{
-        response: "queued",
-        torrentId:torrentId
-      }];
-    }
-     
-  } else {
-    log.error("Empty download library, cannot continue download for",torrentId);
-    return [{
-      response: "empty download library",
-      torrentId:torrentId
-    }];
-  }
+  return torrentDownloadManager.downloadOrQueueTorrent(torrentId);
 });
 
 ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) => {
-  const target = downloadQueue.find(
-    el => el.torrentId === torrentId
-  );
-
-  if(target != null) {
-    downloadQueue = downloadQueue.filter(
-      el => el.torrentId !== torrentId
-    );
-    return [{
-      response: "paused",
-      torrentId:torrentId
-    }];
-
-  } else {
-    log.error("Queue does not contain torrent with Id:",torrentId);
-    return [{
-      response: "torrent not found in queue",
-      torrentId:torrentId
-    }];
-  }
+  return torrentDownloadManager.removeTorrentFromQueue(torrentId);
 });
 
-ipcMain.handle("shift-download-queue-element", (event, movedTorrentId, offset) => {
-  const currentTorrentIndex = downloadQueue
-    .findIndex(ele => ele.torrentId === movedTorrentId);
-
-  if(currentTorrentIndex !== -1) {
-    const torrentElement = downloadQueue[currentTorrentIndex];
-    downloadQueue.splice(currentTorrentIndex,1);
-    downloadQueue.splice(currentTorrentIndex+offset, 0, torrentElement);
-    log.info("Reordering Download Queue");
-  } else {
-    log.error(
-      `Cannot find torrent Element in download queue by id: ${movedTorrentId}`
-    );
-  }
-
-  return downloadQueue
-    .map(el => el.torrentId);
+ipcMain.handle("shift-download-queue-element", (event, torrentId, offset) => {
+  return torrentDownloadManager.shiftQueuedElement(torrentId, offset);
 });
 
 ipcMain.handle("get-download-queue-list", (event) => {
-  return downloadQueue
+  return torrentDownloadManager.downloadQueue
     .map(el => el.torrentId);
 });
 
@@ -666,20 +483,20 @@ ipcMain.handle("download-image",async(event,downloadPath, imageUrl) => {
 // ======================= LIBRARY MANAGEMENT =======================
 
 ipcMain.on("add-to-lib", (event, mediaInfo) => {
-  const LibraryInfo = getLibraryInfo();
+  const LibraryInfo = loadLibraryStorage();
   LibraryInfo.media = LibraryInfo.media.filter(e => !(e.MediaId.toString() === mediaInfo.MediaId.toString() && e.MediaType === mediaInfo.MediaType));
   LibraryInfo.media.push(mediaInfo);
-  insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
+  overwriteStorageFile(Paths.libraryFilePath,LibraryInfo);
 });
 
 ipcMain.on("remove-from-lib", (event, mediaInfo) => {
-  const LibraryInfo = getLibraryInfo();
+  const LibraryInfo = loadLibraryStorage();
   LibraryInfo.media = LibraryInfo.media.filter(e => !(e.MediaId.toString() === mediaInfo.MediaId.toString() && e.MediaType === mediaInfo.MediaType));
-  insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
+  overwriteStorageFile(Paths.libraryFilePath,LibraryInfo);
 });
 
 ipcMain.on("edit-element-lib", async (event, mediaInfo) => {
-  const LibraryInfo = await getLibraryInfo();
+  const LibraryInfo = await loadLibraryStorage();
   let elementIndex = LibraryInfo.media.findIndex(
     e => e.MediaId.toString() === mediaInfo.MediaId.toString() &&
          e.MediaType === mediaInfo.MediaType
@@ -688,38 +505,38 @@ ipcMain.on("edit-element-lib", async (event, mediaInfo) => {
     for(let [key, value] of Object.entries(mediaInfo)) {
       LibraryInfo.media[elementIndex][key] = value;
     }
-    insertNewInfoToLibrary(libraryFilePath, LibraryInfo);
+    overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
   }
 });
 
 ipcMain.handle("load-from-lib", (event, targetIdentification) => {
-  return loadFromLibrary(targetIdentification);
+  return getLibraryEntry(targetIdentification);
 });
 
 // ############################## DOWNLOAD LIBRARY MANAGEMENT ##############################
 
 ipcMain.on("add-to-download-lib", async(event, torrentId, mediaInfo) => {
-  const downloadLibraryInfo = await loadDownloadLibrary();
-  downloadLibraryInfo.media = downloadLibraryInfo.downloads.filter(e => !(e.torrentId === torrentId));
-  downloadLibraryInfo.media.push(mediaInfo);
-  await insertNewInfoToLibrary(downloadLibraryFilePath,downloadLibraryInfo);
+  const downloadLibraryInfo = await loadDownloadStorage();
+  downloadLibraryInfo.downloads = downloadLibraryInfo.downloads.filter(e => !(e.torrentId === torrentId));
+  downloadLibraryInfo.downloads.push(mediaInfo);
+  await overwriteStorageFile(Paths.downloadLibraryFilePath,downloadLibraryInfo);
   return null;
 });
 
 ipcMain.on("remove-from-download-lib", async(event, torrentId) => {
-  const downloadLibraryInfo = await loadDownloadLibrary();
-  downloadLibraryInfo.media = downloadLibraryInfo.downloads.filter(e => !(e.torrentId === torrentId));
-  await insertNewInfoToLibrary(downloadLibraryFilePath,downloadLibraryInfo);
+  const downloadLibraryInfo = await loadDownloadStorage();
+  downloadLibraryInfo.downloads = downloadLibraryInfo.downloads.filter(e => !(e.torrentId === torrentId));
+  await overwriteStorageFile(Paths.downloadLibraryFilePath,downloadLibraryInfo);
   return null;
 });
 
 ipcMain.handle("edit-download-lib", async(event, torrentId, key, value) => {
-  await editDownloadLibraryElements([torrentId],key,value);
+  await editDownloadStorageEntry([torrentId],key,value);
   return null;
 });
 
 ipcMain.handle("load-from-download-lib",async(event,targetIdentification)=>{
-  let wholeDownloadLibrary = await loadDownloadLibrary();
+  let wholeDownloadLibrary = await loadDownloadStorage();
   return wholeDownloadLibrary;
 });
 
@@ -748,12 +565,10 @@ ipcMain.on("send-system-notification", (event, options) => {
   sendSystemNotification(options);
 });
 
-
 // ########## SETTINGS RELATED #################
-
 async function loadSettings() {
   try {
-    const data = fs.readFileSync(SettingsFilePath, 'utf-8');
+    const data = fs.readFileSync(Paths.SettingsFilePath, 'utf-8');
     if(data.trim() === "" || !("TurnOnSubsByDefaultInternal" in JSON.parse(data)))
       throw new Error("empty Settings File");
    
@@ -772,7 +587,7 @@ async function loadSettings() {
       SubColorInternal: "#ffffff",
       SubBackgroundColorInternal: "#000000",
       SubBackgroundOpacityLevelInternal: 0,
-      DefaultDownloadPath: __downloads,
+      DefaultDownloadPath: Paths.__downloads,
       rememberDownloadLocationByDefault: true,
       DownloadSubtitlesByDefault: true,
       MpvExecPath: await findMpvExecPath()
@@ -783,7 +598,7 @@ async function loadSettings() {
 function loadTheme() {
   try{
     let ThemeObj = {theme:[]};
-    let savedTheme = fs.readFileSync(ThemeFilePath, "utf-8");
+    let savedTheme = fs.readFileSync(Paths.ThemeFilePath, "utf-8");
     savedTheme = savedTheme.replaceAll(":root{","")
       .replaceAll("}","")
       .replaceAll("--","")
@@ -798,14 +613,14 @@ function loadTheme() {
   }catch(err){
     log.error("Failed to Load Theme File");
     log.error(err.message);
-    initializeDataFiles();
+    FilesManager.initializeDataFiles();
     return loadTheme();
   }
 }
 
 function loadSubConfigs() {
   let JsonConfig = {};
-  let mpvConfig = fs.readFileSync(SubConfigFile,"utf-8");
+  let mpvConfig = fs.readFileSync(Paths.SubConfigFile,"utf-8");
   let lines = mpvConfig.split("\n");
   lines.forEach(line=>{
     if(!line.includes("osc") && !line.includes("border") && !line.includes("osd-bar") && !line.includes("target-colorspace-hint")){
@@ -824,7 +639,7 @@ function loadSubConfigs() {
 
 function applySubConfigs(jsonContent){
   const mpvConfig = parseMpvConfigs(jsonContent);
-  fs.writeFileSync(SubConfigFile,mpvConfig);
+  fs.writeFileSync(Paths.SubConfigFile,mpvConfig);
 }
 
 function parseMpvConfigs(jsonContent) {
@@ -845,82 +660,7 @@ function parseMpvConfigs(jsonContent) {
   return mpvConfig;
 }
 
-function initializeDataFiles(){
-  if(!fs.existsSync(__configs)){
-    fs.mkdirSync(__configs, { recursive: true });
-  }
-  if(!fs.existsSync(postersDirPath)){
-    fs.mkdirSync(postersDirPath, { recursive: true });
-  }
-  if (!fs.existsSync(videoCachePath)) {
-    fs.mkdirSync(videoCachePath, { recursive: true });
-  }
-  if(!fs.existsSync(SettingsFilePath)){
-    let defaultFileData = JSON.stringify(
-      {
-        "PageZoomFactor": 0.92,
-        "TurnOnSubsByDefaultInternal": true,
-        "SubFontSizeInternal": 16,
-        "SubFontFamilyInternal": "Montserrat",
-        "SubColorInternal": "#ffffff",
-        "SubBackgroundColorInternal": "#000000",
-        "SubBackgroundOpacityLevelInternal": 0,
-        "DefaultDownloadPath": __downloads,
-        "rememberDownloadLocationByDefault": true,
-        "DownloadSubtitlesByDefault": true
 
-      }
-    );
-    fs.writeFileSync(SettingsFilePath,defaultFileData);
-  }
-
-  if(!fs.existsSync(ThemeFilePath)){
-    let defaultFileData = `
-      :root{
-        --dont-Smooth-transition-between-pages:0;
-        --display-scroll-bar:none;
-        --show-continue-watching-on-home:flex;
-        --background-gradient-value:0;
-        --primary-color:10,14,23;
-        --secondary-color:55,65,81,1;
-        --div-containers-borders-color:255,255,255,0;
-        --main-buttons-color:255,255,255,0.04;
-        --MovieElement-hover-BorderColor:255,255,255;
-        --input-backgroundColor:0,0,0,0.44;
-        --drop-down-color:26,35,50,1;
-        --icon-color:55,65,81;
-        --icon-hover-color:148,163,184,1;
-        --text-color:255,255,255;
-      }
-    `;
-    fs.writeFileSync(ThemeFilePath,defaultFileData);
-  }
-
-  if(!fs.existsSync(defaultDownloadDir)){
-    fs.mkdirSync(defaultDownloadDir, { recursive: true });
-  }
-
-  if (!fs.existsSync(mpvConfigDirectory)) {
-    const currentMpvConfPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'mpv')
-      : path.join(__dirname, '../../assets/mpv');
-
-    fs.cpSync(currentMpvConfPath, mpvConfigDirectory, { recursive: true });
-  }
-
-  if(!fs.existsSync(SubConfigFile)){
-    let defaultFileData = `
-      osc=yes 
-      border=yes 
-      osd-bar=no
-      sub-font-size=30
-      sub-font="Arial"
-      sub-color="#ffffff"
-      target-colorspace-hint=no
-    `;
-    fs.writeFileSync(SubConfigFile,defaultFileData);
-  }
-}
 
 async function resolveMpvExecFromPATH() {
   const isWindows = os.platform() === 'win32';
@@ -978,386 +718,6 @@ async function findMpvExecPath() {
   return null;
 }
 
-// ########## DOWLOAD RELATED #################
-
-async function getTrackers() {
-  try{
-    const urls = [
-      'https://cdn.jsdelivr.net/gh/ngosang/trackerslist@master/trackers_best.txt',
-    ];
-
-    const results = await Promise.all(urls.map(u => fetch(u).then(r => r.text())));
-    const trackers = results
-      .flatMap(text => text.trim().split('\n\n'))
-      .filter(Boolean);
-
-    log.success(`Loaded ${trackers.length} trackers`);
-    return trackers;
-  } catch(err) {
-    log.warn(
-      `Failed to load ngosang trackers list, falling back to preset trackers.\n` +
-      `Reason: ${err.message ?? err}`
-    );
-    return [
-      'udp://tracker.opentrackr.org:1337/announce',
-      'udp://open.demonii.com:1337/announce',
-      'udp://tracker.openbittorrent.com:6969/announce',
-      'udp://tracker.torrent.eu.org:451/announce',
-      'udp://explodie.org:6969/announce',
-      'udp://tracker.empire-js.us:1337/announce',
-    ];
-  }
-}
-
-const torrentTrackersPromise = getTrackers();
-async function downloadTorrent(torrentInfo) {
-  // Add torrent
-  const trackers = await torrentTrackersPromise;
-
-  const torrent = DownloadClient.add(torrentInfo.MagnetLink, {
-    path: torrentInfo.downloadPath,
-    announce: trackers
-  });
-
-  downloadingMediaHashMap[torrentInfo.torrentId] = {torrentInstance:torrent,torrentInfo:torrentInfo};
-
-  insertNewDownloadEntryPoint(torrentInfo);
-
-  return new Promise((resolve, reject) => {
-    log.info("Loading Torrent:", torrentInfo.torrentId);
-    torrent.on("metadata", () => log.info("Metadata received"));
-    torrent.on("warning", (warn) => log.warn("Torrent warning:", warn.message));
-
-    torrent.on("ready", () => {
-     
-      log.info("Download Target: " + torrentInfo?.fileName);
-      console.log("\nTorrent Files:-----------------------------------------------------");
-      torrent.files.forEach(f => { console.log(f.name) });
-      console.log("-------------------------------------------------------------------\n");
-
-      let targetFile = findFileInsideTorrent(torrent, torrentInfo?.fileName);
-
-      if (!targetFile) {
-        reject(new Error('No suitable video file found'));
-        return;
-      }
-
-      // Deselect all files first
-      torrent.files.forEach(file => {file.deselect()});
-      
-      // Select only the file that match the name
-      targetFile.select();
-
-
-      // Calculate total size of only selected file
-      const totalSize = targetFile.length;
-      let LibraryStartTime = 0;
-      let PipingStartTime = 0;
-      const DelayBeforeLibrarySave = 1000;
-      const DelayBeforePiping = 400;
-
-      torrent.on("download", async () => {
-        const now = Date.now();
-        // Calculate downloaded bytes for selected files only
-        const downloadedDataLength = targetFile.downloaded;
-
-        torrentInfo["Total"] = totalSize;
-        torrentInfo["Downloaded"] = downloadedDataLength;
-        torrentInfo["poster"] = torrentInfo.posterUrl;
-
-        // Check if download is complete
-        if (totalSize <= downloadedDataLength) {
-          const jsonMessage = {
-            TorrentId: torrentInfo.torrentId,
-            Downloaded: downloadedDataLength,
-            Total: totalSize,
-            DownloadPath: torrentInfo.downloadPath,
-            Status: "Done"
-          };
-          
-          torrentInfo["Status"] = "Done";
-          updateElementDownloadLibrary(torrentInfo, downloadedDataLength,totalSize);
-
-          try {
-            await destroyDownloadingTorrent(torrent, torrentInfo.torrentId);
-            const body = [
-              truncate(torrentInfo?.Title || 'Unknown title'),
-              torrentInfo?.Year,
-              torrentInfo?.Quality
-            ] .filter(Boolean)
-              .join(' • ')
-
-            const [torrentLibEntry] = await loadTargetFromDownloadLibrary(torrentInfo.torrentId);
-            sendSystemNotification({
-              title: "Download Complete",
-              body: body,
-              icon: torrentLibEntry.posterPath, 
-              onClick:() => playVideoOverMpv(torrentLibEntry)
-            });
-            log.info(`Torrent cleaned up: ${torrentInfo.torrentId}`);
-          } catch(err) {
-            log.error(err.message);
-          }
-          log.success(`Download completed: ${torrentInfo.torrentId})`);
-          WINDOW.webContents.send("download-progress-stream", jsonMessage);
-
-          downloadNextTorrentInQueue();
-
-          resolve();
-          return;
-        }
-
-        // Update library periodically
-        if (now - LibraryStartTime >= DelayBeforeLibrarySave) {
-          updateElementDownloadLibrary(torrentInfo, downloadedDataLength, totalSize);
-          LibraryStartTime = now;
-        }
-
-        // Send progress updates
-        if (now - PipingStartTime >= DelayBeforePiping) {
-          const downloadSpeed = torrent.downloadSpeed; // b/s
-
-          const jsonMessage = {
-            TorrentId: torrentInfo.torrentId,
-            Downloaded: downloadedDataLength,
-            Total: totalSize,
-            DownloadPath: torrentInfo.downloadPath,
-            DownloadSpeed:downloadSpeed,
-            Status: "Downloading"
-          };
-
-          WINDOW.webContents.send("download-progress-stream", jsonMessage);
-          PipingStartTime = now;
-
-          log.info(
-            `Downloading ${torrentInfo.dirName}: ` +
-            `${((downloadedDataLength / totalSize) * 100).toFixed(2)}%, ` +
-            `${(downloadSpeed / 1024).toFixed(2)} KB/s`
-          );
-        }
-      });
-    });
-
-    torrent.on("error", (err) => {
-      log.error(`Torrent error: ${torrentInfo.torrentId}, ${err}`);
-      torrent.destroy(() => {
-        deleteTorrentFromMediaHashMap(torrentInfo.torrentId);
-        downloadNextTorrentInQueue();
-      });
-     
-      WINDOW.webContents.send("download-progress-stream", {
-        TorrentId: torrentInfo.torrentId,
-        Status: "error",
-        Error: err.message
-      });
-      
-      reject(err);
-    });
-  });
-}
-
-async function continueDownload(targetTorrent, torrentId) {
-  const wholeDownloadLibrary = await loadDownloadLibrary();
-  const torrentInfo = wholeDownloadLibrary?.downloads
-    ?.find(
-      element => element.torrentId === torrentId
-    );
-
-  if (torrentInfo != null) {
-    // pause every other torrent
-    let queuedTorrents = [];
-    try {
-      queuedTorrents = await addDownloadingTorrentToQueue();
-    } catch(err) {
-      log.error(err.message);
-      return [{
-        responce:"failed",
-        error:err.message,
-        torrentId:torrentId
-      }];
-    }
-
-    // start the requested download
-    try {
-      downloadTorrent(torrentInfo)
-      downloadQueue = downloadQueue
-        .filter(
-          ele => ele.torrentId != torrentId
-        );
-    } catch(err) {
-      log.error(err.message);
-      await editDownloadLibraryElements(
-        [torrentInfo.torrentId],
-        "Status",
-        "Loading"
-      );
-      pauseTargetedTorrent(targetTorrent,torrentId);
-      return [{
-        responce:"failed",
-        error:err.message,
-        torrentId:torrentId
-      }];
-    }
-    
-    return [
-      {
-        response: "continued",
-        torrentId:torrentId
-      },
-      ...queuedTorrents
-    ];
-
-  } else {
-    log.error("Empty download library, cannot continue download for",torrentId);
-    return [{
-      response: "empty download library",
-      torrentId:torrentId
-    }];
-  }
-}
-
-async function pauseTheDownloadingTorrent(targetTorrent, torrentId) {
-  try {
-    await pauseTargetedTorrent(targetTorrent, torrentId);
-    downloadNextTorrentInQueue();
-    return [{
-      response: "paused",
-      torrentId:torrentId
-    }];
-  } catch(err) {
-    log.error(err.message);
-    return [{
-      response:"failed",
-      error:err.message,
-      torrentId:torrentId
-    }];
-  }
-}
-
-function destroyDownloadingTorrent(torrent, torrentId){
-  return new Promise((res,rej) => {
-    deleteTorrentFromMediaHashMap(torrentId);
-    const index = downloadQueue.findIndex(item => item.torrentId === torrentId);
-    if (index !== -1) {
-      const [element] = downloadQueue.splice(index, 1);
-      downloadQueue.push(element);
-    }
-    try {
-      torrent.destroy(res);
-    } catch(err) {
-      rej(err);
-    }
-  });
-}
-
-async function downloadNextTorrentInQueue() {
-  if(downloadQueue.length){
-    const nextTorrent = downloadQueue.shift();
-    if (nextTorrent?.torrentId) {
-      downloadTorrent(nextTorrent);
-      await editDownloadLibraryElements([nextTorrent.torrentId], "Status","Downloading");
-      WINDOW.webContents.send("update-download-categorie",[{response:"continued",torrentId:nextTorrent.torrentId}]);
-    }
-    return nextTorrent?.torrentId;
-  }
-}
-
-function deleteTorrentFromMediaHashMap(torrentId){
-  if(downloadingMediaHashMap[torrentId])
-    delete downloadingMediaHashMap[torrentId];
-}
-
-async function pauseTargetedTorrent(torrent, torrentId){
-  if(!torrent) {
-    return new Error(`Failed to pause: ${torrent}`);
-  }
-
-  if(!torrentId) {
-    return new Error(`Cannot find the torrent Id ${TorrentId}`)
-  }
-
-  destroyDownloadingTorrent(torrent,torrentId);
-  log.info(`Torrent Paused: ${torrentId}`);
-  return torrentId;
-
-}
-
-async function downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
-  // Download subtitles
-  if (subsObjects.length) {
-    try {
-      let subDownloadDir = path.join(TorrentDownloadDir, `SUBS_${torrentId}`);
-      fs.mkdirSync(subDownloadDir, { recursive: true });
-      const downloadRes = await downloadMultipleSubs(subDownloadDir, subsObjects);
-      const numberOfSeccessfulDownloads = downloadRes.filter(res => res.status === "success")?.length;
-      return !!numberOfSeccessfulDownloads; // false if isn't equal to 0, true otherwise
-
-    } catch (err) {
-      reportDownloadError("Subtitles Download", torrentId, err);
-      log.error("Subtitle download error:", err);
-      return false
-    }
-  }
-}
-
-async function downloadImage(downloadDir, posterUrl) {
-  fs.mkdirSync(downloadDir, { recursive: true });
-  try {
-    const controller = new AbortController();
-
-    const res = await fetch(posterUrl, { signal: controller.signal });
-
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-    const buffer = Buffer.from(await res.arrayBuffer());
-    if (!buffer.length) throw new Error('Empty file');
-
-    const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
-    fs.writeFileSync(file, buffer);
-
-    return file;
-  } catch (err) {
-    log.error(`Failed to download ${posterUrl}:`, err.message);
-    return null;
-  }
-}
-
-function reportDownloadError(errorType, torrentId, err){
-  WINDOW.webContents.send("report-download-errors", {
-    type: errorType,
-    torrentId: torrentId,
-    err_msg: err
-  });
-}
-
-function findFileInsideTorrent(torrent, targetFileName){
-  let filesPathsHashMap = {};
-  let files = torrent.files ?? [];
-  for(let fileInsideTorrent of files){
-    if (targetFileName === fileInsideTorrent.name) {
-      return fileInsideTorrent;
-    }
-    filesPathsHashMap[normaliseFileName(fileInsideTorrent.name)] = fileInsideTorrent;
-  }
-  return filesPathsHashMap[normaliseFileName(targetFileName)] ?? null;
-}
-
-async function addDownloadingTorrentToQueue(){
-  const queuedTorrents = [];
-
-  const currentlyDownloadingTorrents = Object.values(downloadingMediaHashMap);
-  for (const downloadingTorrent of currentlyDownloadingTorrents) {
-    let torrentInstance = downloadingTorrent.torrentInstance;
-    let torrentInfo = downloadingTorrent.torrentInfo;
-    let pausedTorrentId = await pauseTargetedTorrent(torrentInstance, torrentInfo.torrentId)
-    queuedTorrents.push({response: "queued", torrentId:pausedTorrentId});
-    if(!downloadQueue.find(ele => ele.torrentId === torrentInfo.torrentId))
-      downloadQueue.push(torrentInfo);
-  }
-
-  return queuedTorrents;
-}
-
 // ############################ NAVIGATION RELATED ############################
 
 function cleanUpVideoPlayerStuff(){
@@ -1380,43 +740,8 @@ function NavigateToPreviousPage(){
   }
 }
 
-function generateUniqueId(seed) {
-  const hash = crypto.createHash('sha256');
-  hash.update(seed);
-  return hash.digest('hex');
-}
-
-function findFile(dir, filename) {
-  if(!fs.existsSync(dir)) return null;
-  const filesPathsHashMap = {};
-  const files = fs.readdirSync(dir);
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) {
-      const result = findFile(fullPath, filename);
-      if (result) return result;
-    } else if (file === filename) {
-      return fullPath;
-    }
-    filesPathsHashMap[normaliseFileName(file)] = fullPath;
-  }
-  return filesPathsHashMap[normaliseFileName(filename)] ?? null;
-}
-
-const normaliseFileName = (fileName)=>{
-  if(fileName) return fileName.replace(/[+\s]+/g, ' ').trim().toLowerCase()
-  return "";
-}
-
-function sanitizeUrl(urlString) {
-    const u = new URL(encodeURI(urlString));
-    u.pathname = u.pathname.replace(/\/{2,}/g, "/");
-    return u.toString();
-}
-
 function loadSubsFromSubDir(identifyingElements) {
-  let torrentId = generateUniqueId(
+  const torrentId = generateUniqueId(
     `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.DownloadDir}`
   );
 
@@ -1468,161 +793,20 @@ function loadSubsFromVideoDirectory(videoPath) {
 
 // ############################ LIBRARIES RELATED ############################
 
-function getLibraryInfo() {
-  try { 
-    return JSON.parse(fs.readFileSync(libraryFilePath, "utf-8")); 
-  } catch { 
-    return { media: [] }; 
-  }
-}
 
-function insertNewInfoToLibrary(libraryFilePath, newData) {
-  try {
-    fs.writeFileSync(libraryFilePath, JSON.stringify(newData, null, 2));
-  } catch (err) {
-    log.error(err);
-  }
-}
 
-async function loadFromLibrary(targetIdentification){
-  let LibraryInfo = await getLibraryInfo();
-  if(LibraryInfo.media.length){
-    if(targetIdentification == null) return LibraryInfo.media;
-    let targetLibraryInfo = LibraryInfo.media.filter(
-      element =>
-        element.MediaId === targetIdentification.MediaId &&
-        element.MediaType === targetIdentification.MediaType
-    );
-    if(targetLibraryInfo.length)
-      return targetLibraryInfo; 
-  }
-  return undefined
-}
-
-async function removeFromLibrary(mediaInfo) {
-  let LibraryInfo = await getLibraryInfo();
-  LibraryInfo.media = LibraryInfo.media.filter(
-    element => element.torrentId !== mediaInfo.torrentId
-  );
-  insertNewInfoToLibrary(libraryFilePath, LibraryInfo);
-}
-
-async function loadTargetFromDownloadLibrary(torrentId) {
-  let LibraryInfo = await loadDownloadLibrary();
-  if(LibraryInfo.downloads.length){
-    if(torrentId == null) return LibraryInfo.downloads;
-    let targetLibraryInfo = LibraryInfo.downloads.filter(
-      element =>
-        element.torrentId === torrentId
-    );
-    if(targetLibraryInfo.length)
-      return targetLibraryInfo; 
-  }
-  return undefined
-}
-
-async function removeFromDownloadLibrary(torrentId){
-  let downloadLib = await loadDownloadLibrary();
-  downloadLib.downloads = downloadLib.downloads.filter(element => (element.torrentId !== torrentId));
-  insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
-}
-
-function loadDownloadLibrary(){
-  try { 
-    return JSON.parse(fs.readFileSync(downloadLibraryFilePath, "utf-8")); 
-  } catch { 
-    return { downloads: [] }; 
-  }
-}
-
-async function insertNewDownloadEntryPoint(torrentInfo,Status="Loading") {
-  let downloadLib = await loadDownloadLibrary();
-
-  // Find existing entry or create new one
-  const existingIndex = downloadLib.downloads.findIndex(
-    item => item.torrentId === torrentInfo.torrentId
-  );
-
-  if(existingIndex === -1) {
-    let posterDownloadPath = torrentInfo?.downloadPath 
-       ? path.join(torrentInfo.downloadPath, "POSTERS") 
-       : postersDirPath;
-    
-    let bgImageUrl = torrentInfo?.bgImageUrl;
-    let posterUrl = torrentInfo?.posterUrl;
-
-    let bgImagePath = bgImageUrl ? path.join(posterDownloadPath,bgImageUrl.split("/").pop()) : "";
-    let posterPath = posterUrl ? path.join(posterDownloadPath,posterUrl.split("/").pop()) : "";
-
-    downloadImage(posterDownloadPath,torrentInfo?.bgImageUrl)
-    downloadImage(posterDownloadPath,torrentInfo?.posterUrl);
-
-    const newEntry = {
-      ...torrentInfo,
-      posterPath: posterPath ?? "undefined",
-      bgImagePath: bgImagePath ?? "undefined",
-      Status:Status,
-      StatusUpdateTime: Date.now()
-    };
-    downloadLib.downloads.push(newEntry);
-
-    const jsonMessage = { Status: "NewDownload" }
-    WINDOW.webContents.send("download-progress-stream", jsonMessage);
-    await insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
-
-    log.info("Creating Download Library Entry Point for: "+torrentInfo.torrentId);
-  } else {
-    log.info("Editing Download Status of: " + torrentInfo.torrentId);
-    await editDownloadLibraryElements([torrentInfo.torrentId], "Status", Status);
-  }
-}
-
-async function editDownloadLibraryElements(torrentsIds,key,value){
-  const downloadLibraryInfo = await loadDownloadLibrary();
-  for(let torrentId of torrentsIds){
-    for(let index=0 ; index < downloadLibraryInfo.downloads.length ; index++){
-      if(downloadLibraryInfo.downloads[index].torrentId === torrentId){
-        if(key === "Status")
-          downloadLibraryInfo.downloads[index]["StatusUpdateTime"] = Date.now();
-        downloadLibraryInfo.downloads[index][key] = value;
-        break; 
-      }
-    }
-  }
-
-  await insertNewInfoToLibrary(downloadLibraryFilePath,downloadLibraryInfo);
-}
 
 async function markMediaDownloadsAsPaused() {
-  let wholeDownloadLibrary = await loadDownloadLibrary();
+  let wholeDownloadLibrary = await loadDownloadStorage();
   let torrentsIds = wholeDownloadLibrary.downloads
     .filter(torrentElement => torrentElement?.Status.toLowerCase() !== "done")
     .map(torrent => torrent.torrentId);
 
-  await editDownloadLibraryElements(torrentsIds,"Status","Paused");
-}
-
-async function updateElementDownloadLibrary(torrentInfo, downloadedBytes, totalSize) {
-  let downloadLib = await loadDownloadLibrary();
-
-  // Find existing entry or create new one
-  const existingIndex = downloadLib.downloads.findIndex(
-    item => item.torrentId === torrentInfo.torrentId
-  );
-  
-  if(existingIndex !== -1){
-    downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
-    downloadLib.downloads[existingIndex]["typeOfSave"] = torrentInfo.Status === "Done" ? "Download-Complete" : "Download"
-    downloadLib.downloads[existingIndex]["Total"] = totalSize;
-
-    if(torrentInfo.Status === "Done")
-      downloadLib.downloads[existingIndex]["Status"] = "Done";
-    await insertNewInfoToLibrary(downloadLibraryFilePath, downloadLib);
-  }
+  await editDownloadStorageEntry(torrentsIds,"Status","Paused");
 }
 
 async function getLastestPlayBackPostion(metaData){
-  let CurrentMediaLibraryEntry = await loadFromLibrary({MediaId:metaData.MediaId,MediaType:metaData.MediaType});
+  let CurrentMediaLibraryEntry = await getLibraryEntry({MediaId:metaData.MediaId,MediaType:metaData.MediaType});
 
   let startFromTime;
   if(CurrentMediaLibraryEntry == null || 
@@ -1660,14 +844,14 @@ async function playVideoOverMpv(metaData) {
     .map(sub => sub.url);
 
   const { MpvExecPath } = await loadSettings();
-  MPVWorker = new Worker(MPVPlayerWorkerPath, {
+  MPVWorker = new Worker(Paths.MPVPlayerWorkerPath, {
     workerData: {
       MpvExecPath: MpvExecPath,
       typeOfPlay:"LocalFile",
       metaData,
       startFromTime,
       subsPaths,
-      mpvConfigDirectory,
+      mpvConfigDirectory:Paths.mpvConfigDirectory,
       mpvWindowConfigs: {
         geometry: windowGeometry,
         fullscreened: windowIsFullScreened,
@@ -1750,7 +934,7 @@ function handleMpvWorker(metaData) {
   });
 }
 
-const handleMpvOutput = (data)=>{
+const handleMpvOutput = (data)=> {
   if(data.toString().includes("AV:")){
     if(WINDOW && WINDOW.isVisible()) WINDOW.hide();
   }
@@ -1774,7 +958,7 @@ const handleMpvOutput = (data)=>{
 }
 
 function updateLastSecondBeforeQuit(lastPbPosition,metaData){
-  const LibraryInfo = getLibraryInfo();
+  const LibraryInfo = loadLibraryStorage();
   let found = false;
 
   LibraryInfo.media ??= [];
@@ -1814,7 +998,7 @@ function updateLastSecondBeforeQuit(lastPbPosition,metaData){
     }
     LibraryInfo.media.push(MediaLibraryObject);
   }
-  insertNewInfoToLibrary(libraryFilePath,LibraryInfo);
+  overwriteStorageFile(Paths.libraryFilePath,LibraryInfo);
 }
 
 // ############################## CACHE HISTORY MANAGEMENT ##############################
@@ -1915,53 +1099,7 @@ async function validateWyzieApiKey(apiKey) {
   }
 }
 
-async function writeAPIKEYIntoEnvFile(apiKeys){
-  try {
-    if(!fs.existsSync(__configs)){
-      fs.mkdirSync(__configs, { recursive: true });
-    }
-    const fileContent = `
-      TMDB_API_KEY="${apiKeys["TMDB_API_KEY"]}"\n
-      Wyzie_API_KEY="${apiKeys["Wyzie_API_KEY"]}"
-    `;
-    await fs.writeFileSync(__envfile,fileContent);
-    return true;
-  } catch(err) {
-    log.error(err.message);
-    return false;
-  }
-}
-
-// ################################### System Related ###################################
-function sendSystemNotification({
-  title = "Notification", body = "",
-  icon = null, onClick = null,
-  silent = false
-} = {}) {
-  const showNotification = () => {
-    const notification = new Notification({
-      title, body, icon, silent
-    });
-    if (onClick) notification.on("click", onClick);
-    notification.show();
-  };
-
-  if (app.isReady()) showNotification();
-  else 
-    app.whenReady()
-      .then(showNotification);
-}
-
 // ################################### Utilities Related ###################################
-function formatSize(bytes) {
-  const gb = bytes / (1024 ** 3);
-  if (gb >= 1) return `${gb.toFixed(2)} GB`;
-  return `${(bytes / (1024 ** 2)).toFixed(2)} MB`;
-}
-
-function truncate(text, max = 40) {
-  return text.length > max ? text.slice(0, max) + "…" : text;
-}
 
 process.on('unhandledRejection', (reason) => {
   if (reason?.name === 'AbortError') return;
