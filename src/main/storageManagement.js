@@ -146,3 +146,12 @@ export async function removeLibraryStorageEntry(torrentId) {
   );
   overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
 }
+
+export async function markMediaDownloadsAsPaused() {
+  const wholeDownloadLibrary = await loadDownloadStorage();
+  const torrentsIds = wholeDownloadLibrary.downloads
+    .filter(torrentElement => torrentElement?.Status.toLowerCase() !== "done")
+    .map(torrent => torrent.torrentId);
+
+  await editDownloadStorageEntry(torrentsIds,"Status","Paused");
+}

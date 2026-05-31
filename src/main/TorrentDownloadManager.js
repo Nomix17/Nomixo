@@ -23,8 +23,9 @@ import fs from 'fs';
 
 
 class TorrentDownloadManager {
-  constructor(WINDOW) {
+  constructor(WINDOW, onPlayVideo) {
     this.WINDOW = WINDOW;
+    this.onPlayVideo = onPlayVideo;
     this.DownloadClient = new WebTorrent();
     this.torrentTrackersPromise = this.getTorrentTrackers();
     this.downloadingMediaHashMap = {};
@@ -37,7 +38,7 @@ class TorrentDownloadManager {
     for (const torrentEntry of torrentsEntries) {
       try {
         Paths.defaultSystemDownloadDir = torrentEntry?.userDownloadPath ?? Paths.defaultSystemDownloadDir;
-        torrentEntry.dirName = this.formatDownloadRootDirName(torrentEntry);
+        torrentEntry.dirName = this.sanitizeDirNameForOS(torrentEntry);
         const torrentDownloadRootDirPath = path.join(Paths.defaultSystemDownloadDir, torrentEntry.dirName);
         fs.mkdirSync(torrentDownloadRootDirPath, { recursive: true });
 
@@ -99,7 +100,7 @@ class TorrentDownloadManager {
     insertNewDownloadEntry(torrentEntry).then((isNewEntry) => {
       if(isNewEntry)
         this.WINDOW.webContents.send("download-progress-stream", { Status: "NewDownload" });
-    });;
+    });
 
     return new Promise((resolve, reject) => {
       log.info("Loading Torrent:", torrentEntry.torrentId);
@@ -199,7 +200,7 @@ class TorrentDownloadManager {
     torrentEntry["Status"] = "Done";
     saveDownloadProgress(torrentEntry, downloadedDataLength, totalSize);
 
-    // try {
+    try {
       await this.destroyDownloadingTorrent(torrent, torrentEntry.torrentId);
       const body = [
         truncate(torrentEntry?.Title || 'Unknown title'),
@@ -212,12 +213,12 @@ class TorrentDownloadManager {
         title: "Download Complete",
         body: body,
         icon: torrentLibEntry.posterPath,
-        onClick: () => playVideoOverMpv(torrentLibEntry)
+        onClick: () => this.onPlayVideo(torrentLibEntry)
       });
       log.info(`Torrent cleaned up: ${torrentEntry.torrentId}`);
-    // } catch (err) {
-    //   log.error(err.message);
-    // }
+    } catch (err) {
+      log.error(err.message);
+    }
 
     log.success(`Download completed: ${torrentEntry.torrentId}`);
     this.WINDOW.webContents.send("download-progress-stream", jsonMessage);
@@ -236,20 +237,15 @@ class TorrentDownloadManager {
     }
   }
 
-  formatDownloadRootDirName(torrentEntry) {
-    const MAX_LENGTH = 200;
-    if (torrentEntry.dirName.length > MAX_LENGTH) {
-      const dirId = generateUniqueId(torrentEntry.dirName);
-      const prefix = torrentEntry.dirName.slice(0, 120);
-
-      let newName = prefix;
-      if (torrentEntry.seasonNumber && torrentEntry.episodeNumber) {
-        newName += `-S${torrentEntry.seasonNumber}E${torrentEntry.episodeNumber}`;
-      }
-
-      return `${newName}-${dirId}`;
-    }
-    return torrentEntry.dirName;
+  static MAX_DIR_NAME_LENGTH = 200;
+  sanitizeDirNameForOS(torrentEntry) {
+    const { dirName, seasonNumber, episodeNumber } = torrentEntry;
+    if (dirName.length <= this.MAX_DIR_NAME_LENGTH) return dirName;
+    const dirId = generateUniqueId(dirName);
+    
+    return seasonNumber && episodeNumber 
+      ? `${dirName.slice(0, 120)}-S${seasonNumber}E${episodeNumber}-${dirId}`
+      : `${dirName.slice(0, 120)}-${dirId}`;
   }
 
   reportDownloadError(errorType, torrentId, err) {
@@ -469,7 +465,7 @@ class TorrentDownloadManager {
     return queuedTorrents;
   }
 
-  async  pauseTargetedTorrent(torrent, torrentId) {
+  async pauseTargetedTorrent(torrent, torrentId) {
     if(!torrent) {
       throw new Error(`Failed to pause: ${torrent}`);
     }
