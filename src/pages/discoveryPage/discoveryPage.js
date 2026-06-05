@@ -130,14 +130,17 @@ function detectWhenScrollsArriveAtTheEndOfAPage(apiKey){
   });
 }
 
-async function loadCachedMediaData(cachedData){
+async function renderCachedMedia(cachedData) {
   const containersData = cachedData?.containers_data;
   if(containersData) {
+    const libraryContent = await loadLibraryInfo();
+
     MediaSuggestions.innerHTML = "";
     const lastLoadedPage = cachedData?.last_loaded_medias_page;
     numberOfLoadedPages = lastLoadedPage ?? 2;
     const allMediaElements = [];
     const allToggleToLibButtons = [];
+
     for(const mediaContainer of containersData) {
       if(mediaContainer.id) {
         const containerDomElement = document.getElementById(mediaContainer.id);
@@ -163,14 +166,20 @@ async function loadCachedMediaData(cachedData){
       }
     }
 
-    for(let toggleToLibButton of allToggleToLibButtons) {
+    for(const toggleToLibButton of allToggleToLibButtons) {
       const thisMediaElement = toggleToLibButton?.parentElement;
       if(!thisMediaElement) continue;
-      addToggleToLibButtonEventListener(
-        toggleToLibButton,
-        thisMediaElement.getAttribute("mediaId"),
-        thisMediaElement.getAttribute("mediaType"),
+
+      const mediaId = thisMediaElement.getAttribute("mediaId")
+      const mediaType = thisMediaElement.getAttribute("mediaType")
+      const mediaIsInLibrary = libraryContent.find(entryPoint => 
+        (entryPoint.MediaId.toString() === mediaId) &&
+        (entryPoint.MediaType.toString() === mediaType)
       );
+      addToggleToLibButtonEventListener(toggleToLibButton, mediaId, mediaType);
+
+      if(mediaIsInLibrary != null) setAddToLibraryButtonToPressed(toggleToLibButton);
+      else setAddToLibraryButtonToNormal(toggleToLibButton)
     }
   }
 }
@@ -179,7 +188,7 @@ async function loadMedia(apiKey){
   const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   if(cachedMediaInfo){
     console.log("Loading Cached Information");
-    await loadCachedMediaData(cachedMediaInfo);
+    await renderCachedMedia(cachedMediaInfo);
     await loadCachedSuggestionsDivScrollValue(cachedMediaInfo);
     await loadCachedDropDownValue(cachedMediaInfo);
   }else{
