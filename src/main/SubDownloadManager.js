@@ -6,13 +6,13 @@ import {join} from "path";
 class SubDownloadManager {
   static async downloadSubs(subsObjects, torrentId, TorrentDownloadDir) {
     // Download subtitles
-    if (subsObjects.length) {
-      const subDownloadDir = join(TorrentDownloadDir, `SUBS_${torrentId}`);
-      mkdirSync(subDownloadDir, { recursive: true });
-      const downloadRes = await this.downloadMultipleSubs(subDownloadDir, subsObjects);
-      const numberOfSuccessfulDownloads = downloadRes.filter(res => res.status === "success")?.length;
-      return !!numberOfSuccessfulDownloads;
-    }
+    if (subsObjects.length == 0)
+      return false;
+    const subDownloadDir = join(TorrentDownloadDir, `SUBS_${torrentId}`);
+    mkdirSync(subDownloadDir, { recursive: true });
+    const downloadRes = await this.downloadMultipleSubs(subDownloadDir, subsObjects);
+    const numberOfSuccessfulDownloads = downloadRes.filter(res => res.status === "success")?.length;
+    return numberOfSuccessfulDownloads != 0;
   }
 
   static async downloadMultipleSubs(subDirectory,subsObjects) {

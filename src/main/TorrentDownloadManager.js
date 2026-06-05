@@ -51,7 +51,7 @@ class TorrentDownloadManager {
         // Download subs
         try {
           if (subsObjects != null) {
-            SubDownloadManager.downloadSubs(subsObjects, torrentId, torrentDownloadRootDirPath);
+            await SubDownloadManager.downloadSubs(subsObjects, torrentId, torrentDownloadRootDirPath);
           } else {
             log.warn("Subtitles Download Skipped");
           }
