@@ -14,7 +14,7 @@ export class Paths {
   static ThemeFilePath = path.join(Paths.__configs, 'Theme.css');
   static libraryFilePath = path.join(Paths.__configs, "library.json");
   static downloadLibraryFilePath = path.join(Paths.__configs, "downloads.json");
-  static MPVPlayerWorkerPath = path.join(Paths.__dirname, 'MPVStreamingWorker.js');
+  static MPVPlayerWorkerPath = path.join(Paths.__dirname, 'MpvWorker.js');
   static subDirectory = "/tmp/tempSubs";
   static videoCachePath = path.join(Paths.__configs, "video_cache");
   static postersDirPath = path.join(Paths.__configs, "posters");
