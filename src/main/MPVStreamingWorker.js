@@ -30,7 +30,7 @@ function StreamTorrent(
 ) {
   return new Promise((resolve, reject) => {
 
-    log.info("\nLoading Torrent:", metaData?.fileName);
+    log.info("Loading Torrent:", metaData?.fileName);
     webTorrentClient = new WebTorrent();
     const torrent = webTorrentClient.add(metaData.Magnet, {path: videoCachePath}, async (torrent) => {
 
