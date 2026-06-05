@@ -247,7 +247,7 @@ async function fetchMediaTorrent(episodeInfo={}) {
 
     const mediaTorrentRes = await fetch(url);
     const mediaTorrentInformation = await mediaTorrentRes.json();
-    renderMediaTorrent(mediaTorrentInformation, libraryInfo?.[0],episodeInfo);
+    await renderMediaTorrent(mediaTorrentInformation, libraryInfo?.[0],episodeInfo);
 
   } catch (error) {
     console.error(error);
@@ -278,11 +278,7 @@ async function getIMDB_ID() {
     `https://api.themoviedb.org/3/${MediaType}/${MediaId}/external_ids?api_key=${apiKey}`
   );
   const mediaExternalIdsData = await mediaExternalIdsRes.json();
-  const imdb_id = mediaExternalIdsData?.imdb_id
-  if(imdb_id == null || imdb_id.trim() == "")
-    throw new Error("No Results Were found !");
-
-  return imdb_id;
+  return mediaExternalIdsData?.imdb_id
 }
 
 function createRefreshTorrentBtn() {
@@ -595,7 +591,7 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
 
   TorrentMagnetContainer.classList.remove("preloadingTorrent");
   if (TorrentMagnetContainer.innerHTML.trim() === "")
-    throw new Error("No Useful Results Were found!");
+    throw new Error("No Useful Results Were found !");
 
   loadIconsDynamically();
 }
