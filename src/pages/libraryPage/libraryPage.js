@@ -180,19 +180,17 @@ async function loadCachedMediaData(cachedData){
   }
 }
 
-async function loadMedia(){
+async function loadMedia() {
   const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   const apiKey = await window.electronAPI.getTMDBAPIKEY();
-
+  await loadDataFromLibrary(apiKey);
   if(cachedMediaInfo){
     console.log("Loading Cached Information");
-    loadCachedMediaData(cachedMediaInfo);
     loadCachedRightDivScrollValue(cachedMediaInfo);
     loadCachedDropDownValue(cachedMediaInfo);
-  }else{
-    await loadDataFromLibrary(apiKey);
-    sortMediaELements(SortingCriteria.newest)
   }
+  const currentSortValue = SortingCriteria[getDropdownValue(SelectSortType)];
+  sortMediaELements(currentSortValue)
 }
 
 async function initPage(){
