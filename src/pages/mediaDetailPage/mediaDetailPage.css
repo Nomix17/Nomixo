@@ -383,6 +383,18 @@ p{
   border-color:white;
 }
 
+#movie-rating-div.inactive {
+  opacity: 0.8;
+  pointer-events: none;
+  cursor: auto;
+}
+#movie-rating-div.inactive:hover {
+  border-color: transparent;
+}
+#movie-rating-div.inactive *{
+  cursor: auto;
+}
+
 .btn-MovieDetailsButtons{
   margin-left:5.4px; 
   margin-bottom:6.3px; 

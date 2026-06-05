@@ -420,6 +420,10 @@ function insertMediaGeneraleInformation(mediaBasicInfo) {
 async function addImdbRatingEventListener() {
   const IMDB_RatingElement = document.getElementById("movie-rating-div");
   const imdb_id = await IMDB_IDPromise;
+  if(imdb_id == null) {
+    IMDB_RatingElement.classList.add("inactive");
+    return;
+  }
   IMDB_RatingElement.addEventListener("click", async() => {
     const imdbLink = `https://www.imdb.com/title/${imdb_id}`;
     console.log(`Opening IMDB link: ${imdbLink}`);
