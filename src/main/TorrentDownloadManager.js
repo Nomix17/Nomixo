@@ -37,9 +37,9 @@ class TorrentDownloadManager {
     const results = [];
     for (const torrentEntry of torrentsEntries) {
       try {
-        Paths.defaultSystemDownloadDir = torrentEntry?.userDownloadPath ?? Paths.defaultSystemDownloadDir;
+        Paths.defaultDownloadPath = torrentEntry?.userDownloadPath ?? Paths.defaultDownloadPath;
         torrentEntry.dirName = this.sanitizeDirNameForOS(torrentEntry);
-        const torrentDownloadRootDirPath = path.join(Paths.defaultSystemDownloadDir, torrentEntry.dirName);
+        const torrentDownloadRootDirPath = path.join(Paths.defaultDownloadPath, torrentEntry.dirName);
         fs.mkdirSync(torrentDownloadRootDirPath, { recursive: true });
 
         const torrentId = generateUniqueId(

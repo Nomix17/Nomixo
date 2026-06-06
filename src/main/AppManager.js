@@ -104,7 +104,7 @@ export class AppManager {
     const defaultSettings = await this.defaultSettingsPromise;
     this.mainZoomFactor = defaultSettings.PageZoomFactor;
     if (defaultSettings?.DefaultDownloadPath != null)
-      Paths.defaultSystemDownloadDir = defaultSettings.DefaultDownloadPath;
+      Paths.defaultDownloadPath = defaultSettings.DefaultDownloadPath;
 
     this.browserWindow.once("ready-to-show", () => {
       this.browserWindow.webContents.setZoomFactor(this.mainZoomFactor);

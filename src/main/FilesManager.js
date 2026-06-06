@@ -7,20 +7,26 @@ import {log} from "./debugging.js";
 export class Paths {
   static __filename = fileURLToPath(import.meta.url);
   static __dirname = path.dirname(Paths.__filename);
-  static __configs = path.join(app.getPath('userData'), "configs");
+
+  static __configs = app.getPath("userData");
+  static __cache = app.getPath("userCache");
+  static __downloads = app.getPath("downloads");
+  static __temp = app.getPath("temp");
+
   static __envfile = path.join(Paths.__configs, ".env");
-  static __downloads = app.getPath('downloads');
-  static SettingsFilePath = path.join(Paths.__configs, 'settings.json');
-  static ThemeFilePath = path.join(Paths.__configs, 'Theme.css');
+  static SettingsFilePath = path.join(Paths.__configs, "settings.json");
+  static ThemeFilePath = path.join(Paths.__configs, "Theme.css");
   static libraryFilePath = path.join(Paths.__configs, "library.json");
   static downloadLibraryFilePath = path.join(Paths.__configs, "downloads.json");
-  static MPVPlayerWorkerPath = path.join(Paths.__dirname, 'MpvWorker.js');
-  static subDirectory = "/tmp/tempSubs";
-  static videoCachePath = path.join(Paths.__configs, "video_cache");
-  static postersDirPath = path.join(Paths.__configs, "posters");
-  static defaultSystemDownloadDir = path.join(Paths.__configs, "Downloads");
-  static mpvConfigDirectory = path.join(Paths.__configs, 'mpv');
-  static SubConfigFile = path.join(Paths.mpvConfigDirectory, 'mpv.conf');
+  static mpvConfigDirectory = path.join(Paths.__configs, "mpv");
+  static SubConfigFile = path.join(Paths.mpvConfigDirectory, "mpv.conf");
+
+  static defaultDownloadPath = Paths.__downloads;
+  static videoCachePath = path.join(Paths.__cache, "video_cache");
+  static postersDirPath = path.join(Paths.__cache, "posters");
+
+  static MpvWorkerPath = path.join(Paths.__dirname, "MpvWorker.js");
+  static subDirectory = path.join(Paths.__temp, "tempSubs");
 }
 
 export class FilesManager {
@@ -68,8 +74,8 @@ export class FilesManager {
         }
       `);
 
-    if (!fs.existsSync(Paths.defaultSystemDownloadDir))
-      fs.mkdirSync(Paths.defaultSystemDownloadDir, { recursive: true });
+    if (!fs.existsSync(Paths.__downloads))
+      fs.mkdirSync(Paths.__downloads, { recursive: true });
 
     if (!fs.existsSync(Paths.mpvConfigDirectory)) {
       const currentMpvConfPath = app.isPackaged

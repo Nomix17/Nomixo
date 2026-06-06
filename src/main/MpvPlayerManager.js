@@ -96,7 +96,7 @@ class MpvPlayerManager {
     const startFromTime = await this.#getLatestPlaybackPosition(metaData);
     const { MpvExecPath } = settings;
 
-    this.#worker = new Worker(Paths.MPVPlayerWorkerPath, {
+    this.#worker = new Worker(Paths.MpvWorkerPath, {
       workerData: {
         MpvExecPath,
         typeOfPlay: "StreamTorrent",
@@ -120,7 +120,7 @@ class MpvPlayerManager {
     const startFromTime = await this.#getLatestPlaybackPosition(metaData);
     const { MpvExecPath } = settings;
 
-    this.#worker = new Worker(Paths.MPVPlayerWorkerPath, {
+    this.#worker = new Worker(Paths.MpvWorkerPath, {
       workerData: {
         MpvExecPath,
         typeOfPlay: "LocalFile",
