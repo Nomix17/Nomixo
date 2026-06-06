@@ -49,7 +49,7 @@ Nomixo is an Electron app that lets you search, browse, and stream movies and TV
 
 Pre-built installers are on the [**Releases page**](https://github.com/Nomix17/Nomixo/releases). Available for Linux (`.deb`, `.rpm`, `.tar.gz`) and Windows (installer + portable `.zip`).
 
-> ⚠️ **MPV must be installed separately.** On Windows, grab a 64-bit build from [SourceForge](https://sourceforge.net/projects/mpv-player-windows/files/64bit/) and either add it to your PATH or configure the path in Settings. Other platforms: [mpv.io/installation](https://mpv.io/installation/).
+> ‼️ **MPV must be installed separately.** On Windows, grab a 64-bit build from [SourceForge](https://sourceforge.net/projects/mpv-player-windows/files/64bit/) and either add it to your PATH or configure the path in Settings. Other platforms: [mpv.io/installation](https://mpv.io/installation/).
 
 
 ## Running from Source
