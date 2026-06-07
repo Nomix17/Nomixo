@@ -51,16 +51,21 @@
         "deb",
         "rpm"
       ],
+      "artifactName": "Nomixo-v${version}-linux-${arch}.${ext}",
       "category": "AudioVideo",
       "icon": "logo/icon",
       "maintainer": "Nomix17"
     },
     "win": {
       "target": [
-        "nsis",
-        "zip"
+        { "target": "zip",  "arch": ["x64"] },
+        { "target": "nsis", "arch": ["x64"] }
       ],
-      "icon": "logo/icon.ico"
+      "icon": "logo/icon.ico",
+      "artifactName": "Nomixo-v${version}-Windows-Portable-${arch}.${ext}"
+    },
+    "nsis": {
+      "artifactName": "Nomixo-v${version}-Windows-Installer-${arch}.${ext}"
     }
   }
 }
