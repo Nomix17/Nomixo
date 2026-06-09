@@ -1206,8 +1206,8 @@ function putTextIntoDiv(Div,textContent){
 }
 
 function setLeftButtonStyle(buttonId) {
-  const buttonIcon = document.querySelector(`#${buttonId} .icon`);
-  buttonIcon.style.fill = "rgba(var(--icon-hover-color))";
+  const buttonIcon = document.querySelector(`#${buttonId}`);
+  buttonIcon.classList.add("active");
 }
 
 

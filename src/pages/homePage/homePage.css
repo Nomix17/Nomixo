@@ -56,7 +56,7 @@ input, button, textarea, :focus {
 
 button{
   cursor:pointer;
-  transition: fill 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
+  transition: fill 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
   background-color: transparent;
 }
 body{
@@ -124,7 +124,7 @@ body, html {
   background-color:transparent;
   height: 73.6px;
   box-sizing: border-box;
-  padding: 16.5px;
+  padding: 16.0px;
   border-bottom:1px solid rgba(var(--div-containers-borders-color));
   z-index:10;
 }
@@ -162,7 +162,7 @@ body, html {
 .icon{
   fill: rgba(var(--icon-color),1);
   background-color:transparent;
-  width:93%;
+  width:97%;
   cursor:pointer;
   transition: fill 0.3s ease;
 }
@@ -171,12 +171,15 @@ body, html {
   width:75%;
 }
 
+.btn-middle-left.active .icon,
 .btn-middle-left:hover .icon {
   fill: rgba(var(--icon-hover-color));
 }
-
-.btn-middle-left:hover{
+ 
+.btn-middle-left.active, 
+.btn-middle-left:hover {
   background-color: rgba(var(--main-buttons-color));
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 #div-middle-right{
@@ -228,22 +231,22 @@ body, html {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  margin-right:10px;
+  margin-right:17px;
   pointer-events: auto;
   height: 371.68px;
   width: 185.84px;
 }
 
 .img-MoviePosterContainer{
-  width: 185.84px;
-  height: 285.2px;
+  width: 192.2px;
+  height: 295px;
   border-radius: 15px;
   cursor:pointer;
 }
 
 .img-MoviePoster {
-  width: 185.84px;
-  height: 285.2px;
+  width: 192.2px;
+  height: 295px;
   border-radius: 15px;
   border: 3px solid rgba(255,255,255,0%);
   position: static; 
@@ -280,7 +283,6 @@ body, html {
   align-items:center;
 }
 
-
 .search-container{
   display:flex;
   align-items:center;
@@ -288,6 +290,7 @@ body, html {
 
 #input-searchForMovie{
   font-size:14.72px;
+  line-height: 45px;
   padding:10px 19px;
   min-width:410px;
   height:45px;
@@ -335,7 +338,7 @@ body, html {
   background-color:  rgba(255,255,255,0%);
   border:none;
   border-radius:10px;
-  padding:10px 15px 10px 15px;
+  padding:10px 15px;
   margin:10px;
 }
 
@@ -343,6 +346,7 @@ body, html {
   cursor:pointer;
   background-color:  rgba(255,255,255,10%);
 }
+
 #place-holder-top-div,
 #btn-fullscreen{
   display: flex;
@@ -350,9 +354,11 @@ body, html {
   align-items: center;
   width:45px;
   height:44.8px;
-  background-color: rgba(0,0,0,0%) ;
-  border:none;
+  background-color: rgba(255,255,255,2%);
+  border: 1px solid rgba(255,255,255,5%);
   border-radius:10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 #img-fullscreen{
   background-color:  rgba(0,0,0,0%);
@@ -363,6 +369,7 @@ body, html {
 #btn-fullscreen:hover{
   cursor:pointer;
   background-color:  rgba(var(--main-buttons-color));
+  border-color: rgba(255, 255, 255, 0.15);
 }
 #btn-fullscreen:hover #img-fullscreen{
   cursor:pointer;
@@ -446,7 +453,6 @@ input::selection {
   transition: transform 0.3s ease, fill 0.3s ease;
 }
 
-
 .continue-video-button {
   bottom: 56%;
   right: 50%;
@@ -494,7 +500,6 @@ input::selection {
 .div-MovieElement:hover .toggleButtonIcon{
   fill: rgba(255,255,255,0.3);
 }
-
 
 .btn-toggle-in-library:hover .toggleButtonIcon,
 .btn-remove-from-library:hover .closeButtonIcon{
@@ -569,12 +574,14 @@ input::selection {
   align-items:center;
   width:45px;
   height:44.8px;
-  background-color:  rgba(0,0,0,0%);
-  border:none;
+  background-color: rgba(255,255,255,2%);
+  border: 1px solid rgba(255,255,255,5%);
   border-radius:10px;
   cursor:pointer;
   padding-top:2px;
   padding-right:10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 #btn-goBack svg{
   opacity:0.1;
