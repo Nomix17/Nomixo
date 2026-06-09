@@ -291,7 +291,7 @@ body, html {
 #input-searchForMovie{
   font-size:14.72px;
   line-height: 45px;
-  padding:10px 19px;
+  padding:10px 29px;
   min-width:410px;
   height:45px;
   background-color: rgba(var(--input-backgroundColor));
