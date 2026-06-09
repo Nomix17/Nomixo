@@ -85,15 +85,16 @@ p{
 }
 
 #btn-fullscreen{
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width:45px;
   height:44.8px;
-  background-color:  rgba(0,0,0,0%);
-  border:none;
+  background-color: rgba(255,255,255,2%);
+  border: 1px solid rgba(255,255,255,5%);
   border-radius:10px;
-  cursor:pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 #btn-goBack svg{
@@ -395,19 +396,23 @@ p{
   cursor: auto;
 }
 
-.btn-MovieDetailsButtons{
-  margin-left:5.4px; 
-  margin-bottom:6.3px; 
-  font-size:13.5px;
-  padding:9px 18px 9px 18px;
+.btn-MovieDetailsButtons {
+  margin-left: 5.4px; 
+  margin-bottom: 6.3px; 
+  font-size: 13.5px;
+  padding: 0 18px; 
+  height: 40px;
+  line-height: 40px; 
   background: rgba(255, 255, 255, 0.1);
-  border:2px solid rgba(255,255,255,0%);
-  border-radius:40px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 40px;
   backdrop-filter: blur(3px);
-  cursor:pointer;
+  cursor: pointer;
 }
+
 .btn-MovieDetailsButtons:hover{
- background-color:  rgba(255,255,255,0.2);
+  background-color:  rgba(255,255,255,0.2);
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 .btn-MovieDetailsButtons:active{
  border:2px solid rgba(255,255,255,100%);
