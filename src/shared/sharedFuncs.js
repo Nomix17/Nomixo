@@ -1212,29 +1212,31 @@ function setLeftButtonStyle(buttonId) {
 
 
 // ################################### ICONS & ASSET LOADING ###################################
+async function fetchSvg(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+    const res = await response.text();
+    localStorage.setItem(`cache_${url}`, res);
+    return res; 
+  } catch (err) {
+    console.error(`Error loading icon (${url}):`, err.message);
+  }
+}
 
-function loadIconsDynamically() {
-  document.addEventListener("DOMContentLoaded", ()=>{
+async function loadIconsDynamically() {
+  document.addEventListener("DOMContentLoaded", () => {
     handleFullScreenIcon();
     handleGoBackIcon();
   });
 
-  fetch('../../../assets/icons/storage.svg')
-    .then(response => response.text())
-    .then(svgText => {
-      document.querySelectorAll('.div-storageImage').forEach(element=>element.innerHTML = svgText);
-    })
-    .catch(err=>{
-      console.error(err.message);
-    });
-  fetch('../../../assets/icons/seeds.svg')
-    .then(response => response.text())
-    .then(svgText => {
-      document.querySelectorAll('.div-seedImage').forEach(element=>element.innerHTML = svgText);
-    })
-    .catch(err=>{
-      console.error(err.message);
-    });
+
+  const assetsPath = "../../../assets/icons";
+  const storageSvgText = localStorage.getItem(`cache_${assetsPath}/storage.svg`) ?? await fetchSvg(`${assetsPath}/storage.svg`);
+  const seedSvgText = localStorage.getItem(`cache_${assetsPath}/seeds.svg`) ?? await fetchSvg(`${assetsPath}/seeds.svg`);
+
+  document.querySelectorAll(".div-storageImage").forEach(element => element.innerHTML = storageSvgText);
+  document.querySelectorAll(".div-seedImage").forEach(element => element.innerHTML = seedSvgText);
 }
 
 function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "../../../assets/PosterNotFound.svg") {
