@@ -8,11 +8,11 @@ let backgroundImage;
 let GlobalTitle = null;
 
 const middleDiv = document.getElementById("div-middle");
-const TorrentContainer = document.getElementById("div-TorrentContainer");
-const SerieContainer = document.getElementById("div-serieEpisodes");
+const torrentSidePanel = document.getElementById("div-torrentSidePanel");
+const episodeSidePanel = document.getElementById("div-serieEpisodes");
 
-const TorrentMagnetContainer = document.getElementById("div-movieMedias");
-const EpisodesContainer = document.getElementById("EpisodesContainer");
+const torrentResultsList = document.getElementById("div-movieMedias");
+const episodeResultsList = document.getElementById("EpisodesContainer");
 
 const selectSeasonContainer = document.querySelector(".selectSeason-container");
 const selectSeason = document.getElementById("select-Seasons");
@@ -30,9 +30,8 @@ const DownloadOverlay = document.getElementById('downloadOverlay');
 
 const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
-TorrentMagnetContainer.classList.add("preloadingTorrent");
-EpisodesContainer.style.cursor = 'default';
-if(MediaType === "movie") TorrentContainer.style.display = "block";
+torrentSidePanel.classList.add("preloadingTorrent");
+if(MediaType === "movie") torrentSidePanel.classList.add("visible-block");
 
 const seasonsDivArray = [];
 
@@ -118,11 +117,11 @@ async function loadAllEpisodesOfSeason(season_number,title) {
     displaySeason(1);
   } catch(err) {
     console.error(err.message)
-    EpisodesContainer.innerHTML = "";
+    episodeResultsList.innerHTML = "";
     const NothingWasFound = document.createElement("span");
     NothingWasFound.innerHTML = "No Results Were Found !";
-    SerieContainer.style.display = "flex";
-    EpisodesContainer.appendChild(NothingWasFound);
+    episodeSidePanel.classList.add("visible-flex");
+    episodeResultsList.appendChild(NothingWasFound);
   }
 }
 
@@ -147,7 +146,7 @@ function renderEpisodes(data,title,libraryInfo) {
       const continueWatchingBtn = createContinueWatchingBtn(libraryInfo);
       EpisodeElement.classList.add("continue_wathing_episode");
       EpisodeElement.appendChild(continueWatchingBtn)
-      EpisodeElement.style.backgroundColor ="rgba(255, 255, 255, 0.1)"; 
+      EpisodeElement.classList.add("continue-watching-highlight");
     }
 
     createEpisodeEventListeners(SeasonDiv, EpisodeElement, episode);
@@ -192,28 +191,18 @@ function createEpisodeEventListeners(SeasonDiv, EpisodeElement, episodeInfo) {
   EpisodeElement.addEventListener("click",async () => {
     handleEpisodeElementColoring(SeasonDiv,EpisodeElement);
     try {
+      torrentSidePanel.classList.add("preloadingTorrent");
       const defaultRatio = await getDefaultRatio();
-      resizeTorrentAndEpisodeElement(defaultRatio,EpisodesContainer);
-      resizeTorrentAndEpisodeElement(defaultRatio,TorrentMagnetContainer);
+      resizeTorrentAndEpisodeElement(defaultRatio,episodeResultsList);
+      resizeTorrentAndEpisodeElement(defaultRatio,torrentResultsList);
 
-      TorrentContainer.style.display = "block";
-      TorrentContainer.style.borderRadius = "0px";
+      torrentSidePanel.classList.add("torrent-panel--open");
+      torrentResultsList.classList.add("torrent-panel--open");
+      torrentResultsList.style.width = "100px";
 
-      TorrentMagnetContainer.style.display = "block";
-      TorrentMagnetContainer.style.borderRadius = "0px";
-      TorrentContainer.style.borderRadius = "0px";
-      TorrentMagnetContainer.style.width = "100px";
+      toggleTorrentContainer.classList.add("toggle-btn--visible");
 
-      toggleTorrentContainer.style.opacity = "1"
-      toggleTorrentContainer.style.pointerEvents = "auto"
-
-      TorrentMagnetContainer.innerHTML = `
-        <div class="img-movieMedias-LoadingGif" class="loader">
-          <div class="dot dot1"></div>
-          <div class="dot dot2"></div>
-          <div class="dot dot3"></div>
-          <div class="dot dot4"></div>
-        </div>`;
+      torrentResultsList.innerHTML = "";
 
       fetchMediaTorrent ({
         seasonNumber:String(episodeInfo.season_number).padStart(2,"0"),
@@ -266,9 +255,10 @@ async function fetchMediaTorrent(episodeInfo={}) {
       nothingWasFoundDiv.appendChild(refreshButton);
     }
 
-    TorrentMagnetContainer.innerHTML = "";
-    TorrentMagnetContainer.style.display = "flex";
-    TorrentMagnetContainer.appendChild(nothingWasFoundDiv);
+    torrentResultsList.innerHTML = "";
+    torrentSidePanel.classList.remove("preloadingTorrent");
+    torrentResultsList.classList.add("visible-flex");
+    torrentResultsList.appendChild(nothingWasFoundDiv);
   }
 }
 
@@ -286,13 +276,8 @@ function createRefreshTorrentBtn() {
   refreshButton.className = "btn-refreshAfterWarningMessage";
   refreshButton.innerHTML = reloadIcon;
   refreshButton.addEventListener("click",() => {
-    TorrentMagnetContainer.innerHTML =
-      `<div class="img-movieMedias-LoadingGif" class="loader">
-        <div class="dot dot1"></div>
-        <div class="dot dot2"></div>
-        <div class="dot dot3"></div>
-        <div class="dot dot4"></div>
-      </div>`;
+    torrentResultsList.innerHTML = "";
+    torrentSidePanel.classList.add("preloadingTorrent");
 
     setTimeout(() => {
       fetchMediaTorrent();
@@ -315,11 +300,11 @@ async function renderMediaPage(data) {
   insertMediaGeneraleInformation(mediaGeneraleInfo);
   insertGenresOfMedia(Genres);
 
-  if(Duration === "TV Show") TorrentMagnetContainer.style.display = "none";
-  else EpisodesContainer.style.display = "none";
+  if(Duration === "TV Show") torrentResultsList.classList.add("hidden");
+  else episodeResultsList.classList.add("hidden");
 
   if(Seasons){
-    SerieContainer.style.display = "flex";
+    episodeSidePanel.classList.add("visible-flex");
     for(const season of Seasons) {
       const [newOption,seasonNumber] = createSeasonOptionElement(season);
       selectSeason.appendChild(newOption); 
@@ -329,8 +314,8 @@ async function renderMediaPage(data) {
     addSeasonsDropDownEventListener()
 
   }else{
-    TorrentMagnetContainer.style.display = "block";
-    selectSeasonContainer.style.display = "none";
+    torrentResultsList.classList.add("visible-block");
+    selectSeasonContainer.classList.add("hidden");
   }
 
   dropDownInit();
@@ -381,10 +366,10 @@ function insertLogoTitleInformation(logoFileName,Title){
   if(logoFileName){
     let logoImage = `https://image.tmdb.org/t/p/original/${logoFileName}`;
     logoTitleElement.src = logoImage;
-    textTitleElement.style.display = "none";
+    textTitleElement.classList.add("hidden");
     addInspectBackdropImage(logoTitleContainer);
   } else {
-    logoTitleContainer.style.display = "none";
+    logoTitleContainer.classList.add("hidden");
     addInspectBackdropImage(textTitleElement);
   }
 
@@ -400,11 +385,11 @@ function insertMediaGeneraleInformation(mediaBasicInfo) {
 
   const [Duration,ReleaseYear,Rating,Summary] = mediaBasicInfo;
   let summaryExist = true;
-  if(!Duration) mediaDurationElement.style.display = "none";
-  if(!ReleaseYear) mediaYearOfReleaseElement.style.display = "none";
+  if(!Duration) mediaDurationElement.classList.add("hidden");
+  if(!ReleaseYear) mediaYearOfReleaseElement.classList.add("hidden");
   if(!Rating || Rating === "0.0"){
-    mediaRatingElement.style.display = "none";
-    imdbLogoElement.style.display = "none";
+    mediaRatingElement.classList.add("hidden");
+    imdbLogoElement.classList.add("hidden");
   }
   if(!Summary || Summary.trim() === ""){
     summaryExist = false;
@@ -434,7 +419,7 @@ async function addImdbRatingEventListener() {
 function addInspectBackdropImage(titleElement) {
   const toggleBackdropInspection = (inspect) => {
     const mainDiv = document.getElementById("div-main");
-    mainDiv.style.opacity = inspect ? "0" : "1";
+    mainDiv.classList.toggle("backdrop-inspecting", inspect);
     mainDiv.inert = inspect;
   }
   titleElement.addEventListener("click", () => {
@@ -569,7 +554,7 @@ function renderCastInfomation(data) {
 }
 
 async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
-  TorrentMagnetContainer.innerHTML = "";
+  torrentResultsList.innerHTML = "";
   addSpaceToTopOfTorrentContainer();
   const imdb_id = await IMDB_IDPromise;
 
@@ -589,15 +574,15 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
 
       if (isCurrentlyWatching) createContinueWatchingBtn(torrentElement, MediaLibraryInfo);
 
-      TorrentMagnetContainer.append(torrentElement);
+      torrentResultsList.append(torrentElement);
     }
   });
 
-  TorrentMagnetContainer.classList.remove("preloadingTorrent");
-  if (TorrentMagnetContainer.innerHTML.trim() === "")
+  if (torrentResultsList.innerHTML.trim() === "")
     throw new Error("No Useful Results Were found !");
 
-  loadIconsDynamically();
+  await loadIconsDynamically();
+  torrentSidePanel.classList.remove("preloadingTorrent");
 }
 
 function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
@@ -605,7 +590,6 @@ function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
   const TorrentElement = document.createElement("div");
   TorrentElement.classList.add("div-TorrentMedia");
   TorrentElement.setAttribute("tabindex", "0");
-  TorrentElement.style.marginBottom = "5px";
 
   const qualityDiv = document.createElement("div");
   qualityDiv.classList.add("div-MediaQuality");
@@ -691,10 +675,11 @@ function displaySeason(seasonIndex) {
     parseInt(div.getAttribute("season_number")) === parseInt(seasonIndex)
   );
   if(currentSeasonDiv){
-    EpisodesContainer.style.display = "block";
-    EpisodesContainer.innerHTML = "";
+    episodeResultsList.classList.remove("hidden");
+    episodeResultsList.classList.add("visible-block");
+    episodeResultsList.innerHTML = "";
     setDropdownValue(selectSeason,seasonIndex);
-    EpisodesContainer.appendChild(currentSeasonDiv);
+    episodeResultsList.appendChild(currentSeasonDiv);
   }
 }
 
@@ -706,25 +691,27 @@ async function getDefaultRatio() {
 async function handleDivsResize() {
   const defaultRatio = await getDefaultRatio();
 
-  resizeTorrentAndEpisodeElement(defaultRatio,EpisodesContainer);
-  resizeTorrentAndEpisodeElement(defaultRatio,TorrentMagnetContainer);
+  resizeTorrentAndEpisodeElement(defaultRatio,episodeResultsList);
+  resizeTorrentAndEpisodeElement(defaultRatio,torrentResultsList);
 
   window.addEventListener("resize",(event)=>{
-    resizeTorrentAndEpisodeElement(defaultRatio,EpisodesContainer);
-    resizeTorrentAndEpisodeElement(defaultRatio,TorrentMagnetContainer);
+    resizeTorrentAndEpisodeElement(defaultRatio,episodeResultsList);
+    resizeTorrentAndEpisodeElement(defaultRatio,torrentResultsList);
   });
 
-  dragResizeDiv(EpisodesContainer);
-  dragResizeDiv(TorrentMagnetContainer);
+  dragResizeDiv(episodeResultsList);
+  dragResizeDiv(torrentResultsList);
 
-  [EpisodesContainer,TorrentMagnetContainer].forEach(ToResizeDiv => {
+  [episodeResultsList,torrentResultsList].forEach(ToResizeDiv => {
     window.addEventListener("mousemove",(event)=>{
       const onLeftBorder = isOnLeftBorder(event,ToResizeDiv); 
       const mouseTopOfDiv = isMouseOnDiv(ToResizeDiv);
       if(onLeftBorder && mouseTopOfDiv){
-        ToResizeDiv.style.cursor = "ew-resize";
+        ToResizeDiv.classList.add("cursor-resize");
+        ToResizeDiv.classList.remove("cursor-default-override");
       }else{
-        ToResizeDiv.style.cursor = "default";
+        ToResizeDiv.classList.remove("cursor-resize");
+        ToResizeDiv.classList.add("cursor-default-override");
       }
     });
   });
@@ -766,9 +753,9 @@ async function handleLibraryButton() {
 }
 
 toggleTorrentContainer.addEventListener("click",(event)=>{
-  TorrentMagnetContainer.style.display = "none";
-  toggleTorrentContainer.style.opacity = "0";
-  toggleTorrentContainer.style.pointerEvents = "none";
+  torrentResultsList.classList.add("hidden");
+  torrentResultsList.classList.remove("torrent-panel--open", "visible-flex", "visible-block");
+  toggleTorrentContainer.classList.remove("toggle-btn--visible");
 
   // clearing the coloring of all the episode Elements
   const SeasonDiv = document.getElementById("main-SeasonDiv");
@@ -830,10 +817,10 @@ function addSpaceToTopOfTorrentContainer() {
 
   if(selectSeasonContainerHeight > 0){
     dummyDiv.style.height = selectSeasonContainerHeight+"px";
-    TorrentContainer.style.paddingBottom = selectSeasonContainerHeight+"px";
+    torrentSidePanel.style.paddingBottom = selectSeasonContainerHeight+"px";
   }else{
     dummyDiv.style.height = "15px";
-    TorrentContainer.style.paddingBottom = "15px";
+    torrentSidePanel.style.paddingBottom = "15px";
   }
 }
 
@@ -847,7 +834,7 @@ function handleRightClicksForTorrentElement(DownloadTargetInfo) {
 
   contextMenu.style.top = event.pageY + "px";
   contextMenu.style.left = event.pageX + "px";
-  contextMenu.style.display = "flex";
+  contextMenu.classList.add("context-menu--visible");
   dontGoBack = true;
 
   event.stopImmediatePropagation();
@@ -1010,20 +997,20 @@ function focusFunction(element) {
 }
 
 document.addEventListener("mousedown", event => {
-  contextMenu.style.display = "none";
+  contextMenu.classList.remove("context-menu--visible");
   dontGoBack = false;
 });
 
 window.addEventListener("keydown",(event)=>{
   if(event.key === "Escape"){
-    contextMenu.style.display = "none";
+    contextMenu.classList.remove("context-menu--visible");
     DownloadOverlay.classList.remove('active');
   }
 });
 
 function triggerLoadingGif() {
   setTimeout(() => {
-    try{globalLoadingGif.style.opacity = "1"}
+    try{globalLoadingGif.classList.add("loading-gif--visible")}
     catch(err){console.error(err)}
   },100);
 }

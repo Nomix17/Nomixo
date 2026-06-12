@@ -142,10 +142,22 @@ p{
   overflow-y: auto;
   box-sizing: border-box;
 }
-.preloadingTorrent{
+.torrent-loader {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.preloadingTorrent > #div-movieMedias {
+  opacity: 0;
+}
+
+.preloadingTorrent > .torrent-loader {
   display: flex;
-  justify-content: center;
-  align-items: center;
 }
 #div-serieEpisodes-LoadingGif,
 #div-movieMedias-LoadingGif{
@@ -197,7 +209,7 @@ p{
 }
 
 #EpisodesContainer,
-#div-TorrentContainer {
+#div-torrentSidePanel {
   display: flex;
   align-items: center; 
   justify-content: center;
@@ -212,13 +224,14 @@ p{
   cursor:ew-resize;
 }
 
-#div-TorrentContainer{
+#div-torrentSidePanel {
   backdrop-filter: blur(20px);
   background-color: rgba(var(--primary-color),0.8);
   border:3px solid rgb(var(--primary-color));
   border-left:none;
   border-radius:20px 0 0 0;
   overflow:hidden;
+  position: relative;
 }
 
 #dummyDiv{
@@ -228,7 +241,8 @@ p{
   margin:0;
 }
 
-#div-movieMedias{
+#div-movieMedias {
+  opacity: 1;
   height: 100%; 
   background-color: transparent;
   gap: 9px;
@@ -238,6 +252,7 @@ p{
   box-sizing: border-box;
   justify-content:center;
   align-items:center;
+  transition: background-color 0.3s ease, opacity 1.0s ease;
 }
 
 #SeasonsContainer .div-NothingWasFound,
@@ -265,10 +280,11 @@ p{
   padding: 18px 0 18px 18px;
   box-sizing: border-box;
   gap: 9px;
-  margin:0px 9px 9px 9px;
-  position:relative;
+  margin: 0px 9px 9px 9px;
+  margin-bottom: 5px;
+  position: relative;
   cursor: pointer;
-  overflow:hidden;
+  overflow: hidden;
 }
 
 .div-TorrentMedia .div-MediaQuality p{
@@ -1145,4 +1161,57 @@ label {
 
 .split-save-btn .custom-select.upward.is-open .select-dropdown {
   transform: translateX(-50%) translateY(0);
+}
+
+/* ── State utility classes (replaces inline .style assignments) ── */
+
+/* display toggles */
+.hidden {
+  display: none !important;
+}
+.visible-block {
+  display: block !important;
+}
+.visible-flex {
+  display: flex !important;
+}
+
+/* TorrentContainer / TorrentMagnetContainer shown from episode click */
+.torrent-panel--open {
+  display: block !important;
+  border-radius: 0px !important;
+}
+
+/* toggleButton (collapse torrent panel) visibility */
+.toggle-btn--visible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* globalLoadingGif fade-in */
+.loading-gif--visible {
+  opacity: 1 !important;
+}
+
+/* backdrop inspection mode: hides main div */
+.backdrop-inspecting {
+  opacity: 0 !important;
+}
+
+/* episode highlighted as "continue watching" */
+.continue-watching-highlight {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* cursor states for resize divs */
+.cursor-resize {
+  cursor: ew-resize !important;
+}
+.cursor-default-override {
+  cursor: default !important;
+}
+
+/* context menu visible */
+.context-menu--visible {
+  display: flex !important;
 }
