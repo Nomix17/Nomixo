@@ -33,7 +33,7 @@ appManager.initializeApp();
 
 // ======================= IPC HANDLERS =======================
 
-//      ================ SETTINGS & THEME ================
+// ================ SETTINGS & THEME ================
 
 ipcMain.handle("load-settings", async () => {
   try {

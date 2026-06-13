@@ -42,6 +42,7 @@ export class AppManager {
     }
 
     if (!this.app.requestSingleInstanceLock()) {
+      log.warn("Another instance of the application is already running. Exiting this instance.");
       this.app.quit();
       return;
     }
