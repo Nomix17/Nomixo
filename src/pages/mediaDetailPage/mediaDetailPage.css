@@ -84,43 +84,6 @@ p{
   pointer-events: auto !important;
 }
 
-#btn-fullscreen{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width:45px;
-  height:44.8px;
-  background-color: rgba(255,255,255,2%);
-  border: 1px solid rgba(255,255,255,5%);
-  border-radius:10px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-#btn-goBack svg{
-  transform:scale(1.1);
-}
-
-#img-goBack,
-#img-fullscreen{
-  background-color:  rgba(0,0,0,0%);
-  width:70%;
-  cursor:pointer;
-}
-#img-fullscreen{
-  width:80%;
-}
-#btn-fullscreen:hover,
-#btn-goBack:hover{
-  background-color:  rgba(var(--main-buttons-color));
-}
-#icon-fullscreen{
-  fill:white;
-  width:22.5px;
-}
-#icon-goBack{
-  width:36px;
-}
 #div-middle {
   display: flex;
   flex: 1; 
