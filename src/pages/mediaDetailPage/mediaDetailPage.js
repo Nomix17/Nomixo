@@ -196,12 +196,7 @@ function createEpisodeEventListeners(SeasonDiv, EpisodeElement, episodeInfo) {
       resizeTorrentAndEpisodeElement(defaultRatio,episodeResultsList);
       resizeTorrentAndEpisodeElement(defaultRatio,torrentResultsList);
 
-      torrentSidePanel.classList.add("torrent-panel--open");
-      torrentResultsList.classList.add("torrent-panel--open");
-      torrentResultsList.style.width = "100px";
-
-      toggleTorrentContainer.classList.add("toggle-btn--visible");
-
+      document.documentElement.classList.add("torrent-panel-open");
       torrentResultsList.innerHTML = "";
 
       fetchMediaTorrent ({
@@ -754,8 +749,8 @@ async function handleLibraryButton() {
 
 toggleTorrentContainer.addEventListener("click",(event)=>{
   torrentResultsList.classList.add("hidden");
-  torrentResultsList.classList.remove("torrent-panel--open", "visible-flex", "visible-block");
-  toggleTorrentContainer.classList.remove("toggle-btn--visible");
+  torrentResultsList.classList.remove("visible-flex", "visible-block");
+  document.documentElement.classList.remove("torrent-panel-open");
 
   // clearing the coloring of all the episode Elements
   const SeasonDiv = document.getElementById("main-SeasonDiv");

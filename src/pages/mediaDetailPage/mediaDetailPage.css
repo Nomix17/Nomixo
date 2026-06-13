@@ -1188,6 +1188,21 @@ label {
   pointer-events: auto !important;
 }
 
+html.torrent-panel-open #div-torrentSidePanel,
+html.torrent-panel-open #div-movieMedias {
+  display: block !important;
+  border-radius: 0px !important;
+}
+
+html.torrent-panel-open #div-movieMedias {
+  width: 100px;
+}
+
+html.torrent-panel-open .toggleButton {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
 /* globalLoadingGif fade-in */
 .loading-gif--visible {
   opacity: 1 !important;
