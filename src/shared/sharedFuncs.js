@@ -327,8 +327,22 @@ async function getProfilePageCacheData(){
   return cacheData;
 }
 
-function getMovieDetailPageCacheData(){
-  return "##################### Coming Soon #####################";
+function getMovieDetailPageCacheData() {
+  const serieEpisodesDiv = document.getElementById("EpisodesContainer"); 
+  const torrentContainerDiv = document.getElementById("div-movieMedias");
+  const selectSeason = document.getElementById("select-Seasons");
+  const episodes = document.querySelectorAll(".div-episodes-Element");
+  const loadedEpisode = [...episodes].findIndex(el => el.classList.contains("pressed_episode"));
+ 
+  const cacheData = {
+    page:"mediaDetail",
+    "serie_episodes_scroll_value": serieEpisodesDiv.scrollTop,
+    "torrent_container_scroll_value": torrentContainerDiv.scrollTop,
+    "loaded_season": selectSeason.innerHTML.trim() != "" ? getDropdownValue(selectSeason) : null,
+    "loaded_episode": loadedEpisode + 1
+  };
+
+  return cacheData;
 }
 
 function getDownloadCacheData(){

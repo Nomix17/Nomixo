@@ -114,7 +114,7 @@ async function loadAllEpisodesOfSeason(season_number,title) {
     const res = await fetch(url);
     const episodesData = await res.json();
     await renderEpisodes(episodesData,title,libraryInfo?.[0]);
-    displaySeason(1);
+
   } catch(err) {
     console.error(err.message)
     episodeResultsList.innerHTML = "";
@@ -298,17 +298,29 @@ async function renderMediaPage(data) {
   if(Duration === "TV Show") torrentResultsList.classList.add("hidden");
   else episodeResultsList.classList.add("hidden");
 
-  if(Seasons){
+  if(Seasons) {
     episodeSidePanel.classList.add("visible-flex");
-    for(const season of Seasons) {
+    const seasonsNumbers = Seasons.map(season => {
       const [newOption,seasonNumber] = createSeasonOptionElement(season);
-      selectSeason.appendChild(newOption); 
-      loadAllEpisodesOfSeason(seasonNumber,Title);
-    }
+      selectSeason.appendChild(newOption);
+      return seasonNumber;
+    });
+
+    (async() => {
+      for(const seasonNumber of seasonsNumbers) {
+        await loadAllEpisodesOfSeason(seasonNumber,Title);
+      }
+    })().then(async() => {
+      const seasonToDisplay = (await loadCachedSeasonNumber()) ?? 1;
+      const cachedEpisodeNumber = await loadCachedEpisodeNumber();
+      displaySeason(seasonToDisplay);
+      if(cachedEpisodeNumber)
+        document.querySelectorAll(".div-episodes-Element")[cachedEpisodeNumber - 1].click();
+    });
 
     addSeasonsDropDownEventListener()
 
-  }else{
+  } else {
     torrentResultsList.classList.add("visible-block");
     selectSeasonContainer.classList.add("hidden");
   }
@@ -577,6 +589,8 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
     throw new Error("No Useful Results Were found !");
 
   await loadIconsDynamically();
+  const torrentScrollValue = await loadCachedTorrentsScrollValue();
+  document.getElementById("div-movieMedias").scrollTop = torrentScrollValue
   torrentSidePanel.classList.remove("preloadingTorrent");
 }
 
@@ -991,6 +1005,51 @@ function focusFunction(element) {
   element.focus();
 }
 
+async function loadCachedInformations() {
+  setTimeout(async() => {
+    const episodeScrollValue = await loadCachedEpisodesScrollValue();
+    const torrentScrollValue = await loadCachedTorrentsScrollValue();
+    const episodeNumber = await loadCachedEpisodeNumber();
+
+    const targetEpisode = document.querySelectorAll(".div-episodes-Element")[episodeNumber-1];
+
+    document.getElementById("episodeResultsList").scrollTop = episodeScrollValue;
+    if(targetEpisode)
+      targetEpisode.click();
+
+
+    setTimeout(()=>{
+      document.getElementById("div-movieMedias").scrollTop = torrentScrollValue
+      console.log(episodeScrollValue);
+      console.log(torrentScrollValue);
+    },90);
+  },90);
+}
+
+async function loadCachedTorrentsScrollValue() {
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const torrentContainerTopScroll = cachedData?.torrent_container_scroll_value;
+  return torrentContainerTopScroll;
+}
+
+async function loadCachedEpisodeNumber() {
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const episodeNumber = cachedData?.loaded_episode;
+  return episodeNumber;
+}
+
+async function loadCachedSeasonNumber() {
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const seasonNumber = cachedData?.loaded_season;
+  return seasonNumber;
+}
+
+async function loadCachedEpisodesScrollValue() {
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const episodesContainerTopScroll = cachedData?.serie_episodes_scroll_value;
+  return episodesContainerTopScroll;
+}
+
 document.addEventListener("mousedown", event => {
   contextMenu.classList.remove("context-menu--visible");
   dontGoBack = false;
@@ -1009,6 +1068,11 @@ function triggerLoadingGif() {
     catch(err){console.error(err)}
   },100);
 }
+
+(async() => {
+  if(await loadCachedEpisodeNumber())
+    document.documentElement.classList.add("torrent-panel-open");
+})();
 
 triggerLoadingGif();
 manageSaveDropDowns();
