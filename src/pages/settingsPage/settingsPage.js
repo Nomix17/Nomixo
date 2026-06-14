@@ -253,16 +253,19 @@ async function loadTheme(){
 
       let inputElement = document.getElementById(elementId);
 
-      if(elementValue.split(",").length === 4){
-        let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
-        inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
-        alphaValue = elementValue.split(",")[3];
-        alphaInputRange.value = parseFloat(alphaValue)*100;
-      }else{
-        inputColor = elementValue;
+      try {
+        if(elementValue.split(",").length === 4){
+            let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
+            inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
+            alphaValue = elementValue.split(",")[3];
+            alphaInputRange.value = parseFloat(alphaValue)*100;
+        }else{
+          inputColor = elementValue;
+        }
+        inputElement.value = rgbToHex(inputColor);
+      } catch (err) {
+        console.error(err.message);
       }
-
-      inputElement.value = rgbToHex(inputColor);
     }
   });
 }
