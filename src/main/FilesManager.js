@@ -63,7 +63,6 @@ export class FilesManager {
           --background-gradient-value:0;
           --primary-color:10,14,23;
           --secondary-color:55,65,81,1;
-          --div-containers-borders-color:255,255,255,0;
           --main-buttons-color:255,255,255,0.04;
           --MovieElement-hover-BorderColor:255,255,255;
           --input-backgroundColor:0,0,0,0.44;

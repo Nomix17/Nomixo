@@ -407,7 +407,6 @@ output {
   margin: 18.4px auto;
   content: "";
   width: 97%;
-  border-top: 1px solid rgba(var(--div-containers-borders-color));
 }
 
 .ElementsTopOfEachOther {
