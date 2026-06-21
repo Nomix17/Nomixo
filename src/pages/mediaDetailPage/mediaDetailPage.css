@@ -134,7 +134,7 @@ p{
   border:3px solid rgb(var(--primary-color));
   border-right:none;
   border-radius:20px 0 0 0 ;
-  margin-right:0px;
+  margin-right:-1px;
 }
 
 .selectSeason-container{
@@ -209,7 +209,6 @@ p{
   background-color: transparent;
   gap: 9px;
   padding-bottom: 9px;
-  border-left:3px solid rgb(var(--primary-color));
   overflow-y: auto; 
   box-sizing: border-box;
   justify-content:center;
