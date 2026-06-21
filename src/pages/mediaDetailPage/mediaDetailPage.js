@@ -9,7 +9,7 @@ let GlobalTitle = null;
 
 const middleDiv = document.getElementById("div-middle");
 const torrentSidePanel = document.getElementById("div-torrentSidePanel");
-const episodeSidePanel = document.getElementById("div-serieEpisodes");
+const episodeSidePanel = document.getElementById("div-episodesSidePanel");
 
 const torrentResultsList = document.getElementById("div-movieMedias");
 const episodeResultsList = document.getElementById("EpisodesContainer");

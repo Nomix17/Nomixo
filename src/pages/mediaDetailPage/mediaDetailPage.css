@@ -122,12 +122,11 @@ p{
 .preloadingTorrent > .torrent-loader {
   display: flex;
 }
-#div-serieEpisodes-LoadingGif,
 #div-movieMedias-LoadingGif{
   background-color:rgba(0,0,0,0%);
 }
 
-#div-serieEpisodes{
+#div-episodesSidePanel{
   display:flex;
   flex-direction:column;
   backdrop-filter: blur(20px);
@@ -219,7 +218,7 @@ p{
 }
 
 #SeasonsContainer .div-NothingWasFound,
-#div-serieEpisodes .div-NothingWasFound,
+#div-episodesSidePanel .div-NothingWasFound,
 #div-movieMedias .div-NothingWasFound{
   font-size:18px;
   font-weight: 700;
@@ -228,7 +227,7 @@ p{
 }
 
 #SeasonsContainer h4
-#div-serieEpisodes h4{
+#div-episodesSidePanel h4{
   margin:0;
 }
 .div-episodes-Element,
