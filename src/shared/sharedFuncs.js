@@ -160,7 +160,7 @@ function openDetailPage(movieId, mediaType){
 function openSearchPage(){
   const searchKeyword = searchInput.value.trim();
   if(!searchKeyword) return;
-  return navigate(`../pages/searchPage/searchPage.html?search=${searchKeyword}`);
+  return navigate(`../pages/searchPage/searchPage.html?search=${encodeURIComponent(searchKeyword)}`);
 }
 
 async function navigate(newPath){
