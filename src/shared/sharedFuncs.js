@@ -447,6 +447,13 @@ function checkIfDivShouldHaveMoveToRightOrLeftButton(MediaDivs) {
 let dontGoBack = false;
 function setupKeyPressesHandler() {
   window.addEventListener("keydown",(event)=>{
+    const activeEl = document.activeElement;
+    const isInputFocused =
+      activeEl?.tagName === "INPUT" ||
+      activeEl?.tagName === "TEXTAREA" ||
+      activeEl?.isContentEditable;
+    if (isInputFocused) return;
+
     if (event.key === "Escape") {
       if(dontGoBack) {
         dontGoBack = false;
@@ -468,8 +475,10 @@ function setupKeyPressesHandler() {
 }
 
 function setupKeyPressesForInputElement(searchInput) {
-  searchInput.addEventListener("keypress",(event)=>{
+  searchInput.addEventListener("keydown",(event) => {
     if(event.key === "Enter") openSearchPage();
+    else if(event.key === "Escape") searchInput.blur();
+    event.stopPropagation();
   });
 }
 
