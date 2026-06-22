@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nomixo - Free Desktop Streaming</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/logo/icon128.png">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/logo/icon128.png" alt="Nomixo icon" />
+    Nomixo
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#download">Download</a>
+    <a href="https://github.com/Nomix17/Nomixo" target="_blank">GitHub</a>
+  </div>
+  <a class="nav-cta" href="#download">
+    <i class="ti ti-download" aria-hidden="true"></i>
+    Download free
+  </a>
+</nav>
+
+<div class="hero">
+  <h1>Stream anything<br /><span>No subscription</span></h1>
+  <p class="hero-sub">
+    A desktop client for movies, TV shows, and anime. Search, browse, and stream.
+  </p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="#download">
+      <i class="ti ti-download" aria-hidden="true"></i>
+      Get Nomixo
+    </a>
+    <a class="btn-ghost" href="https://github.com/Nomix17/Nomixo" target="_blank">
+      <i class="ti ti-brand-github" aria-hidden="true"></i>
+      View on GitHub
+    </a>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<section id="features">
+  <div class="section-label">Features</div>
+  <h2>Has everything you need.</h2>
+  <p class="section-sub">A lean desktop app built on Electron. No bloat, no tracking, no upsells.</p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon"><i class="ti ti-search" aria-hidden="true"></i></div>
+      <h3>Browse &amp; search</h3>
+      <p>Home page with popular content, real-time search across movies, shows, and anime, and a discovery page by genre.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="ti ti-player-play" aria-hidden="true"></i></div>
+      <h3>Hardware-accelerated playback</h3>
+      <p>Streams via WebTorrent and plays through MPV with full hardware acceleration. Saves your position automatically.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="ti ti-download" aria-hidden="true"></i></div>
+      <h3>Download queue</h3>
+      <p>Full download manager with pause, resume, cancel, and reorder support.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="ti ti-bookmark" aria-hidden="true"></i></div>
+      <h3>Library &amp; history</h3>
+      <p>Save favorites, track watch progress, and resume exactly where you left off.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="ti ti-subtask" aria-hidden="true"></i></div>
+      <h3>Auto subtitles</h3>
+      <p>Auto-download via Wyzie, or load local .srt / .vtt files. Configure font, size, color, and opacity.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="ti ti-palette" aria-hidden="true"></i></div>
+      <h3>Fully themeable</h3>
+      <p>Customize colors and the entire appearance through Settings. Your setup, your look.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="how">
+  <div class="section-label">How it works</div>
+  <h2>Simple by design.</h2>
+  <p class="section-sub">Under the hood it's a smart pipeline. From your side, it's just pick something and watch.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Search or browse</h3>
+        <p>Nomixo pulls metadata from TMDB. Search anything or browse popular movies, series, and anime organized by genre.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Pick your stream</h3>
+        <p>Nomixo fetches a magnet link from Torrentio and starts buffering it with WebTorrent over a local HTTP stream.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>MPV takes over</h3>
+        <p>The app launches MPV pointed at that stream. The Nomixo window steps aside while you watch and reappears when you're done.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Progress saved automatically</h3>
+        <p>Playback position is written to disk. Resume from where you stopped.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <div class="section-label">Requirements</div>
+  <h2>What you'll need.</h2>
+  <p class="section-sub">Nomixo is lightweight. Only one hard dependency beyond the app itself.</p>
+
+  <div class="req-grid">
+
+    <div class="req-card">
+      <div class="req-card-icon"><i class="ti ti-player-play" aria-hidden="true"></i></div>
+      <div class="req-card-name">MPV Player</div>
+      <div class="req-card-note">Required for all playback</div>
+      <div class="req-card-links">
+        <a href="https://sourceforge.net/projects/mpv-player-windows/files/64bit/" target="_blank" rel="noopener">
+          <i class="ti ti-brand-windows" aria-hidden="true"></i> Windows
+        </a>
+        <a href="https://mpv.io/installation/" target="_blank" rel="noopener">
+          <i class="ti ti-world" aria-hidden="true"></i> Other platforms
+        </a>
+      </div>
+    </div>
+
+    <a class="req-card" href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">
+      <div class="req-card-icon"><i class="ti ti-key" aria-hidden="true"></i></div>
+      <div class="req-card-name">TMDB API Key</div>
+      <div class="req-card-note">Free — needed on first launch</div>
+      <div class="req-card-links">
+        <span class="req-card-cta"><i class="ti ti-arrow-up-right" aria-hidden="true"></i> Get free key</span>
+      </div>
+    </a>
+
+    <a class="req-card" href="https://wyzie.ru/" target="_blank" rel="noopener">
+      <div class="req-card-icon"><i class="ti ti-subtask" aria-hidden="true"></i></div>
+      <div class="req-card-name">Wyzie API Key <span class="badge-opt">optional</span></div>
+      <div class="req-card-note">For automatic subtitle search</div>
+      <div class="req-card-links">
+        <span class="req-card-cta"><i class="ti ti-arrow-up-right" aria-hidden="true"></i> Get free key</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="download" class="download-section">
+  <div class="download-wrap">
+    <div class="download-copy">
+      <div class="section-label">Download</div>
+      <h2 class="download-title">Ready to watch?</h2>
+      <p>Pre-built installers for Linux and Windows. Free, always.</p>
+    </div>
+    <div class="download-options">
+
+      <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.4.0/Nomixo-v1.4.0-Windows-Installer-x64.exe" target="_blank">
+        <i class="ti ti-brand-windows" aria-hidden="true"></i>
+        <div>
+          Windows Installer
+          <span>.exe · x64</span>
+        </div>
+      </a>
+
+      <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.4.0/Nomixo-v1.4.0-Windows-Portable-x64.zip" target="_blank">
+        <i class="ti ti-brand-windows" aria-hidden="true"></i>
+        <div>
+          Windows Portable
+          <span>.zip · x64</span>
+        </div>
+      </a>
+
+      <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.4.0/Nomixo-v1.4.0-linux-amd64.deb" target="_blank">
+        <i class="fa-brands fa-linux" aria-hidden="true"></i>
+        <div>
+          Linux Debian
+          <span>.deb · amd64</span>
+        </div>
+      </a>
+
+      <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.4.0/Nomixo-v1.4.0-linux-x86_64.rpm" target="_blank">
+        <i class="fa-brands fa-linux" aria-hidden="true"></i>
+        <div>
+          Linux RPM
+          <span>.rpm · x86_64</span>
+        </div>
+      </a>
+
+      <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.4.0/Nomixo-v1.4.0-linux-x64.tar.gz" target="_blank">
+        <i class="fa-brands fa-linux" aria-hidden="true"></i>
+        <div>
+          Linux Generic
+          <span>.tar.gz · x64</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/Nomix17/Nomixo" target="_blank">GitHub</a>
+    <a href="https://github.com/Nomix17/Nomixo/releases" target="_blank">Releases</a>
+    <a href="https://github.com/Nomix17/Nomixo/blob/main/LICENSE" target="_blank">GPL-3.0</a>
+  </div>
+  <span>© 2025 Nomixo — free &amp; open source</span>
+</footer>
+
+</body>
+</html>
