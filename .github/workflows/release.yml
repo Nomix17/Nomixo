@@ -20,6 +20,8 @@ jobs:
 
       - name: Build Windows targets
         run: npm run build -- --win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -42,6 +44,8 @@ jobs:
 
       - name: Build Linux targets
         run: npm run build -- --linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -66,6 +70,8 @@ jobs:
 
       - name: Build macOS targets
         run: npm run build -- --mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/upload-artifact@v4
         with:
