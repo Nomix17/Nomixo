@@ -49,7 +49,8 @@
       "target": [
         "tar.gz",
         "deb",
-        "rpm"
+        "rpm",
+        "AppImage"
       ],
       "artifactName": "Nomixo-v${version}-linux-${arch}.${ext}",
       "category": "AudioVideo",
@@ -66,6 +67,12 @@
     },
     "nsis": {
       "artifactName": "Nomixo-v${version}-Windows-Installer-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "artifactName": "Nomixo-v${version}-mac.${ext}"
     }
   }
 }
