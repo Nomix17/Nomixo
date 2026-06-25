@@ -1,6 +1,6 @@
 {
   "name": "nomixo",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Stream your favorite movies and shows in one seamless experience",
   "type": "module",
   "author": {
@@ -59,8 +59,18 @@
     },
     "win": {
       "target": [
-        { "target": "zip",  "arch": ["x64"] },
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "logo/icon.ico",
       "artifactName": "Nomixo-v${version}-Windows-Portable-${arch}.${ext}"
