@@ -3,6 +3,7 @@ const MediaId = data.get("MovieId");
 const MediaType = data.get("MediaType");
 const apiKeyPromise = window.electronAPI.getTMDBAPIKEY();
 const IMDB_IDPromise = getIMDB_ID();
+const trailerPromise = getMediaTrailer();
 
 let backgroundImage;
 let GlobalTitle = null;
@@ -63,7 +64,7 @@ async function loadMovieInformation() {
     const url = `https://api.themoviedb.org/3/${MediaType}/${MediaId}?api_key=${apiKey}`;
     const res = await fetch(url);
     const mediaInfo = await res.json();
-    renderMediaPage(mediaInfo);
+    await renderMediaPage(mediaInfo);
     if(MediaType === "movie") {
       await fetchMediaTorrent(); 
     }
@@ -266,6 +267,27 @@ async function getIMDB_ID() {
   return mediaExternalIdsData?.imdb_id
 }
 
+async function getMediaTrailer() {
+  const apiKey = await apiKeyPromise;
+  const res = await fetch(`https://api.themoviedb.org/3/${MediaType}/${MediaId}/videos?api_key=${apiKey}`);
+  if(res.ok) {
+    const data = await res.json();
+    const trailers = data.results.filter(
+      video => video.type === "Trailer" && video.site === "YouTube" && video.official
+    );
+    for(const trailer of trailers) {
+      const videoUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
+      console.log(videoUrl);
+      const res = await fetch(
+        `https://www.youtube.com/oembed?url=${videoUrl}&format=json`
+      );
+      if(res.ok)
+        return trailer.key;
+    }
+    return null;
+  }
+}
+
 function createRefreshTorrentBtn() {
   const refreshButton = document.createElement("button");
   refreshButton.className = "btn-refreshAfterWarningMessage";
@@ -289,10 +311,11 @@ async function renderMediaPage(data) {
   document.title = Title;
   addBackgroundImageToBody(backgroundImage);
   addImdbRatingEventListener();
+  addTrailerEventListener();
   insertLogoTitleInformation(logoFileName,Title);
 
   const mediaGeneraleInfo = [Duration,ReleaseYear,Rating,Summary];
-  insertMediaGeneraleInformation(mediaGeneraleInfo);
+  await insertMediaGeneraleInformation(mediaGeneraleInfo);
   insertGenresOfMedia(Genres);
 
   if(Duration === "TV Show") torrentResultsList.classList.add("hidden");
@@ -383,20 +406,25 @@ function insertLogoTitleInformation(logoFileName,Title){
   textTitleElement.innerText = Title;
 }
 
-function insertMediaGeneraleInformation(mediaBasicInfo) {
+async function insertMediaGeneraleInformation(mediaBasicInfo) {
   const mediaDurationElement = document.getElementById("p-movieDuration");
   const mediaYearOfReleaseElement = document.getElementById("p-movieYearOfRelease");
   const mediaRatingElement = document.getElementById("p-movieRating");
   const mediaSummaryElement = document.getElementById("p-summaryParagraph");
   const imdbLogoElement = document.getElementById("img-IMDBlogo");
+  const mediaTrailerElement = document.getElementById("movie-trailer-div");
 
   const [Duration,ReleaseYear,Rating,Summary] = mediaBasicInfo;
+  const trailerKey = await trailerPromise;
   let summaryExist = true;
   if(!Duration) mediaDurationElement.classList.add("hidden");
   if(!ReleaseYear) mediaYearOfReleaseElement.classList.add("hidden");
   if(!Rating || Rating === "0.0"){
     mediaRatingElement.classList.add("hidden");
     imdbLogoElement.classList.add("hidden");
+  }
+  if(trailerKey == null || trailerKey.trim == "") {
+    mediaTrailerElement.classList.add("hidden");
   }
   if(!Summary || Summary.trim() === ""){
     summaryExist = false;
@@ -420,6 +448,18 @@ async function addImdbRatingEventListener() {
     const imdbLink = `https://www.imdb.com/title/${imdb_id}`;
     console.log(`Opening IMDB link: ${imdbLink}`);
     window.electronAPI.openExternalLink(imdbLink);
+  });
+}
+
+async function addTrailerEventListener() {
+  const trailerKey = await trailerPromise;
+  const trailerDiv = document.getElementById("movie-trailer-div");
+  if(trailerKey == null || trailerKey.trim == "")
+    return;
+  trailerDiv.addEventListener("click", async() => {
+    const trailerLink = `https://www.youtube.com/watch?v=${trailerKey}`;
+    console.log(`Opening Trailer link: ${trailerLink}`);
+    window.electronAPI.openExternalLink(trailerLink);
   });
 }
 
@@ -495,6 +535,8 @@ function addBackgroundImageToBody(backgroundImage) {
   if (backgroundImage !== "https://image.tmdb.org/t/p/original/null") {
     applyBackground(document.documentElement.style, 0.6);
     applyBackground(document.querySelector('.split-save-btn').style, 0.8);
+    applyBackground(document.querySelector('#movie-trailer-div').style, 0.8);
+    // applyBackground(document.querySelector('#bottomButtonsDiv').style, 0.6);
   }
 }
 

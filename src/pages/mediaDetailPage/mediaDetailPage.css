@@ -351,12 +351,16 @@ p{
   transition:border-color 0.2s ease;
   cursor:pointer;
 }
+
 #p-movieRating{
   margin:0;
   padding-right:9px;
   cursor:pointer;
 }
-
+#p-movie-trailer{
+  margin:0 0 0 10px;
+  cursor:pointer;
+}
 #movie-rating-div:hover{
   border-color:white;
 }
@@ -402,6 +406,11 @@ p{
 #div-movieSummary{
   background-color: rgba(255,255,255,0%);
   padding-bottom: 9px;
+}
+#div-genelareInfos {
+  display:flex;
+  justify-content: flex-start;
+  align-items: center;
 }
 .infoText{
   font-size:14.4px;
@@ -587,8 +596,9 @@ h1{
   padding-top:9px;
   position:absolute;
   bottom:0px;
-  width:50%;
-  margin-bottom:1%;
+  width:100%;
+  padding:10px 0;
+  gap:5px;
 }
 
 .toggleButtonIcon{
@@ -1048,10 +1058,12 @@ label {
   transition: background-color 0.3s ease, border 0.3s ease;
 }
 
+#movie-trailer-div:hover .button-wrapper,
 .split-save-btn:hover {
   background-color: rgba(255, 255, 255, 0.15);
 }
 
+#movie-trailer-div:active,
 .split-save-btn:active {
   border: 2px solid rgba(255, 255, 255, 100%);
   background-color: rgba(255, 255, 255, 30%);
@@ -1190,4 +1202,36 @@ html.torrent-panel-open .toggleButton {
 /* context menu visible */
 .context-menu--visible {
   display: flex !important;
+}
+
+#movie-trailer-div {
+  display: flex;
+  justify-content:center;
+  align-items: center;
+  border: 2px solid rgba(255, 255, 255, 20%);
+  border-radius: 40px;
+  backdrop-filter: blur(3px);
+  position: relative;
+  padding: 3px;
+  transition: background-color 0.3s ease, border 0.3s ease;
+}
+.button-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 6px 15px;
+  background: transparent;
+  border: none;
+  border-radius: 40px;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.button-wrapper svg {
+  stroke: white;
+  stroke-width:1;
+}
+#p-movie-trailer {
+  font-weight: 500;
+  font-size: 13.8px;
+  font-family: sans-serif;
 }
