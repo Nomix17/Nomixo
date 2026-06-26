@@ -33,13 +33,13 @@
     "files": [
       "src/**/*",
       "assets/**/*",
-      "!assets/mpv/**/*",
+      "!assets/mpvConfigs/**/*",
       "package.json"
     ],
     "extraResources": [
       {
-        "from": "assets/mpv",
-        "to": "mpv",
+        "from": "assets/mpvConfigs",
+        "to": "mpvConfigs",
         "filter": [
           "**/*"
         ]

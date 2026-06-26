@@ -18,7 +18,7 @@ export class Paths {
   static ThemeFilePath = path.join(Paths.__configs, "Theme.css");
   static libraryFilePath = path.join(Paths.__configs, "library.json");
   static downloadLibraryFilePath = path.join(Paths.__configs, "downloads.json");
-  static mpvConfigDirectory = path.join(Paths.__configs, "mpv");
+  static mpvConfigDirectory = path.join(Paths.__configs, "mpvConfigs");
   static SubConfigFile = path.join(Paths.mpvConfigDirectory, "mpv.conf");
 
   static defaultDownloadPath = Paths.__downloads;
@@ -78,8 +78,8 @@ export class FilesManager {
 
     if (!fs.existsSync(Paths.mpvConfigDirectory)) {
       const currentMpvConfPath = app.isPackaged
-        ? path.join(process.resourcesPath, 'mpv')
-        : path.join(Paths.__dirname, '../../assets/mpv');
+        ? path.join(process.resourcesPath, 'mpvConfigs')
+        : path.join(Paths.__dirname, '../../assets/mpvConfigs');
       fs.cpSync(currentMpvConfPath, Paths.mpvConfigDirectory, { recursive: true });
     }
 
