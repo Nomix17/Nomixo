@@ -43,6 +43,13 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "mpvBinary",
+        "to": "mpvBinary",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "linux": {

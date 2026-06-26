@@ -17,6 +17,17 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
+      - name: Bundle mpv (Windows)
+        shell: powershell
+        run: |
+          $release = Invoke-RestMethod "https://api.github.com/repos/zhongfly/mpv-winbuild/releases/latest"
+          $asset = $release.assets | Where-Object { 
+            $_.name -match "^mpv-x86_64-\d+" 
+          } | Select-Object -First 1
+          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile mpv.7z
+          7z x mpv.7z -o"mpv-extracted" -y
+          New-Item -ItemType Directory -Force -Path "mpvBinary"
+          Copy-Item (Get-ChildItem -Recurse -Filter "mpv.exe" "mpv-extracted" | Select-Object -First 1).FullName "mpvBinary/mpv.exe"
 
       - name: Build Windows targets
         run: npm run build -- --win --publish never
@@ -39,7 +50,12 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-
+      - name: Bundle mpv (Linux)
+        run: |
+          sudo apt-get update && sudo apt-get install -y mpv
+          mkdir -p mpvBinary
+          cp $(which mpv) mpvBinary/mpv
+          chmod +x mpvBinary/mpv
       - name: Build Linux targets
         run: npm run build -- --linux --publish never
 
@@ -63,7 +79,12 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-
+      - name: Bundle mpv (macOS)
+        run: |
+          brew install mpv
+          mkdir -p mpvBinary
+          cp $(which mpv) mpvBinary/mpv
+          chmod +x mpvBinary/mpv
       - name: Build macOS targets
         run: npm run build -- --mac --publish never
 
