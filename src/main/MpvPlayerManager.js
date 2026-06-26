@@ -155,6 +155,7 @@ class MpvPlayerManager {
     const knownPaths =
       os.platform() === "win32"
         ? [
+            path.join(process.resourcesPath, "mpvBinary", "mpv.exe"),
             "C:\\Program Files\\mpv\\mpv.exe",
             "C:\\Program Files (x86)\\mpv\\mpv.exe",
             path.join(os.homedir(), "AppData", "Local", "Programs", "mpv", "mpv.exe"),
@@ -163,8 +164,10 @@ class MpvPlayerManager {
             path.join(process.env.LOCALAPPDATA || "", "Microsoft", "WinGet", "Packages", "mpv.exe"),
           ]
         : [
+            path.join(process.resourcesPath, "mpvBinary", "mpv"),
             "/usr/bin/mpv",
             "/usr/local/bin/mpv",
+            "/opt/homebrew/bin/mpv",
             "/snap/bin/mpv",
             "/flatpak/exports/bin/mpv",
             path.join(os.homedir(), ".local/bin/mpv"),
