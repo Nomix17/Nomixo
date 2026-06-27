@@ -64,6 +64,7 @@
       "icon": "logo/icon",
       "maintainer": "Nomix17"
     },
+    "toolsets": { "appimage": "1.0.2" },
     "win": {
       "target": [
         {
