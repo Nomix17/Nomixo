@@ -455,7 +455,7 @@ async function loadSettings() {
   } catch (err) {
     log.error(err.message);
     return {
-      PageZoomFactor: 0.92,
+      PageZoomFactor: 1,
       TurnOnSubsByDefaultInternal: true,
       SubFontSizeInternal: 16,
       SubFontFamilyInternal: "Montserrat",

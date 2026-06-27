@@ -42,7 +42,7 @@ export class FilesManager {
 
     if (!fs.existsSync(Paths.SettingsFilePath))
       fs.writeFileSync(Paths.SettingsFilePath, JSON.stringify({
-        "PageZoomFactor": 0.92,
+        "PageZoomFactor": 1,
         "TurnOnSubsByDefaultInternal": true,
         "SubFontSizeInternal": 16,
         "SubFontFamilyInternal": "Montserrat",
