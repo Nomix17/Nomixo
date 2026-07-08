@@ -104,7 +104,9 @@ ZoomFactorInput.addEventListener("mouseleave",()=>{
 });
 
 const addCustomThemeBtn = document.getElementById("btn-addCustomTheme");
-addCustomThemeBtn.addEventListener("click", () => {
+addCustomThemeBtn.addEventListener("click", async () => {
+  await loadCurrentTheme();
+  applySelectedColor(ColorInputsWithAlphaValue);
   document.getElementById("theme-overlay").classList.add("active");
 });
 
