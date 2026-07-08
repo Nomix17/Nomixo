@@ -84,7 +84,7 @@ function hideBiography(){
 function addDescriptionButtonsEventListener(){
   const bioReadMoreBtn = document.getElementById('bio-read-more');
   const bioOverlay = document.getElementById('full-bio-overlay');
-  const closeBtn = bioOverlay?.querySelector('.close-btn');
+  const closeBtn = bioOverlay?.querySelector('.floating-x-remove-btn');
   
   if (bioReadMoreBtn) {
     bioReadMoreBtn.addEventListener('click', (e) => {
