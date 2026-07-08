@@ -1,0 +1,12 @@
+:root{
+  --background-gradient-value:0;
+  --primary-color:0,0,0;
+  --secondary-color:70,70,70,1;
+  --main-buttons-color:255,255,255,0.01;
+  --MovieElement-hover-BorderColor:255,255,255;
+  --input-backgroundColor:255,255,255,0.05;
+  --drop-down-color:10,10,10,1;
+  --icon-color:60,60,60;
+  --icon-hover-color:255,255,255,1;
+  --text-color:255,255,255;
+}
