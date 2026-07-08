@@ -508,7 +508,7 @@ h1{
 }
 .div-seedImage .seed,
 .div-storageImage .center{
-  fill:rgba(var(--icon-color));
+  fill:rgba(var(--small-icons-color));
 }
 
 .div-storageImage .border{
