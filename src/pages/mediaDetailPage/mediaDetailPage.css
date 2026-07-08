@@ -71,7 +71,7 @@ p{
 }
 #div-middle{
   padding-left:63px;
-  opacity: var(--dont-Smooth-transition-between-pages);
+  opacity: 0;
 }
 #div-middle * {
   pointer-events: none !important;

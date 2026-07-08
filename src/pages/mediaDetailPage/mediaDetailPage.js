@@ -277,7 +277,6 @@ async function getMediaTrailer() {
     );
     for(const trailer of trailers) {
       const videoUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
-      console.log(videoUrl);
       const res = await fetch(
         `https://www.youtube.com/oembed?url=${videoUrl}&format=json`
       );

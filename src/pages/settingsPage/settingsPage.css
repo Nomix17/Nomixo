@@ -58,7 +58,7 @@ output {
 
 #div-middle-right {
   padding: 18.4px 0px 36.8px 0px;
-  opacity: var(--dont-Smooth-transition-between-pages);
+  opacity: 0;
 }
 
 #div-ApplyButton {

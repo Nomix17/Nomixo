@@ -57,9 +57,6 @@ export class FilesManager {
     if (!fs.existsSync(Paths.ThemeFilePath))
       fs.writeFileSync(Paths.ThemeFilePath, `
         :root{
-          --dont-Smooth-transition-between-pages:0;
-          --display-scroll-bar:none;
-          --show-continue-watching-on-home:flex;
           --background-gradient-value:0;
           --primary-color:10,14,23;
           --secondary-color:55,65,81,1;

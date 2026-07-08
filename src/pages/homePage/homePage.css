@@ -191,7 +191,7 @@ body, html {
   padding-top:0;
   overflow-y:scroll;
   overflow-x:hidden;
-  opacity: var(--dont-Smooth-transition-between-pages);
+  opacity: 0;
   transition: opacity 0.5s ease;
   padding-bottom:1%;
   pointer-events: none !important;
@@ -222,7 +222,7 @@ body, html {
 }
 
 #continue-watching-categorie{
-  display:var(--show-continue-watching-on-home);
+  display: flex;
   padding-top:17px;
 }
 
@@ -525,7 +525,7 @@ input::selection {
   flex-direction:row
 }
 .div-hidingScrollBar::-webkit-scrollbar {
-  display:var(--display-scroll-bar);
+  display: none;
 }
 
 .div-hidingScrollBar:hover ~ button{
