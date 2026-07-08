@@ -680,7 +680,6 @@ document.querySelectorAll(".link-btn").forEach(btn => {
 });
 
 // calling functions
-addSmoothTransition();
 loadCurrentTheme();
 loadExternalSubConfigs();
 loadApiKeys();

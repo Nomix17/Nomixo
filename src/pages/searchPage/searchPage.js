@@ -6,7 +6,6 @@ let OtherRecommandationDiv = document.getElementById("div-middle-right-OtherReco
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 let searchInput = document.getElementById("input-searchForMovie");
 
-addSmoothTransition();
 setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
 
 const params = new URLSearchParams(window.location.search);

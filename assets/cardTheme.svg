@@ -10,7 +10,7 @@
   .bg-dropdown  { fill: rgba(var(--drop-down-color)); }
   .stroke-secondary { stroke: rgb(var(--secondary-color)); }
   .stroke-hover      { stroke: rgb(var(--MovieElement-hover-BorderColor)); }
-  .icon         { fill: rgb(var(--icon-color)); stroke: rgb(var(--icon-color)); }
+  .icon         { fill: rgb(var(--icon-color));}
   .icon-hover   { fill: rgba(var(--main-buttons-color)); stroke: rgba(var(--icon-hover-color)); }
   .text-main    { fill: rgb(var(--text-color)); font-family: sans-serif; }
   .text-muted   { fill: rgb(var(--text-color)); font-family: sans-serif; opacity: 0.55; }
