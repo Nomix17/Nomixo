@@ -81,121 +81,13 @@
               <input id="input-ZoomFactor" type="range" name="foo"/>
               <output for="foo" onforminput="value = foo.valueAsNumber;"></output>
             </div>
-            <table id="themeTable">
-              <tr>
-                <td>Page Smooth Transitions</td>
-                <td class="toCenter">
-                  <label class="custom-toggle">
-                    <input type="checkbox" id="dont-Smooth-transition-between-pages" />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </td>
-              </tr>
-              <tr>
-                <td>Show Suggestions Scroll Bar</td>
-                <td class="toCenter">
-                  <label class="custom-toggle">
-                    <input type="checkbox" id="display-scroll-bar" />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </td>
-              </tr>
 
-              <tr>
-                <td>Show Continue Watching on Home</td>
-                <td class="toCenter">
-                  <label class="custom-toggle">
-                    <input type="checkbox" id="show-continue-watching-on-home" />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </td>
-              </tr>
+            <h4>Prepared Themes</h4>
+            <div class="prepared-themes-div"></div>
 
-              <tr>
-                <td>Primary Color</td>
-                <td class="toCenter">
-                  <div class="ElementsTopOfEachOther">
-                    <input id="primary-color" type="color"/>
-                    <input name="backgroundGradientValue" id="background-gradient-value" class="alphaRangeValue" type="range"/>
-                    <output class="alphaValueFloatingDiv" for="backgroundGradientValue" onforminput="value = foo.valueAsNumber;"></output>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Secondary Color</td>
-                <td class="toCenter">
-                  <div class="ElementsTopOfEachOther">
-                    <input type="color" id="secondary-color"/>
-                    <input name="SecondaryColorAlphaRange" id="SecondaryColorAlphaRange" class="alphaRangeValue" type="range"/>
-                    <output class="alphaValueFloatingDiv" for="SecondaryColorAlphaRange" onforminput="value = foo.valueasnumber;"></output>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Main Buttons Color</td>
-                <td class="toCenter">
-                  <div class="ElementsTopOfEachOther">
-                    <input type="color" id="main-buttons-color"/>
-                    <input name="leftButtonsColorAlphaValueRange" id="leftButtonsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
-                    <output class="alphaValueFloatingDiv" for="leftButtonsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Hovered Element Border Color</td>
-                <td class="toCenter">
-                  <input type="color" id="MovieElement-hover-BorderColor"/>
-                </td>
-              </tr>
-              <tr>
-                <td>Input Background Color</td>
-                <td class="toCenter">
-                  <div class="ElementsTopOfEachOther">
-                    <input type="color" id="input-backgroundColor"/>
-                    <input name="InputBgColorAlphaValueRange" id="InputBgColorAlphaValueRange" class="alphaRangeValue" type="range"/>
-                    <output class="alphaValueFloatingDiv" for="InputBgColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Drop Down Color</td>
-                <td class="toCenter">
-                  <div class="ElementsTopOfEachOther">
-                    <input type="color" id="drop-down-color"/>
-                    <input name="DropDownAlphaValueRange" id="DropDownAlphaValueRange" class="alphaRangeValue" type="range"/>
-                    <output class="alphaValueFloatingDiv" for="DropDownAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Icon Color</td>
-                <td class="toCenter">
-                  <input type="color" id="icon-color"/>
-                </td>
-              </tr>
-              <tr>
-                <td>Hovered Icon Color</td>
-                <td class="toCenter">
-                  <div class="ElementsTopOfEachOther">
-                    <input type="color" id="icon-hover-color"/>
-                    <input name="HoveredIconsBgAlphaValueRange" id="HoveredIconsBgAlphaValueRange" class="alphaRangeValue" type="range"/>
-                    <output class="alphaValueFloatingDiv" for="HoveredIconsBgAlphaValueRange" onforminput="value = foo.valueasnumber;"></output>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Text Color</td>
-                <td class="toCenter">
-                  <input type="color" id="text-color"/>
-                </td>
-              </tr>
-            </table>
+            <div id="div-addCustomThemeBtn">
+              <button id="btn-addCustomTheme" type="button">+ Add Custom Theme</button>
+            </div>
           </div>
           <div class="border"></div>
 
@@ -361,8 +253,84 @@
           <div id="div-ApplyButton">
             <button id="btn-applySettings">Apply</button>
           </div>
+          </div>
         </div>
+
+        <div class="overlay" id="theme-overlay">
+          <div class = "delete-container" id="details-customizeTheme">
+            <input id="theme-title" placeholder="Theme title"/>
+            <button class="floating-x-remove-btn"></button>
+            <h2>Primary Color</h2>
+            <div class="ElementsTopOfEachOther">
+              <input id="primary-color" type="color"/>
+              <input name="backgroundGradientValue" id="background-gradient-value" class="alphaRangeValue" type="range"/>
+              <output class="alphaValueFloatingDiv" for="backgroundGradientValue" onforminput="value = foo.valueAsNumber;"></output>
+            </div>
+
+            <h2>Secondary Color</h2>
+            <div class="ElementsTopOfEachOther">
+              <input type="color" id="secondary-color"/>
+              <input name="SecondaryColorAlphaRange" id="SecondaryColorAlphaRange" class="alphaRangeValue" type="range"/>
+              <output class="alphaValueFloatingDiv" for="SecondaryColorAlphaRange" onforminput="value = foo.valueasnumber;"></output>
+            </div>
+
+            <h2>Main Buttons Color</h2>
+            <div class="ElementsTopOfEachOther">
+              <input type="color" id="main-buttons-color"/>
+              <input name="leftButtonsColorAlphaValueRange" id="leftButtonsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+              <output class="alphaValueFloatingDiv" for="leftButtonsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+            </div>
+
+            <h2>Hovered Element Border Color</h2>
+            <input type="color" id="MovieElement-hover-BorderColor"/>
+
+            <h2>Input Background Color</h2>
+            <div class="ElementsTopOfEachOther">
+              <input type="color" id="input-backgroundColor"/>
+              <input name="InputBgColorAlphaValueRange" id="InputBgColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+              <output class="alphaValueFloatingDiv" for="InputBgColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+            </div>
+
+            <h2>Drop Down Color</h2>
+            <div class="ElementsTopOfEachOther">
+              <input type="color" id="drop-down-color"/>
+              <input name="DropDownAlphaValueRange" id="DropDownAlphaValueRange" class="alphaRangeValue" type="range"/>
+              <output class="alphaValueFloatingDiv" for="DropDownAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+            </div>
+
+            <h2>Icon Color</h2>
+            <input type="color" id="icon-color"/>
+
+            <h2>Hovered Icon Color</h2>
+            <div class="ElementsTopOfEachOther">
+              <input type="color" id="icon-hover-color"/>
+              <input name="HoveredIconsBgAlphaValueRange" id="HoveredIconsBgAlphaValueRange" class="alphaRangeValue" type="range"/>
+              <output class="alphaValueFloatingDiv" for="HoveredIconsBgAlphaValueRange" onforminput="value = foo.valueasnumber;"></output>
+            </div>
+
+            <h2>Text Color</h2>
+            <input type="color" id="text-color"/>
+            <button class="save-new-theme-btn">Save</button>
+          </div>
         </div>
+
+        <div class="overlay" id="deleteOverlay">
+          <div class="delete-container">
+            <button class="close-btn" id="closeBtn" aria-label="Close">×</button>
+            
+            <h2 class="delete-title">Delete this theme?</h2>
+            
+            <div class="delete-body">
+              <p class="delete-msg">Are you sure you want to delete </p>
+            </div>
+            
+            <div class="button-group">
+              <button id="cancelBtn" class="secondary-btn">Cancel</button>
+              <button id="deleteBtn" class="primary-btn">Delete</button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </body>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/css" href="Theme.css"?>
+<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img">
+
+<style>
+  .bg-primary   { fill: rgb(var(--primary-color)); }
+  .bg-secondary { fill: rgb(var(--secondary-color)); }
+  .bg-button    { fill: rgba(var(--main-buttons-color)); }
+  .bg-input     { fill: rgba(var(--input-backgroundColor)); }
+  .bg-dropdown  { fill: rgba(var(--drop-down-color)); }
+  .stroke-secondary { stroke: rgb(var(--secondary-color)); }
+  .stroke-hover      { stroke: rgb(var(--MovieElement-hover-BorderColor)); }
+  .icon         { fill: rgb(var(--icon-color)); stroke: rgb(var(--icon-color)); }
+  .icon-hover   { fill: rgba(var(--icon-hover-color)); stroke: rgba(var(--icon-hover-color)); }
+  .text-main    { fill: rgb(var(--text-color)); font-family: sans-serif; }
+  .text-muted   { fill: rgb(var(--text-color)); font-family: sans-serif; opacity: 0.55; }
+  .btn-hover    { fill: rgba(255,255,255,0.1); }
+</style>
+
+<!-- base -->
+<rect x="0" y="0" width="400" height="260" rx="8" class="bg-primary"/>
+
+<g transform="translate(3,6)">
+
+<!-- top bar: back button, search pill, fullscreen button -->
+<rect x="3" y="4" width="12" height="12" rx="3" class="bg-secondary"/>
+
+<rect x="138" y="3" width="124" height="14" rx="7" class="bg-input"/>
+<text x="146" y="12.5" font-size="5" class="text-muted">Search movies, shows &amp; people</text>
+<circle cx="252" cy="10" r="2.6" fill="none" class="icon" stroke-width="0.9"/>
+<line x1="253.9" y1="11.9" x2="256" y2="14" class="icon" stroke-width="0.9"/>
+
+<rect x="378" y="4" width="12" height="12" rx="3" class="bg-secondary"/>
+
+<!-- left icon rail: simple rounded-rect buttons -->
+<rect x="3" y="26" width="12" height="12" rx="3" class="bg-secondary"/>
+<rect x="3.2" y="48" width="11" height="11" rx="3" class="icon-hover"/>
+<rect x="3" y="70" width="12" height="12" rx="3" class="bg-secondary"/>
+<rect x="3" y="92" width="12" height="12" rx="3" class="bg-secondary"/>
+<rect x="3" y="114" width="12" height="12" rx="3" class="bg-secondary"/>
+
+<!-- Movies section -->
+<text x="26" y="35" font-size="10" font-weight="500" class="text-main">Movies - Popular</text>
+<rect x="356" y="27" width="28" height="12" rx="4" class="btn-hover"/>
+<text x="380" y="35" font-size="6" text-anchor="end" class="text-muted">See All</text>
+
+<g>
+  <rect x="22" y="43" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="42" y="110" font-size="5" text-anchor="middle" class="text-muted">Movie Title</text>
+
+  <rect x="68" y="43" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="88" y="110" font-size="5" text-anchor="middle" class="text-muted">Movie Title</text>
+
+  <rect x="114" y="43" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="134" y="110" font-size="5" text-anchor="middle" class="text-muted">Movie Title</text>
+
+  <rect x="160" y="43" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="180" y="110" font-size="5" text-anchor="middle" class="text-muted">Movie Title</text>
+
+  <rect x="206" y="43" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="226" y="110" font-size="5" text-anchor="middle" class="text-muted">Movie Title</text>
+
+  <rect x="252" y="43" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="272" y="110" font-size="5" text-anchor="middle" class="text-muted">Movie Title</text>
+
+  <rect x="298" y="43" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="318" y="110" font-size="5" text-anchor="middle" class="text-muted">Movie Title</text>
+
+  <rect x="344" y="43" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="364" y="110" font-size="5" text-anchor="middle" class="text-muted">Movie Title</text>
+</g>
+
+<!-- Series section -->
+<text x="26" y="133" font-size="10" font-weight="500" class="text-main">Series - Popular</text>
+<text x="380" y="133" font-size="6" text-anchor="end" class="text-muted">See All</text>
+
+<g>
+  <rect x="22" y="143" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="42" y="210" font-size="5" text-anchor="middle" class="text-muted">TvShow Title</text>
+
+  <rect x="68" y="143" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="88" y="210" font-size="5" text-anchor="middle" class="text-muted">TvShow Title</text>
+
+  <rect x="114" y="143" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="134" y="210" font-size="5" text-anchor="middle" class="text-muted">TvShow Title</text>
+
+  <rect x="160" y="143" width="40" height="55" rx="2" class="bg-secondary  stroke-hover" stroke-width="1.2"/>
+  <text x="180" y="210" font-size="5" text-anchor="middle" class="text-muted">TvShow Title</text>
+
+  <rect x="206" y="143" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="226" y="210" font-size="5" text-anchor="middle" class="text-muted">TvShow Title</text>
+
+  <rect x="252" y="143" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="272" y="210" font-size="5" text-anchor="middle" class="text-muted">TvShow Title</text>
+
+  <rect x="298" y="143" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="318" y="210" font-size="5" text-anchor="middle" class="text-muted">TvShow Title</text>
+
+  <rect x="344" y="143" width="40" height="55" rx="2" class="bg-secondary"/>
+  <text x="364" y="210" font-size="5" text-anchor="middle" class="text-muted">TvShow Title</text>
+</g>
+
+<rect x="390" y="43" width="3" height="70" rx="1.5" class="btn-hover"/>
+
+</g>
+
+</svg>

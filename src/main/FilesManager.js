@@ -15,6 +15,7 @@ export class Paths {
 
   static __envfile = path.join(Paths.__configs, ".env");
   static SettingsFilePath = path.join(Paths.__configs, "settings.json");
+  static themesDirPath = path.join(Paths.__configs, "themes");
   static ThemeFilePath = path.join(Paths.__configs, "Theme.css");
   static libraryFilePath = path.join(Paths.__configs, "library.json");
   static downloadLibraryFilePath = path.join(Paths.__configs, "downloads.json");
@@ -90,6 +91,12 @@ export class FilesManager {
         sub-color="#ffffff"
         target-colorspace-hint=no
       `);
+
+    if (!fs.existsSync(Paths.themesDirPath))
+      fs.cpSync(
+        path.join(Paths.__dirname, '../../assets/themes/'), 
+        Paths.themesDirPath, {recursive: true}
+      );
   }
 
   static async writeAPIKEYIntoEnvFile(apiKeys){

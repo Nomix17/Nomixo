@@ -26,6 +26,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   loadTheme: () => ipcRenderer.invoke("load-theme"),
   loadSubConfig: () => ipcRenderer.invoke("load-sub"),
   
+  getPreparedThemes: () => ipcRenderer.invoke("get-prepared-themes"),
+  applyPreparedTheme: (themefileName) => ipcRenderer.invoke("apply-prepared-theme", themefileName),
+  createPreparedTheme: (newThemeName, newThemeObj) => ipcRenderer.invoke("create-prepared-theme",newThemeName, newThemeObj),
+  removePreparedTheme: (themefilePath) => ipcRenderer.invoke("remove-prepared-theme", themefilePath),
+
   addMediaToLibrary: (mediaEntryPoint) => ipcRenderer.send("add-to-lib",mediaEntryPoint),
   removeMediaFromLibrary: (mediaEntryPoint) => ipcRenderer.send("remove-from-lib",mediaEntryPoint),
   editMediaFromLibrary: (mediaEntryPoint) => ipcRenderer.send("edit-element-lib",mediaEntryPoint),

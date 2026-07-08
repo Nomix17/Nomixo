@@ -1260,6 +1260,7 @@ async function loadIconsDynamically() {
 
   document.querySelectorAll(".div-storageImage").forEach(element => element.innerHTML = storageSvgText);
   document.querySelectorAll(".div-seedImage").forEach(element => element.innerHTML = seedSvgText);
+  document.querySelectorAll(".floating-x-remove-btn").forEach(element => element.innerHTML = xRemoveIcon);
 }
 
 function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "../../../assets/PosterNotFound.svg") {

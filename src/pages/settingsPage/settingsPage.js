@@ -34,7 +34,7 @@ let FontFamilyInternal = "monospace";
 let TextColorInternal = "white";
 let BackgroundColorInternal ="black";
 let OpacityInternal = 0;
-let choosenTheme;
+let CurrentTheme;
 
 let SubtitlesOnByDefaultExternal = false;
 let FontSizeExternalExternal = 24;
@@ -103,14 +103,51 @@ ZoomFactorInput.addEventListener("mouseleave",()=>{
   bubble.style.opacity = "0";
 });
 
-ApplyButton.addEventListener("click",()=>{
+const addCustomThemeBtn = document.getElementById("btn-addCustomTheme");
+addCustomThemeBtn.addEventListener("click", () => {
+  document.getElementById("theme-overlay").classList.add("active");
+});
+
+const newThemeNameInput = document.getElementById("theme-title");
+newThemeNameInput.addEventListener("input", () => {
+  newThemeNameInput.classList.remove("error-shake");
+});
+
+const saveNewThemeBtn = document.querySelector(".save-new-theme-btn");
+saveNewThemeBtn.addEventListener("click", async () => {
+  const newThemeName = newThemeNameInput?.value;
+  if(newThemeName == null || newThemeName.trim() == "") {
+    newThemeNameInput.focus();
+    newThemeNameInput.classList.add("error-shake");
+    setTimeout(() => {
+      newThemeNameInput.classList.remove("error-shake");
+    },300);
+    return;
+  }
+  const newThemeObj = getNewTheme();
+  const newThemePath = await window.electronAPI.createPreparedTheme(newThemeName, newThemeObj);
+
+  const container = document.querySelector(".prepared-themes-div");
+  const newCard = await createThemeCard(newThemeName, newThemePath);
+  container.appendChild(newCard);
+  selectThemeCard(newCard);
+
+  document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
+  displayMessage("new theme was saved.");
+  document.getElementById("theme-overlay").classList.remove("active");
+});
+
+const closeNewThemeDiv = document.querySelector(".delete-container .floating-x-remove-btn");
+closeNewThemeDiv.addEventListener("click", () => {
+  document.getElementById("theme-overlay").classList.remove("active");
+});
+
+ApplyButton.addEventListener("click",()=> {
   let SettingsObj = getSettings();
-  let ThemeObj = getThemeConfig();
   let SubConfigObj = getSubConfig();
   
   if(somethingChanged){
     window.electronAPI.applySettings(SettingsObj);
-    window.electronAPI.applyTheme(ThemeObj);
     window.electronAPI.applySubConfig(SubConfigObj);
     document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
     displayMessage("new settings were saved.");
@@ -223,28 +260,13 @@ FontSizeExternalInput.addEventListener("keypress",(event) => {
 
 // global Functions 
 
-async function loadTheme(){
+async function loadCurrentTheme(){
   let ThemeObj = await window.electronAPI.loadTheme();
   ThemeObj.theme.forEach(obj => {
     let elementId = Object.keys(obj)[0];
     let elementValue = obj[Object.keys(obj)[0]];
 
-    if(elementId === "dont-Smooth-transition-between-pages"){
-      supressInputEventListener = true;
-      if(!parseInt(elementValue)) document.getElementById(elementId).click();
-      supressInputEventListener = false;
-    }
-    else if(elementId === "display-scroll-bar"){
-      supressInputEventListener = true;
-      if(elementValue === "block") document.getElementById(elementId).click();
-      supressInputEventListener = false;
-    }
-    else if(elementId === "show-continue-watching-on-home"){
-      supressInputEventListener = true;
-      if(elementValue === "flex") document.getElementById(elementId).click();
-      supressInputEventListener = false;
-    }
-    else if(elementId === "background-gradient-value"){
+    if(elementId === "background-gradient-value"){
       document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100); // I want the max value to be 25%
     }else{
 
@@ -279,7 +301,7 @@ async function loadSettings(){
   setFloatingZoomFactorDiv(ZoomFactorValue);
 
   // load Internal player sub settings
-  choosenTheme = SettingsObj.Theme;
+  CurrentTheme = SettingsObj.CurrentTheme;
   SubtitlesOnByDefaultInternal = SettingsObj.TurnOnSubsByDefaultInternal ;
   FontSizeInternal = SettingsObj.SubFontSizeInternal;
   FontFamilyInternal = SettingsObj.SubFontFamilyInternal;
@@ -323,17 +345,10 @@ async function loadExternalSubConfigs(){
   applySelectedColor(ColorInputsWithAlphaValue)
 }
 
-function getThemeConfig(){
+function getNewTheme() {
   let ThemeObjs = {theme:[]};
-  let ThemeSettingsInputElements = document.querySelectorAll('#themeTable input[type="color"]');
-  let SmoothTransition =  document.getElementById("dont-Smooth-transition-between-pages");
-  let DisplayScrollBar = document.getElementById("display-scroll-bar");
-  let ShowContinueWatchingOnHome = document.getElementById("show-continue-watching-on-home");
+  let ThemeSettingsInputElements = document.querySelectorAll('#details-customizeTheme input[type="color"]');
   let backgroundGradientValue = document.getElementById("background-gradient-value");
-
-  ThemeObjs.theme.push({"--dont-Smooth-transition-between-pages":SmoothTransition.checked?0:1});
-  ThemeObjs.theme.push({"--display-scroll-bar":DisplayScrollBar.checked?"block":"none"});
-  ThemeObjs.theme.push({"--show-continue-watching-on-home":ShowContinueWatchingOnHome.checked?"flex":"none"});
   ThemeObjs.theme.push({"--background-gradient-value":(100-backgroundGradientValue.value)/100});
 
   ThemeSettingsInputElements.forEach(input => {
@@ -350,7 +365,7 @@ function getThemeConfig(){
 function getSettings(){
   return{
     PageZoomFactor: ZoomFactorValue,
-    Theme: choosenTheme,
+    CurrentTheme: CurrentTheme,
     TurnOnSubsByDefaultInternal: SubtitlesOnByDefaultInternal,
     SubFontSizeInternal: FontSizeInternal,
     SubFontFamilyInternal: FontFamilyInternal,
@@ -469,23 +484,123 @@ function commitFontSizeExternal(){
   somethingChanged = true;
 }
 
-// calling functions
-addSmoothTransition();
-loadTheme();
-loadSettings();
-loadExternalSubConfigs();
-loadApiKeys();
-setupKeyPressesHandler();
-setLeftButtonStyle("btn-settings");
-loadIconsDynamically();
-handlingMiddleRightDivResizing();
-dropDownInit();
-
-window.addEventListener("keydown",(event)=>{
-  if(event.key === "Enter"){
-    ApplyButton.click();
+async function fetchSVGMarkup() {
+  const svgPath = "../../../assets/cardTheme.svg";
+  const res = await fetch(svgPath);
+  if (!res.ok) {
+    console.error(`Failed to load SVG at ${svgPath}`, res.status);
+    return "";
   }
-});
+  return res.text();
+}
+
+async function extractThemeVars(cssPath) {
+  const res = await fetch(cssPath);
+  if (!res.ok) {
+    console.error(`Failed to load theme CSS at ${cssPath}`, res.status);
+    return [];
+  }
+  const css = await res.text();
+  return css.match(/--[\w-]+\s*:\s*[^;]+/g) || [];
+}
+
+function selectThemeCard(card) {
+  document.querySelectorAll(".card")
+    .forEach(el => el.classList.remove("selected"));
+  card.classList.add("selected");
+}
+
+const SVGThemeMarkupPromise = fetchSVGMarkup();
+async function createThemeCard(themeName, themePath, isDefault = false) {
+  const svgMarkup = await SVGThemeMarkupPromise;
+  const vars = await extractThemeVars(themePath);
+
+  const card = document.createElement("div");
+  const cardTitle = document.createElement("p");
+
+  const label = themeName.replaceAll(/_/g, " ");
+  cardTitle.innerText = label.charAt(0).toUpperCase() + label.slice(1);
+
+  card.classList.add("card");
+  card.setAttribute("card-file-name", themeName);
+  card.appendChild(cardTitle);
+  card.insertAdjacentHTML("beforeend", svgMarkup);
+
+  card.classList.toggle("selected", CurrentTheme === themeName);
+  vars.forEach(decl => {
+    const [name, value] = decl.split(/:(.+)/).map(s => s.trim());
+    card.style.setProperty(name, value);
+  });
+
+  if(!isDefault) createThemeCardRemovingBtn(card, themeName, themePath);
+  addCardEventListener(card);
+  return card;
+}
+
+function createThemeCardRemovingBtn(cardEl, themeName, themePath) {
+  const removeBtn = document.createElement('button');
+  removeBtn.classList.add('floating-x-remove-btn');
+  removeBtn.innerHTML = xRemoveIcon;
+  
+  removeBtn.addEventListener('click', async(event) => {
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    createRemoveThemeConfirmationPopup(cardEl, themeName, themePath);
+  });
+
+  cardEl.appendChild(removeBtn);
+}
+
+function createRemoveThemeConfirmationPopup(cardEl, themeName, themePath) {
+  const overlay = document.getElementById('deleteOverlay');
+  const deleteMsg = overlay.querySelector('.delete-msg');
+  const closeBtn = document.getElementById('closeBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const deleteBtn = document.getElementById('deleteBtn');
+
+  deleteMsg.textContent = `Are you sure you want to delete the theme "${themeName}"?`;
+
+  overlay.classList.add('active');
+  overlay.style.display = 'flex';
+
+  [cancelBtn, closeBtn].forEach(el => {
+    el.addEventListener('click', function () {
+      overlay.classList.remove('active');
+    })
+  });
+
+  deleteBtn.addEventListener('click', async function () {
+    await window.electronAPI.removePreparedTheme(themePath);
+    overlay.classList.remove('active');
+    cardEl.remove();
+  });
+}
+
+function addCardEventListener(cardEl) {
+  cardEl.addEventListener("click", async () => {
+    const themefileName = cardEl.getAttribute("card-file-name");
+    await window.electronAPI.applyPreparedTheme(themefileName);
+    CurrentTheme = themefileName;
+    // setTimeout(() => {
+      document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
+    // },100);
+    selectThemeCard(document.querySelector(`[card-file-name="${themefileName}"]`));
+  });
+}
+
+async function renderPreparedThemeCards() {
+  const themesFiles = await window.electronAPI.getPreparedThemes();
+  const container = document.querySelector(".prepared-themes-div");
+  container.innerHTML = "";
+
+  const cards = await Promise.all(
+    themesFiles.map(
+      (themeFile) =>
+        createThemeCard(themeFile.name, themeFile.path, themeFile.isDefault)
+    )
+  );
+  cards.forEach(card => container.appendChild(card));
+}
 
 document.querySelectorAll(".edit-btn").forEach(btn => {
   btn.innerHTML = editIcon;
@@ -562,4 +677,23 @@ document.querySelectorAll(".link-btn").forEach(btn => {
 
     window.electronAPI.openExternalLink(URL);
   });
+});
+
+// calling functions
+addSmoothTransition();
+loadCurrentTheme();
+loadExternalSubConfigs();
+loadApiKeys();
+setupKeyPressesHandler();
+setLeftButtonStyle("btn-settings");
+loadIconsDynamically();
+handlingMiddleRightDivResizing();
+dropDownInit();
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await loadSettings();
+    renderPreparedThemeCards();
+  } catch (error) {
+    console.error("Failed to initialize app settings:", error);
+  }
 });

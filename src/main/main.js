@@ -2,6 +2,7 @@ import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
+import { copyFile, writeFile, unlink} from 'fs/promises';
 
 import { AppManager } from "./AppManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
@@ -71,20 +72,84 @@ ipcMain.handle("apply-settings", async (event, SettingsObj) => {
   return null;
 });
 
+ipcMain.on("apply-sub-config", (event, SubConfig) => {
+  applySubConfigs(SubConfig);
+});
+
 ipcMain.on("apply-theme", (event, ThemeObj) => {
   const formatedThemeObj = ThemeObj.theme.map(
     (obj) => `${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`
   );
-
   const themeFileContent = `:root{\n    ${formatedThemeObj.join(";\n")}\n  ;}`;
-
   fs.writeFile(Paths.ThemeFilePath, themeFileContent, (err) => {
     if (err) log.error(err);
   });
 });
 
-ipcMain.on("apply-sub-config", (event, SubConfig) => {
-  applySubConfigs(SubConfig);
+async function copyThemeFileToMainTheme(themeFileName, themeFilePath) {
+  await copyFile(themeFilePath, Paths.ThemeFilePath)
+  const oldSettings = await loadSettings();
+  const FullSettings = {...oldSettings, "CurrentTheme" : themeFileName};
+  await writeFile(Paths.SettingsFilePath, JSON.stringify(FullSettings, null, 2));
+}
+
+ipcMain.handle("apply-prepared-theme", async (event, themefileName) => {
+  try {
+    const themeFilePath = path.join(Paths.themesDirPath, `${themefileName}.css`);
+    await copyThemeFileToMainTheme(themefileName, themeFilePath);
+  } catch(error) {
+    log.error(error);
+  }
+});
+
+ipcMain.handle("get-prepared-themes", () => {
+  try {
+    const defaultThemes = 
+      fs.readdirSync(path.join(Paths.__dirname, '../../assets/themes/'))
+        .filter(file => path.extname(file) === ".css")
+        .map(file => path.basename(file, ".css"));
+
+    const files = fs.readdirSync(Paths.themesDirPath);
+    return files
+      .filter(file => path.extname(file) === ".css")
+      .map((file) => {
+        return {
+          name: path.basename(file, ".css"),
+          path: path.join(Paths.themesDirPath, file),
+          time: fs.statSync(path.join(Paths.themesDirPath, file)).mtime.getTime()
+        };
+      })
+      .sort((a, b) => a.time - b.time)
+      .map((el) => {
+        return {
+          name: el.name,
+          path: el.path,
+          isDefault: defaultThemes.find(dTheme => dTheme === el.name) != null
+        }
+      });
+  } catch (err) {
+    log.error(`Failed to read themes directory at ${Paths.themesDirPath}`, err);
+    return [];
+  }
+});
+
+ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj) => {
+  const formatedThemeObj = newThemeObj.theme.map(
+    (obj) => `${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`
+  );
+  const themeFileContent = `:root{\n    ${formatedThemeObj.join(";\n")}\n  ;}`;
+  const themeFilePath = path.join(Paths.themesDirPath, `${newThemeName}.css`);
+  await writeFile(themeFilePath, themeFileContent);
+  copyThemeFileToMainTheme(newThemeName, themeFilePath);
+  return themeFilePath;
+});
+
+ipcMain.handle("remove-prepared-theme", async (event, themefilePath) => {
+  if(
+    fs.existsSync(themefilePath) &&
+    path.dirname(themefilePath) == Paths.themesDirPath
+  );
+    await unlink(themefilePath);
 });
 
 // ======================= NAVIGATION =======================
