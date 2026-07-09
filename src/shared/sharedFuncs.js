@@ -475,10 +475,85 @@ function setupKeyPressesHandler() {
 }
 
 function setupKeyPressesForInputElement(searchInput) {
-  searchInput.addEventListener("keydown",(event) => {
-    if(event.key === "Enter") openSearchPage();
-    else if(event.key === "Escape") searchInput.blur();
+  let selectedIndex = -1;
+  function getDropdownItems() {
+    const dropdown = document.getElementById('recent-searches-dropdown');
+    const isVisible = dropdown && dropdown.classList.contains('visible');
+    return isVisible ? Array.from(dropdown.querySelectorAll('.recent-search-item')) : [];
+  }
+
+  function updateSelection(items, index) {
+    items.forEach((item, i) => item.classList.toggle('selected', i === index));
+    const item = items[index];
+    item?.scrollIntoView({ block: 'nearest' });
+    return item.querySelector(".recent-search-query")?.textContent;
+  }
+
+  searchInput.addEventListener('focus', () => {
+    selectedIndex = -1;
+  });
+
+  searchInput.addEventListener('keydown', async (event) => {
+    const items = getDropdownItems();
+
+    if(event.key === "Enter") {
+      await window.electronAPI.addSearchHistoryItem(searchInput.value.trim());
+      openSearchPage();
+      event.preventDefault();
+
+    } else if(event.key === "Escape"){
+      searchInput.blur();
+      event.preventDefault();
+
+    } else if (event.key === 'ArrowDown') {
+      if (items.length === 0) return;
+      event.preventDefault();
+      selectedIndex = (selectedIndex + 1) % items.length;
+      const query = updateSelection(items, selectedIndex);
+      if(query)
+        searchInput.value = query;
+
+    } else if (event.key === 'ArrowUp') {
+      if (items.length === 0) return;
+      event.preventDefault();
+      selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+      const query = updateSelection(items, selectedIndex);
+      if(query)
+        searchInput.value = query;
+    }
+
+    searchInput.addEventListener("input", () => {
+      let showDropdown = false; 
+      selectedIndex = -1;
+      const dropdown = document.getElementById('recent-searches-dropdown');
+      const dropdownItems = dropdown.querySelectorAll(".recent-search-item");
+      const typedValue = searchInput.value.trim().toLowerCase();
+
+      dropdownItems.forEach((item) => {
+        const query = item.querySelector(".recent-search-query").textContent.toLowerCase();
+        const hideItem = typedValue !== "" && !query.startsWith(typedValue);
+        item.classList.toggle("hide", hideItem);
+        if (!hideItem) {
+          showDropdown = true;
+        }
+      });
+      const shouldBeVisible = (typedValue === "" && dropdown.children.length !== 0) || showDropdown;
+      dropdown.classList.toggle("visible", shouldBeVisible);
+    });
+
     event.stopPropagation();
+  });
+
+  searchInput.addEventListener('input', () => {
+    selectedIndex = -1; 
+    const dropdown = document.getElementById('recent-searches-dropdown');
+    const dropdownItems = dropdown ? dropdown.querySelectorAll(".recent-search-item") : [];
+    const typedValue = searchInput.value.trim().toLowerCase();
+
+    dropdownItems.forEach((item) => {
+      const query = item.querySelector(".recent-search-query").textContent.toLowerCase();
+      item.classList.toggle("hide", typedValue !== "" && !query.includes(typedValue));
+    });
   });
 }
 
@@ -1534,4 +1609,113 @@ function getItemSize(item) {
     width: rect.width  + marginLeft + marginRight,
     height: rect.height + marginTop  + marginBottom,
   };
+}
+
+function createSearchHistoryDropDown() {
+  const container = document.getElementById('div-input-container');
+  const input = document.getElementById('input-searchForMovie');
+
+  if (!container || !input) {
+    console.warn('createRecentSearchesDropDown: required elements not found');
+    return;
+  }
+
+  const dropdown = document.createElement('div');
+  dropdown.classList.add('recent-searches-dropdown');
+  dropdown.id = 'recent-searches-dropdown';
+  container.appendChild(dropdown);
+
+  input.addEventListener('focus', async () => {
+    await renderHistory(dropdown, input);
+    if (dropdown.children.length > 0) {
+      dropdown.classList.add('visible');
+    }
+  });
+
+  input.addEventListener('blur', () => {
+    dropdown.classList.remove('visible');
+  });
+}
+
+async function renderHistory(dropdown, input) {
+  let history = [];
+  try {
+    history = await window.electronAPI.getSearchHistory();
+  } catch (err) {
+    console.error('Failed to load search history:', err);
+    return;
+  }
+
+  dropdown.innerHTML = '';
+
+  if (!history || history.length === 0) {
+    dropdown.classList.remove('visible');
+    return;
+  }
+
+  history.forEach(({ query, timestamp }) => {
+    const item = document.createElement('div');
+    item.classList.add('recent-search-item');
+
+    const queryText = document.createElement('span');
+    queryText.classList.add('recent-search-query');
+    queryText.textContent = query;
+
+    const timeText = document.createElement('span');
+    timeText.classList.add('recent-search-time');
+    timeText.textContent = formatRelativeTime(timestamp);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.classList.add('floating-x-remove-btn');
+    removeBtn.setAttribute('aria-label', `Remove "${query}" from history`);
+    removeBtn.innerHTML = xRemoveIcon;
+
+    removeBtn.addEventListener('mousedown', (e) => e.preventDefault());
+
+    removeBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        await window.electronAPI.removeSearchHistoryItem(query);
+        item.remove();
+        const allItemsHidden = Array.from(dropdown.children).every(child => 
+          child.classList.contains('hide')
+        );
+        if (dropdown.children.length === 0 || allItemsHidden) {
+          dropdown.classList.remove('visible');
+        }
+      } catch (err) {
+        console.error('Failed to remove search history item:', err);
+      }
+    });
+
+    item.appendChild(queryText);
+    item.appendChild(timeText);
+    item.appendChild(removeBtn);
+
+    item.addEventListener('mousedown', (e) => e.preventDefault());
+
+    item.addEventListener('click', () => {
+      input.value = query;
+      dropdown.classList.remove('visible');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      openSearchPage();
+    });
+
+    dropdown.appendChild(item);
+  });
+}
+
+function formatRelativeTime(timestamp) {
+  const diffMs = Date.now() - timestamp;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+
+  if (diffSec < 60) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay < 7) return `${diffDay}d ago`;
+
+  return new Date(timestamp).toLocaleDateString();
 }

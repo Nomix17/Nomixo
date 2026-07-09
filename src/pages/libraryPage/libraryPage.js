@@ -221,3 +221,4 @@ handleNavigationButtonsHandler(focusFunction);
 setLeftButtonStyle("btn-library");
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
+createSearchHistoryDropDown();

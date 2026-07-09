@@ -223,3 +223,4 @@ setupKeyPressesHandler();
 setLeftButtonStyle("btn-discover");
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
+createSearchHistoryDropDown();

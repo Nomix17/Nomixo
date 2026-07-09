@@ -25,6 +25,7 @@ export class Paths {
   static defaultDownloadPath = Paths.__downloads;
   static videoCachePath = path.join(Paths.__cache, "video_cache");
   static postersDirPath = path.join(Paths.__cache, "posters");
+  static searchHistoryCacheFile = path.join(Paths.__cache, "search_history.json");
 
   static MpvWorkerPath = path.join(Paths.__dirname, "MpvWorker.js");
   static subDirectory = path.join(Paths.__temp, "tempSubs");

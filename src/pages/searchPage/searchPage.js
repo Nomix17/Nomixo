@@ -73,11 +73,8 @@ loadData();
 resizeMoviesPostersContainers([MoviesRecommandationDiv,SeriesRecommandationDiv,FiguresRecommandationDiv,OtherRecommandationDiv]);
 
 setupKeyPressesHandler();
-
 setupNavigationBtnHandler();
-
 setupKeyPressesForInputElement(searchInput);
-
 loadIconsDynamically();
-
 handlingMiddleRightDivResizing();
+createSearchHistoryDropDown();

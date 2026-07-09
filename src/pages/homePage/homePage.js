@@ -86,3 +86,4 @@ setupNavigationBtnHandler();
 resizeMoviesPostersContainers([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
+createSearchHistoryDropDown();

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { readFile, writeFile, unlink} from 'fs/promises';
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
 import { downloadImage } from "./utils.js";
@@ -154,4 +155,27 @@ export async function markMediaDownloadsAsPaused() {
     .map(torrent => torrent.torrentId);
 
   await editDownloadStorageEntry(torrentsIds,"Status","Paused");
+}
+
+export async function readSearchHistory() {
+  try {
+    const data = await readFile(Paths.searchHistoryCacheFile, "utf-8");
+    if (data.trim() === "") throw new Error("Empty Search History");
+    return JSON.parse(data)?.history || [];
+  } catch (error) {
+    log.error("Failed to load search history: ", error.message);
+    return [];
+  }
+}
+
+export async function writeSearchHistory(history) {
+  try {
+    await writeFile(
+      Paths.searchHistoryCacheFile,
+      JSON.stringify({ history }, null, 2),
+      "utf-8"
+    );
+  } catch (error) {
+    log.error("Failed to save search history: ", error.message);
+  }
 }

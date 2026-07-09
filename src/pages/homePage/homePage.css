@@ -861,3 +861,103 @@ i[data-lucide="expand"] {
 #cancelBtn:hover {
   background-color: rgba(0, 0, 0, 0.3);
 }
+
+#div-input-container {
+  position: relative;
+}
+
+.recent-searches-dropdown {
+  position: absolute;
+  top: 130%;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  width: 99%;
+  background-color: rgba(var(--drop-down-color));
+  border: 1px solid rgba(var(--secondary-color));
+  border-top: none;
+  border-radius: 11px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--secondary-color)) transparent;
+}
+
+.recent-searches-dropdown.visible {
+  display: block;
+}
+
+.recent-searches-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-searches-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.recent-searches-dropdown::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--secondary-color));
+  border-radius: 3px;
+}
+
+.recent-searches-dropdown::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--icon-hover-color));
+}
+
+.recent-search-item {
+  display: flex;
+  position: relative;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: rgb(var(--text-color));
+  transition: background-color 0.15s ease;
+}
+
+.recent-search-item:hover {
+  background-color: rgba(var(--main-buttons-color));
+}
+.recent-search-item.hide {
+  display:none;
+}
+
+.recent-search-item .floating-x-remove-btn {
+  top:50%;
+  right:5%;
+  border-radius:100%;
+  transform: translate(50%, -50%);
+  backdrop-filter: none;
+  background-color: transparent;
+  z-index: 10;
+}
+
+.recent-search-item .floating-x-remove-btn:hover {
+  box-shadow: none;
+}
+
+.recent-search-item .floating-x-remove-btn:hover svg{
+  transition: fill 0.1s ease;
+  fill:rgba(255,255,255,0.1);
+}
+
+.recent-search-query {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgb(var(--text-color));
+}
+
+.recent-search-time {
+  font-size: 12px;
+  color: rgba(var(--small-icons-color));
+  margin-right:7%;
+  flex-shrink: 0;
+}
+
+.recent-search-item.selected {
+  background-color: rgba(var(--main-buttons-color));
+}

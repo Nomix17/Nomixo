@@ -65,6 +65,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   loadPageCachedDataFromHistory: (currentPageURL) => ipcRenderer.invoke("load-cached-data-from-history",currentPageURL),
 
+  addSearchHistoryItem: (query) => ipcRenderer.invoke("add-search-history-item", query),
+  getSearchHistory: () => ipcRenderer.invoke("get-search-history"), 
+  removeSearchHistoryItem: (query) => ipcRenderer.invoke("remove-search-history-item", query),
+
   validateTMDBApiKey: (inputedApiKey)=> ipcRenderer.invoke("validate-tmdb-api-key",inputedApiKey),
   validateWyzieApiKey: (inputedApiKey)=> ipcRenderer.invoke("validate-wyzie-api-key",inputedApiKey),
 

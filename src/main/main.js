@@ -21,6 +21,8 @@ import {
   editDownloadStorageEntry,
   getLibraryEntry,
   overwriteStorageFile,
+  readSearchHistory,
+  writeSearchHistory
 } from "./storageManagement.js";
 
 
@@ -413,6 +415,36 @@ ipcMain.handle("load-cached-data-from-history", (event, currentPageURL) => {
   return appManager.positionWasChangedViaGoBackButton
     ? appManager.loadPageCachedDataFromHistory(currentPageURL)
     : null;
+});
+
+const MAX_HISTORY_ITEMS = 15;
+ipcMain.handle("add-search-history-item", async (event, query) => {
+  if (!query || typeof query !== "string" || query.trim() === "") return;
+
+  const trimmedQuery = query.trim();
+  let history = await readSearchHistory();
+  history = history.filter(
+    (item) => item.query.toLowerCase() !== trimmedQuery.toLowerCase()
+  );
+
+  history.unshift({ query: trimmedQuery, timestamp: Date.now() });
+
+  if (history.length > MAX_HISTORY_ITEMS)
+    history = history.slice(0, MAX_HISTORY_ITEMS);
+
+  writeSearchHistory(history);
+  return history;
+});
+
+ipcMain.handle("get-search-history", async (event) => {
+  return await readSearchHistory();
+});
+
+ipcMain.handle("remove-search-history-item", async (event, query) => {
+  let history = await readSearchHistory();
+  history = history.filter((item) => item.query !== query);
+  await writeSearchHistory(history);
+  return history;
 });
 
 // ======================= SYSTEM INTERACTION =======================
