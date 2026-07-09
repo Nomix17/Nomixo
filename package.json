@@ -1,6 +1,6 @@
 {
   "name": "nomixo",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Stream your favorite movies and shows in one seamless experience",
   "type": "module",
   "author": {
@@ -64,7 +64,9 @@
       "icon": "logo/icon",
       "maintainer": "Nomix17"
     },
-    "toolsets": { "appimage": "1.0.2" },
+    "toolsets": {
+      "appimage": "1.0.2"
+    },
     "win": {
       "target": [
         {
