@@ -601,6 +601,13 @@ async function renderPreparedThemeCards() {
         createThemeCard(themeFile.name, themeFile.path, themeFile.isDefault)
     )
   );
+
+  const defaultIndex = themesFiles.findIndex(themeFile => themeFile.name.toLowerCase() == "default");
+  if (defaultIndex !== -1) {
+    const [defaultCard] = cards.splice(defaultIndex, 1);
+    cards.unshift(defaultCard);
+  }
+
   cards.forEach(card => container.appendChild(card));
 }
 
