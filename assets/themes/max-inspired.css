@@ -1,10 +1,9 @@
-/* MAX-INSPIRED — black background, moody purple accent */
 :root{
   --background-gradient-value:0;
   --primary-color:10,8,14;
   --secondary-color:50,30,70,1;
   --main-buttons-color:130,80,223,0.12;
-  --small-icons-color:130,80,223,0.12;
+  --small-icons-color:150,100,240,0.8;
   --MovieElement-hover-BorderColor:150,100,240;
   --input-backgroundColor:6,4,10,0.55;
   --drop-down-color:22,16,32,1;

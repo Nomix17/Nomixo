@@ -2,12 +2,12 @@
   --background-gradient-value:0;
   --primary-color:15,15,15;
   --secondary-color:60,60,60,1;
-  --main-buttons-color:255,0,0,1.0;
-  --small-icons-color:255,0,0,1.0;
+  --main-buttons-color:200,0,0,0.9;
+  --small-icons-color:200,0,0,0.9;
   --MovieElement-hover-BorderColor:255,0,0;
   --input-backgroundColor:0,0,0,0.5;
   --drop-down-color:28,28,28,1;
   --icon-color:100,100,100;
-  --icon-hover-color:200,200,200,1;
+  --icon-hover-color:255,255,255,1;
   --text-color:255,255,255;
 }
