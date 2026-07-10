@@ -29,9 +29,9 @@ Nomixo is an Electron app that lets you search, browse, and stream movies and TV
 
 ## Screenshots
 
-![Home](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/home.png)
-![Media Detail](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/media_details.png)
-![Download Manager](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/download_page.png)
+![Home](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/home.jpg)
+![Media Detail](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/media_details.jpg)
+![Download Manager](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/download_page.jpg)
 ![Video Player](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/videoplayer.png)
 
 
