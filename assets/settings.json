@@ -8,5 +8,6 @@
   "SubBackgroundOpacityLevelInternal": 0,
   "DefaultDownloadPath": "",
   "rememberDownloadLocationByDefault": true,
-  "DownloadSubtitlesByDefault": true
+  "DownloadSubtitlesByDefault": true,
+  "CurrentTheme": "default"
 }
