@@ -2,7 +2,7 @@ import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
-import { copyFile, writeFile, unlink} from 'fs/promises';
+import { copyFile, writeFile, readFile, unlink} from 'fs/promises';
 
 import { AppManager } from "./AppManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
@@ -54,8 +54,8 @@ ipcMain.handle("load-theme", () => {
   }
 });
 
-ipcMain.handle("load-sub", () => {
-  try { return loadSubConfigs(); }
+ipcMain.handle("load-sub", async() => {
+  try { return await loadSubConfigs(); }
   catch { throw new Error("Failed to load sub configs"); }
 });
 
@@ -591,9 +591,9 @@ function loadTheme() {
   }
 }
 
-function loadSubConfigs() {
+async function loadSubConfigs() {
   const JsonConfig = {};
-  const mpvConfig = fs.readFileSync(Paths.SubConfigFile, "utf-8");
+  const mpvConfig = await readFile(Paths.SubConfigFile, "utf-8");
   mpvConfig.split("\n").forEach((line) => {
     if (
       !line.includes("osc") &&
@@ -613,23 +613,49 @@ function loadSubConfigs() {
   return JsonConfig;
 }
 
-function applySubConfigs(jsonContent) {
-  fs.writeFileSync(Paths.SubConfigFile, parseMpvConfigs(jsonContent));
+async function applySubConfigs(newJsonConf) {
+  const updatedConf = await updateMpvConf(newJsonConf);
+  const fileContent = exportJsonToMpvConfigs(updatedConf);
+  await writeFile(Paths.SubConfigFile, fileContent);
 }
 
-function parseMpvConfigs(jsonContent) {
-  let mpvConfig = "osc=yes \nborder=yes \nosd-bar=no\ntarget-colorspace-hint=no";
-  for (const [key, val] of Object.entries(jsonContent)) {
+async function updateMpvConf(newJsonConf) {
+  const oldConf = await getJsonifiedMpvConfigs();
+  for (const [key, val] of Object.entries(newJsonConf)) {
     if (key === "no-sub") {
-      if (val === true) mpvConfig += "\nno-sub";
+      if (val !== true) delete oldConf["no-sub"];
+      else oldConf[key] = "yes";
     } else {
       const value =
         val === true && key !== "sub-font-size" ? "yes" :
         val === false && key !== "sub-font-size" ? "no" : val;
-      mpvConfig += `\n${key}=${value}`;
+      oldConf[key] = value;
     }
   }
-  return mpvConfig;
+  return oldConf;
+}
+
+async function getJsonifiedMpvConfigs() {
+  const jsonContent = {};
+  const fileContent = await readFile(Paths.SubConfigFile);
+  const lines = fileContent.toString().split(/\r?\n/);
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const [key, ...rest] = trimmed.split('=');
+    let value = rest.join('=').trim();
+    if (key) jsonContent[key.trim()] = value.trim();
+  }
+  return jsonContent;
+}
+
+function exportJsonToMpvConfigs(jsonContent) {
+  let fileContent = "";
+  for (const [key, val] of Object.entries(jsonContent)) {
+    fileContent += `${key}=${val}\n`;
+  }
+  return fileContent;
 }
 
 // ======================= API KEY VALIDATION =======================
