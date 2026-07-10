@@ -1,0 +1,12 @@
+{
+  "PageZoomFactor": 1,
+  "TurnOnSubsByDefaultInternal": true,
+  "SubFontSizeInternal": 16,
+  "SubFontFamilyInternal": "Montserrat",
+  "SubColorInternal": "#ffffff",
+  "SubBackgroundColorInternal": "#000000",
+  "SubBackgroundOpacityLevelInternal": 0,
+  "DefaultDownloadPath": "",
+  "rememberDownloadLocationByDefault": true,
+  "DownloadSubtitlesByDefault": true
+}

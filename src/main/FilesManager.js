@@ -33,6 +33,12 @@ export class Paths {
 
 export class FilesManager {
   static initializeDataFiles() {
+    FilesManager.createMissingDirs();
+    FilesManager.copyDefaultDirs();
+    FilesManager.copyDefaultFiles();
+  }
+
+  static createMissingDirs() {
     if (!fs.existsSync(Paths.__configs))
       fs.mkdirSync(Paths.__configs, { recursive: true });
 
@@ -42,39 +48,11 @@ export class FilesManager {
     if (!fs.existsSync(Paths.videoCachePath))
       fs.mkdirSync(Paths.videoCachePath, { recursive: true });
 
-    if (!fs.existsSync(Paths.SettingsFilePath))
-      fs.writeFileSync(Paths.SettingsFilePath, JSON.stringify({
-        "PageZoomFactor": 1,
-        "TurnOnSubsByDefaultInternal": true,
-        "SubFontSizeInternal": 16,
-        "SubFontFamilyInternal": "Montserrat",
-        "SubColorInternal": "#ffffff",
-        "SubBackgroundColorInternal": "#000000",
-        "SubBackgroundOpacityLevelInternal": 0,
-        "DefaultDownloadPath": Paths.__downloads,
-        "rememberDownloadLocationByDefault": true,
-        "DownloadSubtitlesByDefault": true
-      }));
-
-    if (!fs.existsSync(Paths.ThemeFilePath))
-      fs.writeFileSync(Paths.ThemeFilePath, `
-        :root{
-          --background-gradient-value:0;
-          --primary-color:10,14,23;
-          --secondary-color:55,65,81,1;
-          --main-buttons-color:255,255,255,0.04;
-          --MovieElement-hover-BorderColor:255,255,255;
-          --input-backgroundColor:0,0,0,0.44;
-          --drop-down-color:26,35,50,1;
-          --icon-color:55,65,81;
-          --icon-hover-color:148,163,184,1;
-          --text-color:255,255,255;
-        }
-      `);
-
     if (!fs.existsSync(Paths.__downloads))
       fs.mkdirSync(Paths.__downloads, { recursive: true });
+  }
 
+  static copyDefaultDirs() {
     if (!fs.existsSync(Paths.mpvConfigDirectory)) {
       const currentMpvConfPath = app.isPackaged
         ? path.join(process.resourcesPath, 'mpvConfigs')
@@ -82,21 +60,28 @@ export class FilesManager {
       fs.cpSync(currentMpvConfPath, Paths.mpvConfigDirectory, { recursive: true });
     }
 
-    if (!fs.existsSync(Paths.SubConfigFile))
-      fs.writeFileSync(Paths.SubConfigFile, `
-        osc=yes 
-        border=yes 
-        osd-bar=no
-        sub-font-size=30
-        sub-font="Arial"
-        sub-color="#ffffff"
-        target-colorspace-hint=no
-      `);
-
     if (!fs.existsSync(Paths.themesDirPath))
       fs.cpSync(
         path.join(Paths.__dirname, '../../assets/themes/'), 
         Paths.themesDirPath, {recursive: true}
+      );
+  }
+
+  static copyDefaultFiles() {
+    if (!fs.existsSync(Paths.SettingsFilePath)) {
+      fs.cpSync(
+        path.join(Paths.__dirname, '../../assets/settings.json'),
+        Paths.SettingsFilePath
+      );
+      const settings = JSON.parse(fs.readFileSync(Paths.SettingsFilePath, "utf-8"));
+      settings.DefaultDownloadPath = Paths.__downloads;
+      fs.writeFileSync(Paths.SettingsFilePath, JSON.stringify(settings, null, 2));
+    }
+
+    if (!fs.existsSync(Paths.ThemeFilePath))
+      fs.cpSync(
+        path.join(Paths.__dirname, "../../assets/themes/default.css"),
+        Paths.ThemeFilePath
       );
   }
 
