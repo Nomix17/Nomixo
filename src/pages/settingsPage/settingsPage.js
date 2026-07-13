@@ -139,7 +139,7 @@ saveNewThemeBtn.addEventListener("click", async () => {
   document.getElementById("theme-overlay").classList.remove("active");
 });
 
-const closeNewThemeDiv = document.querySelector(".delete-container .floating-x-remove-btn");
+const closeNewThemeDiv = document.querySelector("#details-customizeTheme .floating-x-remove-btn");
 closeNewThemeDiv.addEventListener("click", () => {
   document.getElementById("theme-overlay").classList.remove("active");
 });
@@ -697,6 +697,7 @@ setLeftButtonStyle("btn-settings");
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
 dropDownInit();
+initBackupSection();
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     await loadSettings();
@@ -704,4 +705,46 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (error) {
     console.error("Failed to initialize app settings:", error);
   }
+});
+
+async function initBackupSection() {
+  const closeImportConfirmBtn = document.querySelector("#import-confirm-overlay .floating-x-remove-btn");
+  closeImportConfirmBtn.innerHTML = xRemoveIcon;
+}
+
+const importBtn = document.getElementById("btn-importLibrary");
+importBtn.addEventListener("click", async () => {
+  const libElements = await window.electronAPI.loadMediaLibraryInfo();
+  const libraryCountEl = document.getElementById("p-current-library-count");
+  libraryCountEl.innerText = `Your current library has ${libElements ? libElements.length : 0} titles.`;
+
+  const mergeRadioInput = document.getElementById("radio-merge");
+  mergeRadioInput.checked = true;
+
+  const overlay = document.getElementById("import-confirm-overlay");
+  overlay.classList.add("active");
+});
+
+const exportBtn = document.getElementById("btn-exportLibrary");
+exportBtn.addEventListener("click", async () => {
+  await window.electronAPI.exportLibrary();
+  displayMessage("Library was exported.");
+});
+
+const confirmImportBtn = document.getElementById("confirmImportBtn");
+confirmImportBtn.addEventListener("click", async() => {
+  const mergeRadioInput = document.getElementById("radio-merge");
+  await window.electronAPI.importLibrary(mergeRadioInput.checked);
+  const overlay = document.getElementById("import-confirm-overlay");
+  overlay.classList.remove("active");
+  displayMessage("Library was imported.");
+});
+
+const closeOverlayBtn = document.querySelector("#import-confirm-overlay #cancelBtn");
+const closeImportConfirmBtn = document.querySelector("#import-confirm-overlay .floating-x-remove-btn");
+[closeOverlayBtn, closeImportConfirmBtn].forEach(el => {
+  el.addEventListener("click", () => {
+    const overlay = document.getElementById("import-confirm-overlay");
+    overlay.classList.remove("active");
+  });
 });

@@ -250,6 +250,68 @@
             </div>
 
           </div>
+
+          <h1>Backup &amp; Restore</h1>
+          <div id="div-BackupRestore">
+            <div class="backup-cards-row">
+              <div class="backup-card">
+                <div class="backup-card-header">
+                  
+                  <svg class="backup-card-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download">
+                    <path d="M12 15V3"/>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <path d="m7 10 5 5 5-5"/>
+                  </svg>
+
+                  <span>Export Library</span>
+                </div>
+                <p class="backup-card-desc">Save your Watch Later, Currently Watching, and Watched lists as a file.</p>
+                <button id="btn-exportLibrary">Export</button>
+              </div>
+
+              <div class="backup-card">
+                <div class="backup-card-header">
+
+                  <svg class="backup-card-icon" 
+                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload">
+                    <path d="M12 3v12"/><path d="m17 8-5-5-5 5"/>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  </svg>
+
+                  <span>Import Library</span>
+                </div>
+                <p class="backup-card-desc">Restore from a previously exported file.</p>
+                <button id="btn-importLibrary">Import</button>
+              </div>
+            </div>
+
+            <div class="overlay" id="import-confirm-overlay">
+              <div class="delete-container" id="details-importConfirm">
+                <button class="floating-x-remove-btn"></button>
+                <h2 class="delete-title">Import Library</h2>
+                <p id="p-current-library-count">Your current library has 0 titles.</p>
+
+                <div class="import-mode-options">
+                  <label class="import-mode-option">
+                    <input type="radio" name="importMode" id="radio-merge" checked />
+                    <span><strong>Merge</strong> — add to your current library</span>
+                  </label>
+                  <label class="import-mode-option">
+                    <input type="radio" name="importMode" id="radio-replace" />
+                    <span><strong>Replace</strong> — wipe and restore from file</span>
+                  </label>
+                </div>
+
+                <div class="button-group">
+                  <button id="cancelBtn" class="secondary-btn">Cancel</button>
+                  <button id="confirmImportBtn" class="primary-btn">Import</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div id="div-ApplyButton">
             <button id="btn-applySettings">Apply</button>
           </div>

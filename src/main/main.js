@@ -369,6 +369,59 @@ ipcMain.handle("load-from-lib", (event, targetIdentification) => {
   return getLibraryEntry(targetIdentification);
 });
 
+ipcMain.handle("import-library", async (event, merge) => {
+  try {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ["openFile"],
+      defaultPath: app.getPath('home')
+    });
+
+    if(canceled) return;
+    let LibraryInfo = [];
+    if(merge) {
+      LibraryInfo = loadLibraryStorage()?.media ?? [];
+    }
+
+    const data = await readFile(filePaths[0], 'utf8');
+    const newLibrary = JSON.parse(data);
+
+    if(newLibrary?.media == null) throw new Error("Failed to recognise file format");
+    LibraryInfo = [...LibraryInfo, ...newLibrary?.media];
+
+    const libraryMap = new Map(
+      LibraryInfo.map(oldEl => [`${oldEl.MediaId}_${oldEl.MediaType}`, oldEl])
+    );
+    newLibrary?.media?.forEach(newEl => {
+      const key = `${newEl.MediaId}_${newEl.MediaType}`;
+      const existingEl = libraryMap.get(key);
+      if (!existingEl || newEl.timeOfSave > existingEl.timeOfSave) {
+        libraryMap.set(key, newEl);
+      }
+    });
+    const mergedLibrary = Array.from(libraryMap.values());
+
+    const jsonString = JSON.stringify({ media: mergedLibrary }, null, 2);
+    await writeFile(Paths.libraryFilePath, jsonString, 'utf8');
+  } catch(error) {
+    log.error("Cannot Import Library:", error.message);
+  }
+});
+
+ipcMain.handle("export-library", async(event) => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+    defaultPath: app.getPath('home')
+  });
+  if(canceled) return;
+  const destinationPath = filePaths[0];
+
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear()).slice(-2);
+  await copyFile(Paths.libraryFilePath, path.join(destinationPath, `nomixo_library_dump_${day}_${month}_${year}.json`));
+});
+
 // ======================= DOWNLOAD LIBRARY MANAGEMENT =======================
 
 ipcMain.on("add-to-download-lib", async (event, torrentId, mediaInfo) => {

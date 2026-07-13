@@ -36,6 +36,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   editMediaFromLibrary: (mediaEntryPoint) => ipcRenderer.send("edit-element-lib",mediaEntryPoint),
   loadMediaLibraryInfo: (targetIdentification) => ipcRenderer.invoke("load-from-lib",targetIdentification),
 
+  importLibrary: (merge) => ipcRenderer.invoke("import-library", (merge)),
+  exportLibrary: () => ipcRenderer.invoke("export-library"),
+
   addElementToDownloadInfo: (torrentId, mediaInfo) => ipcRenderer.invoke("add-to-download-lib",torrentId, mediaInfo),
   removeElementFromDownloadLibraryInfo: (torrentId) => ipcRenderer.invoke("remove-from-download-lib",torrentId),
   editElementInDownloadLibraryInfo: (torrentId, key, value) => ipcRenderer.invoke("edit-download-lib",torrentId, key, value),

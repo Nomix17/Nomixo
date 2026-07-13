@@ -63,6 +63,10 @@ output {
   justify-content: flex-start;
 }
 
+#div-ExternalPlayerSettings {
+  margin-bottom: 64.4px;
+}
+
 #div-middle-right {
   padding: 18.4px 0px 36.8px 0px;
   opacity: 0;
@@ -180,7 +184,7 @@ output {
   font-weight: normal;
   white-space: nowrap;
   flex-shrink: 0;
-  color: var(--color-text-primary);
+  color: var(--text-color);
 }
 
 .input-container .input-wrapper {
@@ -798,4 +802,161 @@ input.error-shake {
 
 .rtp-btn-confirm:hover {
   background: rgba(var(--secondary-color));
+}
+
+#div-BackupRestore {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 40px 9.2px 0 110.4px;
+}
+
+#p-library-summary {
+  font-size: 14.72px;
+  color: var(--color-text-secondary);
+  margin: 0 0 27.6px 0;
+  padding: 0;
+}
+
+#span-libraryCount,
+#span-lastExported {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.backup-cards-row {
+  display: flex;
+  gap: 27.6px;
+  margin-bottom: 18.4px;
+}
+
+.backup-card {
+  border: 0.5px solid rgba(255,255,255,0.05);
+  border-radius: 7.36px;
+  padding: 18.4px 20.24px;
+  background: rgba(0,0,0,0.1);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  width: 20%;
+  display: flex;
+  flex-direction: column;
+}
+
+.backup-card-header {
+  display: flex;
+  align-items: center;
+  gap: 9.2px;
+  margin-bottom: 6.44px;
+  font-size: 18.4px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.backup-card-icon {
+  width: 18.4px;
+  height: 18.4px;
+  fill: rgba(var(--icon-color), 0.85);
+  transition: fill 0.3s ease;
+}
+
+.backup-card-desc {
+  font-size: 14.72px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0 0 13.8px 0;
+  padding: 0;
+}
+
+.backup-card button {
+  width: 100%;
+  height: 39.56px;
+  padding: 0 12.88px;
+  font-size: 13.8px;
+  font-weight: 500;
+  border-radius: 7.36px;
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.1s;
+  margin-top: auto;
+}
+
+.backup-card button:hover {
+  background: transparent;
+}
+
+.backup-card button:active {
+  transform: scale(0.98);
+}
+
+#p-import-file-summary {
+  font-size: 13.8px;
+  color: var(--color-text-secondary);
+  margin: 0 0 9.2px 0;
+  padding: 0;
+}
+
+#p-current-library-count {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 18.4px 10px;
+  font-weight:bold;
+  padding: 0;
+}
+
+.import-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 9.2px;
+  margin-bottom: 27.6px;
+}
+
+.import-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 9.2px;
+  border: 1px solid rgba(var(--icon-color), 0.15);
+  border-radius: 7.36px;
+  padding: 11.04px 13.8px;
+  font-size: 13.8px;
+  background-color: rgba(var(--input-backgroundColor), 0.5);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.import-mode-option:hover {
+  border-color: rgba(var(--secondary-color));
+}
+
+.import-mode-option:has(input:checked) {
+  border-color: rgba(var(--secondary-color));
+  background-color: rgba(255,255,255,0.04);
+}
+
+.import-mode-option input[type="radio"] {
+  accent-color: rgba(var(--secondary-color));
+  cursor: pointer;
+}
+
+.import-mode-option strong {
+  font-weight: 600;
+}
+
+#confirmImportBtn {
+  background-color: rgba(var(--secondary-color));
+  border:1px solid transparent;
+}
+#confirmImportBtn:hover {
+  background-color: transparent;
+  border-color: rgba(var(--secondary-color));
+}
+
+#cancelBtn {
+  border: 1px solid transparent;
+}
+
+#cancelBtn:hover {
+  background-color: transparent;
+  border-color: rgba(255, 255, 255, 0.1);
 }
