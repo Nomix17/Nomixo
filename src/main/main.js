@@ -376,7 +376,7 @@ ipcMain.handle("import-library", async (event, merge) => {
       defaultPath: app.getPath('home')
     });
 
-    if(canceled) return;
+    if(canceled) return false;
     let LibraryInfo = [];
     if(merge) {
       LibraryInfo = loadLibraryStorage()?.media ?? [];
@@ -402,24 +402,33 @@ ipcMain.handle("import-library", async (event, merge) => {
 
     const jsonString = JSON.stringify({ media: mergedLibrary }, null, 2);
     await writeFile(Paths.libraryFilePath, jsonString, 'utf8');
+    return true;
   } catch(error) {
     log.error("Cannot Import Library:", error.message);
+    return false;
   }
 });
 
 ipcMain.handle("export-library", async(event) => {
-  const { canceled, filePaths } = await dialog.showOpenDialog({
-    properties: ["openDirectory"],
-    defaultPath: app.getPath('home')
-  });
-  if(canceled) return;
-  const destinationPath = filePaths[0];
+  try {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ["openDirectory"],
+      defaultPath: app.getPath('home')
+    });
+    if(canceled) return false;
+    const destinationPath = filePaths[0];
 
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = String(now.getFullYear()).slice(-2);
-  await copyFile(Paths.libraryFilePath, path.join(destinationPath, `nomixo_library_dump_${day}_${month}_${year}.json`));
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).slice(-2);
+    await copyFile(Paths.libraryFilePath, path.join(destinationPath, `nomixo_library_dump_${day}_${month}_${year}.json`));
+    return true;
+
+  } catch(error) {
+    log.error("Connot Export Library: ", error.message);
+    return false
+  }
 });
 
 // ======================= DOWNLOAD LIBRARY MANAGEMENT =======================

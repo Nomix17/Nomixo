@@ -727,14 +727,16 @@ importBtn.addEventListener("click", async () => {
 
 const exportBtn = document.getElementById("btn-exportLibrary");
 exportBtn.addEventListener("click", async () => {
-  await window.electronAPI.exportLibrary();
-  displayMessage("Library was exported.");
+  const exported = await window.electronAPI.exportLibrary();
+  if(exported)
+    displayMessage("Library was exported.");
 });
 
 const confirmImportBtn = document.getElementById("confirmImportBtn");
 confirmImportBtn.addEventListener("click", async() => {
   const mergeRadioInput = document.getElementById("radio-merge");
-  await window.electronAPI.importLibrary(mergeRadioInput.checked);
+  const imported = await window.electronAPI.importLibrary(mergeRadioInput.checked);
+  if(!imported) return;
   const overlay = document.getElementById("import-confirm-overlay");
   overlay.classList.remove("active");
   displayMessage("Library was imported.");
