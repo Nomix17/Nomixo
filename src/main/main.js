@@ -150,7 +150,7 @@ ipcMain.handle("remove-prepared-theme", async (event, themefilePath) => {
   if(
     fs.existsSync(themefilePath) &&
     path.dirname(themefilePath) == Paths.themesDirPath
-  );
+  )
     await unlink(themefilePath);
 });
 
