@@ -837,6 +837,7 @@ input.error-shake {
   background: rgba(0,0,0,0.1);
   transition: background-color 0.2s ease, border-color 0.2s ease;
   width: 20%;
+  min-width: 200px;
   display: flex;
   flex-direction: column;
 }
@@ -854,7 +855,7 @@ input.error-shake {
 .backup-card-icon {
   width: 18.4px;
   height: 18.4px;
-  fill: rgba(var(--icon-color), 0.85);
+  stroke: rgba(var(--small-icons-color));
   transition: fill 0.3s ease;
 }
 
