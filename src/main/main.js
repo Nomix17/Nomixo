@@ -136,14 +136,22 @@ ipcMain.handle("get-prepared-themes", () => {
 });
 
 ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj) => {
-  const formatedThemeObj = newThemeObj.theme.map(
-    (obj) => `${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`
-  );
-  const themeFileContent = `:root{\n    ${formatedThemeObj.join(";\n")}\n  ;}`;
-  const themeFilePath = path.join(Paths.themesDirPath, `${newThemeName}.css`);
-  await writeFile(themeFilePath, themeFileContent);
-  copyThemeFileToMainTheme(newThemeName, themeFilePath);
-  return themeFilePath;
+  try {
+    const fileName = newThemeName.toLowerCase();
+    const themeFilePath = path.join(Paths.themesDirPath, `${fileName}.css`);
+    if(fs.existsSync(themeFilePath))
+      throw new Error(`Theme '${newThemeName}' Already Exists`);
+
+    const formatedThemeObj = newThemeObj.theme.map(
+      (obj) => `${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`
+    );
+    const themeFileContent = `:root{\n    ${formatedThemeObj.join(";\n")}\n  ;}`;
+    await writeFile(themeFilePath, themeFileContent);
+    copyThemeFileToMainTheme(fileName, themeFilePath);
+    return { success:true, theme_file_path: themeFilePath };
+  } catch(error) {
+    return { success:false, message: error.message };
+  }
 });
 
 ipcMain.handle("remove-prepared-theme", async (event, themefilePath) => {

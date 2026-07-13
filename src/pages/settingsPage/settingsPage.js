@@ -117,20 +117,31 @@ newThemeNameInput.addEventListener("input", () => {
 
 const saveNewThemeBtn = document.querySelector(".save-new-theme-btn");
 saveNewThemeBtn.addEventListener("click", async () => {
-  const newThemeName = newThemeNameInput?.value;
-  if(newThemeName == null || newThemeName.trim() == "") {
+
+  const shakeNewThemeInput = () => {
     newThemeNameInput.focus();
     newThemeNameInput.classList.add("error-shake");
     setTimeout(() => {
       newThemeNameInput.classList.remove("error-shake");
     },300);
+  }
+
+  const newThemeName = newThemeNameInput?.value;
+  if(newThemeName == null || newThemeName.trim() == "") {
+    shakeNewThemeInput();
     return;
   }
   const newThemeObj = getNewTheme();
-  const newThemePath = await window.electronAPI.createPreparedTheme(newThemeName, newThemeObj);
+  const res = await window.electronAPI.createPreparedTheme(newThemeName, newThemeObj);
 
+  if(!res.success) {
+    shakeNewThemeInput();
+    displayMessage(res.message);
+    return;
+  }
+  
   const container = document.querySelector(".prepared-themes-div");
-  const newCard = await createThemeCard(newThemeName, newThemePath);
+  const newCard = await createThemeCard(newThemeName, res.theme_file_path);
   container.appendChild(newCard);
   selectThemeCard(newCard);
 

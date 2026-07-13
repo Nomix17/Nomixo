@@ -613,7 +613,7 @@ input::selection {
   background-color:rgba(var(--primary-color));
   top:20px;
   right:-120%;
-  z-index:100;
+  z-index:2000;
   border:2px solid white;
   border-radius:12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
