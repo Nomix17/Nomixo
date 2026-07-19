@@ -581,7 +581,10 @@ function renderCastInfomation(data) {
 
   const loadedCast = [];
   for(const castObject of MainCastObjects) {
-    if(!loadedCast.includes(castObject.id)) {
+    if(
+      !loadedCast.includes(castObject.id) &&
+      castObject.name.trim() !== ""
+    ) {
       const newCastElement = document.createElement("button");
       newCastElement.onclick = ()=>{openProfilePage(castObject.id)};
       newCastElement.id = castObject.id;
