@@ -12,6 +12,7 @@ const MediaSuggestions = document.getElementById("div-MediaSuggestions");
 const SelectMediaType = document.getElementById("select-type");
 const SelectGenre = document.getElementById("select-Genres");
 const SelectSortBase = document.getElementById("select-sort");
+let allowToFetchData = true;
 
 setTimeout(() => {
   try {
@@ -22,6 +23,7 @@ setTimeout(() => {
 }, 100);
 
 async function fetchData(apiKey, genreId, ThisMediaType, page) {
+  allowToFetchData = false;
   const resolvedSortBy = 
     MediaType === "tv"
       ? SortBase.replace("primary_release_date", "first_air_date")
@@ -52,6 +54,7 @@ async function fetchData(apiKey, genreId, ThisMediaType, page) {
     globalLoadingGif.remove();
     RightmiddleDiv.classList.add("activate");
   }
+  allowToFetchData = true;
 }
 
 async function loadGenres(apiKey) {
@@ -123,6 +126,7 @@ function detectWhenScrollsArriveAtTheEndOfAPage(apiKey){
     const middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
     if (RightmiddleDiv.scrollTop + middleRightDivHeight + 30 >= RightmiddleDiv.scrollHeight) {
       loadingGif.style.display = "flex";
+      if(!allowToFetchData) return;
       numberOfLoadedPages += 2;
       fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages + 1);
       fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages);
