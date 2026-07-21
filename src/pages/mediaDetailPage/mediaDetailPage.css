@@ -701,28 +701,6 @@ h1{
   transform: translateY(0);
 }
 
-.close-btn {
-  position: absolute;
-  top: 14.4px;
-  right: 14.4px;
-  width: 28.8px;
-  height: 28.8px;
-  border: none;
-  background: transparent;
-  font-size: 21.6px;
-  color:rgb(var(--text-color));
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s ease;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
 .media-info {
   display: flex;
   align-items: flex-start;
