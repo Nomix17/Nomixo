@@ -623,7 +623,7 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
         String(episodeInfo.seasonNumber) === String(MediaLibraryInfo["seasonNumber"]) &&
         String(episodeInfo.episodeNumber) === String(MediaLibraryInfo["episodeNumber"]);
 
-      if (isCurrentlyWatching) createContinueWatchingBtn(torrentElement, MediaLibraryInfo);
+      // if (isCurrentlyWatching) createContinueWatchingBtn(torrentElement, MediaLibraryInfo);
 
       torrentResultsList.append(torrentElement);
     }
@@ -677,13 +677,52 @@ function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
   descriptionDiv.appendChild(titleP);
   descriptionDiv.appendChild(infoDiv);
 
+  const downloadBtn = createTorrentDownloadButton(torrentAdvancedInfo);
+
   TorrentElement.appendChild(qualityDiv);
   TorrentElement.appendChild(descriptionDiv);
+  TorrentElement.appendChild(downloadBtn);
 
   addTorrentElementEventListener(TorrentElement,torrentAdvancedInfo);
   addFloatingDivToDisplayFullTitle(TorrentElement, ".div-MediaDescription p");
 
   return TorrentElement;
+}
+
+function createTorrentDownloadButton(torrentAdvancedInfo) {
+  const downloadBtn = document.createElement("button");
+  downloadBtn.classList.add("btn-downloadTorrent");
+  downloadBtn.setAttribute("type", "button");
+  downloadBtn.setAttribute("aria-label", "Download torrent");
+  downloadBtn.title = "Download";
+
+  downloadBtn.innerHTML = downloadIcon;
+
+  downloadBtn.addEventListener("click",(event) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const DownloadTargetInfo = buildDownloadTargetInfo(torrentAdvancedInfo);
+    setupDownloadDivEvents(DownloadTargetInfo);
+    showDownloadInfoInputDiv(DownloadTargetInfo);
+  });
+
+  return downloadBtn;
+}
+
+function buildDownloadTargetInfo(torrentsInfo) {
+  const [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
+       backgroundImage, episodeInfo, Size, Quality, Title] = torrentsInfo;
+
+  const mediaTitle = document.getElementById("h1-MovieTitle").innerText;
+  const mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
+
+  return {
+    IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
+    Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
+    fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
+    seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
+  };
 }
 
 function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
@@ -692,22 +731,6 @@ function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
 
   TorrentElement.addEventListener("click",()=>{
     openMediaVideo(undefined,MediaId,MediaType,undefined,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
-  });
- 
-  // right click handeling
-  TorrentElement.addEventListener("mousedown",(event)=>{
-    if (event.button === 2) {
-      const mediaTitle = document.getElementById("h1-MovieTitle").innerText;
-      const mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
-      const DownloadTargetInfo = {
-        IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
-        Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
-        fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
-        seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
-      };
-      setupDownloadDivEvents(DownloadTargetInfo);
-      handleRightClicksForTorrentElement(DownloadTargetInfo);
-    }
   });
 }
 
@@ -875,24 +898,6 @@ function addSpaceToTopOfTorrentContainer() {
     dummyDiv.style.height = "15px";
     torrentSidePanel.style.paddingBottom = "15px";
   }
-}
-
-function handleRightClicksForTorrentElement(DownloadTargetInfo) {
-  const DownloadOption = contextMenu.querySelector("#DownloadOption");
-
-  DownloadOption.addEventListener("mousedown",() => {
-    showDownloadInfoInputDiv(DownloadTargetInfo),
-    {once:true}
-  });
-
-  contextMenu.style.top = event.pageY + "px";
-  contextMenu.style.left = event.pageX + "px";
-  contextMenu.classList.add("context-menu--visible");
-  dontGoBack = true;
-
-  event.stopImmediatePropagation();
-  event.preventDefault();
-  event.stopPropagation();
 }
 
 async function showDownloadInfoInputDiv(DownloadTargetInfo) {
