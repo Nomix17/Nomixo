@@ -15,7 +15,7 @@
   width: max-content;
   min-width: 100%;
   position: relative;
-  padding: 10px 36.8px 6.44px 9.2px;
+  padding: 7px 36.8px 7px 9.2px;
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   background-color: rgba(255, 255, 255, 10%);
@@ -26,7 +26,7 @@
   text-align: left;
   white-space: nowrap;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  font-size: 13.8px;
+  font-size: 13.0px;
   box-sizing: border-box;
 }
 .select-trigger::after {
