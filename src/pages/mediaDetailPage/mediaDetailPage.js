@@ -611,7 +611,7 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
 
   data.streams.forEach(torrentInfo => {
     const { quality, title, size, seedersNumber, fileName, magnetLink } = parseTorrentInfo(torrentInfo);
-    if (parseInt(seedersNumber) && fileName.trim() !== "") {
+    if (fileName.trim() !== "") {
       const infoToDisplay = [quality, title, size, seedersNumber];
       const advancedInfo = [MediaId, MediaType, fileName, magnetLink, imdb_id,
                             backgroundImage, episodeInfo, size, quality, title];
