@@ -433,6 +433,7 @@ p{
 #mediaTitle{
   padding:0;
   margin:4.5px 0 0 0;
+  max-width: 85%;
 }
 #season-episode{
   margin:0 0 9px 0;
