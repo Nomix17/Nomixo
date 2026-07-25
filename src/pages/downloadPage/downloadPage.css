@@ -1,7 +1,3 @@
-:root {
-  --checkmark-icon: url("../assets/icons/movie.svg");
-}
-
 #div-middle-right {
   display: flex;
   flex-direction: column;
@@ -24,17 +20,41 @@
   box-sizing: border-box;
 }
 
+#download-done-div {
+  margin-bottom: 27px;
+}
+
+#div-text {
+  position: fixed;
+  top: 50vh;
+  left: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translate(-50%, -50%);
+}
+
+#span-text {
+  margin-bottom: 10px;
+  font-size: 22.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(0, 0, 0, 0);
+}
+
 .downloads-categorie {
   background-color: rgba(255, 255, 255, 0.1);
   padding: 27px;
   border-radius: 20px;
 }
-.downloads-categorie .categorie-top-bar{
+
+.downloads-categorie .categorie-top-bar {
   display: flex;
   align-items: center;
-  justify-content:space-between;
-  width:100%;
+  justify-content: space-between;
+  width: 100%;
 }
+
 .downloads-categorie .title-container {
   display: flex;
   align-items: center;
@@ -48,31 +68,29 @@
 }
 
 .downloads-categorie .categorie-controll {
-  background-color:rgba(255,255,255,0.01);
+  background-color: rgba(255, 255, 255, 0.01);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.08);
-  padding:9px;
-  font-size:1.2em;
-  margin-right:22.5px;
-  cursor:pointer;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px;
+  font-size: 1.2em;
+  margin-right: 22.5px;
+  cursor: pointer;
   transition: transform 0.3s ease, background-color 0.3s ease;
 }
+
 .downloads-categorie .categorie-controll:hover {
-  background-color:rgba(255,255,255,0.08);
+  background-color: rgba(255, 255, 255, 0.08);
 }
+
 .downloads-categorie .categorie-controll:active {
-  background-color:rgba(255,255,255,0.01);
+  background-color: rgba(255, 255, 255, 0.01);
 }
 
 .downloads-categorie .categorie-controll.disabled {
-  pointer-events:none;
-  color:rgba(255,255,255,.4);
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.4);
   box-shadow: none;
-}
-
-#download-done-div {
-  margin-bottom: 27px;
 }
 
 .downloads-counter {
@@ -104,7 +122,7 @@
 }
 
 .empty-container-text.hidden {
-  display:none;
+  display: none;
 }
 
 .download-media {
@@ -224,22 +242,21 @@
   display: flex;
   flex-direction: row;
   height: 100%;
-  gap:10px;
+  gap: 10px;
 }
 
 .download-movie-right-div.up-side-down {
   flex-direction: column;
-  padding-right:9px;
+  padding-right: 9px;
 }
 
 .download-movie-right-div .btn-arrow {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.08);
   padding: 9px;
   border-radius: 10px;
-  border:none;
+  border: none;
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease;
-  background-color: rgba(255,255,255,0.08);
 }
 
 .download-movie-right-div .btn-arrow.disabled {
@@ -248,7 +265,7 @@
 }
 
 .download-movie-right-div .btn-arrow:hover {
-  background-color: rgba(255,255,255,0.2);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .download-movie-right-div .btn-arrow:active {
@@ -266,109 +283,6 @@
   display: flex;
   align-items: center;
   gap: 10.8px;
-}
-
-.play-button,
-.delete-button,
-.toggle-pause-button,
-.cancel-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  color: rgb(var(--text-color));
-  font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.toggle-pause-button {
-  background-color: rgba(var(--primary-color), 0.6);
-}
-
-.cancel-button {
-  background-color: rgb(160, 11, 6);
-}
-
-.play-button,
-.delete-button {
-  width: 81px;
-  height: 45px;
-  padding: 9px;
-  margin-right: 18px;
-  border-radius: 15px;
-  pointer-events: auto;
-}
-
-.play-button {
-  background-color: rgba(var(--primary-color), 0.5);
-}
-
-.delete-button {
-  background-color: rgb(160, 11, 6);
-}
-
-.play-button:hover,
-.delete-button:hover,
-.toggle-pause-button:hover,
-.cancel-button:hover {
-  transform: scale(1.1);
-}
-
-.play-button:active,
-.delete-button:active,
-.toggle-pause-button:active,
-.cancel-button:active {
-  transform: scale(0.95);
-}
-
-.play-button.just-finished {
-  animation: completePulse 0.6s ease-in-out;
-}
-
-@keyframes completePulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.08);
-  }
-}
-
-.play-button svg,
-.delete-button svg,
-.toggle-pause-button .videoIcon,
-.toggle-pause-button .playIcon {
-  fill: white;
-  transform: scale(0.5);
-}
-
-.toggle-pause-button .pauseIcon {
-  fill: white;
-  transform: scale(0.4);
-}
-
-.cancel-button svg {
-  fill: white;
-  transform: scale(0.8);
-}
-
-.trashIcon {
-  transition: transform 0.5s ease;
-}
-
-.delete-button .trashIcon {
-  height: 100%;
-}
-
-.cancel-button .trashIcon {
-  fill: white;
-  transform: scale(0.55, 0.65);
 }
 
 .drag-button {
@@ -391,6 +305,136 @@
   width: 100%;
   height: 100%;
   fill: white;
+}
+
+.play-button,
+.delete-button,
+.toggle-pause-button,
+.cancel-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  color: rgb(var(--text-color));
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  transform-origin: center;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.play-button,
+.delete-button {
+  width: 91px;
+  height: 45px;
+  padding: 9px;
+  margin-right: 18px;
+  border-radius: 15px;
+  pointer-events: auto;
+  gap:5px;
+}
+
+.play-button {
+  background-color: rgba(var(--primary-color), 0.5);
+}
+
+.play-button.just-finished {
+  animation: completePulse 0.6s ease-in-out;
+}
+
+.delete-button,
+.cancel-button {
+  background-color: rgb(160, 11, 6);
+}
+
+.toggle-pause-button {
+  background-color: rgba(var(--primary-color), 0.6);
+}
+
+.play-button:hover,
+.delete-button:hover,
+.toggle-pause-button:hover,
+.cancel-button:hover {
+  transform: scale(1.1);
+}
+
+.play-button:active,
+.delete-button:active,
+.toggle-pause-button:active,
+.cancel-button:active {
+  transform: scale(0.95);
+}
+
+.play-button svg {
+  fill: white;
+  width: 24%;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.delete-button svg {
+  fill: white;
+  width: 20%;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.toggle-pause-button .playIcon {
+  fill: white;
+  width: 50%;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.toggle-pause-button .videoIcon {
+  fill: white;
+  width: 75%;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.toggle-pause-button .pauseIcon {
+  fill: white;
+  width: 40%;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.cancel-button svg {
+  fill: white;
+  width: 80%;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.trashIcon {
+  transition: transform 0.5s ease;
+}
+
+.delete-button .trashIcon {
+  height: 100%;
+}
+
+.cancel-button .closeButtonIcon {
+  fill: white;
+  width: 75%;
+  height: 55%;
+  flex-shrink: 0;
+}
+
+@keyframes completePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
 }
 
 .context-menu-button {
@@ -473,24 +517,6 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-#div-text {
-  position: fixed;
-  top: 50vh;
-  left: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: translate(-50%, -50%);
-}
-
-#span-text {
-  margin-bottom: 10px;
-  font-size: 22.5px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
-  background-color: rgba(0, 0, 0, 0);
-}
-
 .requesting-continue-download {
   position: relative;
   overflow: hidden;
@@ -522,12 +548,6 @@
   z-index: 2;
 }
 
-@keyframes spin-border {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 .loading-gif {
   width: 13.5px;
   height: 13.5px;
@@ -536,6 +556,12 @@
   border-top-color: rgba(255, 255, 255, 0.5);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+@keyframes spin-border {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes spin {
@@ -561,10 +587,10 @@
   opacity: 0;
   filter: blur(8px) brightness(50%);
   transition: opacity 0.4s ease-in-out;
-  mask-image: 
+  mask-image:
     linear-gradient(to right, transparent 0px, black 5px, black calc(100% - 5px), transparent 100%),
     linear-gradient(to bottom, transparent 0px, black 5px, black calc(100% - 5px), transparent 100%);
-  -webkit-mask-image: 
+  -webkit-mask-image:
     linear-gradient(to right, transparent 0px, black 5px, black calc(100% - 5px), transparent 100%),
     linear-gradient(to bottom, transparent 0px, black 5px, black calc(100% - 5px), transparent 100%);
   mask-composite: intersect;
