@@ -14,14 +14,6 @@ const SelectGenre = document.getElementById("select-Genres");
 const SelectSortBase = document.getElementById("select-sort");
 let allowToFetchData = true;
 
-setTimeout(() => {
-  try {
-    globalLoadingGif.style.opacity = "1" 
-  } catch (err) {
-    console.log(err) 
-  } 
-}, 100);
-
 async function fetchData(apiKey, genreId, ThisMediaType, page) {
   allowToFetchData = false;
   const resolvedSortBy = 
@@ -220,6 +212,7 @@ function focusFunction(element) {
   element.focus();
 }
 
+triggerLoadingGif();
 initPage();
 setupKeyPressesForInputElement(searchInput);
 handleNavigationButtonsHandler(focusFunction);

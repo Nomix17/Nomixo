@@ -6,8 +6,6 @@ let OtherRecommandationDiv = document.getElementById("div-middle-right-OtherReco
 let globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 let searchInput = document.getElementById("input-searchForMovie");
 
-setTimeout(()=>{try{globalLoadingGif.style.opacity = "1"}catch(err){console.log(err)}},100);
-
 const params = new URLSearchParams(window.location.search);
 let searchKeyword = params.get("search");
 
@@ -61,17 +59,15 @@ function loadSearchInformation(apiKey){
   });
 }
 
-
 function insertResultsElement(data){
   let searchResults = data.results;
   let ContainerDivs = [MoviesRecommandationDiv,SeriesRecommandationDiv,FiguresRecommandationDiv,OtherRecommandationDiv];
   insertMediaElements(searchResults,ContainerDivs,null,LibraryInformation)
 }
 
+triggerLoadingGif();
 loadData();
-
 resizeMoviesPostersContainers([MoviesRecommandationDiv,SeriesRecommandationDiv,FiguresRecommandationDiv,OtherRecommandationDiv]);
-
 setupKeyPressesHandler();
 setupNavigationBtnHandler();
 setupKeyPressesForInputElement(searchInput);

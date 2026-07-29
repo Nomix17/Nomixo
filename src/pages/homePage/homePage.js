@@ -5,15 +5,7 @@ const popularSeriesDiv = document.getElementById("div-middle-right-popularSeries
 const searchInput = document.getElementById("input-searchForMovie");
 const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
-setTimeout(()=>{
-  try {
-    globalLoadingGif.style.opacity = "1"
-  } catch(err) {
-    console.log(err)
-  }
-},100);
-
-async function loadMovies(){
+async function loadMovies() {
   const apiKey = await window.electronAPI.getTMDBAPIKEY().then();
   const LibraryInformation = await loadLibraryInfo();
 
@@ -76,8 +68,8 @@ function focusFunction(element) {
   element.focus();
 }
 
+triggerLoadingGif();
 loadMovies();
-
 setupKeyPressesHandler();
 handleNavigationButtonsHandler(focusFunction);
 setLeftButtonStyle("btn-home");

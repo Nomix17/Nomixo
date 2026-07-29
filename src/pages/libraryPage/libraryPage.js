@@ -10,14 +10,6 @@ const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 const data = new URLSearchParams(window.location.search);
 const typeOfSave = data.get("typeOfSave");
 
-setTimeout(()=>{
-  try {
-    globalLoadingGif.style.opacity = "1"
-  } catch(err) {
-    console.log(err)
-  }
-},100);
-
 async function loadDataFromLibrary(apiKey){
   const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
   
@@ -214,6 +206,7 @@ function focusFunction(element) {
   element.focus();
 }
 
+triggerLoadingGif();
 initPage();
 setupKeyPressesForInputElement(searchInput);
 setupKeyPressesHandler();

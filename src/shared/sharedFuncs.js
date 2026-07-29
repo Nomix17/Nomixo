@@ -366,7 +366,7 @@ async function loadCachedRightMiddleDivScrollValue(){
   }
 }
 
-function loadCachedRightDivScrollValue(cachedData){
+function loadCachedRightDivScrollValue(cachedData) {
   const RightmiddleDiv = document.getElementById("div-middle-right");
   const RightmiddleDivScrollTopValue = cachedData?.right_middle_div_top_scroll_value;
   if(RightmiddleDivScrollTopValue)
@@ -1721,3 +1721,11 @@ function formatRelativeTime(timestamp) {
 
   return new Date(timestamp).toLocaleDateString();
 }
+
+function triggerLoadingGif() {
+  setTimeout(() => {
+    try { globalLoadingGif.style.opacity = "1" }
+    catch (err) { console.log(err) } 
+  }, 100);
+}
+
