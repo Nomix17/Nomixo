@@ -1726,6 +1726,6 @@ function triggerLoadingGif() {
   setTimeout(() => {
     try { globalLoadingGif.style.opacity = "1" }
     catch (err) { console.log(err) } 
-  }, 100);
+  }, 30);
 }
 

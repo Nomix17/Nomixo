@@ -305,7 +305,7 @@ async function loadCurrentTheme(){
   });
 }
 
-async function loadSettings(){
+async function loadSettings() {
   SettingsObj = await window.electronAPI.loadSettings();
 
   // load zoom factor value
@@ -337,7 +337,7 @@ async function loadSettings(){
   inputMpvExecPath.value = MpvExecPath;
   applySelectedColor(ColorInputsWithAlphaValue)
 
-  RightmiddleDiv.classList.add("activate");
+  renderPreparedThemeCards();
 }
 
 async function loadExternalSubConfigs(){
@@ -688,36 +688,6 @@ document.querySelectorAll(".verify-btn").forEach(btn => {
   });
 });
 
-document.querySelectorAll(".link-btn").forEach(btn => {
-  btn.addEventListener("click",() => {
-    const URL = 
-      btn.id === "tmdb-get-key"
-        ? "https://developer.themoviedb.org/docs/getting-started"
-        : "https://sub.wyzie.io/redeem"
-
-    window.electronAPI.openExternalLink(URL);
-  });
-});
-
-// calling functions
-loadCurrentTheme();
-loadExternalSubConfigs();
-loadApiKeys();
-setupKeyPressesHandler();
-setLeftButtonStyle("btn-settings");
-loadIconsDynamically();
-handlingMiddleRightDivResizing();
-dropDownInit();
-initBackupSection();
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    await loadSettings();
-    renderPreparedThemeCards();
-  } catch (error) {
-    console.error("Failed to initialize app settings:", error);
-  }
-});
-
 async function initBackupSection() {
   const closeImportConfirmBtn = document.querySelector("#import-confirm-overlay .floating-x-remove-btn");
   closeImportConfirmBtn.innerHTML = xRemoveIcon;
@@ -761,3 +731,27 @@ const closeImportConfirmBtn = document.querySelector("#import-confirm-overlay .f
     overlay.classList.remove("active");
   });
 });
+
+document.querySelectorAll(".link-btn").forEach(btn => {
+  btn.addEventListener("click",() => {
+    const URL = 
+      btn.id === "tmdb-get-key"
+        ? "https://developer.themoviedb.org/docs/getting-started"
+        : "https://sub.wyzie.io/redeem"
+
+    window.electronAPI.openExternalLink(URL);
+  });
+});
+
+// calling functions
+RightmiddleDiv.classList.add("activate");
+loadCurrentTheme();
+loadExternalSubConfigs();
+loadApiKeys();
+setupKeyPressesHandler();
+setLeftButtonStyle("btn-settings");
+loadIconsDynamically();
+handlingMiddleRightDivResizing();
+dropDownInit();
+initBackupSection();
+loadSettings();

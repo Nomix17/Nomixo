@@ -173,21 +173,18 @@ async function loadCachedMediaData(cachedData){
 }
 
 async function loadMedia() {
-  const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   const apiKey = await window.electronAPI.getTMDBAPIKEY();
   await loadDataFromLibrary(apiKey);
-  if(cachedMediaInfo){
-    console.log("Loading Cached Information");
-    loadCachedRightDivScrollValue(cachedMediaInfo);
-    loadCachedDropDownValue(cachedMediaInfo);
-  }
   const currentSortValue = SortingCriteria[getDropdownValue(SelectSortType)];
   sortMediaELements(currentSortValue)
 }
 
-async function initPage(){
-  changeDescriptionTitleValue();
+async function initPage() {
+  const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  if(!cachedMediaInfo?.right_middle_div_top_scroll_value)
+    RightmiddleDiv.classList.add("activate");
 
+  changeDescriptionTitleValue();
   dropDownInit();
   setDropdownValue(SelectMediaType, "all");
   setDropdownValue(SelectSaveType, typeOfSave || "All");
@@ -197,6 +194,13 @@ async function initPage(){
   await loadMedia();
 
   filterMedia(getDropdownValue(SelectMediaType), getDropdownValue(SelectSaveType));
+
+
+  if(cachedMediaInfo) {
+    console.log("Loading Cached Information");
+    loadCachedRightDivScrollValue(cachedMediaInfo);
+    loadCachedDropDownValue(cachedMediaInfo);
+  }
 
   globalLoadingGif.remove()
   RightmiddleDiv.classList.add("activate");

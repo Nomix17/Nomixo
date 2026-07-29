@@ -1,3 +1,4 @@
+const RightmiddleDiv = document.getElementById("div-middle-right");
 const currentlyDownloadingDiv = document.getElementById("currently-downloading-div");
 const queuedDownloadsDiv  = document.getElementById("download-queue-div");
 const pausedDownloadsDiv = document.getElementById("download-paused-div");
@@ -7,33 +8,34 @@ const libraryDumpPromise = window.electronAPI.loadDownloadLibraryInfo()
 let monitoringProgress = false;
 async function loadDownloadMediaFromLib() {
   const library = await libraryDumpPromise;
+  const scrollValue = await getCachedScrollValue();
+  if(scrollValue == 0)
+    RightmiddleDiv.classList.add("activate");
 
-  if(library != null){
+  if(library != null) {
     const sortedLib = library.downloads
       .sort((item1, item2) =>
         (item1?.["StatusUpdateTime"] ?? 0) - (item2?.["StatusUpdateTime"] ?? 0)
       );
 
-    for(let mediaLibEntryPoint of sortedLib){
+    for(let mediaLibEntryPoint of sortedLib) {
       createDownloadElement(mediaLibEntryPoint);
     }
     const queueList = await window.electronAPI.getDownloadQueueList();
     reorderDownloadQueue(queueList, false);
   }
 
-  if(library?.downloads?.length !== 0){
+  if(library?.downloads?.length !== 0) {
     if(!monitoringProgress){
       monitorDownloads();
       monitorErrors();
     }
   }
 
-  let RightmiddleDiv = document.getElementById("div-middle-right");
+  scrollTo(scrollValue);
   RightmiddleDiv.classList.add("activate");
 
-
   updateDownloadUI();
-  await loadCachedPageInfo();
 }
 
 async function createDownloadElement(mediaLibEntryPoint) {
@@ -110,9 +112,6 @@ async function createDownloadElement(mediaLibEntryPoint) {
 
   handleCancelButton(mediaLibEntryPoint,CancelButton);
   alignSizeDiv();
-
-  let RightmiddleDiv = document.getElementById("div-middle-right");
-  RightmiddleDiv.classList.add("activate");
 }
 
 async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement) {
@@ -806,14 +805,14 @@ function monitorErrors() {
   });
 }
 
-async function loadCachedPageInfo() {
+async function getCachedScrollValue() {
   let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
-  if(cachedData){
-    console.log("Loading Cached Information");
-    let downloadMediaContainerScrollTopValue = cachedData.download_container_top_scroll_value;
-    let downloadMediaContainer = document.querySelector(".download-categorie-container");
-    downloadMediaContainer.scrollTop = downloadMediaContainerScrollTopValue;
-  }
+  return cachedData ? cachedData.download_container_top_scroll_value : 0;
+}
+
+async function scrollTo(scrollValue) {
+  const downloadMediaContainer = document.querySelector(".download-categorie-container");
+  downloadMediaContainer.scrollTop = scrollValue;
 }
 
 function updateDownloadUI() {
