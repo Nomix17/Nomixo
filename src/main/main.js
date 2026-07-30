@@ -339,6 +339,26 @@ ipcMain.handle("download-image", async (event, downloadPath, imageUrl) => {
     : { download_result: "failed" };
 });
 
+ipcMain.handle("download-backdrop", async (event, backgroundImageUrl) => {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    defaultPath: path.join(app.getPath("home"), path.basename(backgroundImageUrl)),
+    filters: [ { name: "Images", extensions: ["png", "jpg", "jpeg", "webp"] }, ],
+  });
+  if (canceled || !filePath)
+    return null;
+  try {
+    const response = await fetch(backgroundImageUrl);
+    if (!response.ok)
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    const arrayBuffer = await response.arrayBuffer();
+    await writeFile(filePath, Buffer.from(arrayBuffer));
+    return filePath;
+  } catch (err) {
+    console.error("Failed to download backdrop:", err);
+    throw err;
+  }
+});
+
 // ======================= LIBRARY MANAGEMENT =======================
 
 ipcMain.on("add-to-lib", (event, mediaInfo) => {

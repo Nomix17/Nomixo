@@ -65,6 +65,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDownloadErrorsReports: (fn)=> ipcRenderer.on("report-download-errors",(event,data)=>fn(data)),
 
   downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl),
+  downloadBackdrop: (backgroundImageUrl) => ipcRenderer.invoke("download-backdrop", backgroundImageUrl),
 
   loadPageCachedDataFromHistory: (currentPageURL) => ipcRenderer.invoke("load-cached-data-from-history",currentPageURL),
 

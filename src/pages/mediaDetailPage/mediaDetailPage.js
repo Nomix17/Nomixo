@@ -463,18 +463,37 @@ async function addTrailerEventListener() {
 }
 
 function addInspectBackdropImage(titleElement) {
+  const toggleDownloadBackdropBtn = (create) => {
+    if(create) {
+      const btn = document.createElement("div");
+      btn.classList.add("download-backdrop-btn");
+      btn.innerHTML = downloadIcon + "<p>Save Backdrop</p>";
+      document.querySelector("body").appendChild(btn);
+      btn.classList.add("show");
+      btn.addEventListener("click", downloadBackdrop);
+    } else {
+      const btn = document.querySelector(".download-backdrop-btn");
+      btn.classList.add("hide");
+      setTimeout(() => {
+        btn.remove();
+      }, 100);
+    }
+  };
+
   const toggleBackdropInspection = (inspect) => {
     const mainDiv = document.getElementById("div-main");
     mainDiv.classList.toggle("backdrop-inspecting", inspect);
     mainDiv.inert = inspect;
   }
   titleElement.addEventListener("click", () => {
+    toggleDownloadBackdropBtn(true);
     toggleBackdropInspection(true);
     setTimeout(() => {
       const restore = () => {
         event.preventDefault();
         event.stopPropagation();
         toggleBackdropInspection(false);
+        toggleDownloadBackdropBtn(false);
         document.removeEventListener("keydown", restore);
         document.removeEventListener("click", restore);
       };
@@ -482,6 +501,16 @@ function addInspectBackdropImage(titleElement) {
       document.addEventListener("click", restore, { once: true });
     }, 100);
   });
+}
+
+async function downloadBackdrop(event) {
+  try {
+    const filePath = await window.electronAPI.downloadBackdrop(backgroundImage);
+    if (filePath)
+      displayMessage(`<div class="display-message"><p class="main-p">Backdrop Saved!</p><p class="secondary-p">${filePath}</p></div>`);
+  } catch (err) {
+      displayMessage(`<div class="display-message"><p class="main-p">Failed to save backdrop</p></div>`);
+  }
 }
 
 function insertGenresOfMedia(Genres){
