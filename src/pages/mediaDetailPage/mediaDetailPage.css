@@ -1047,32 +1047,6 @@ label {
   background-color: rgba(255, 255, 255, 30%);
 }
 
-.split-save-btn__main {
-  display: flex;
-  align-items: center;
-  gap: 7.2px;
-  font-size: 13.5px;
-  padding: 9px 16.2px;
-  background: transparent;
-  border: none;
-  border-radius: 40px 0 0 40px;
-  color: inherit;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.split-save-btn__main:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.split-save-btn__main .toggleButtonIcon {
-  width: 17.1px;
-  height: 17.1px;
-  fill: white;
-  margin: 0;
-  padding: 0;
-}
-
 .split-save-btn__divider {
   width: 1px;
   background: rgba(255, 255, 255, 0.25);
@@ -1193,6 +1167,8 @@ html.torrent-panel-open .toggleButton {
   padding: 3px;
   transition: background-color 0.3s ease, border 0.3s ease;
 }
+
+.split-save-btn__main,
 .button-wrapper {
   display: flex;
   align-items: center;
@@ -1204,6 +1180,22 @@ html.torrent-panel-open .toggleButton {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
+.split-save-btn__main {
+  border-radius: 40px 0 0 40px;
+  padding: 6px 13px;
+  gap:7px;
+}
+.split-save-btn__main:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.split-save-btn__main .toggleButtonIcon {
+  width: 17.1px;
+  height: 17.1px;
+  fill: white;
+  margin: 0;
+  padding: 0;
+}
+
 .button-wrapper svg {
   stroke: white;
   stroke-width:1;
