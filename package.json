@@ -33,17 +33,12 @@
     "files": [
       "src/**/*",
       "assets/**/*",
-      "!assets/mpvConfigs/**/*",
       "package.json"
     ],
+    "asarUnpack": [
+      "assets/**/*"
+    ],
     "extraResources": [
-      {
-        "from": "assets/mpvConfigs",
-        "to": "mpvConfigs",
-        "filter": [
-          "**/*"
-        ]
-      },
       {
         "from": "mpvBinary",
         "to": "mpvBinary",

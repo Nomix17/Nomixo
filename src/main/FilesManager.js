@@ -13,6 +13,10 @@ export class Paths {
   static __downloads = app.getPath("downloads");
   static __temp = app.getPath("temp");
 
+  static __assets = app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'assets')
+    : path.join(Paths.__dirname, '../../assets')
+
   static __envfile = path.join(Paths.__configs, ".env");
   static SettingsFilePath = path.join(Paths.__configs, "settings.json");
   static themesDirPath = path.join(Paths.__configs, "themes");
@@ -33,9 +37,14 @@ export class Paths {
 
 export class FilesManager {
   static initializeDataFiles() {
-    FilesManager.createMissingDirs();
-    FilesManager.copyDefaultDirs();
-    FilesManager.copyDefaultFiles();
+    try {
+      FilesManager.createMissingDirs();
+      FilesManager.copyDefaultDirs();
+      FilesManager.copyDefaultFiles();
+      log.info("Config files were successfully initialized");
+    } catch (err) {
+      log.error("Failed to initialize config files\n", err.message);
+    }
   }
 
   static createMissingDirs() {
@@ -54,38 +63,41 @@ export class FilesManager {
 
   static copyDefaultDirs() {
     if (!fs.existsSync(Paths.mpvConfigDirectory)) {
-      const currentMpvConfPath = app.isPackaged
-        ? path.join(process.resourcesPath, 'mpvConfigs')
-        : path.join(Paths.__dirname, '../../assets/mpvConfigs');
-      fs.cpSync(currentMpvConfPath, Paths.mpvConfigDirectory, { recursive: true });
+      fs.cpSync(
+        path.join(Paths.__assets, 'mpvConfigs'),
+        Paths.mpvConfigDirectory, { recursive: true }
+      );
     }
 
-    if (!fs.existsSync(Paths.themesDirPath))
+    if (!fs.existsSync(Paths.themesDirPath)) {
       fs.cpSync(
-        path.join(Paths.__dirname, '../../assets/themes/'), 
-        Paths.themesDirPath, {recursive: true}
+        path.join(Paths.__assets, 'themes'),
+        Paths.themesDirPath, { recursive: true }
       );
+    }
   }
 
   static copyDefaultFiles() {
     if (!fs.existsSync(Paths.SettingsFilePath)) {
       fs.cpSync(
-        path.join(Paths.__dirname, '../../assets/settings.json'),
+        path.join(Paths.__assets, 'settings.json'),
         Paths.SettingsFilePath
       );
+
       const settings = JSON.parse(fs.readFileSync(Paths.SettingsFilePath, "utf-8"));
       settings.DefaultDownloadPath = Paths.__downloads;
       fs.writeFileSync(Paths.SettingsFilePath, JSON.stringify(settings, null, 2));
     }
 
-    if (!fs.existsSync(Paths.ThemeFilePath))
+    if (!fs.existsSync(Paths.ThemeFilePath)) {
       fs.cpSync(
-        path.join(Paths.__dirname, "../../assets/themes/default.css"),
+        path.join(Paths.__assets, "themes/default.css"),
         Paths.ThemeFilePath
       );
+    }
   }
 
-  static async writeAPIKEYIntoEnvFile(apiKeys){
+  static async writeAPIKEYIntoEnvFile(apiKeys) {
     try {
       if(!fs.existsSync(Paths.__configs)){
         fs.mkdirSync(Paths.__configs, { recursive: true });
