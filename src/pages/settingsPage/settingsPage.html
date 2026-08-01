@@ -74,49 +74,93 @@
     
         <!-- right div -->
         <div id="div-middle-right">
-          <div id="ThemeOptionContainer">
-            <h1>Theme</h1>
-            <div id="zoomFactorContainer">
-              <h4>Page Zoom Factor</h4>
-              <input id="input-ZoomFactor" type="range" name="foo"/>
-              <output for="foo" onforminput="value = foo.valueAsNumber;"></output>
+          <div class="inner">
+            <div class="settings-card" id="ThemeOptionContainer">
+              <div class="section-header">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 22c5.5 0 10-4 10-9a8 8 0 0 0-8-8 9 9 0 0 0-9 9c0 1.5.5 3 2 3h1a2 2 0 0 1 2 2v1c0 1.5 1 2 2 2z"/>
+                  <circle cx="7.5" cy="10.5" r="1"/>
+                  <circle cx="11" cy="7" r="1"/>
+                  <circle cx="15.5" cy="7.5" r="1"/>
+                  <circle cx="17.5" cy="11.5" r="1"/>
+                </svg>
+                <div class="section-header-text">
+                  <h1>Theme</h1>
+                  <p class="section-desc">Change how the app looks, or design your own color palette.</p>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Page Zoom Factor</p>
+                  <p class="setting-desc">Scales the size of everything on screen — text, buttons and posters.</p>
+                </div>
+                <div class="setting-control">
+                  <div id="zoomFactorContainer">
+                    <input id="input-ZoomFactor" type="range" name="foo"/>
+                    <output for="foo" onforminput="value = foo.valueAsNumber;"></output>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row setting-row-stacked">
+                <div class="setting-text">
+                  <p class="setting-label">Prepared Themes</p>
+                  <p class="setting-desc">Click a theme to apply it right away, or add your own below.</p>
+                </div>
+                <div class="prepared-themes-div">
+                  <button id="btn-addCustomTheme" type="button">+</button>
+                </div>
+              </div>
             </div>
 
-            <h4>Prepared Themes</h4>
-            <div class="prepared-themes-div"></div>
+            <div class="settings-card" id="div-PlayerSubtitlesInternal">
+              <div class="section-header">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/>
+                  <path d="M8 21h8M12 17v4"/>
+                </svg>
+                <div class="section-header-text">
+                  <h1>Internal Player</h1>
+                  <p class="section-desc">Settings for videos played inside the app's built-in player.</p>
+                </div>
+              </div>
 
-            <div id="div-addCustomThemeBtn">
-              <button id="btn-addCustomTheme" type="button">+ Add Custom Theme</button>
-            </div>
-          </div>
-          <div class="border"></div>
-
-          <h1>Internal Player</h1>
-          <div id="div-PlayerSubtitlesInternal">
-            <h2>Subtitles</h2>
-            <table>
-              <tr>
-                <td>Enable Subtitles By Default</td>
-                <td class="toCenter">
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Enable Subtitles by Default</p>
+                  <p class="setting-desc">Turn subtitles on automatically whenever you start a video.</p>
+                </div>
+                <div class="setting-control">
                   <label class="custom-toggle">
                     <input id="toggleDefaultSubtitlesInternal" type="checkbox" />
                     <span class="toggle-track">
                       <span class="toggle-thumb"></span>
                     </span>
                   </label>
-                </td>
-              </tr>
-              <tr>
-                <td>Font Size</td>
-                <td class="toCenter">
-                  <button class="btn-changeNum" id="btn-decreaseFontSizeInternal">-</button>
-                  <input id="p-fontSizeInternal"/>
-                  <button class="btn-changeNum" id="btn-increaseFontSizeInternal">+</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Font Family</td>
-                <td class="toCenter">
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Font Size</p>
+                  <p class="setting-desc">How large subtitle text appears on screen.</p>
+                </div>
+                <div class="setting-control">
+                  <div class="sub-font-increase-decrease">
+                    <button class="btn-changeNum" id="btn-decreaseFontSizeInternal">-</button>
+                    <input id="p-fontSizeInternal"/>
+                    <button class="btn-changeNum" id="btn-increaseFontSizeInternal">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Font Family</p>
+                  <p class="setting-desc">The typeface used for subtitle text.</p>
+                </div>
+                <div class="setting-control">
                   <div class="custom-select">
                     <button class="select-trigger" aria-expanded="false">monospace</button>
                     <div id="dropDownMenu-Font-Internal" class="select-dropdown">
@@ -129,70 +173,92 @@
                       <div class="select-option" value="Comic Sans MS" style="font-family: 'Comic Sans MS'">Comic Sans MS</div>
                     </div>
                   </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Text Color</td>
-                <td class="toCenter"><input id="input-TextColorInternal" type="color"></input> </td>
-              </tr>
-              <tr>
-                <td>Background Color</td>
-                <td class="toCenter"><input id="input-BackgroundColorInternal" type="color"/></td>
-              </tr>
-              <tr>
-                <td>Background Opacity</td>
-                <td class="toCenter">
-                  <button class="btn-changeNum" id="btn-decreaseOpacityInternal">-</button>
-                  <input id="p-OpacityInternal"/>
-                  <button class="btn-changeNum" id="btn-increaseOpacityInternal">+</button>
-                </td>
-              </tr>
-            </table>
-          </div>
+                </div>
+              </div>
 
-          <div class="border"></div>
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Text Color</p>
+                  <p class="setting-desc">The color of the subtitle text itself.</p>
+                </div>
+                <div class="setting-control">
+                  <input id="input-TextColorInternal" type="color">
+                </div>
+              </div>
 
-          <h1>External Player</h1>
-          <div id="div-ExternalPlayerSettings">
-            <h2>Setup Settings</h2>
-            <table>
-              <td>
-                <div class="input-container">
-                  <h2>Executable Path</h2>
-                  <div class="input-wrapper">
-                    <input id="input-mpv-exec-path" spellcheck="false" placeholder="Enter executable path…"/>
-                  </div>
-                  <div class="verify-btn-wrapper">
-                    <button class="browse-btn">Browse</button>
-                    <p class="response-message-p"></p>
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Background Color</p>
+                  <p class="setting-desc">The color of the box drawn behind subtitle text.</p>
+                </div>
+                <div class="setting-control">
+                  <input id="input-BackgroundColorInternal" type="color"/>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Background Opacity</p>
+                  <p class="setting-desc">How see-through the subtitle background is.</p>
+                </div>
+                <div class="setting-control">
+                  <div class="sub-font-increase-decrease">
+                    <button class="btn-changeNum" id="btn-decreaseOpacityInternal">-</button>
+                    <input id="p-OpacityInternal"/>
+                    <button class="btn-changeNum" id="btn-increaseOpacityInternal">+</button>
                   </div>
                 </div>
-              </td>
-            <table>
-            <h2>Subtitles</h2>
-            <table>
-              <tr>
-                <td>Enable Subtitles By Default</td>
-                <td class="toCenter">
+              </div>
+            </div>
+
+            <div class="settings-card" id="div-ExternalPlayerSettings">
+              <div class="section-header">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <path d="M15 3h6v6"/>
+                  <path d="M10 14 21 3"/>
+                </svg>
+                <div class="section-header-text">
+                  <h1>External Player</h1>
+                  <p class="section-desc">Settings for videos played inside the MPV external player.</p>
+                </div>
+              </div>
+
+            <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Enable Subtitles by Default</p>
+                  <p class="setting-desc">Turn subtitles on automatically whenever you start a video.</p>
+                </div>
+                <div class="setting-control">
                   <label class="custom-toggle">
                     <input id="toggleDefaultSubtitlesExternal" type="checkbox" />
                     <span class="toggle-track">
                       <span class="toggle-thumb"></span>
                     </span>
                   </label>
-                </td>
-              </tr>
-              <tr>
-                <td>Font Size</td>
-                <td class="toCenter">
-                  <button class="btn-changeNum" id="btn-decreaseFontSizeExternal">-</button>
-                  <input id="p-fontSizeExternal"/>
-                  <button class="btn-changeNum" id="btn-increaseFontSizeExternal">+</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Font Family</td>
-                <td class="toCenter">
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Font Size</p>
+                  <p class="setting-desc">How large subtitle text appears on screen.</p>
+                </div>
+                <div class="setting-control">
+                  <div class="sub-font-increase-decrease">
+                    <button class="btn-changeNum" id="btn-decreaseFontSizeExternal">-</button>
+                    <input id="p-fontSizeExternal"/>
+                    <button class="btn-changeNum" id="btn-increaseFontSizeExternal">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Font Family</p>
+                  <p class="setting-desc">The typeface used for subtitle text.</p>
+                </div>
+                <div class="setting-control">
                   <div class="custom-select">
                     <button class="select-trigger" aria-expanded="false">monospace</button>
                     <div id="dropDownMenu-Font" class="select-dropdown">
@@ -205,178 +271,224 @@
                       <div class="select-option" value="Comic Sans MS" style="font-family: 'Comic Sans MS'">Comic Sans MS</div>
                     </div>
                   </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Text Color</td>
-                <td class="toCenter"><input id="input-TextColorExternal" type="color"/></td>
-              </tr>
-            </table>
+                </div>
+              </div>
 
-            <h1>API Keys</h1>
-            <div class="api-key-inputs-div">
-              <div class="input-container">
-                <h2>TMDB API</h2>
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">Text Color</p>
+                  <p class="setting-desc">The color of the subtitle text itself.</p>
+                </div>
+                <div class="setting-control">
+                  <input id="input-TextColorExternal" type="color"/>
+                </div>
+              </div>
+
+              <div class="setting-text setting-text-standalone">
+                <p class="setting-label">Executable Path</p>
+                <p class="setting-desc">The location of MPV executable on this computer.</p>
+              </div>
+              <div class="input-container exec-path-container">
                 <div class="input-wrapper">
-                  <input type="password" placeholder="TMDB Api Key" class="api-key-input tmdb" readonly/>
-                  <button class="edit-btn"></button>
+                  <input id="input-mpv-exec-path" spellcheck="false" placeholder="Enter executable path…"/>
                 </div>
                 <div class="verify-btn-wrapper">
-                  <button class="verify-btn">Verify</button>
+                  <button class="browse-btn">Browse</button>
                   <p class="response-message-p"></p>
                 </div>
-                <p class="hint">
-                  <button class="link-btn" id="tmdb-get-key">
-                    Get a Key ↗
-                  </button>
-                </p>
-              </div>
-              <div class="input-container">
-                <h2>Wyzie API</h2>
-                <div class="input-wrapper">
-                  <input type="password" placeholder="Wyzie Api Key" class="api-key-input wyzie" readonly/>
-                  <button class="edit-btn"></button>
-                </div>
-                <div class="verify-btn-wrapper">
-                  <button class="verify-btn">Verify</button>
-                  <p class="response-message-p"></p>
-                </div>
-                <p class="hint">
-                  <button class="link-btn" id="wyzie-get-key">
-                    Get a Key ↗
-                  </button>
-                </p>
               </div>
             </div>
 
-          </div>
-
-          <h1>Backup &amp; Restore</h1>
-          <div id="div-BackupRestore">
-            <div class="backup-cards-row">
-              <div class="backup-card">
-                <div class="backup-card-header">
-                  
-                  <svg class="backup-card-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download">
-                    <path d="M12 15V3"/>
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <path d="m7 10 5 5 5-5"/>
-                  </svg>
-
-                  <span>Export Library</span>
+            <div class="settings-card">
+              <div class="section-header">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="7.5" cy="15.5" r="4.5"/>
+                  <path d="M10.9 12.1 19 4l3 3-2 2 2 2-3 3-2-2-2 2"/>
+                </svg>
+                <div class="section-header-text">
+                  <h1>API Keys</h1>
+                  <p class="section-desc">Connect outside services to unlock posters, details and subtitles.</p>
                 </div>
-                <p class="backup-card-desc">Save your Watch Later, Currently Watching, and Watched lists as a file.</p>
-                <button id="btn-exportLibrary">Export</button>
               </div>
 
-              <div class="backup-card">
-                <div class="backup-card-header">
-
-                  <svg class="backup-card-icon" 
-                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload">
-                    <path d="M12 3v12"/><path d="m17 8-5-5-5 5"/>
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  </svg>
-
-                  <span>Import Library</span>
-                </div>
-                <p class="backup-card-desc">Restore from a previously exported file.</p>
-                <button id="btn-importLibrary">Import</button>
-              </div>
-            </div>
-
-            <div class="overlay" id="import-confirm-overlay">
-              <div class="delete-container" id="details-importConfirm">
-                <button class="floating-x-remove-btn"></button>
-                <h2 class="delete-title">Import Library</h2>
-                <p id="p-current-library-count">Your current library has 0 titles.</p>
-
-                <div class="import-mode-options">
-                  <label class="import-mode-option">
-                    <input type="radio" name="importMode" id="radio-merge" checked />
-                    <span><strong>Merge</strong> — add to your current library</span>
-                  </label>
-                  <label class="import-mode-option">
-                    <input type="radio" name="importMode" id="radio-replace" />
-                    <span><strong>Replace</strong> — wipe and restore from file</span>
-                  </label>
+              <div class="api-key-inputs-div">
+                <div class="input-container">
+                  <h2>TMDB API</h2>
+                  <div class="input-wrapper">
+                    <input type="password" placeholder="TMDB Api Key" class="api-key-input tmdb" readonly/>
+                    <button class="edit-btn"></button>
+                  </div>
+                  <div class="verify-btn-wrapper">
+                    <button class="verify-btn">Verify</button>
+                    <p class="response-message-p"></p>
+                  </div>
+                  <p class="hint">
+                    <button class="link-btn" id="tmdb-get-key">
+                      Get a Key ↗
+                    </button>
+                  </p>
                 </div>
 
-                <div class="button-group">
-                  <button id="cancelBtn" class="secondary-btn">Cancel</button>
-                  <button id="confirmImportBtn" class="primary-btn">Import</button>
+                <div class="input-container">
+                  <h2>Wyzie API</h2>
+                  <div class="input-wrapper">
+                    <input type="password" placeholder="Wyzie Api Key" class="api-key-input wyzie" readonly/>
+                    <button class="edit-btn"></button>
+                  </div>
+                  <div class="verify-btn-wrapper">
+                    <button class="verify-btn">Verify</button>
+                    <p class="response-message-p"></p>
+                  </div>
+                  <p class="hint">
+                    <button class="link-btn" id="wyzie-get-key">
+                      Get a Key ↗
+                    </button>
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div id="div-ApplyButton">
-            <button id="btn-applySettings">Apply</button>
-          </div>
+            <div class="settings-card">
+              <div class="section-header">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="4" rx="1"/>
+                  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/>
+                  <path d="M10 13h4"/>
+                </svg>
+                <div class="section-header-text">
+                  <h1>Backup &amp; Restore</h1>
+                  <p class="section-desc">Save your library to a file on your computer, or restore it from a backup.</p>
+                </div>
+              </div>
+
+              <div id="div-BackupRestore">
+                <div class="backup-cards-row">
+                  <div class="backup-card">
+                    <div class="backup-card-header">
+
+                      <svg class="backup-card-icon"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download">
+                        <path d="M12 15V3"/>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <path d="m7 10 5 5 5-5"/>
+                      </svg>
+
+                      <span>Export Library</span>
+                    </div>
+                    <p class="backup-card-desc">Save your Watch Later, Currently Watching, and Watched lists as a file.</p>
+                    <button id="btn-exportLibrary">Export</button>
+                  </div>
+
+                  <div class="backup-card">
+                    <div class="backup-card-header">
+
+                      <svg class="backup-card-icon"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload">
+                        <path d="M12 3v12"/><path d="m17 8-5-5-5 5"/>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      </svg>
+
+                      <span>Import Library</span>
+                    </div>
+                    <p class="backup-card-desc">Restore from a previously exported file.</p>
+                    <button id="btn-importLibrary">Import</button>
+                  </div>
+                </div>
+
+                <div class="overlay" id="import-confirm-overlay">
+                  <div class="delete-container" id="details-importConfirm">
+                    <button class="floating-x-remove-btn"></button>
+                    <h2 class="delete-title">Import Library</h2>
+                    <p id="p-current-library-count">Your current library has 0 titles.</p>
+
+                    <div class="import-mode-options">
+                      <label class="import-mode-option">
+                        <input type="radio" name="importMode" id="radio-merge" checked />
+                        <span><strong>Merge</strong> — add to your current library</span>
+                      </label>
+                      <label class="import-mode-option">
+                        <input type="radio" name="importMode" id="radio-replace" />
+                        <span><strong>Replace</strong> — wipe and restore from file</span>
+                      </label>
+                    </div>
+
+                    <div class="button-group">
+                      <button id="cancelBtn" class="secondary-btn">Cancel</button>
+                      <button id="confirmImportBtn" class="primary-btn">Import</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="div-ApplyButton">
+              <button id="btn-applySettings">Apply</button>
+            </div>
           </div>
         </div>
+      </div>
 
         <div class="overlay" id="theme-overlay">
           <div class = "delete-container" id="details-customizeTheme">
             <input id="theme-title" placeholder="Theme title"/>
             <button class="floating-x-remove-btn"></button>
-            <h2>Primary Color</h2>
+            <h2>Primary Color<span class="field-hint">Main app background</span></h2>
             <div class="ElementsTopOfEachOther">
               <input id="primary-color" type="color"/>
               <input name="backgroundGradientValue" id="background-gradient-value" class="alphaRangeValue" type="range"/>
               <output class="alphaValueFloatingDiv" for="backgroundGradientValue" onforminput="value = foo.valueAsNumber;"></output>
             </div>
 
-            <h2>Secondary Color</h2>
+            <h2>Secondary Color<span class="field-hint">Highlights &amp; accents</span></h2>
             <div class="ElementsTopOfEachOther">
               <input type="color" id="secondary-color"/>
               <input name="SecondaryColorAlphaRange" id="SecondaryColorAlphaRange" class="alphaRangeValue" type="range"/>
               <output class="alphaValueFloatingDiv" for="SecondaryColorAlphaRange" onforminput="value = foo.valueasnumber;"></output>
             </div>
 
-            <h2>Main Buttons Color</h2>
+            <h2>Main Buttons Color<span class="field-hint">Sidebar navigation buttons</span></h2>
             <div class="ElementsTopOfEachOther">
               <input type="color" id="main-buttons-color"/>
               <input name="leftButtonsColorAlphaValueRange" id="leftButtonsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
               <output class="alphaValueFloatingDiv" for="leftButtonsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
             </div>
 
-            <h2>Small Icons Color</h2>
+            <h2>Small Icons Color<span class="field-hint">Sidebar icons</span></h2>
             <div class="ElementsTopOfEachOther">
               <input type="color" id="small-icons-color"/>
               <input name="smallIconsColorAlphaValueRange" id="smallIconsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
               <output class="alphaValueFloatingDiv" for="smallIconsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
             </div>
-            <h2>Hovered Element Border Color</h2>
+            <h2>Hovered Element Border Color<span class="field-hint">Outline when you hover a poster</span></h2>
             <input type="color" id="MovieElement-hover-BorderColor"/>
 
-            <h2>Input Background Color</h2>
+            <h2>Input Background Color<span class="field-hint">Text fields &amp; search boxes</span></h2>
             <div class="ElementsTopOfEachOther">
               <input type="color" id="input-backgroundColor"/>
               <input name="InputBgColorAlphaValueRange" id="InputBgColorAlphaValueRange" class="alphaRangeValue" type="range"/>
               <output class="alphaValueFloatingDiv" for="InputBgColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
             </div>
 
-            <h2>Drop Down Color</h2>
+            <h2>Drop Down Color<span class="field-hint">Menus &amp; dropdown panels</span></h2>
             <div class="ElementsTopOfEachOther">
               <input type="color" id="drop-down-color"/>
               <input name="DropDownAlphaValueRange" id="DropDownAlphaValueRange" class="alphaRangeValue" type="range"/>
               <output class="alphaValueFloatingDiv" for="DropDownAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
             </div>
 
-            <h2>Icon Color</h2>
+            <h2>Icon Color<span class="field-hint">Buttons throughout the app</span></h2>
             <input type="color" id="icon-color"/>
 
-            <h2>Hovered Icon Color</h2>
+            <h2>Hovered Icon Color<span class="field-hint">Icon color on hover</span></h2>
             <div class="ElementsTopOfEachOther">
               <input type="color" id="icon-hover-color"/>
               <input name="HoveredIconsBgAlphaValueRange" id="HoveredIconsBgAlphaValueRange" class="alphaRangeValue" type="range"/>
               <output class="alphaValueFloatingDiv" for="HoveredIconsBgAlphaValueRange" onforminput="value = foo.valueasnumber;"></output>
             </div>
 
-            <h2>Text Color</h2>
+            <h2>Text Color<span class="field-hint">General body text</span></h2>
             <input type="color" id="text-color"/>
             <button class="save-new-theme-btn">Save</button>
           </div>

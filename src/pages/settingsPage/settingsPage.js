@@ -2,6 +2,7 @@ const RightmiddleDiv = document.getElementById("div-middle-right");
 const ZoomFactorInput = document.getElementById("input-ZoomFactor");
 const ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
 const ApplyButton = document.getElementById("btn-applySettings");
+const addCustomThemeBtn = document.getElementById("btn-addCustomTheme");
 
 // Internal Player
 const toggleButtonInternal = document.getElementById("toggleDefaultSubtitlesInternal");
@@ -103,7 +104,6 @@ ZoomFactorInput.addEventListener("mouseleave",()=>{
   bubble.style.opacity = "0";
 });
 
-const addCustomThemeBtn = document.getElementById("btn-addCustomTheme");
 addCustomThemeBtn.addEventListener("click", async () => {
   await loadCurrentTheme();
   applySelectedColor(ColorInputsWithAlphaValue);
@@ -142,7 +142,7 @@ saveNewThemeBtn.addEventListener("click", async () => {
   
   const container = document.querySelector(".prepared-themes-div");
   const newCard = await createThemeCard(newThemeName, res.theme_file_path);
-  container.appendChild(newCard);
+  container.insertBefore(newCard, addCustomThemeBtn);
   selectThemeCard(newCard);
 
   document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
@@ -337,7 +337,7 @@ async function loadSettings() {
   inputMpvExecPath.value = MpvExecPath;
   applySelectedColor(ColorInputsWithAlphaValue)
 
-  renderPreparedThemeCards();
+  await renderPreparedThemeCards();
 }
 
 async function loadExternalSubConfigs(){
@@ -401,7 +401,7 @@ function getSubConfig(){
 function setFloatingZoomFactorDiv(value) {
   let bubble = document.querySelector('output[for="foo"]');
   bubble.innerHTML = Math.round(value * 100) + " %";
-  let marginLeft = 120;
+  let marginLeft = 0;
   let min = 0;
   let max = 2;
 
@@ -594,9 +594,7 @@ function addCardEventListener(cardEl) {
     const themefileName = cardEl.getAttribute("card-file-name");
     await window.electronAPI.applyPreparedTheme(themefileName);
     CurrentTheme = themefileName;
-    // setTimeout(() => {
-      document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
-    // },100);
+    document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
     selectThemeCard(document.querySelector(`[card-file-name="${themefileName}"]`));
   });
 }
@@ -605,6 +603,7 @@ async function renderPreparedThemeCards() {
   const themesFiles = await window.electronAPI.getPreparedThemes();
   const container = document.querySelector(".prepared-themes-div");
   container.innerHTML = "";
+  container.appendChild(addCustomThemeBtn);
 
   const cards = await Promise.all(
     themesFiles.map(
@@ -619,7 +618,7 @@ async function renderPreparedThemeCards() {
     cards.unshift(defaultCard);
   }
 
-  cards.forEach(card => container.appendChild(card));
+  cards.forEach(card => container.insertBefore(card, addCustomThemeBtn));
 }
 
 document.querySelectorAll(".edit-btn").forEach(btn => {
