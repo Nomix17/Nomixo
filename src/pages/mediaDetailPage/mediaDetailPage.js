@@ -119,11 +119,35 @@ async function loadAllEpisodesOfSeason(season_number,title) {
   } catch(err) {
     console.error(err.message)
     episodeResultsList.innerHTML = "";
-    const NothingWasFound = document.createElement("span");
-    NothingWasFound.innerHTML = "No Results Were Found !";
-    episodeSidePanel.classList.add("visible-flex");
-    episodeResultsList.appendChild(NothingWasFound);
+    addNothingWasFoundMessage(
+      episodeResultsList, err.message,
+      "Failed To Fetch Episodes, Please try again",
+      refreshEpisodes
+    );
   }
+}
+
+function addNothingWasFoundMessage(parent, message, defaultMsg, refreshCallback) {
+  const isNoResultsError =
+    message === "No Useful Results Were found !" ||
+    message === "No Results Were found !";
+
+  const nothingWasFoundDiv = document.createElement("div");
+  nothingWasFoundDiv.classList.add("div-NothingWasFound");
+  addNothingWasFoundDivMargin(nothingWasFoundDiv);
+  nothingWasFoundDiv.textContent = 
+    isNoResultsError
+    ? message
+    : defaultMsg;
+
+  if (!isNoResultsError) {
+    const refreshButton = createRefreshBtn(refreshCallback);
+    nothingWasFoundDiv.appendChild(refreshButton);
+  }
+
+  parent.classList.remove("hidden");
+  parent.classList.add("visible-flex");
+  parent.appendChild(nothingWasFoundDiv);
 }
 
 function renderEpisodes(data,title,libraryInfo) {
@@ -236,25 +260,13 @@ async function fetchMediaTorrent(episodeInfo={}) {
 
   } catch (error) {
     console.error(error);
-    const isNoResultsError =
-      error?.message === "No Useful Results Were found !" ||
-      error?.message === "No Results Were found !";
-
-    const nothingWasFoundDiv = document.createElement("div");
-    nothingWasFoundDiv.classList.add("div-NothingWasFound");
-    nothingWasFoundDiv.textContent = isNoResultsError
-      ? error.message
-      : "Failed To Fetch Torrents, Please try again";
-
-    if (!isNoResultsError) {
-      const refreshButton = createRefreshTorrentBtn();
-      nothingWasFoundDiv.appendChild(refreshButton);
-    }
-
     torrentResultsList.innerHTML = "";
     torrentSidePanel.classList.remove("preloadingTorrent");
-    torrentResultsList.classList.add("visible-flex");
-    torrentResultsList.appendChild(nothingWasFoundDiv);
+    addNothingWasFoundMessage(
+      torrentResultsList, error?.message,
+      "Failed To Fetch Torrents, Please try again",
+      refreshTorrent
+    );
   }
 }
 
@@ -287,19 +299,28 @@ async function getMediaTrailer() {
   }
 }
 
-function createRefreshTorrentBtn() {
+function createRefreshBtn(refreshCallback) {
   const refreshButton = document.createElement("button");
   refreshButton.className = "btn-refreshAfterWarningMessage";
   refreshButton.innerHTML = reloadIcon;
-  refreshButton.addEventListener("click",() => {
-    torrentResultsList.innerHTML = "";
-    torrentSidePanel.classList.add("preloadingTorrent");
-
-    setTimeout(() => {
-      fetchMediaTorrent();
-    },1000);
-  });
+  refreshButton.addEventListener("click", refreshCallback);
   return refreshButton;
+}
+
+function refreshTorrent() {
+  torrentResultsList.innerHTML = "";
+  torrentSidePanel.classList.add("preloadingTorrent");
+  setTimeout(() => {
+    fetchMediaTorrent();
+  },1000);
+}
+
+function refreshEpisodes() {
+  episodeResultsList.innerHTML = "";
+  episodeResultsList.classList.add("preloadingEpisodes");
+  setTimeout(() => {
+    loadAllEpisodesOfSeason(getDropdownValue(selectSeason), GlobalTitle);
+  },1000);
 }
 
 async function renderMediaPage(data) {
@@ -916,17 +937,24 @@ function moveDiv(event,ToResizeDiv) {
   ToResizeDiv.style.minWidth = parseInt(ToResizeDiv.style.minWidth) + leftBorderPos-mousePos+"px";
 }
 
+function getSelectSeasonContainerHeight() {
+  return selectSeasonContainer.offsetHeight > 0 
+    ? selectSeasonContainer.offsetHeight + "px" 
+    : "15px";
+}
+
 function addSpaceToTopOfTorrentContainer() {
   const dummyDiv = document.getElementById("dummyDiv");
-  const selectSeasonContainerHeight = selectSeasonContainer.offsetHeight;
+  const selectSeasonContainerHeight = getSelectSeasonContainerHeight();
 
-  if(selectSeasonContainerHeight > 0){
-    dummyDiv.style.height = selectSeasonContainerHeight+"px";
-    torrentSidePanel.style.paddingBottom = selectSeasonContainerHeight+"px";
-  }else{
-    dummyDiv.style.height = "15px";
-    torrentSidePanel.style.paddingBottom = "15px";
-  }
+  dummyDiv.style.height = selectSeasonContainerHeight;
+  torrentSidePanel.style.paddingBottom = selectSeasonContainerHeight;
+}
+
+function addNothingWasFoundDivMargin(nothingWasFoundDiv) {
+  const selectSeasonContainerHeight = getSelectSeasonContainerHeight();
+  if(nothingWasFoundDiv)
+    nothingWasFoundDiv.style.marginBottom = selectSeasonContainerHeight;
 }
 
 async function showDownloadInfoInputDiv(DownloadTargetInfo) {

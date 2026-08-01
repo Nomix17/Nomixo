@@ -1129,6 +1129,10 @@ html.torrent-panel-open .toggleButton {
   pointer-events: auto !important;
 }
 
+html.torrent-panel-open #div-movieMedias.visible-flex {
+  display: flex !important;
+}
+
 /* globalLoadingGif fade-in */
 .loading-gif--visible {
   opacity: 1 !important;
