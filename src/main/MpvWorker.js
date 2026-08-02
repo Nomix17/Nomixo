@@ -119,6 +119,17 @@ function StreamTorrent(
       });
     });
 
+    torrent.on('wire', () => {
+      parentPort.postMessage({ type: 'progress', stage: 'metadata-peers', data: { peers : torrent.numPeers }});
+    });
+
+    torrent.on('metadata', () => {
+      log.info("Metadata Loaded");
+      parentPort.postMessage({ type: 'progress', stage: 'metadata-received'});
+    });
+
+    torrent.on("warning", (warn) => log.warn("Torrent warning:", warn.message));
+
     torrent.on('error', async (err) => {
       const errorMsg = `Torrent error: ${err.message}`;
       log.error(errorMsg);

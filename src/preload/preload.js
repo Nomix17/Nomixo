@@ -49,7 +49,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readSubFile: (filePath) => ipcRenderer.invoke("read-sub-file",filePath),
 
   downloadTorrent: (torrentInformation,subsObjects) => ipcRenderer.invoke("download-torrent",torrentInformation,subsObjects),
-  getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
   pauseTorrentDownload: (torrentId) => ipcRenderer.invoke("pause-torrent-download", torrentId),
   continueTorrentDownload: (torrentId) => ipcRenderer.invoke("continue-torrent-download", torrentId),
   toggleTorrentDownload: (torrentId) => ipcRenderer.invoke("toggle-torrent-download", torrentId),
@@ -63,6 +62,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getMsgFromMainProcess: (fn)=> ipcRenderer.on("msg-from-main-process",(event,data)=>fn(data)),
   getFetchingTorrentErrors: (fn)=> ipcRenderer.on("torrent-fetching-error",(event,data)=>fn(data)),
   getDownloadErrorsReports: (fn)=> ipcRenderer.on("report-download-errors",(event,data)=>fn(data)),
+  getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
+  getTorrentStreamingReport:(fn) => ipcRenderer.on("torrent-streaming-report",(event,data) => fn(data)),
 
   downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl),
   downloadBackdrop: (backgroundImageUrl) => ipcRenderer.invoke("download-backdrop", backgroundImageUrl),

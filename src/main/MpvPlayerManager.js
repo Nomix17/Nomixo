@@ -263,6 +263,13 @@ class MpvPlayerManager {
     };
 
     this.#worker.on("message", (msg) => {
+      if (msg.type === "progress") {
+        this.#browserWindow.webContents.send("torrent-streaming-report", {
+          type: msg.type,
+          stage: msg.stage,
+          data: msg.data
+        });
+      }
       if (msg.type !== "status") return;
       switch (msg.message) {
         case "Mpv output data":

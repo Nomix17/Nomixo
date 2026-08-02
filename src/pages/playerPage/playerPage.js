@@ -15,7 +15,7 @@ let seasonNumber = data.get("seasonNumber");
 let episodeNumber = data.get("episodeNumber");
 
 let playerTypeRaw = data.get("playerType");
-let playerType = playerTypeRaw === "undefined" ? null : playerTypeRaw;
+let playerType = "external"; //playerTypeRaw === "undefined" ? null : playerTypeRaw;
 
 let subsDelay = 0; // ms
 let defaultFontSize = 30; // px
@@ -137,6 +137,7 @@ MiddleContainer.addEventListener("dblclick",(event)=>{
 });
 
 window.addEventListener("keydown",(event)=>{
+  let stopPropagation = true;
   if((event.target.tagName === 'INPUT' && event.target.type !== "range") || event.target.tagName === 'TEXTAREA')
     return;
 
@@ -157,6 +158,8 @@ window.addEventListener("keydown",(event)=>{
       oldVolume = VideoElement.volume;
       VideoElement.volume = 0;
     }
+  } else {
+    stopPropagation = false;
   }
 
   if (event.key === "Tab" ||
@@ -164,8 +167,10 @@ window.addEventListener("keydown",(event)=>{
       event.key === "Alt" ) event.preventDefault();
   VolumeSliderElement.value = VideoElement.volume * 100;
   updateVolumeIcons();
-  event.preventDefault();
-  event.stopImmediatePropagation();
+  if(stopPropagation) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
 });
 
 
@@ -302,14 +307,14 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
   let usingMagnet = (downloadPath === "undefined");
   let fileIsMkv = (fileName.endsWith("mkv"));
 
-  if(usingMagnet){
+  if(usingMagnet) {
     let subs = await loadingAllSubs(mediaImdbId,seasonNumber,episodeNumber);
     subtitlesArray = subs;
-    if(playerType === "external" || (fileIsMkv && playerType == null)){
+    if(playerType === "external" || (fileIsMkv && playerType == null)) {
       // pass to external Player
       playVideoInMpv(true,Magnet,undefined,fileName,undefined,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs);
       
-    }else{
+    } else {
       insertLanguageButton(subs); 
       getSubsViaLanguage("en");
       window.electronAPI.getVideoUrl(Magnet,fileName).then( ([url,mimeType]) => {
@@ -331,17 +336,17 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
       });
     }
 
-  }else{
+  } else {
     let identifyingElements = {"IMDB_ID":mediaImdbId,"episodeNumber":episodeNumber,"seasonNumber":seasonNumber,"DownloadDir":downloadPath};
     let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
     let subs = await window.electronAPI.loadLocalSubs(videoPath,identifyingElements);
     subtitlesArray = subs;
 
-    if(playerType === "external" || (fileIsMkv && playerType == null)){
+    if(playerType === "external" || (fileIsMkv && playerType == null)) {
       // pass to external Player
       playVideoInMpv(false,undefined,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,undefined);
 
-    }else{
+    } else {
       insertLanguageButton(subs); 
       getSubsViaLanguage("built-in");
 
@@ -361,16 +366,17 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
 }
 
 async function playVideoInMpv(PlayMagnet,Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs){
-  let metaData = {"Magnet":Magnet, "downloadPath":downloadPath,
-        "fileName":fileName, "bgImagePath":bgImagePath,
-        "MediaId":MediaId,"MediaType":MediaType,
-        "TorrentId":TorrentIdentification, "mediaImdbId":mediaImdbId,
-        "seasonNumber":seasonNumber, "episodeNumber":episodeNumber
+  let metaData = {
+    "Magnet":Magnet, "downloadPath":downloadPath,
+    "fileName":fileName, "bgImagePath":bgImagePath,
+    "MediaId":MediaId,"MediaType":MediaType,
+    "TorrentId":TorrentIdentification, "mediaImdbId":mediaImdbId,
+    "seasonNumber":seasonNumber, "episodeNumber":episodeNumber
   };
 
-  if(PlayMagnet){
+  if(PlayMagnet) {
     window.electronAPI.StreamTorrentOverMpv(metaData,subs);
-  }else{
+  }else {
     window.electronAPI.PlayVideoOverMpv(metaData);
   }
 }
@@ -671,6 +677,21 @@ function monitorMsgFromMainProcess(){
       let request = msg.request;
         if(request ===  "exit_video_player")
           window.electronAPI.goBack();
+    }
+  });
+}
+
+function monitorTorrentStreamingReport(){
+  window.electronAPI.getTorrentStreamingReport((msg) =>{
+    if(msg.type === "progress"){
+      switch(msg.stage) {
+        case "metadata-peers": {
+          console.log("Number of peers connections:", msg.data.peers);
+        }
+        case "metadata-received": {
+          console.log("Metadata Received");
+        }
+      }
     }
   });
 }
