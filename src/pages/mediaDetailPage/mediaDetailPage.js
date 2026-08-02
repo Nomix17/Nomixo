@@ -656,6 +656,8 @@ function renderCastInfomation(data) {
 
 async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
   torrentResultsList.innerHTML = "";
+  torrentResultsList.classList.remove("visible-flex");
+
   addSpaceToTopOfTorrentContainer();
   const imdb_id = await IMDB_IDPromise;
 
