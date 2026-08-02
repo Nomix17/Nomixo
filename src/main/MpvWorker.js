@@ -1,18 +1,19 @@
-import SubDownloadManager from "./SubDownloadManager.js";
+import SubDownloadManager from './SubDownloadManager.js';
+import getTorrentTrackers from './torrentTracker.js';
 import {
   generateUniqueId,
   findFile,
   normaliseFileName
-} from "./utils.js";
-import {log} from "./debugging.js";
-import {spawn} from "child_process";
-import {parentPort, workerData} from "worker_threads";
+} from './utils.js';
+import { log } from './debugging.js';
+import { spawn } from 'child_process';
+import { parentPort, workerData } from 'worker_threads';
 import WebTorrent from 'webtorrent';
-import express from "express";
-import mime from "mime";
-import path from "path";
+import express from 'express';
+import mime from 'mime';
+import path from 'path';
 import os from 'os';
-import fs from "fs";
+import fs from 'fs';
 
 let mpvProcess = null;
 let expressServer = null;
@@ -28,12 +29,17 @@ function StreamTorrent(
   mpvConfigDirectory,
   mpvWindowConfigs
 ) {
-  return new Promise((resolve, reject) => {
-
+  return new Promise(async (resolve, reject) => {
+    const trackers = await getTorrentTrackers()
     log.info("Loading Torrent:", metaData?.fileName);
-    webTorrentClient = new WebTorrent();
-    const torrent = webTorrentClient.add(metaData.Magnet, {path: videoCachePath}, async (torrent) => {
 
+    webTorrentClient = new WebTorrent();
+    const torrent = webTorrentClient.add(metaData.Magnet, {
+      path: videoCachePath,
+      announce: trackers 
+    });
+
+    torrent.on("ready", async () => {
       console.log("\nTorrent Files:-----------------------------------------------------");
       torrent.files.forEach(f => { console.log(f.name) });
       console.log("-------------------------------------------------------------------\n");
@@ -92,7 +98,9 @@ function StreamTorrent(
           );
 
           const tmpSubDir = path.join(subDirectory, `SUB_${subsId}`);
+          log.info("Downloading subtitles to: ", tmpSubDir);
           const downloadResponse = await SubDownloadManager.downloadMultipleSubs(tmpSubDir, subsObjects);
+          log.info("Finished downloading subtitles");
           const subsPaths = downloadResponse
             .filter(response => response.status === "success")
             .map(response => response.file);
@@ -114,11 +122,7 @@ function StreamTorrent(
     torrent.on('error', async (err) => {
       const errorMsg = `Torrent error: ${err.message}`;
       log.error(errorMsg);
-      parentPort.postMessage({
-        type: "status",
-        message: "Torrent Fetching Error",
-        error: errorMsg
-      });
+      parentPort.postMessage({ type: "status", message: "Torrent Fetching Error", error: errorMsg });
       await cleanup();
       reject(err);
     });
