@@ -1,7 +1,8 @@
 const RightmiddleDiv = document.getElementById("div-middle-right");
 const ZoomFactorInput = document.getElementById("input-ZoomFactor");
 const ColorInputsWithAlphaValue = document.querySelectorAll('.ElementsTopOfEachOther input[type="color"]');
-const ApplyButton = document.getElementById("btn-applySettings");
+const applyButtonDiv = document.getElementById('div-ApplyButton');
+const applyButton = document.getElementById("btn-applySettings");
 const addCustomThemeBtn = document.getElementById("btn-addCustomTheme");
 
 // Internal Player
@@ -76,15 +77,29 @@ async function saveApiKeys() {
     });
   }
 }
+function settingsChanged(status) {
+  somethingChanged = status
+  applyButton.classList.toggle('active', status);
+}
+
+function updateApplyButtonVisibility(clientY) {
+  const REVEAL_THRESHOLD_PX = 80;
+  const distanceFromBottom = window.innerHeight - clientY;
+  const shouldShow = distanceFromBottom <= REVEAL_THRESHOLD_PX;
+  applyButtonDiv.classList.toggle('visible', shouldShow);
+}
 
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll("input").forEach(inputElement=>{
     inputElement.addEventListener("change", ()=>{
-      if(!supressInputEventListener){
-        somethingChanged = true;
+      if(!supressInputEventListener) {
+        settingsChanged(true);
       }
     });
   });
+});
+document.addEventListener('mousemove', (e) => {
+  updateApplyButtonVisibility(e.clientY);
 });
 
 // Elements Listeners
@@ -155,16 +170,19 @@ closeNewThemeDiv.addEventListener("click", () => {
   document.getElementById("theme-overlay").classList.remove("active");
 });
 
-ApplyButton.addEventListener("click",()=> {
+applyButtonDiv.addEventListener('focusin', () => {
+  applyButtonDiv.classList.add('visible');
+});
+applyButton.addEventListener("click",()=> {
   let SettingsObj = getSettings();
   let SubConfigObj = getSubConfig();
   
-  if(somethingChanged){
+  if(somethingChanged) {
     window.electronAPI.applySettings(SettingsObj);
     window.electronAPI.applySubConfig(SubConfigObj);
     document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
     displayMessage("new settings were saved.");
-    somethingChanged = false;
+    settingsChanged(false);
   }
   saveApiKeys();
 });
@@ -186,30 +204,30 @@ toggleButtonInternal.addEventListener("change",()=>{
 increaseFontSizeInternalButton.addEventListener("click",()=>{
   if(FontSizeInternal < 100) FontSizeInternal += 1;
   FontSizeInternalInput.value = FontSizeInternal+"px";
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 decreaseFontSizeInternalButton.addEventListener("click",()=>{
   if(FontSizeInternal > 0) FontSizeInternal -= 1;
   FontSizeInternalInput.value = FontSizeInternal+"px";
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 increaseBackgroundOpacityInternalButton.addEventListener("click",()=>{
   if(OpacityInternal < 100) OpacityInternal += 5;
   backgroundOpacityInternalInput.value = OpacityInternal+"%";
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 decreaseBackgroundOpacityInternalButton.addEventListener("click",()=>{
   if(OpacityInternal > 0) OpacityInternal -= 5;
   backgroundOpacityInternalInput.value = OpacityInternal+"%";
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 DropDownFontMenuInternal.addEventListener("dropdownChange",(event)=>{
   FontFamilyInternal = event.detail.value;
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 inputTextColorInternal.addEventListener("input",(event)=>{
@@ -241,28 +259,28 @@ toggleButtonExternal.addEventListener("change",()=>{
 increaseFontSizeExternalButton.addEventListener("click",()=>{
   if(FontSizeExternal < 100) FontSizeExternal += 1;
   FontSizeExternalInput.value = FontSizeExternal+"px";
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 decreaseFontSizeExternalButton.addEventListener("click",()=>{
   if(FontSizeExternal > 0) FontSizeExternal -= 1;
   FontSizeExternalInput.value = FontSizeExternal+"px";
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 DropDownFontMenuExternal.addEventListener("dropdownChange",(event)=>{
   FontFamilyExternal = event.detail.value;
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 inputTextColorExternal.addEventListener("input",(event)=>{
   TextColorExternal = inputTextColorExternal.value;
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 inputMpvExecPath.addEventListener("input", (event) => {
   MpvExecPath = inputMpvExecPath.value;
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 FontSizeExternalInput.addEventListener("blur",(event) => {commitFontSizeExternal()});
@@ -472,7 +490,7 @@ function commitFontSizeInternal(){
   }
   FontSizeInternalInput.value = FontSizeInternal+"px";
   FontSizeInternalInput.blur();
-  somethingChanged = true;
+  settingsChanged(true);
 }
 
 function commitBgOpacityInternal(){
@@ -482,7 +500,7 @@ function commitBgOpacityInternal(){
   }
   backgroundOpacityInternalInput.value = OpacityInternal+"%";
   backgroundOpacityInternalInput.blur();
-  somethingChanged = true;
+  settingsChanged(true);
 }
 
 // External Player related functions
@@ -494,7 +512,7 @@ function commitFontSizeExternal(){
   }
   FontSizeExternalInput.value = FontSizeExternal+"px";
   FontSizeExternalInput.blur();
-  somethingChanged = true;
+  settingsChanged(true);
 }
 
 async function fetchSVGMarkup() {
@@ -639,7 +657,7 @@ document.querySelector(".browse-btn")
     inputMpvExecPath.value = execPath;
     MpvExecPath = execPath;
   }
-  somethingChanged = true;
+  settingsChanged(true);
 });
 
 document.querySelectorAll(".verify-btn").forEach(btn => {
@@ -668,7 +686,7 @@ document.querySelectorAll(".verify-btn").forEach(btn => {
       setTimeout(() => {
         btn.classList.remove("success");
       },1000);
-      somethingChanged = true;
+      settingsChanged(true);
     } else {
       btn.classList.add("failed");
       responseMessageP.innerText = 

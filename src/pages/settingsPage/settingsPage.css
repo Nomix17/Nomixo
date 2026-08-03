@@ -42,12 +42,13 @@ table {
 }
 
 #div-middle-right {
-  padding: 18.4px 0px 36.8px 0px;
+  padding: 18.4px 0px 0px 0px;
   opacity: 0;
 }
 #div-middle-right .inner {
   margin: 0 auto;
   max-width: 80%;
+  padding-bottom: 90px;
 }
 
 .settings-card {
@@ -234,33 +235,53 @@ output {
 }
 
 #div-ApplyButton {
-  margin-top: 50px 0 50px 0;
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  z-index: 50;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 8px 90px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: translateX(-50%) translateY(calc(100% - 8px));
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+
+#div-ApplyButton.visible {
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
 }
 
 #btn-applySettings {
-  width: 110.4px;
-  height: 46px;
-  transform: translateZ(0);
-  border-radius: 10px;
+  min-width: 130px;
+  height: 44px;
+  opacity: 0.6;
+  border-radius: 12px;
   border: none;
-  background-color: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
-  font-size: 18px;
-  padding: 10px;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
+  background-color: white;
+  color: black;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  padding: 8px 24px;
+  transition: opacity 0.15s ease;
+  cursor: default !important;
+}
+#btn-applySettings.active {
+  opacity: 1;
+}
+#btn-applySettings.active:hover {
+  opacity: 0.85;
+  cursor:auto !important;
 }
 
-#btn-applySettings:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-#btn-applySettings:active {
-  background-color: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+#btn-applySettings.active:active {
+  opacity: 0.7;
 }
 
 #input-ZoomFactor {
@@ -1133,4 +1154,3 @@ input.error-shake {
   background-color: transparent;
   border-color: rgba(255, 255, 255, 0.1);
 }
-
