@@ -307,8 +307,10 @@ class MpvPlayerManager {
       this.#browserWindow.hide();
 
     if (line.includes("AV:")) {
+      const parts = line.split("AV:")[1].split("/");
+      const timePart = parts[0];
+      const durationPart = parts[1].trim().split(" ")[0];
 
-      const [timePart, durationPart] = line.split("AV:")[1].split("/");
       const parseHMS = (str) => {
         const [h, m, s] = str.trim().split(":").map(Number);
         return (h * 60 + m) * 60 + s;
