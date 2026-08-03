@@ -272,13 +272,13 @@ class MpvPlayerManager {
       }
       if (msg.type !== "status") return;
       switch (msg.message) {
-        case "Mpv output data":
+        case "mpv_output_data":
           this.#handleMpvOutput(msg.data);
           break;
-        case "Playback done":
+        case "playback_done":
           handleDone();
           break;
-        case "Playback error":
+        case "playback_error":
         case "Torrent Fetching Error":
           handleError(msg.error);
           break;
@@ -303,8 +303,10 @@ class MpvPlayerManager {
   #handleMpvOutput(data) {
     const line = data.toString();
 
+    if(this.#browserWindow?.isVisible() && (line.includes("MPV_WINDOW_OPENED") || line.includes("AV:")))
+      this.#browserWindow.hide();
+
     if (line.includes("AV:")) {
-      if (this.#browserWindow?.isVisible()) this.#browserWindow.hide();
 
       const [timePart, durationPart] = line.split("AV:")[1].split("/");
       const parseHMS = (str) => {

@@ -1,0 +1,1 @@
+print("MPV_WINDOW_OPENED")

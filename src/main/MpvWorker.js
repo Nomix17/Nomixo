@@ -216,7 +216,7 @@ function runMpvProcess(
 
     parentPort.postMessage({
       type: "status",
-      message: "Playback error",
+      message: "playback_error",
       error: errMsg
     });
 
@@ -229,7 +229,7 @@ function runMpvProcess(
     log.info(`MPV process closed (exit code ${code})`);
     await cleanup();
 
-    parentPort.postMessage({ type: "status", message: "Playback done" });
+    parentPort.postMessage({ type: "status", message: "playback_done" });
     if (onClose) onClose();
   });
 
@@ -237,7 +237,7 @@ function runMpvProcess(
     dataPipe.on('data', (data) => {
       parentPort.postMessage({
         type: "status",
-        message: "Mpv output data",
+        message: "mpv_output_data",
         data: data.toString()
       });
     });
@@ -330,7 +330,7 @@ if (workerData.typeOfPlay === "StreamTorrent") {
 
     parentPort.postMessage({
       type: "status",
-      message: "Playback error",
+      message: "playback_error",
       error: errMsg
     });
     await cleanup();
