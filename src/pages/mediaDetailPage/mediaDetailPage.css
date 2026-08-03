@@ -1270,6 +1270,9 @@ html.torrent-panel-open #div-movieMedias.visible-flex {
     border-color 0.25s ease,
     color 0.25s ease,
     transform 0.2s ease;
+  transform-origin: center;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .download-backdrop-btn svg {
