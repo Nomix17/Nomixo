@@ -17,7 +17,8 @@
   width:60%;
 }
 .card {
-  width: 468px;
+  width: 100%;
+  max-width: 468px;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.09);
   border-radius: 16.2px;
@@ -130,8 +131,7 @@
   border-radius: 5.4px;
   transition: color 0.15s;
 }
-.eye-btn:hover { color: rgba(255,255,255,0.65); }
-.eye-btn svg { width: 15.3px; height: 15.3px; }
+.eye-btn svg { fill: rgba(255,255,255,0.65); width: 15.3px; height: 15.3px; }
 .eye-btn .icon-hide { display: none; }
 .eye-btn.shown .icon-show { display: none; }
 .eye-btn.shown .icon-hide { display: block; }
