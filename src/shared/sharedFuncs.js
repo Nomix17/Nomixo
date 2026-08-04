@@ -400,7 +400,7 @@ function addSmoothTransition() {
 
 function handlingMiddleRightDivResizing() {
   const rightMiddleDiv = document.getElementById("div-middle-right");
-  resizingRightMiddleDiv(rightMiddleDiv);
+  requestAnimationFrame(() => resizingRightMiddleDiv(rightMiddleDiv));
   window.addEventListener("resize",() => {
     resizingRightMiddleDiv(rightMiddleDiv);
   });
@@ -1412,8 +1412,9 @@ async function fullscreenClicked(){
 
 function dropDownInit(){
   manageDropDowns();
-  syncDropdownWidths();
-  // setTimeout(syncDropdownWidths, 100);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(syncDropdownWidths);
+  });
 }
 
 function manageDropDowns() {
