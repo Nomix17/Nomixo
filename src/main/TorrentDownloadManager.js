@@ -1,5 +1,5 @@
 import SubDownloadManager from './SubDownloadManager.js';
-import getTorrentTrackers from './torrentTracker.js';
+import { getTorrentTrackers } from './torrentTracker.js';
 import { 
   generateUniqueId,
   normaliseFileName,
@@ -28,7 +28,6 @@ class TorrentDownloadManager {
     this.WINDOW = WINDOW;
     this.onPlayVideo = onPlayVideo;
     this.DownloadClient = new WebTorrent();
-    this.torrentTrackersPromise = getTorrentTrackers();
     this.downloadingMediaHashMap = {};
     this.downloadQueue = [];
     Paths.downloadLibraryFilePath = path.join(Paths.__configs, "downloads.json");
@@ -90,7 +89,7 @@ class TorrentDownloadManager {
   }
 
   async executeTorrentDownload(torrentEntry) {
-    const trackers = await this.torrentTrackersPromise;
+    const trackers = await getTorrentTrackers();
     const torrent = this.DownloadClient.add(torrentEntry.MagnetLink, {
       path: torrentEntry.downloadPath,
       announce: trackers

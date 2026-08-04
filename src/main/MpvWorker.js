@@ -1,5 +1,5 @@
 import SubDownloadManager from './SubDownloadManager.js';
-import getTorrentTrackers from './torrentTracker.js';
+import { getTorrentTrackers } from './torrentTracker.js';
 import {
   generateUniqueId,
   findFile,

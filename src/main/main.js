@@ -4,9 +4,10 @@ import path from "path";
 import fs from "fs";
 import { copyFile, writeFile, readFile, unlink} from 'fs/promises';
 
+import { log } from "./debugging.js";
 import { AppManager } from "./AppManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
-import { log } from "./debugging.js";
+import { initTorrentTrackers } from "./torrentTracker.js";
 import SubDownloadManager from "./SubDownloadManager.js";
 import { Paths, FilesManager } from "./FilesManager.js";
 import {
@@ -33,6 +34,7 @@ dotenv.config({ path: Paths.__envfile });
 FilesManager.initializeDataFiles();
 const appManager = new AppManager(app, loadSettings());
 appManager.initializeApp();
+initTorrentTrackers();
 
 // ======================= IPC HANDLERS =======================
 
