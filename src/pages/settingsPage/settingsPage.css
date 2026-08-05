@@ -878,30 +878,67 @@ input[type="range"]::-webkit-slider-thumb {
   margin:10px 0;
 }
 
-#btn-addCustomTheme {
-  display:flex;
-  justify-content: center;
+.prepared-themes-div .theme-add-card {
+  display: flex;
+  position: relative;
+  flex-direction: column;
   align-items: center;
-  justify-self: center;
-  align-self: center; 
-  height: 40px;
-  width: 40px;
-  padding: 0 18.4px;
-  border-radius: 7.36px;
-  border: 0.5px solid rgba(255, 255, 255, 0.2);
-  background-color: rgba(255, 255, 255, 0.05);
+  width: 100%;
+  padding: 9.2px;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
   color: white;
-  font-size: 30px;
-  font-weight: 400;
   font-family: inherit;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
 }
-#btn-addCustomTheme:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+
+.prepared-themes-div .theme-add-card:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.35);
 }
-#btn-addCustomTheme:active {
+
+.prepared-themes-div .theme-add-card:active {
   transform: scale(0.98);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.prepared-themes-div .theme-add-card .add-preview {
+  order: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 16 / 10; /* match this to your .card svg preview's actual ratio */
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.prepared-themes-div .theme-add-card:hover .add-preview {
+  color: rgba(255, 255, 255, 0.85);
+  transform: scale(1.08) rotate(90deg);
+}
+
+.prepared-themes-div .theme-add-card p {
+  order: 2;
+  font-size: 12.88px;
+  font-weight: 500;
+  margin: 9.2px 0 0 0;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.prepared-themes-div .theme-add-card:hover p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.prepared-themes-div .theme-add-card:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
 }
 
 /* 1. Define the shaking animation */
