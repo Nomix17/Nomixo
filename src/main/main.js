@@ -784,5 +784,6 @@ async function validateWyzieApiKey(apiKey) {
 
 process.on("unhandledRejection", (reason) => {
   if (reason?.name === "AbortError") return;
-  log.error("Unhandled rejection:", reason);
+  const errorDetails = reason instanceof Error ? reason.stack : reason;
+  log.error("Unhandled rejection:", errorDetails);
 });
