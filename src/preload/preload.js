@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webFrame } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   navigateTo: (newPageURL,currentPageURL,cacheData) => ipcRenderer.send('change-page', newPageURL,currentPageURL,cacheData),
@@ -84,3 +84,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendSystemNotification: (options) => ipcRenderer.send("send-system-notification", options)
 });
 
+
+const zoomFactor = ipcRenderer.sendSync('get-zoom-factor');
+if (zoomFactor) {
+  webFrame.setZoomFactor(zoomFactor);
+}

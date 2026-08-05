@@ -40,6 +40,10 @@ initTorrentTrackers();
 
 // ================ SETTINGS & THEME ================
 
+ipcMain.on("get-zoom-factor", (event) => {
+  event.returnValue = appManager.mainZoomFactor || 1.0;
+});
+
 ipcMain.handle("load-settings", async () => {
   try {
     return await loadSettings();
