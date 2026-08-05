@@ -15,7 +15,7 @@ let seasonNumber = data.get("seasonNumber");
 let episodeNumber = data.get("episodeNumber");
 
 let playerTypeRaw = data.get("playerType");
-let playerType = "external"; //playerTypeRaw === "undefined" ? null : playerTypeRaw;
+let playerType = playerTypeRaw === "undefined" ? null : playerTypeRaw;
 
 let subsDelay = 0; // ms
 let defaultFontSize = 30; // px
@@ -303,15 +303,14 @@ function gettingformatedTime(time){
   return results;
 }
 
-async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber){
-  let usingMagnet = (downloadPath === "undefined");
-  let fileIsMkv = (fileName.endsWith("mkv"));
+async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber) {
+  const usingMagnet = (downloadPath === "undefined");
+  // let fileIsMkv = (fileName.endsWith("mkv"));
 
   if(usingMagnet) {
-    let subs = await loadingAllSubs(mediaImdbId,seasonNumber,episodeNumber);
+    const subs = await loadingAllSubs(mediaImdbId,seasonNumber,episodeNumber);
     subtitlesArray = subs;
-    if(playerType === "external" || (fileIsMkv && playerType == null)) {
-      // pass to external Player
+    if(playerType === "external" || playerType == null) {
       playVideoInMpv(true,Magnet,undefined,fileName,undefined,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs);
       
     } else {
@@ -337,13 +336,12 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
     }
 
   } else {
-    let identifyingElements = {"IMDB_ID":mediaImdbId,"episodeNumber":episodeNumber,"seasonNumber":seasonNumber,"DownloadDir":downloadPath};
-    let videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
-    let subs = await window.electronAPI.loadLocalSubs(videoPath,identifyingElements);
+    const identifyingElements = {"IMDB_ID":mediaImdbId,"episodeNumber":episodeNumber,"seasonNumber":seasonNumber,"DownloadDir":downloadPath};
+    const videoPath = await window.electronAPI.getFullVideoPath(downloadPath,fileName);
+    const subs = await window.electronAPI.loadLocalSubs(videoPath, identifyingElements);
     subtitlesArray = subs;
 
-    if(playerType === "external" || (fileIsMkv && playerType == null)) {
-      // pass to external Player
+    if(playerType === "external" || playerType == null) {
       playVideoInMpv(false,undefined,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,undefined);
 
     } else {
@@ -365,7 +363,7 @@ async function loadVideo(Magnet,downloadPath,fileName,TorrentIdentification,Medi
   }
 }
 
-async function playVideoInMpv(PlayMagnet,Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs){
+async function playVideoInMpv(PlayMagnet,Magnet,downloadPath,fileName,TorrentIdentification,MediaId,MediaType,mediaImdbId,seasonNumber,episodeNumber,subs) {
   let metaData = {
     "Magnet":Magnet, "downloadPath":downloadPath,
     "fileName":fileName, "bgImagePath":bgImagePath,
