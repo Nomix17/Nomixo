@@ -5,9 +5,6 @@
   <img src="./assets/logo/icon.png" width="300" alt="Nomixo logo">
 </picture><br/><br />
 
-  [![Version](https://img.shields.io/github/v/release/Nomix17/Nomixo?color=4F8EF7&leabel=version&logo=github&logoColor=white)](https://github.com/Nomix17/Nomixo/releases)
-  [![Electron](https://img.shields.io/badge/Electron-2C2E3B?logo=electron&logoColor=9FEAF9)](https://www.electronjs.org)
-  [![Node](https://img.shields.io/badge/Node.js-v18+-235A32?logo=nodedotjs&logoColor=6BBF47)](https://nodejs.org)
 </div>
 
 
@@ -28,10 +25,18 @@ Nomixo is an Electron app that lets you search, browse, and stream movies and TV
 
 ## Screenshots
 
-![Home](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/home.jpg)
-![Media Detail](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/media_details.jpg)
-![Download Manager](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/download_page.jpg)
-![Video Player](https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/Screenshots/videoplayer.png)
+<div align="center">
+  <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/docs/Screenshots/home.png" alt="Home" width="90%"/>
+  <hr style="border: 0; border-top: 2px solid rgba(255,255,255,0.2); margin: 30px auto; width: 80%;">
+
+  <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/docs/Screenshots/media_details.png" alt="Media Detail" width="90%"/>
+  <hr style="border: 0; border-top: 2px solid rgba(255,255,255,0.2); margin: 30px auto; width: 80%;">
+
+  <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/docs/Screenshots/download_page.png" alt="Download Manager" width="90%"/>
+  <hr style="border: 0; border-top: 2px solid rgba(255,255,255,0.2); margin: 30px auto; width: 80%;">
+
+  <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/docs/Screenshots/videoplayer.png" alt="Video Player" width="90%"/>
+</div>
 
 
 ## Requirements
