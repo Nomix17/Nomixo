@@ -60,14 +60,14 @@ export class AppManager {
         });
       });
 
-      const { window, isMaximized } = this.#createBrowserWindow();
-      this.browserWindow = window;
+      this.browserWindow = await this.#createBrowserWindow();
+      this.#setupBrowserWindowListeners();
       this.mpvPlayerManager = new MpvPlayerManager(this.browserWindow);
       this.torrentDownloadManager = new TorrentDownloadManager(
         this.browserWindow,
         (entry) => this.mpvPlayerManager.playVideoOverMpv(entry)
       );
-      await this.#setupBrowserWindowListeners(entryPointFile, isMaximized);
+      this.browserWindow.loadFile(entryPointFile);
       await markMediaDownloadsAsPaused();
     });
 
@@ -77,7 +77,14 @@ export class AppManager {
     });
   }
 
-  #createBrowserWindow() {
+  #getBackgroundColor() {
+    const content = fs.readFileSync(Paths.ThemeFilePath, "utf8");
+    const backgroundColorLine = content.split("\n").find(line => line.includes("--primary-color")) ?? "10,14,23";
+    return `rgb(${backgroundColorLine.trim().split(":")[1].split(";")[0] ?? backgroundColorLine})`;
+  }
+
+  async #createBrowserWindow() {
+    const bgColor = this.#getBackgroundColor();
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
     const { width, height, x, y, isMaximized } = this.store.get("windowBounds") || {
@@ -86,33 +93,31 @@ export class AppManager {
       isMaximized: false,
     };
 
+    this.mainZoomFactor = await this.#getZoomFactorFromSettings();
     const window = new BrowserWindow({
       width, height, x, y,
-      show: false,
+      show: true,
+      backgroundColor: bgColor,
       webPreferences: {
         preload: path.join(Paths.__dirname, "../preload/preload.js"),
         contextIsolation: true,
         nodeIntegration: false,
+        zoomFactor: this.mainZoomFactor
       },
     });
-
-    return { window, isMaximized };
+    window.setMenuBarVisibility(false);
+    if(isMaximized) window.maximize()
+    return window;
   }
 
-  async #setupBrowserWindowListeners(entryPointFile, isMaximized) {
-    this.browserWindow.setMenuBarVisibility(false);
-    this.browserWindow.loadFile(entryPointFile);
+  async #getZoomFactorFromSettings() {
     const defaultSettings = await this.defaultSettingsPromise;
-    this.mainZoomFactor = defaultSettings.PageZoomFactor;
     if (defaultSettings?.DefaultDownloadPath != null)
       Paths.defaultDownloadPath = defaultSettings.DefaultDownloadPath;
+    return defaultSettings.PageZoomFactor;
+  }
 
-    this.browserWindow.once("ready-to-show", () => {
-      this.browserWindow.webContents.setZoomFactor(this.mainZoomFactor);
-      if (isMaximized) this.browserWindow.maximize();
-      this.browserWindow.show();
-    });
-
+  #setupBrowserWindowListeners() {
     this.browserWindow.on("close", () => {
       this.store.set("windowBounds", {
         ...(this.browserWindow.isMaximized()
