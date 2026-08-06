@@ -89,10 +89,24 @@ async function loadGenres(apiKey) {
   };
 }
 
+async function checkAndFillScreen(apiKey) {
+  const middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
+  if(RightmiddleDiv.scrollHeight <= middleRightDivHeight + 30 && allowToFetchData) {
+    loadingGif.style.display = "flex";
+    numberOfLoadedPages += 2;
+    await fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages);
+    await fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages + 1);
+    checkAndFillScreen(apiKey);
+  }
+}
+
 async function loadMediaFromAPI(apiKey){
   MediaSuggestions.innerHTML = "";
-  fetchData(apiKey, genreId, MediaType, 2);
-  fetchData(apiKey, genreId, MediaType, 1);
+  await Promise.all([
+    fetchData(apiKey, genreId, MediaType, 1),
+    fetchData(apiKey, genreId, MediaType, 2),
+  ]);
+  await checkAndFillScreen(apiKey);
 }
 
 function changeDescriptionTitleValue(titleValue){
@@ -114,14 +128,14 @@ function addDropDownsEventListener(){
 
 let numberOfLoadedPages = 2;
 function detectWhenScrollsArriveAtTheEndOfAPage(apiKey){
-  RightmiddleDiv.addEventListener('scroll', function () {
+  RightmiddleDiv.addEventListener('scroll', async () => {
     const middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
     if (RightmiddleDiv.scrollTop + middleRightDivHeight + 30 >= RightmiddleDiv.scrollHeight) {
       loadingGif.style.display = "flex";
       if(!allowToFetchData) return;
       numberOfLoadedPages += 2;
-      fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages + 1);
       fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages);
+      fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages + 1);
     }
   });
 }
