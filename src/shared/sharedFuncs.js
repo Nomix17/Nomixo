@@ -734,44 +734,38 @@ function addEventListenerToMediaDomElementToOpenDetailPage(mediaDomElement,media
   });
 }
 
-function insertMediaElements(MediaSearchResults,MediaContainer,MediaType,LibraryInformation){
+const renderedMedia = new Set();
+function insertMediaElements(MediaSearchResults, MediaContainer, MediaType, LibraryInformation) {
   if(!MediaSearchResults?.length) throw new Error("No data was Fetched");
 
-  const tempArray = [];
   MediaSearchResults.forEach(obj => {
-    let Id = obj?.["id"] ?? "Unknown";
-    let Title = obj?.["title"] ?? obj?.["name"] ?? "Unknown";
-    let Adult = obj?.["adult"] ?? "Unknown";
-    let ThisMediaType = obj?.["media_type"] ?? MediaType;
-    let PosterImage;
+    const mediaId = obj?.["id"] ?? "Unknown";
+    const mediaTitle = obj?.["title"] ?? obj?.["name"] ?? "Unknown";
+    const adult = obj?.["adult"] ?? "Unknown";
+    const thisMediaType = obj?.["media_type"] ?? MediaType;
+    const mediaKey = `${mediaId}-${thisMediaType}`;
+    let posterImage;
+    
+    if(!renderedMedia.has(mediaKey)) {
+      if(obj?.["poster_path"]) posterImage = ("https://image.tmdb.org/t/p/w500/"+obj["poster_path"]).replace(/([^:]\/)\/+/g, '$1');
+      else if(obj?.["profile_path"])  posterImage = ("https://image.tmdb.org/t/p/w500/"+obj["profile_path"]).replace(/([^:]\/)\/+/g, '$1');
+      else if(thisMediaType === "person") posterImage = "../../../assets/ProfileNotFound.svg"
+      else posterImage = "../../../assets/PosterNotFound.svg"
 
-    if(!tempArray.includes(Title)){
-      tempArray.push(Title); 
-      
-      if(obj?.["poster_path"]) PosterImage = ("https://image.tmdb.org/t/p/w500/"+obj["poster_path"]).replace(/([^:]\/)\/+/g, '$1');
-      else if(obj?.["profile_path"])  PosterImage = ("https://image.tmdb.org/t/p/w500/"+obj["profile_path"]).replace(/([^:]\/)\/+/g, '$1');
-      else if(ThisMediaType === "person") PosterImage = "../../../assets/ProfileNotFound.svg"
-      else PosterImage = "../../../assets/PosterNotFound.svg"
-
-      const mediaDomElement = creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType);
-      const toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, Id, ThisMediaType,Title,PosterImage)
-
-      if(ThisMediaType.toLowerCase() !== "person")
+      const mediaDomElement = creatingTheBaseOfNewMediaElement(mediaTitle, posterImage, mediaId, thisMediaType);
+      const toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, mediaId, thisMediaType, mediaTitle, posterImage)
+      if(thisMediaType.toLowerCase() !== "person")
         mediaDomElement.appendChild(toggleInLibraryBtn);
 
-      if(!Array.isArray(MediaContainer)){
-        const mediaElementsLoaded = Array.from(MediaContainer.querySelectorAll(".div-MovieElement"));
-        const mediaElementDoesntExistAlready = !(mediaElementsLoaded.some(element => element.innerHTML === mediaDomElement.innerHTML));
-        if(mediaElementDoesntExistAlready)
-          MediaContainer.appendChild(mediaDomElement);
-
-      }else{
-        if(ThisMediaType.toLowerCase() === "movie") MediaContainer[0].append(mediaDomElement);
-        else if(ThisMediaType.toLowerCase() === "tv") MediaContainer[1].append(mediaDomElement);
-        else if(ThisMediaType.toLowerCase() === "person") MediaContainer[2].append(mediaDomElement);
+      if(!Array.isArray(MediaContainer)) {
+        MediaContainer.appendChild(mediaDomElement);
+      } else {
+        if(thisMediaType.toLowerCase() === "movie") MediaContainer[0].append(mediaDomElement);
+        else if(thisMediaType.toLowerCase() === "tv") MediaContainer[1].append(mediaDomElement);
+        else if(thisMediaType.toLowerCase() === "person") MediaContainer[2].append(mediaDomElement);
         else MediaContainer[3].append(mediaDomElement);
-
-      } 
+      }
+      renderedMedia.add(mediaKey);
     }
   });
 }
