@@ -48,22 +48,11 @@ class TorrentDownloadManager {
         torrentEntry["torrentId"] = torrentId;
         torrentEntry["downloadPath"] = torrentDownloadRootDirPath;
 
-        // Download subs
-        try {
-          if (subsObjects != null) {
-            await SubDownloadManager.downloadSubs(subsObjects, torrentId, torrentDownloadRootDirPath);
-          } else {
-            log.warn("Subtitles Download Skipped");
-          }
-        } catch (error) {
-          this.reportDownloadError("Subtitles Download", torrentId, error);
-          log.error(error);
-        }
-
         // Download the torrent
         try {
           const clientIsBusy = this.DownloadClient.torrents.length;
           if (!clientIsBusy) {
+            await this.downloadSubs(torrentEntry, subsObjects);
             await this.executeTorrentDownload(torrentEntry);
             results.push({ success: true, torrentId });
           } else {
@@ -72,7 +61,7 @@ class TorrentDownloadManager {
                 this.WINDOW.webContents.send("download-progress-stream", { Status: "NewDownload" });
             });
             if (!this.downloadQueue.find(ele => ele.torrentId === torrentEntry.torrentId))
-              this.downloadQueue.push(torrentEntry);
+              this.downloadQueue.push({ ...torrentEntry, subsObjects });
           }
         } catch (error) {
           this.reportDownloadError("Torrent Download", torrentId, error);
@@ -88,6 +77,23 @@ class TorrentDownloadManager {
     return results;
   }
 
+  async downloadSubs(torrentEntry, subsObjects) {
+    try {
+      if (subsObjects != null) {
+        insertNewDownloadEntry(torrentEntry, "DownloadSubs").then((isNewEntry) => {
+          if(isNewEntry)
+            this.WINDOW.webContents.send("download-progress-stream", { Status: "NewDownload" });
+        });
+        await SubDownloadManager.downloadSubs(subsObjects, torrentEntry.torrentId, torrentEntry.downloadPath);
+      } else {
+        log.warn("Subtitles Download Skipped");
+      }
+    } catch (error) {
+      this.reportDownloadError("Subtitles Download", torrentEntry.torrentId, error);
+      log.error(error);
+    }
+  }
+
   async executeTorrentDownload(torrentEntry) {
     const trackers = await getTorrentTrackers();
     const torrent = this.DownloadClient.add(torrentEntry.MagnetLink, {
@@ -95,7 +101,10 @@ class TorrentDownloadManager {
       announce: trackers
     });
 
-    this.downloadingMediaHashMap[torrentEntry.torrentId] = { torrentInstance: torrent, torrentEntry };
+    this.downloadingMediaHashMap[torrentEntry.torrentId] = {
+      torrentInstance: torrent,
+      torrentEntry
+    };
 
     insertNewDownloadEntry(torrentEntry).then((isNewEntry) => {
       if(isNewEntry)
@@ -229,6 +238,7 @@ class TorrentDownloadManager {
     if (this.downloadQueue.length) {
       const nextTorrent = this.downloadQueue.shift();
       if (nextTorrent?.torrentId) {
+        await this.downloadSubs(nextTorrent, nextTorrent.subsObjects);
         this.executeTorrentDownload(nextTorrent);
         await editDownloadStorageEntry([nextTorrent.torrentId], "Status", "Downloading");
         this.WINDOW.webContents.send("update-download-categorie", [{ response: "continued", torrentId: nextTorrent.torrentId }]);
