@@ -62,12 +62,12 @@ export class AppManager {
 
       this.browserWindow = await this.#createBrowserWindow();
       this.#setupBrowserWindowListeners();
+      this.browserWindow.loadFile(entryPointFile);
       this.mpvPlayerManager = new MpvPlayerManager(this.browserWindow);
       this.torrentDownloadManager = new TorrentDownloadManager(
         this.browserWindow,
         (entry) => this.mpvPlayerManager.playVideoOverMpv(entry)
       );
-      this.browserWindow.loadFile(entryPointFile);
       await markMediaDownloadsAsPaused();
     });
 
