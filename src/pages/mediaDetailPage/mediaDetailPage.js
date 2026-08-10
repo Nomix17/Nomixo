@@ -250,8 +250,10 @@ async function fetchMediaTorrent(episodeInfo={}) {
 
   try {
     const imdb_id = await IMDB_IDPromise;
+    const seasonNum = Number(episodeInfo.seasonNumber);
+    const episodeNum = Number(episodeInfo.episodeNumber);
     const url = (MediaType === "tv") 
-      ? `https://torrentio.strem.fun/stream/series/${imdb_id}:${episodeInfo.seasonNumber}:${episodeInfo.episodeNumber}.json`
+      ? `https://torrentio.strem.fun/stream/series/${imdb_id}:${seasonNum}:${episodeNum}.json`
       : `https://torrentio.strem.fun/stream/movie/${imdb_id}.json`;
 
     const mediaTorrentRes = await fetch(url);
