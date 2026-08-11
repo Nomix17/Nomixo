@@ -2,7 +2,7 @@ const data = new URLSearchParams(window.location.search);
 const MediaId = data.get("MovieId");
 const MediaType = data.get("MediaType");
 const apiKeyPromise = window.electronAPI.getTMDBAPIKEY();
-const IMDB_IDPromise = getIMDB_ID();
+const IMDB_IDPromise = getIMDB_ID(MediaType, MediaId, apiKeyPromise);
 const trailerPromise = getMediaTrailer();
 
 let backgroundImage;
@@ -270,15 +270,6 @@ async function fetchMediaTorrent(episodeInfo={}) {
       refreshTorrent
     );
   }
-}
-
-async function getIMDB_ID() {
-  const apiKey = await apiKeyPromise;
-  const mediaExternalIdsRes = await fetch(
-    `https://api.themoviedb.org/3/${MediaType}/${MediaId}/external_ids?api_key=${apiKey}`
-  );
-  const mediaExternalIdsData = await mediaExternalIdsRes.json();
-  return mediaExternalIdsData?.imdb_id
 }
 
 async function getMediaTrailer() {

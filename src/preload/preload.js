@@ -65,6 +65,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDownloadErrorsReports: (fn)=> ipcRenderer.on("report-download-errors",(event,data)=>fn(data)),
   getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
   getTorrentStreamingReport:(fn) => ipcRenderer.on("torrent-streaming-report",(event,data) => fn(data)),
+  updateDownloadStatus:(fn) => ipcRenderer.on("update-download-status",(event,data) => fn(data)),
+
 
   downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl),
   downloadBackdrop: (backgroundImageUrl) => ipcRenderer.invoke("download-backdrop", backgroundImageUrl),

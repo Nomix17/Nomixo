@@ -3,7 +3,10 @@ const currentlyDownloadingDiv = document.getElementById("currently-downloading-d
 const queuedDownloadsDiv  = document.getElementById("download-queue-div");
 const pausedDownloadsDiv = document.getElementById("download-paused-div");
 const doneDownloadsDiv = document.getElementById("download-done-div");
-const libraryDumpPromise = window.electronAPI.loadDownloadLibraryInfo() 
+const libraryDumpPromise = window.electronAPI.loadDownloadLibraryInfo();
+
+const LOADING_MSG = "Loading metadata";
+const SUBS_DOWNLOADING_MSG = "Downloading subs";
 
 let monitoringProgress = false;
 async function loadDownloadMediaFromLib() {
@@ -36,6 +39,14 @@ async function loadDownloadMediaFromLib() {
   RightmiddleDiv.classList.add("activate");
 
   updateDownloadUI();
+}
+
+async function createDownloadElementFromId(torrentId) {
+  if(!torrentId) return;
+  const library = await window.electronAPI.loadDownloadLibraryInfo();
+  const torrentEntry = library.find(entry => entry.torrentId === torrentId);
+  if(torrentEntry)
+    createDownloadElement(torrentEntry);
 }
 
 async function createDownloadElement(mediaLibEntryPoint) {
@@ -78,7 +89,8 @@ async function createDownloadElement(mediaLibEntryPoint) {
   makeSureBgImageIsDownloaded(mediaLibEntryPoint);
 
   let downloadCategorie;
-  if (downloadStatus.toLowerCase() === "downloading" || downloadStatus.toLowerCase() === "loading") {
+  const activeDownloadStatus = ["downloading", "loading", "subs-download"];
+  if (activeDownloadStatus.includes(downloadStatus.toLowerCase())) {
     downloadCategorie = currentlyDownloadingDiv;
     addBackgroundImageToDownloadingDiv(
       MediaDownloadElement,
@@ -86,10 +98,12 @@ async function createDownloadElement(mediaLibEntryPoint) {
       mediaLibEntryPoint?.posterPath
     );
 
-    if (downloadStatus.toLowerCase() === "loading") {
-      if(!loadingIntervals?.[mediaLibEntryPoint.torrentId])
-        addingLoadingAnimation(mediaLibEntryPoint.torrentId,downloadSpeedElement,PausePlayButton);
-    }
+    MarkDownloadElementAsLoading(
+      MediaDownloadElement,
+      downloadStatus.toLowerCase() === "subs-download" 
+        ? SUBS_DOWNLOADING_MSG 
+        : LOADING_MSG
+    );
 
   } else if(downloadStatus.toLowerCase() === "done") {
     downloadCategorie = doneDownloadsDiv;
@@ -103,7 +117,7 @@ async function createDownloadElement(mediaLibEntryPoint) {
     downloadCategorie = pausedDownloadsDiv;
     MarkDownloadElementAsPaused(MediaDownloadElement);
     if(downloadStatus.toLowerCase() !== "paused")
-      console.log(downloadStatus, "Is Unknown Download Status");
+      console.error(downloadStatus, "Is Unknown Download Status");
   }
 
   handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
@@ -226,27 +240,19 @@ function monitorDownloads() {
 }
 
 function refreshEntries() {
-  window.electronAPI.getDownloadProgress(async (data) => {
-    let JsonData = data;
-    if(JsonData?.Status === "NewDownload"){
-      let MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
-      let emptyLibText = MediaDownloadElementContainer.querySelector("#div-text");
-      if(emptyLibText) emptyLibText.remove()
-      loadDownloadMediaFromLib();
-    }
-  });
+
 }
 
 function handleCancelButton(mediaInfo,cancelDownloadButton) {
   if(cancelDownloadButton) {
     cancelDownloadButton.addEventListener("click",async () => {
-      window.electronAPI.cancelDownload(mediaInfo);
-      let TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
+      const TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
       TargetDownloadElement.remove();
-      let MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
+      const MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
       if(MediaDownloadElementContainer.innerHTML.trim() === "")
         putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
-
+      const res = await window.electronAPI.cancelDownload(mediaInfo);
+      handleDownloadCategorieChanging(res);
       updateDownloadUI();
     });
   }
@@ -263,14 +269,14 @@ function handleTogglingPauseButton(torrentId,MediaDownloadElement) {
   }
 }
 
-function addingLoadingAnimation(torrentId,downloadSpeedElement,PausePlayButton) {
+function addingLoadingAnimation(torrentId, downloadSpeedElement, PausePlayButton, loadingMsg) {
   PausePlayButton.classList.add("requesting-continue-download");
 
   let counter = 1;
-  downloadSpeedElement.innerHTML = "loading ."
-  loadingIntervals[torrentId] = setInterval(()=>{
+  downloadSpeedElement.innerHTML = `${loadingMsg} .`;
+  loadingIntervals[torrentId] = setInterval(() => {
     let dots = ["",".",". .",". . ."];
-    downloadSpeedElement.innerHTML = "loading "+dots[counter % dots.length];
+    downloadSpeedElement.innerHTML = `${loadingMsg} ${dots[counter % dots.length]}`;
     counter ++;
   },500);
 }
@@ -709,7 +715,8 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
   }
 }
 
-async function MarkDownloadElementAsLoading(MediaDownloadElement) {
+let currentbgImage = null;
+async function MarkDownloadElementAsLoading(MediaDownloadElement, loadingMsg = LOADING_MSG) {
   const PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   const downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
   const elementId = MediaDownloadElement.id;
@@ -719,17 +726,21 @@ async function MarkDownloadElementAsLoading(MediaDownloadElement) {
   shiftingArrows.forEach(el => el.remove());
 
   PausePlayButton.innerHTML = pauseIcon;
-  downloadSpeedElement.innerHTML = "loading"
+  downloadSpeedElement.innerHTML = loadingMsg
 
-  addingLoadingAnimation(elementId,downloadSpeedElement,PausePlayButton);
+  addingLoadingAnimation(elementId,downloadSpeedElement,PausePlayButton,loadingMsg);
   let posterImage = MediaDownloadElement.querySelector(".poster-img").src;
-  const targetTorrentInfo = (await libraryDumpPromise)?.downloads
+  const targetTorrentInfo = (await window.electronAPI.loadDownloadLibraryInfo())?.downloads
     .find(el => el.torrentId === elementId);
+
   addBackgroundImageToDownloadingDiv(
     MediaDownloadElement,
-    targetTorrentInfo?.bgImagePath ??
-    posterImage
+    targetTorrentInfo?.bgImagePath ?? posterImage 
   );
+}
+
+async function MarkDownloadElementAsDownloadSubs(MediaDownloadElement) {
+  await MarkDownloadElementAsLoading(MediaDownloadElement, SUBS_DOWNLOADING_MSG);
 }
 
 function reorderDownloadQueue(newOrder, animateTransition=true) {
@@ -813,7 +824,7 @@ async function scrollTo(scrollValue) {
   downloadMediaContainer.scrollTop = scrollValue;
 }
 
-function updateDownloadUI() {
+async function updateDownloadUI() {
   handleEmptyDownloadCategories();
   updateElementsCounterForEachContainer();
   disableBorderArrowBtnsForQueuedEls();
@@ -822,7 +833,7 @@ function updateDownloadUI() {
 function handleEmptyDownloadCategories() {
   const categories = document.querySelectorAll(".downloads-categorie");
   
-  for(const downloadCategorieDiv of categories){
+  for(const downloadCategorieDiv of categories) {
     const container = downloadCategorieDiv.querySelector('.movieContainer');
     const isEmpty = [...container.children].every(el => el.matches('p.empty-container-text'));
     const emptyParagraph = downloadCategorieDiv.querySelector('.empty-container-text')
@@ -833,10 +844,7 @@ function handleEmptyDownloadCategories() {
       elementCategoryControllBtn.classList.toggle("disabled", isEmpty);
     downloadCategorieDiv.style.display = "block";
 
-    if(
-      isEmpty &&
-      downloadCategorieDiv.id === "currently-downloading-div"
-    )
+    if(isEmpty && downloadCategorieDiv.id === "currently-downloading-div")
       removeDownloadBackgroundDiv();
 
     if (
@@ -862,7 +870,10 @@ function updateElementsCounterForEachContainer() {
 }
 
 async function addBackgroundImageToDownloadingDiv(mediaElement, posterImage) {
+  if (posterImage === currentbgImage) return;
+  currentbgImage = posterImage;
   removeDownloadBackgroundDiv();
+
   if(mediaElement && posterImage && posterImage.trim() !== "") {
     let backgroundImageDiv = document.createElement("div");
     backgroundImageDiv.className = "currently-downloading-background-div";
@@ -880,11 +891,9 @@ async function addBackgroundImageToDownloadingDiv(mediaElement, posterImage) {
 }
 
 function removeDownloadBackgroundDiv() {
-  const downloadBackgroundDiv = document.querySelector(".currently-downloading-background-div");
-  if (downloadBackgroundDiv) {
-    downloadBackgroundDiv.remove();
-  }
-
+  const downloadBackgroundDivs = document.querySelectorAll(".currently-downloading-background-div");
+  downloadBackgroundDivs.forEach(el => el.remove());
+  currentbgImage = null;
 }
 
 function makeSureImageIsLoaded(imagePath) {
@@ -914,19 +923,20 @@ function makeSureImageIsLoaded(imagePath) {
   });
 }
 
-
 function handleDownloadCategoryUpdateFromMain() {
-  window.electronAPI.updateDownloadCategorie(res => {
+  window.electronAPI.updateDownloadStatus(res => {
     handleDownloadCategorieChanging(res);
   });
 }
 
 async function handleDownloadCategorieChanging(categorieChangedTorrents) {
   const DOWNLOAD_CATEGORIES = {
-    paused: {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, SaveStatus: "Paused" },
-    queued: {categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued, SaveStatus: "Queued"},
-    continued: {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading, SaveStatus: "Loading"},
-    failed: {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, SaveStatus: null}
+    "paused": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, SaveStatus: "Paused" },
+    "queued": {categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued, SaveStatus: "Queued"},
+    "continued": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading, SaveStatus: "Loading"},
+    "new-download": {categoryDiv: currentlyDownloadingDiv, applyUIState: createDownloadElementFromId, SaveStatus: "Loading"},
+    "subs-download": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs, SaveStatus: "Download-Subs"},
+    "failed": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, SaveStatus: null}
   };
 
   for(const res of categorieChangedTorrents) {
@@ -941,14 +951,19 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
       removeLoadingAnimation(res.torrentId, PausePlayButton);
     }
 
-    const category = DOWNLOAD_CATEGORIES?.[res.response];
+    const category = DOWNLOAD_CATEGORIES?.[res.status];
     if(category == null) {
-      console.error("Undefined category: ", res.response);
+      console.error("Undefined category: ", res.status);
       continue;
     }
 
-    category?.applyUIState(targetElement);
-    if(res?.response === "failed"){
+    if(res?.status === "new-download") {
+      category?.applyUIState(res?.torrentId);
+    } else {
+      category?.applyUIState(targetElement);
+    }
+
+    if(res?.status === "failed") {
       console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
     }
 

@@ -95,7 +95,7 @@ function StreamTorrent(
           log.info(`Streaming URL: ${url}`);
 
           const subsId = generateUniqueId(
-            `${metaData.mediaImdbId}-${metaData.episodeNumber ?? "undefined"}-${metaData.seasonNumber ?? "undefined"}`
+            `${metaData.IMDB_ID}-${metaData.episodeNumber ?? "undefined"}-${metaData.seasonNumber ?? "undefined"}`
           );
 
           const tmpSubDir = path.join(subDirectory, `SUB_${subsId}`);

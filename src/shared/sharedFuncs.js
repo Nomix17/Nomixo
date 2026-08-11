@@ -979,6 +979,15 @@ async function continueWatchingEventListener(continueVideoButton,mediaEntryPoint
   });
 }
 
+async function getIMDB_ID(MediaType, MediaId, apiKeyPromise) {
+  const apiKey = await apiKeyPromise;
+  const mediaExternalIdsRes = await fetch(
+    `https://api.themoviedb.org/3/${MediaType}/${MediaId}/external_ids?api_key=${apiKey}`
+  );
+  const mediaExternalIdsData = await mediaExternalIdsRes.json();
+  return mediaExternalIdsData?.imdb_id
+}
+
 function addContrastForPlayIcon() {
   const root = document.documentElement;
   const primaryColor = getComputedStyle(root).getPropertyValue('--primary-color').trim();

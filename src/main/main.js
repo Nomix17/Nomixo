@@ -277,7 +277,7 @@ ipcMain.handle("play-torrent-over-mpv", async (event, metaData) => {
 
 ipcMain.handle("play-video-over-mpv", async (event, metaData) => {
   const subsPaths = loadSubsFromSubDir({
-    IMDB_ID: metaData.mediaImdbId,
+    IMDB_ID: metaData.IMDB_ID,
     episodeNumber: metaData.episodeNumber,
     seasonNumber: metaData.seasonNumber,
     DownloadDir: metaData.downloadPath,
