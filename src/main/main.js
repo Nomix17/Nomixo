@@ -310,7 +310,7 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
 });
 
 ipcMain.handle("add-torrent-to-download-queue", async (event, torrentId) => {
-  return appManager.torrentDownloadManager.downloadOrQueueTorrent(torrentId);
+  return await appManager.torrentDownloadManager.addToQueue(torrentId);
 });
 
 ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) => {
@@ -318,11 +318,11 @@ ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) =>
 });
 
 ipcMain.handle("shift-download-queue-element", (event, torrentId, offset) => {
-  return appManager.torrentDownloadManager.shiftQueuedElement(torrentId, offset);
+  return appManager.torrentDownloadManager.downloadClient.shiftQueuedItem(torrentId, offset);
 });
 
 ipcMain.handle("get-download-queue-list", () => {
-  return appManager.torrentDownloadManager.downloadQueue.map((el) => el.torrentId);
+  return appManager.torrentDownloadManager.downloadClient.getQueueTorrentIds();
 });
 
 // ======================= DOWNLOAD OTHER THINGS =======================

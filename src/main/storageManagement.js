@@ -32,7 +32,7 @@ export async function getDownloadEntry(torrentId) {
     let targetLibraryInfo = LibraryInfo.downloads.filter(
       element => element.torrentId === torrentId
     );
-    if (targetLibraryInfo.length) return targetLibraryInfo;
+    if (targetLibraryInfo.length) return targetLibraryInfo?.[0];
   }
   return undefined;
 }

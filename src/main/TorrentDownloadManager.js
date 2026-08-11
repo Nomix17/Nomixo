@@ -1,5 +1,5 @@
-import { getTorrentTrackers } from './torrentTracker.js';
-import { 
+import { QueuedWebTorrent } from './QueuedWebTorrent.js';
+import {
   generateUniqueId,
   normaliseFileName,
   sendSystemNotification,
@@ -7,159 +7,145 @@ import {
 } from './utils.js';
 
 import {
-  loadDownloadStorage,
   getDownloadEntry,
-  insertNewDownloadEntry, 
+  insertNewDownloadEntry,
   saveDownloadProgress,
   editDownloadStorageEntry,
   removeDownloadStorageEntry,
 } from "./storageManagement.js";
 
-import {Paths} from "./FilesManager.js";
-import {log} from "./debugging.js";
-import WebTorrent from 'webtorrent';
+import { Paths } from "./FilesManager.js";
+import { log } from "./debugging.js";
 import path from "path";
+import { mkdir } from 'fs/promises';
 import fs from 'fs';
 
+const DELAY_BEFORE_LIBRARY_SAVE_MS = 1000;
+const DELAY_BEFORE_PIPING_MS = 400;
 
 class TorrentDownloadManager {
+  static MAX_DIR_NAME_LENGTH = 200;
+
   constructor(WINDOW, onPlayVideo) {
     this.WINDOW = WINDOW;
     this.onPlayVideo = onPlayVideo;
-    this.DownloadClient = new WebTorrent();
-    this.downloadingMediaHashMap = {};
-    this.downloadQueue = [];
+    this.downloadClient = new QueuedWebTorrent();
     Paths.downloadLibraryFilePath = path.join(Paths.__configs, "downloads.json");
   }
 
-  async scheduleTorrentDownloads(torrentsEntries, subsObjects) {
+  async scheduleTorrentDownloads(torrentsEntries, downloadSubtitles = true) {
     const results = [];
     for (const torrentEntry of torrentsEntries) {
       try {
-        Paths.defaultDownloadPath = torrentEntry?.userDownloadPath ?? Paths.defaultDownloadPath;
-        torrentEntry.dirName = this.sanitizeDirNameForOS(torrentEntry);
-        const torrentDownloadRootDirPath = path.join(Paths.defaultDownloadPath, torrentEntry.dirName);
-        fs.mkdirSync(torrentDownloadRootDirPath, { recursive: true });
-
+        const torrentDownloadPath = await this.getTorrentDownloadPath(torrentEntry);
         const torrentId = generateUniqueId(
-          `${torrentEntry.IMDB_ID}-${torrentEntry.episodeNumber ?? "undefined"}-${torrentEntry.seasonNumber ?? "undefined"}-${torrentDownloadRootDirPath}`
+          `${torrentEntry.IMDB_ID}-${torrentEntry.episodeNumber ?? "undefined"}-${torrentEntry.seasonNumber ?? "undefined"}-${torrentDownloadPath}`
         );
-        torrentEntry["torrentId"] = torrentId;
-        torrentEntry["downloadPath"] = torrentDownloadRootDirPath;
+        torrentEntry.torrentId = torrentId;
+        torrentEntry.downloadPath = torrentDownloadPath;
+        torrentEntry.downloadSubtitles = downloadSubtitles;
 
-        // Download the torrent
-        try {
-          const clientIsBusy = this.DownloadClient.torrents.length;
-          if (!clientIsBusy) {
-            await this.downloadSubs(torrentEntry, subsObjects);
-            await this.executeTorrentDownload(torrentEntry);
-            results.push({ success: true, torrentId });
-          } else {
-            insertNewDownloadEntry(torrentEntry, "Queued").then((isNewEntry) => {
-              if(isNewEntry)
-                this.WINDOW.webContents.send("download-progress-stream", { Status: "NewDownload" });
-            });
-            if (!this.downloadQueue.find(ele => ele.torrentId === torrentEntry.torrentId))
-              this.downloadQueue.push({ ...torrentEntry, subsObjects });
-          }
-        } catch (error) {
-          this.reportDownloadError("Torrent Download", torrentId, error);
-          log.error(error);
-          results.push({ success: false, error: error.message, torrentId });
-        }
-
-      } catch (err) {
-        log.error(`Error processing torrent:`, err);
-        results.push({ success: false, error: err.message });
+        const { status } = await this.executeTorrentDownload(torrentEntry, false, downloadSubtitles);
+        results.push({ success: true, torrentId, status });
+      } catch (error) {
+        log.error(`Error processing torrent:`, error);
+        results.push({ success: false, error: error.message, torrentId: torrentEntry?.torrentId });
       }
     }
     return results;
   }
 
+  async getTorrentDownloadPath(torrentEntry) {
+    Paths.defaultDownloadPath = torrentEntry?.userDownloadPath ?? Paths.defaultDownloadPath;
+    torrentEntry.dirName = this.sanitizeDirNameForOS(torrentEntry);
+    const torrentDownloadPath = path.join(Paths.defaultDownloadPath, torrentEntry.dirName);
+    await mkdir(torrentDownloadPath, { recursive: true });
+    return torrentDownloadPath;
   }
 
-  async executeTorrentDownload(torrentEntry) {
-    const trackers = await getTorrentTrackers();
-    const torrent = this.DownloadClient.add(torrentEntry.MagnetLink, {
-      path: torrentEntry.downloadPath,
-      announce: trackers
-    });
+  async executeTorrentDownload(torrentEntry, priority = false, downloadSubtitles = torrentEntry.downloadSubtitles ?? true) {
+    torrentEntry.downloadSubtitles = downloadSubtitles;
 
-    this.downloadingMediaHashMap[torrentEntry.torrentId] = {
-      torrentInstance: torrent,
-      torrentEntry
-    };
+    const { status, donePromise } = await this.downloadClient.add(
+      torrentEntry, {}, priority,
+      (startedTorrent) => this.attachTorrentHandlers(startedTorrent, torrentEntry),
+      downloadSubtitles,
+      async () => {
+        await insertNewDownloadEntry(torrentEntry, "Subs-Download");
+        this.pushStatusUpdate([{ status: "subs-download", torrentId: torrentEntry.torrentId }])
+      }
+    );
 
-    insertNewDownloadEntry(torrentEntry).then((isNewEntry) => {
-      if(isNewEntry)
-        this.WINDOW.webContents.send("download-progress-stream", { Status: "NewDownload" });
-    });
+    if (status !== 'Paused') {
+      const isNewEntry = await insertNewDownloadEntry(torrentEntry, status, priority);
+      if (isNewEntry) {
+        this.WINDOW.webContents.send("download-progress-stream", { Status: status });
+      }
+    }
+    this.watchForOutcome(donePromise, torrentEntry);
 
-    return new Promise((resolve, reject) => {
-      log.info("Loading Torrent:", torrentEntry.torrentId);
-      torrent.on("metadata", () => log.info("Metadata received"));
-      torrent.on("warning", (warn) => log.warn("Torrent warning:", warn.message));
+    return { status };
+  }
 
-      torrent.on("ready", () => {
-        log.info("Download Target: " + torrentEntry?.fileName);
-        console.log("\nTorrent Files:-----------------------------------------------------");
-        torrent.files.forEach(f => { console.log(f.name) });
-        console.log("-------------------------------------------------------------------\n");
-
-        const targetFile = this.findFileInsideTorrent(torrent, torrentEntry?.fileName);
-        if (!targetFile) {
-          reject(new Error('No suitable video file found'));
-          return;
-        }
-
-        torrent.files.forEach(file => { file.deselect() });
-        targetFile.select();
-
-        const totalSize = targetFile.length;
-        let LibraryStartTime = 0;
-        let PipingStartTime = 0;
-        const DelayBeforeLibrarySave = 1000;
-        const DelayBeforePiping = 400;
-
-        torrent.on("download", async () => {
-          const now = Date.now();
-          const downloadedDataLength = targetFile.downloaded;
-          torrentEntry["Total"] = totalSize;
-          torrentEntry["Downloaded"] = downloadedDataLength;
-          torrentEntry["poster"] = torrentEntry.posterUrl;
-
-          if (totalSize <= downloadedDataLength) {
-            await this.pipeDownloadCompleteToRenderer(torrent, torrentEntry, totalSize, downloadedDataLength);
-            resolve();
-            return;
-          }
-
-          if (now - LibraryStartTime >= DelayBeforeLibrarySave) {
-            saveDownloadProgress(torrentEntry, downloadedDataLength, totalSize);
-            LibraryStartTime = now;
-          }
-
-          if (now - PipingStartTime >= DelayBeforePiping) {
-            this.pipeDownloadProgressToRenderer(torrentEntry, torrent.downloadSpeed, totalSize, downloadedDataLength); //problem is here
-            PipingStartTime = now;
-          }
-        });
-      });
-
-      torrent.on("error", (err) => {
-        log.error(`Torrent error: ${torrentEntry.torrentId}, ${err}`);
-        torrent.destroy(() => {
-          this.deleteTorrentFromMediaHashMap(torrentEntry.torrentId);
-          this.downloadNextTorrentInQueue();
-        });
-
+  watchForOutcome(donePromise, torrentEntry) {
+    donePromise
+      .then((completedTorrent) =>
+        this.pipeDownloadCompleteToRenderer(
+          completedTorrent,
+          torrentEntry,
+          torrentEntry.Total ?? 0,
+          torrentEntry.Downloaded ?? 0
+        )
+      )
+      .catch((err) => {
+        if (err?.name === 'TorrentCancelledError') return;
+        log.error(`Torrent error: ${torrentEntry.torrentId}, ${err?.message ?? err}`);
+        this.reportDownloadError("Torrent Download", torrentEntry.torrentId, err);
         this.WINDOW.webContents.send("download-progress-stream", {
           TorrentId: torrentEntry.torrentId,
           Status: "error",
-          Error: err.message
+          Error: err?.message
         });
+      });
+  }
 
-        reject(err);
+  attachTorrentHandlers(torrent, torrentEntry) {
+    log.info("Loading Torrent:", torrentEntry.torrentId);
+    torrent.on("metadata", () => log.info("Metadata received"));
+    torrent.on("warning", (warn) => log.warn("Torrent warning:", warn.message));
+
+    torrent.on("ready", () => {
+      log.info("Download Target: " + torrentEntry?.fileName);
+
+      const targetFile = this.findFileInsideTorrent(torrent, torrentEntry?.fileName);
+      if (!targetFile) {
+        torrent.emit('error', new Error('No suitable video file found'));
+        return;
+      }
+
+      torrent.files.forEach(file => file.deselect());
+      targetFile.select();
+
+      const totalSize = targetFile.length;
+      let libraryStartTime = 0;
+      let pipingStartTime = 0;
+
+      torrent.on("download", () => {
+        const now = Date.now();
+        const downloadedDataLength = targetFile.downloaded;
+        torrentEntry.Total = totalSize;
+        torrentEntry.Downloaded = downloadedDataLength;
+        torrentEntry.poster = torrentEntry.posterUrl;
+
+        if (now - libraryStartTime >= DELAY_BEFORE_LIBRARY_SAVE_MS) {
+          saveDownloadProgress(torrentEntry, downloadedDataLength, totalSize);
+          libraryStartTime = now;
+        }
+
+        if (now - pipingStartTime >= DELAY_BEFORE_PIPING_MS) {
+          this.pipeDownloadProgressToRenderer(torrentEntry, torrent.downloadSpeed, totalSize, downloadedDataLength);
+          pipingStartTime = now;
+        }
       });
     });
   }
@@ -190,22 +176,25 @@ class TorrentDownloadManager {
       Status: "Done"
     };
 
-    torrentEntry["Status"] = "Done";
+    torrentEntry.Status = "Done";
     saveDownloadProgress(torrentEntry, downloadedDataLength, totalSize);
 
     try {
-      await this.destroyDownloadingTorrent(torrent, torrentEntry.torrentId);
+      await new Promise((resolve, reject) => {
+        torrent.destroy({ destroyStore: false }, (err) => (err ? reject(err) : resolve()));
+      });
+
       const body = [
         truncate(torrentEntry?.Title || 'Unknown title'),
         torrentEntry?.Year,
         torrentEntry?.Quality
       ].filter(Boolean).join(' • ');
 
-      const [torrentLibEntry] = await getDownloadEntry(torrentEntry.torrentId);
+      const torrentLibEntry = await getDownloadEntry(torrentEntry.torrentId);
       sendSystemNotification({
         title: "Download Complete",
         body: body,
-        icon: torrentLibEntry.posterPath,
+        icon: torrentLibEntry?.posterPath,
         onClick: () => this.onPlayVideo(torrentLibEntry)
       });
       log.info(`Torrent cleaned up: ${torrentEntry.torrentId}`);
@@ -215,244 +204,208 @@ class TorrentDownloadManager {
 
     log.success(`Download completed: ${torrentEntry.torrentId}`);
     this.WINDOW.webContents.send("download-progress-stream", jsonMessage);
-    this.downloadNextTorrentInQueue();
-  }
-
-  async downloadNextTorrentInQueue() {
-    if (this.downloadQueue.length) {
-      const nextTorrent = this.downloadQueue.shift();
-      if (nextTorrent?.torrentId) {
-        this.executeTorrentDownload(nextTorrent);
-        await editDownloadStorageEntry([nextTorrent.torrentId], "Status", "Downloading");
-        this.WINDOW.webContents.send("update-download-categorie", [{ response: "continued", torrentId: nextTorrent.torrentId }]);
-      }
-      return nextTorrent?.torrentId;
-    }
-  }
-
-  static MAX_DIR_NAME_LENGTH = 200;
-  sanitizeDirNameForOS(torrentEntry) {
-    const { dirName, seasonNumber, episodeNumber } = torrentEntry;
-    if (dirName.length <= this.MAX_DIR_NAME_LENGTH) return dirName;
-    const dirId = generateUniqueId(dirName);
-    
-    return seasonNumber && episodeNumber 
-      ? `${dirName.slice(0, 120)}-S${seasonNumber}E${episodeNumber}-${dirId}`
-      : `${dirName.slice(0, 120)}-${dirId}`;
   }
 
   reportDownloadError(errorType, torrentId, err) {
     this.WINDOW.webContents.send("report-download-errors", {
       type: errorType,
       torrentId: torrentId,
-      err_msg: err
+      err_msg: err?.message ?? err
     });
   }
 
-  deleteTorrentFromMediaHashMap(torrentId) {
-    if (this.downloadingMediaHashMap[torrentId])
-      delete this.downloadingMediaHashMap[torrentId];
+  static UI_STATUS_TO_STORAGE_STATUS = {
+    "continued": "Loading",
+    "queued": "Queued",
+    "paused": "Paused",
+    "failed": "Paused",
+    "subs-download": "Subs-Download"
+  };
+
+  pushStatusUpdate(changes) {
+    this.WINDOW.webContents.send("update-download-status", changes);
+
+    for (const change of changes) {
+      const storageStatus = TorrentDownloadManager.UI_STATUS_TO_STORAGE_STATUS[change.status];
+      if (!storageStatus || !change.torrentId) continue;
+
+      editDownloadStorageEntry([change.torrentId], "Status", storageStatus)
+        .catch((err) => log.error(`Failed to persist status for ${change.torrentId}:`, err.message));
+    }
   }
 
-  async pauseTorrentDownload(torrentId) {
-    const targetTorrent = this.downloadingMediaHashMap[torrentId]?.torrentInstance;
+  toggleTorrentDownload(torrentId) {
+    return this.downloadClient.isCurrentlyDownloading(torrentId)
+      ? this.pauseTorrentDownload(torrentId)
+      : this.continueTorrentDownload(torrentId);
+  }
+
+  continueTorrentDownload(torrentId) {
+    const currentTorrentId = this.downloadClient.current?.info?.torrentId ?? null;
+    const optimistic = [{ status: "continued", torrentId }];
+    if (currentTorrentId && currentTorrentId !== torrentId) {
+      optimistic.push({ status: "queued", torrentId: currentTorrentId });
+    }
+    this._continueTorrentDownload(torrentId).catch((err) => {
+      log.error(err.message);
+      this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
+    });
+    return optimistic;
+}
+
+  async _continueTorrentDownload(torrentId) {
+    const torrentEntry = await getDownloadEntry(torrentId);
+
+    if (torrentEntry == null) {
+      log.error("Empty download library, cannot continue download for", torrentId);
+      this.pushStatusUpdate([{ status: "empty download library", torrentId }]);
+      return;
+    }
+
     try {
-      await this.pauseTargetedTorrent(targetTorrent, torrentId);
-      this.downloadNextTorrentInQueue();
-      return [{ response: "paused", torrentId }];
+      await editDownloadStorageEntry([torrentEntry.torrentId], "Status", "Loading");
+
+      if (torrentEntry.Status === "Queued") {
+        const changes = await this.downloadClient.startQueuedTorrent(torrentId);
+        this.pushStatusUpdate(changes);
+        return;
+      }
+
+      const queuedTorrents = this.downloadClient
+        .getQueueTorrentIds()
+        .map((id) => ({ status: "queued", torrentId: id }));
+      await this.executeTorrentDownload(torrentEntry, true);
+
+      this.pushStatusUpdate([{ status: "continued", torrentId }, ...queuedTorrents]);
     } catch (err) {
       log.error(err.message);
-      return [{ response: "failed", error: err.message, torrentId }];
+      await editDownloadStorageEntry([torrentEntry.torrentId], "Status", "Paused");
+      this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
     }
   }
 
-  async continueTorrentDownload(torrentId) {
-    const targetTorrent = this.downloadingMediaHashMap[torrentId]?.torrentInstance;
-    const wholeDownloadLibrary = await loadDownloadStorage();
-    const torrentEntry = wholeDownloadLibrary?.downloads?.find(
-      element => element.torrentId === torrentId
-    );
-
-    if (torrentEntry != null) {
-      let queuedTorrents = [];
-      try {
-        queuedTorrents = await this.addDownloadingTorrentToQueue();
-      } catch (err) {
-        log.error(err.message);
-        return [{ response: "failed", error: err.message, torrentId }];
-      }
-
-      try {
-        this.executeTorrentDownload(torrentEntry);
-        this.downloadQueue = this.downloadQueue.filter(ele => ele.torrentId != torrentId);
-      } catch (err) {
-        log.error(err.message);
-        await editDownloadStorageEntry([torrentEntry.torrentId], "Status", "Loading");
-        this.pauseTargetedTorrent(targetTorrent, torrentId);
-        return [{ response: "failed", error: err.message, torrentId }];
-      }
-
-      return [{ response: "continued", torrentId }, ...queuedTorrents];
-
-    } else {
-      log.error("Empty download library, cannot continue download for", torrentId);
-      return [{ response: "empty download library", torrentId }];
-    }
+  predictNextQueuedTorrentId() {
+    return this.downloadClient.getQueueTorrentIds()[0] ?? null;
   }
 
-  async toggleTorrentDownload(torrentId) {
-    const targetTorrent = this.downloadingMediaHashMap[torrentId]?.torrentInstance;
-    return targetTorrent
-      ? await this.pauseTorrentDownload(torrentId)
-      : await this.continueTorrentDownload(torrentId);
+  pauseTorrentDownload(torrentId) {
+    const nextTorrentId = this.predictNextQueuedTorrentId();
+    const optimistic = [{ status: "paused", torrentId }];
+    if (nextTorrentId) {
+      optimistic.push({ status: "continued", torrentId: nextTorrentId });
+    }
+    this._pauseTorrentDownload(torrentId).catch((err) => {
+      log.error(err.message);
+      this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
+    });
+    return optimistic;
   }
 
-  async cancelTorrentDownload(torrentEntry) {
-    const torrentId = torrentEntry.torrentId;
-    const targetTorrent = this.downloadingMediaHashMap?.[torrentId]?.torrentInstance;
-
-    if (targetTorrent) {
-      if (this.downloadQueue[0] != null)
-        this.WINDOW.webContents.send(
-          "update-download-categorie",
-          [{ response: "continued", torrentId: this.downloadQueue[0]?.torrentId }]
-        );
-
-      await new Promise((resolve, reject) => {
-        try {
-          targetTorrent.destroy(() => {
-            this.deleteTorrentFromMediaHashMap(torrentId);
-            log.info(`Torrent cancelled: ${torrentId}`);
-            resolve();
-          });
-        } catch (error) {
-          log.error(error.message);
-          if (this.downloadQueue[0] != null)
-            this.WINDOW.webContents.send(
-              "update-download-categorie",
-              [{ response: "paused", torrentId: this.downloadQueue[0]?.torrentId }]
-            );
-          reject();
-        }
-      });
+  async _pauseTorrentDownload(torrentId) {
+    const torrentEntry = await getDownloadEntry(torrentId);
+    if (!torrentEntry) {
+      throw new Error(`Cannot find torrent with Id: ${torrentId}`);
     }
+    const res = await this.downloadClient.cancelDownload(torrentId);
+    await editDownloadStorageEntry([torrentId], "Status", "Paused");
+    this.pushStatusUpdate(res);
+  }
 
-    this.downloadQueue = this.downloadQueue.filter(element => element.torrentId !== torrentId);
+  static WRAPPER_STATUS_TO_UI_STATUS = {
+    Loading: "continued",
+    Queued: "queued"
+  };
+
+  toUIStatus(wrapperStatus) {
+    return TorrentDownloadManager.WRAPPER_STATUS_TO_UI_STATUS[wrapperStatus] ?? wrapperStatus;
+  }
+
+  cancelTorrentDownload(torrentEntry) {
+    const nextTorrentId = this.predictNextQueuedTorrentId();
+    const optimistic = [{ status: "paused", torrentId: torrentEntry.torrentId }];
+    if (nextTorrentId) {
+      optimistic.push({ status: "continued", torrentId: nextTorrentId });
+    }
+    this._cancelTorrentDownload(torrentEntry).catch((err) => {
+      log.error(err.message);
+      this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId: torrentEntry.torrentId }]);
+    });
+    return optimistic;
+  }
+
+  async _cancelTorrentDownload(torrentEntry) {
+    const res = await this.downloadClient.cancelDownload(torrentEntry.torrentId);
+    this.pushStatusUpdate(res);
 
     const downloadPath = torrentEntry.downloadPath;
     if (downloadPath && fs.existsSync(downloadPath)) {
       await fs.promises.rm(downloadPath, { recursive: true, force: true });
       log.info(`Removed directory: ${downloadPath}`);
     }
-    await removeDownloadStorageEntry(torrentId);
-    await this.downloadNextTorrentInQueue();
-
-    return { success: true, torrentId };
+    await removeDownloadStorageEntry(torrentEntry.torrentId);
   }
 
-  async downloadOrQueueTorrent(torrentId) {
-    const wholeDownloadLibrary = await loadDownloadStorage();
-    const targetTorrentInfo = wholeDownloadLibrary?.downloads?.find(
-      element => element.torrentId === torrentId
-    );
+  addToQueue(torrentId) {
+    const queuedTorrents = this.downloadClient
+      .getQueueTorrentIds()
+      .map((id) => ({ status: "queued", torrentId: id }));
+    const optimisticStatus = this.downloadClient.current == null ? "continued" : "queued";
 
-    if (targetTorrentInfo) {
-      const currentlyDownloadingTorrents = Object.values(this.downloadingMediaHashMap);
-      if (!currentlyDownloadingTorrents.length) {
-        this.executeTorrentDownload(targetTorrentInfo);
-        return [{ response: "continued", torrentId }];
-      } else {
-        this.downloadQueue.push(targetTorrentInfo);
-        return [{ response: "queued", torrentId }];
-      }
-    } else {
-      log.error("Empty download library, cannot continue download for", torrentId);
-      return [{ response: "empty download library", torrentId }];
-    }
+    this._addToQueue(torrentId).catch((err) => {
+      log.error(err.message);
+      this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
+    });
+
+    return [...queuedTorrents, { torrentId, status: optimisticStatus }];
+  }
+
+  async _addToQueue(torrentId) {
+    const torrentEntry = await getDownloadEntry(torrentId);
+    const { status } = await this.executeTorrentDownload(torrentEntry);
+    this.pushStatusUpdate([{ torrentId, status: this.toUIStatus(status) }]);
   }
 
   removeTorrentFromQueue(torrentId) {
-    const target = this.downloadQueue.find(el => el.torrentId === torrentId);
-
-    if (target != null) {
-      this.downloadQueue = this.downloadQueue.filter(el => el.torrentId !== torrentId);
-      return [{ response: "paused", torrentId }];
-    } else {
+    const wasQueued = this.downloadClient.getQueueTorrentIds().includes(torrentId);
+    if (!wasQueued) {
       log.error("Queue does not contain torrent with Id:", torrentId);
-      return [{ response: "torrent not found in queue", torrentId }];
+      return [{ status: "torrent not found in queue", torrentId }];
     }
+
+    const optimistic = [{ status: "paused", torrentId }];
+    this.downloadClient.cancelDownload(torrentId)
+      .then((res) => this.pushStatusUpdate(res))
+      .catch((err) => {
+        log.error(err.message);
+        this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
+      });
+    return optimistic;
   }
 
   shiftQueuedElement(torrentId, offset) {
-    const currentTorrentIndex = this.downloadQueue.findIndex(ele => ele.torrentId === torrentId);
-
-    if (currentTorrentIndex !== -1) {
-      const torrentElement = this.downloadQueue[currentTorrentIndex];
-      this.downloadQueue.splice(currentTorrentIndex, 1);
-      this.downloadQueue.splice(currentTorrentIndex + offset, 0, torrentElement);
-      log.info("Reordering Download Queue");
-    } else {
-      log.error(`Cannot find torrent element in download queue by id: ${torrentId}`);
-    }
-
-    return this.downloadQueue.map(el => el.torrentId);
-  }
-
-  destroyDownloadingTorrent(torrent, torrentId, keepInQueue=false) {
-    return new Promise((res, rej) => {
-      this.deleteTorrentFromMediaHashMap(torrentId);
-      const index = this.downloadQueue.findIndex(item => item.torrentId === torrentId);
-      if (index !== -1) {
-        const [element] = this.downloadQueue.splice(index, 1);
-        if(keepInQueue) this.downloadQueue.push(element);
-      }
-      try {
-        torrent.destroy(res);
-      } catch (err) {
-        rej(err);
-      }
-    });
-  }
-
-  async addDownloadingTorrentToQueue() {
-    const queuedTorrents = [];
-
-    const currentlyDownloadingTorrents = Object.values(this.downloadingMediaHashMap);
-    for (const downloadingTorrent of currentlyDownloadingTorrents) {
-      let torrentInstance = downloadingTorrent.torrentInstance;
-      let torrentEntry = downloadingTorrent.torrentEntry;
-      let pausedTorrentId = await this.pauseTargetedTorrent(torrentInstance, torrentEntry.torrentId);
-      queuedTorrents.push({ response: "queued", torrentId: pausedTorrentId });
-      if (!this.downloadQueue.find(ele => ele.torrentId === torrentEntry.torrentId))
-        this.downloadQueue.push(torrentEntry);
-    }
-    return queuedTorrents;
-  }
-
-  async pauseTargetedTorrent(torrent, torrentId) {
-    if(!torrent) {
-      throw new Error(`Failed to pause: ${torrent}`);
-    }
-
-    if(!torrentId) {
-      throw new Error(`Cannot find the torrent Id ${torrentId}`)
-    }
-
-    this.destroyDownloadingTorrent(torrent,torrentId, true);
-    log.info(`Torrent Paused: ${torrentId}`);
-    return torrentId;
+    return this.downloadClient.shiftQueuedItem(torrentId, offset);
   }
 
   findFileInsideTorrent(torrent, targetFileName) {
     const filesPathsHashMap = {};
     const files = torrent.files ?? [];
-    for(let fileInsideTorrent of files){
+    for (let fileInsideTorrent of files) {
       if (targetFileName === fileInsideTorrent.name) {
         return fileInsideTorrent;
       }
       filesPathsHashMap[normaliseFileName(fileInsideTorrent.name)] = fileInsideTorrent;
     }
     return filesPathsHashMap[normaliseFileName(targetFileName)] ?? null;
+  }
+
+  sanitizeDirNameForOS(torrentEntry) {
+    const { dirName, seasonNumber, episodeNumber } = torrentEntry;
+    if (dirName.length <= TorrentDownloadManager.MAX_DIR_NAME_LENGTH) return dirName;
+    const dirId = generateUniqueId(dirName);
+
+    return seasonNumber && episodeNumber
+      ? `${dirName.slice(0, 120)}-S${seasonNumber}E${episodeNumber}-${dirId}`
+      : `${dirName.slice(0, 120)}-${dirId}`;
   }
 }
 
