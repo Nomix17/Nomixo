@@ -1,10 +1,11 @@
 import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
-import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import { copyFile, writeFile, readFile, unlink} from 'fs/promises';
 
 import { log } from "./debugging.js";
+import dotenv from "dotenv";
+import { config } from "./config.js";
 import { AppManager } from "./AppManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
 import { initTorrentTrackers } from "./torrentTracker.js";
@@ -26,9 +27,8 @@ import {
   writeSearchHistory
 } from "./storageManagement.js";
 
-
 dotenv.config({ path: Paths.__envfile });
-
+config.init();
 // ======================= APP INITIALIZATION =======================
 
 FilesManager.initializeDataFiles();
@@ -241,8 +241,8 @@ ipcMain.handle("open-external-link", (event, url) => {
   shell.openExternal(url);
 });
 
-ipcMain.handle("get-tmdb-api-key", () => appManager.TMDB_API_KEY);
-ipcMain.handle("get-wyzie-api-key", () => appManager.Wyzie_API_KEY);
+ipcMain.handle("get-tmdb-api-key", () => config.getTMDBKey());
+ipcMain.handle("get-wyzie-api-key", () => config.getWyzieKey());
 
 ipcMain.handle("validate-tmdb-api-key", async (event, inputedApiKey) => {
   return validateTMDBApiKey(inputedApiKey);
@@ -253,8 +253,8 @@ ipcMain.handle("validate-wyzie-api-key", async (event, inputedApiKey) => {
 });
 
 ipcMain.handle("save-api-key", async (event, apiKeys) => {
-  appManager.TMDB_API_KEY = apiKeys["TMDB_API_KEY"];
-  appManager.Wyzie_API_KEY = apiKeys["Wyzie_API_KEY"];
+  config.setTMDBKey(apiKeys["TMDB_API_KEY"]);
+  config.setWyzieKey(apiKeys["Wyzie_API_KEY"]);
   try {
     await FilesManager.writeAPIKEYIntoEnvFile(apiKeys);
   } catch (err) {

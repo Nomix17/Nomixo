@@ -1,5 +1,6 @@
 import SubDownloadManager from './SubDownloadManager.js';
 import { getTorrentTrackers } from './torrentTracker.js';
+import { config } from "./config.js";
 import {
   generateUniqueId,
   findFile,
@@ -18,6 +19,7 @@ import fs from 'fs';
 let mpvProcess = null;
 let expressServer = null;
 let webTorrentClient = null;
+config.init();
 
 function StreamTorrent(
   MpvExecPath,
