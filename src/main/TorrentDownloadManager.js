@@ -1,4 +1,3 @@
-import SubDownloadManager from './SubDownloadManager.js';
 import { getTorrentTrackers } from './torrentTracker.js';
 import { 
   generateUniqueId,
@@ -77,21 +76,6 @@ class TorrentDownloadManager {
     return results;
   }
 
-  async downloadSubs(torrentEntry, subsObjects) {
-    try {
-      if (subsObjects != null) {
-        insertNewDownloadEntry(torrentEntry, "DownloadSubs").then((isNewEntry) => {
-          if(isNewEntry)
-            this.WINDOW.webContents.send("download-progress-stream", { Status: "NewDownload" });
-        });
-        await SubDownloadManager.downloadSubs(subsObjects, torrentEntry.torrentId, torrentEntry.downloadPath);
-      } else {
-        log.warn("Subtitles Download Skipped");
-      }
-    } catch (error) {
-      this.reportDownloadError("Subtitles Download", torrentEntry.torrentId, error);
-      log.error(error);
-    }
   }
 
   async executeTorrentDownload(torrentEntry) {
@@ -238,7 +222,6 @@ class TorrentDownloadManager {
     if (this.downloadQueue.length) {
       const nextTorrent = this.downloadQueue.shift();
       if (nextTorrent?.torrentId) {
-        await this.downloadSubs(nextTorrent, nextTorrent.subsObjects);
         this.executeTorrentDownload(nextTorrent);
         await editDownloadStorageEntry([nextTorrent.torrentId], "Status", "Downloading");
         this.WINDOW.webContents.send("update-download-categorie", [{ response: "continued", torrentId: nextTorrent.torrentId }]);

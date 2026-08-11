@@ -476,9 +476,7 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
     const totalSizeElementContaint = totalSizeElement.innerHTML;
     totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating subtitles`;
 
-    const subsObjects = await loadingAllSubs(MediaInfo.IMDB_ID);
-
-    const res = await window.electronAPI.downloadSubtitles(MediaInfo,  subsObjects);
+    const res = await window.electronAPI.downloadSubtitles(MediaInfo);
     totalSizeElement.innerHTML = res?.updated ? "Subtitles Updated ✔" : "Failed To Update Subtitles ⨯";
     setTimeout(() => {
       totalSizeElement.innerHTML = totalSizeElementContaint;

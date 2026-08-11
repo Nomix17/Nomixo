@@ -1,4 +1,4 @@
-import SubDownloadManager from './SubDownloadManager.js';
+import { SubDownloadManager } from './SubDownloadManager.js';
 import { getTorrentTrackers } from './torrentTracker.js';
 import { config } from "./config.js";
 import {
@@ -24,7 +24,6 @@ config.init();
 function StreamTorrent(
   MpvExecPath,
   metaData,
-  subsObjects,
   startFromTime,
   videoCachePath,
   subDirectory,
@@ -100,8 +99,8 @@ function StreamTorrent(
           );
 
           const tmpSubDir = path.join(subDirectory, `SUB_${subsId}`);
-          log.info("Downloading subtitles to: ", tmpSubDir);
-          const downloadResponse = await SubDownloadManager.downloadMultipleSubs(tmpSubDir, subsObjects);
+          log.info("Downloading subtitles to:", tmpSubDir);
+          const downloadResponse = await SubDownloadManager.downloadSubsForMedia(metaData, metaData.torrentId, tmpSubDir);
           log.info("Finished downloading subtitles");
           const subsPaths = downloadResponse
             .filter(response => response.status === "success")
@@ -300,7 +299,6 @@ if (workerData.typeOfPlay === "StreamTorrent") {
   StreamTorrent(
     workerData.MpvExecPath,
     workerData.metaData,
-    workerData.subsObjects,
     workerData.startFromTime,
     workerData.videoCachePath,
     workerData.subDirectory,

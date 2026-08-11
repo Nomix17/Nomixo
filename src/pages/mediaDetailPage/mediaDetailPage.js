@@ -1032,22 +1032,14 @@ function setupDownloadDivEvents(DownloadTargetInfo) {
   });
 }
 
-async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles) {
+async function DownloadTorrent(DownloadTargetInfo, hasToDownloadSubs) {
   const apiKey = await apiKeyPromise;
   const userDownloadPath = document.getElementById("downloadPath")?.value;
   const posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   DownloadTargetInfo["posterUrl"] = `https://image.tmdb.org/t/p/w500${posterPath}`;
   DownloadTargetInfo["bgImageUrl"] = backgroundImage;
   DownloadTargetInfo["userDownloadPath"] = userDownloadPath;
-  const subsObjects = 
-    (downloadSubtitles) 
-    ? await loadingAllSubs(
-      DownloadTargetInfo.IMDB_ID,
-      DownloadTargetInfo.episodeNumber,
-      DownloadTargetInfo.seasonNumber
-    ) : [];
-
-  window.electronAPI.downloadTorrent([DownloadTargetInfo],subsObjects);
+  window.electronAPI.downloadTorrent([DownloadTargetInfo], hasToDownloadSubs);
 }
 
 async function loadLogoImage(movieLanguage) {

@@ -9,7 +9,7 @@ import { config } from "./config.js";
 import { AppManager } from "./AppManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
 import { initTorrentTrackers } from "./torrentTracker.js";
-import SubDownloadManager from "./SubDownloadManager.js";
+import { SubDownloadManager } from "./SubDownloadManager.js";
 import { Paths, FilesManager } from "./FilesManager.js";
 import {
   generateUniqueId,
@@ -270,9 +270,9 @@ ipcMain.handle("get-video-url", async (event, magnet, fileName) => {
   return appManager.mpvPlayerManager.getVideoUrl(magnet, fileName);
 });
 
-ipcMain.handle("play-torrent-over-mpv", async (event, metaData, subsObjects) => {
+ipcMain.handle("play-torrent-over-mpv", async (event, metaData) => {
   const settings = await loadSettings();
-  return appManager.mpvPlayerManager.playTorrentOverMpv(metaData, subsObjects, settings);
+  return appManager.mpvPlayerManager.playTorrentOverMpv(metaData, settings);
 });
 
 ipcMain.handle("play-video-over-mpv", async (event, metaData) => {
@@ -289,18 +289,8 @@ ipcMain.handle("play-video-over-mpv", async (event, metaData) => {
 
 // ======================= TORRENT DOWNLOADING =======================
 
-ipcMain.handle("download-torrent", async (event, torrentsEntries, subsObjects) => {
-  return appManager.torrentDownloadManager.scheduleTorrentDownloads(torrentsEntries, subsObjects);
-});
-
-ipcMain.handle("download-subtitles", async (event, torrentEntry, subsObjects) => {
-  try {
-    await SubDownloadManager.downloadSubs(subsObjects, torrentEntry.torrentId, torrentEntry.downloadPath);
-  } catch (err) {
-    log.error("Failed To Download Subtitles", torrentEntry.torrentId + ":", err.message);
-    return { updated: false };
-  }
-  return { updated: true };
+ipcMain.handle("download-torrent", async (event, torrentsEntries, hasToDownloadSubs) => {
+  return appManager.torrentDownloadManager.scheduleTorrentDownloads(torrentsEntries, hasToDownloadSubs);
 });
 
 ipcMain.handle("pause-torrent-download", async (event, torrentId) => {
@@ -493,7 +483,21 @@ ipcMain.handle("load-from-download-lib", async () => {
   return loadDownloadStorage();
 });
 
-// ======================= SUBTITLES FILES MANAGEMENT =======================
+// ======================= SUBTITLES MANAGEMENT =======================
+
+ipcMain.handle("download-subtitles", async (event, torrentEntry) => {
+  try {
+    await SubDownloadManager.downloadSubsForMedia(torrentEntry, torrentEntry.torrentId, torrentEntry.downloadPath);
+  } catch (err) {
+    log.error("Failed To Download Subtitles", torrentEntry.torrentId + ":", err.message);
+    return { updated: false };
+  }
+  return { updated: true };
+});
+
+ipcMain.handle("fetch-subtitles", async(event, mediaInfo) => {
+  return await SubDownloadManager.fetchSubtitlesInfo(mediaInfo);
+});
 
 ipcMain.handle("load-local-subs", async (event, videoPath, identifyingElements) => {
   const localBuiltInSubs = loadSubsFromVideoDirectory(videoPath);

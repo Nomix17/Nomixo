@@ -92,7 +92,7 @@ class MpvPlayerManager {
     });
   }
 
-  async playTorrentOverMpv(metaData, subsObjects, settings) {
+  async playTorrentOverMpv(metaData, settings) {
     const startFromTime = await this.#getLatestPlaybackPosition(metaData);
     const { MpvExecPath } = settings;
 
@@ -101,7 +101,6 @@ class MpvPlayerManager {
         MpvExecPath,
         typeOfPlay: "StreamTorrent",
         metaData,
-        subsObjects,
         startFromTime,
         videoCachePath: Paths.videoCachePath,
         subDirectory: Paths.subDirectory,

@@ -2,6 +2,7 @@ import { BrowserWindow, app, nativeTheme, protocol, screen } from "electron";
 import Store from 'electron-store';
 import TorrentDownloadManager from "./TorrentDownloadManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
+import { SubDownloadManager } from "./SubDownloadManager.js";
 import { markMediaDownloadsAsPaused } from "./storageManagement.js";
 import { generateUniqueId } from "./utils.js";
 import { Paths } from "./FilesManager.js";

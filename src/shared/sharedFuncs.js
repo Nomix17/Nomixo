@@ -1163,32 +1163,6 @@ async function getPosterPath(imdbId, apiKey) {
   return poster ?? null;
 }
 
-async function loadingAllSubs(id,episodeNumber,seasonNumber){
-  try{
-    const params = new URLSearchParams({
-      id,
-      ...((
-        episodeNumber && seasonNumber &&
-        episodeNumber != "undefined" && seasonNumber != "undefined"
-      ) && { season: seasonNumber, episode: episodeNumber })
-    });
-    const WYZIE_API_KEY = await window.electronAPI.getWyzieAPIKey();
-    const requestUrl = `https://sub.wyzie.ru/search?${params}&key=${WYZIE_API_KEY}`;
-    const res = await fetch(requestUrl);
-    
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    const data = await res.json();
-    return data;
-
-  }catch(err){
-    console.error(err);
-    return [];
-  }
-}
-
-
 // ################################### UI COMPONENTS & FEEDBACK ###################################
 
 function DisplayWarningOrErrorForUser(warningMessage,addRefreshButton = true) {
