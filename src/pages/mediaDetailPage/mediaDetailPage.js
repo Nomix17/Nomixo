@@ -34,6 +34,9 @@ const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 torrentSidePanel.classList.add("preloadingTorrent");
 if(MediaType === "movie") torrentSidePanel.classList.add("visible-block");
 
+const MAX_NUMBER_OF_DIRECTORS = 5;
+const MAX_NUMBER_OF_CAST_MEMBERS = 5;
+
 const seasonsDivArray = [];
 
 async function pageInit() {
@@ -609,13 +612,16 @@ function renderCastInfomation(data) {
       element.job === "Director" &&
       element.known_for_department === "Directing"
   );
-  if(DirectorsObjects.length){
+
+  if(!DirectorsObjects.length) {
     DirectorsObjects = Crew.filter(
       element => 
         element.job === "Director" ||
         element.known_for_department === "Directing"
     );
   }
+  
+  DirectorsObjects = DirectorsObjects.sort((a, b) => b.popularity - a.popularity);
 
   const loadedDirectors = [];
   for(const directorObject of DirectorsObjects) {
@@ -627,7 +633,7 @@ function renderCastInfomation(data) {
       newDirectorElement.innerText = directorObject.name;
       divDirectoryElement.append(newDirectorElement);
       loadedDirectors.push(directorObject.id);
-      if(loadedDirectors.length > 4) break;
+      if(loadedDirectors.length >= MAX_NUMBER_OF_DIRECTORS) break;
     }
   }
 
@@ -644,7 +650,7 @@ function renderCastInfomation(data) {
       newCastElement.innerText = castObject.name;
       divCastElement.append(newCastElement);
       loadedCast.push(castObject.id);
-      if(loadedCast.length > 4) break;
+      if(loadedCast.length >= MAX_NUMBER_OF_CAST_MEMBERS) break;
     }
   }
 
