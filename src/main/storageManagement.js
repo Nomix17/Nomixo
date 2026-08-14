@@ -5,21 +5,22 @@ import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
 import { downloadImage } from "./utils.js";
 
-function loadJsonFile(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+async function loadJsonFile(filePath) {
+  const content = await readFile(filePath, "utf-8");
+  return JSON.parse(content);
 }
 
-export function loadDownloadStorage() {
+export async function loadDownloadStorage() {
   try {
-    return loadJsonFile(Paths.downloadLibraryFilePath);
+    return await loadJsonFile(Paths.downloadLibraryFilePath);
   } catch {
     return { downloads: [] };
   }
 }
 
-export function loadLibraryStorage() {
+export async function loadLibraryStorage() {
   try {
-    return loadJsonFile(Paths.libraryFilePath);
+    return await loadJsonFile(Paths.libraryFilePath);
   } catch {
     return { media: [] };
   }
@@ -51,9 +52,9 @@ export async function getLibraryEntry(targetIdentification) {
   return undefined;
 }
 
-export function overwriteStorageFile(filePath, newData) {
+export async function overwriteStorageFile(filePath, newData) {
   try {
-    fs.writeFileSync(filePath, JSON.stringify(newData));
+    await writeFile(filePath, JSON.stringify(newData));
   } catch (err) {
     log.error(err);
   }
@@ -137,7 +138,7 @@ export async function removeDownloadStorageEntry(torrentId) {
   downloadLib.downloads = downloadLib.downloads.filter(
     element => element.torrentId !== torrentId
   );
-  overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+  await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
 }
 
 export async function removeLibraryStorageEntry(torrentId) {
@@ -145,7 +146,7 @@ export async function removeLibraryStorageEntry(torrentId) {
   LibraryInfo.media = LibraryInfo.media.filter(
     element => element.torrentId !== torrentId
   );
-  overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+  await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
 }
 
 export async function markMediaDownloadsAsPaused() {

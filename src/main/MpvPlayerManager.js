@@ -326,8 +326,8 @@ class MpvPlayerManager {
     process.stdout.write(line);
   }
 
-  #savePlaybackPosition(lastPbPosition, metaData) {
-    const LibraryInfo = loadLibraryStorage();
+  async #savePlaybackPosition(lastPbPosition, metaData) {
+    const LibraryInfo = await loadLibraryStorage();
     LibraryInfo.media ??= [];
 
     let found = false;
@@ -366,7 +366,7 @@ class MpvPlayerManager {
       });
     }
 
-    overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+    await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
   }
 
   async #getLatestPlaybackPosition(metaData) {

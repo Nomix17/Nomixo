@@ -367,21 +367,21 @@ ipcMain.handle("download-backdrop", async (event, backgroundImageUrl) => {
 
 // ======================= LIBRARY MANAGEMENT =======================
 
-ipcMain.on("add-to-lib", (event, mediaInfo) => {
-  const LibraryInfo = loadLibraryStorage();
+ipcMain.on("add-to-lib", async (event, mediaInfo) => {
+  const LibraryInfo = await loadLibraryStorage();
   LibraryInfo.media = LibraryInfo.media.filter(
     (e) => !(e.MediaId.toString() === mediaInfo.MediaId.toString() && e.MediaType === mediaInfo.MediaType)
   );
   LibraryInfo.media.push(mediaInfo);
-  overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+  await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
 });
 
-ipcMain.on("remove-from-lib", (event, mediaInfo) => {
-  const LibraryInfo = loadLibraryStorage();
+ipcMain.on("remove-from-lib", async (event, mediaInfo) => {
+  const LibraryInfo = await loadLibraryStorage();
   LibraryInfo.media = LibraryInfo.media.filter(
     (e) => !(e.MediaId.toString() === mediaInfo.MediaId.toString() && e.MediaType === mediaInfo.MediaType)
   );
-  overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+  await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
 });
 
 ipcMain.on("edit-element-lib", async (event, mediaInfo) => {
@@ -395,12 +395,12 @@ ipcMain.on("edit-element-lib", async (event, mediaInfo) => {
     for (const [key, value] of Object.entries(mediaInfo)) {
       LibraryInfo.media[elementIndex][key] = value;
     }
-    overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+    await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
   }
 });
 
-ipcMain.handle("load-from-lib", (event, targetIdentification) => {
-  return getLibraryEntry(targetIdentification);
+ipcMain.handle("load-from-lib", async (event, targetIdentification) => {
+  return await getLibraryEntry(targetIdentification);
 });
 
 ipcMain.handle("import-library", async (event, merge) => {
@@ -413,7 +413,7 @@ ipcMain.handle("import-library", async (event, merge) => {
     if(canceled) return false;
     let LibraryInfo = [];
     if(merge) {
-      LibraryInfo = loadLibraryStorage()?.media ?? [];
+      LibraryInfo = await loadLibraryStorage()?.media ?? [];
     }
 
     const data = await readFile(filePaths[0], 'utf8');
@@ -490,7 +490,7 @@ ipcMain.handle("edit-download-lib", async (event, torrentId, key, value) => {
 });
 
 ipcMain.handle("load-from-download-lib", async () => {
-  return loadDownloadStorage();
+  return await loadDownloadStorage();
 });
 
 // ======================= SUBTITLES FILES MANAGEMENT =======================
