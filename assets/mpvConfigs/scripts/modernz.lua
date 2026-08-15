@@ -175,7 +175,7 @@ local user_opts = {
 
     nibbles_top = false,                    -- top chapter nibbles above seekbar
     nibbles_bottom = true,                 -- bottom chapter nibbles below seekbar
-    nibbles_style = "bar",            -- chapter nibble style. "triangle", "bar", or "single-bar"
+    nibbles_style = "cut",            -- chapter nibble style. "triangle", "bar", "single-bar", or "cut" (cuts a gap into the seekbar itself instead of drawing a marker above/below it)
 
     automatickeyframemode = true,          -- automatically set keyframes for the seekbar based on video length
     automatickeyframelimit = 600,          -- videos longer than this (in seconds) will have keyframes on the seekbar
@@ -943,6 +943,30 @@ local function prepare_elements()
 
     table.sort(elements, elem_compare)
 
+    local chapter_cut_positions = nil
+    if user_opts.nibbles_style == "cut" and (user_opts.nibbles_top or user_opts.nibbles_bottom) then
+        for _, el in pairs(elements) do
+            if el.name == "seekbar" and el.type == "slider" and el.slider.markerF ~= nil then
+                local geo = el.layout.geometry
+                local slider_lo = el.layout.slider
+                if slider_lo.gap > 0 then
+                    local min_pos = user_opts.seek_handle_size > 0 and (user_opts.seek_handle_size * geo.h / 2) or slider_lo.border
+                    local max_pos = geo.w - min_pos
+                    local markers = el.slider.markerF()
+                    chapter_cut_positions = {}
+                    for _, m in pairs(markers) do
+                        if m >= el.slider.min.value and m <= el.slider.max.value then
+                            table.insert(chapter_cut_positions, min_pos + (max_pos - min_pos) * (m / 100))
+                        end
+                    end
+                    table.sort(chapter_cut_positions)
+                    el.chapter_cut_positions = chapter_cut_positions
+                end
+                break
+            end
+        end
+    end
+
     for _,element in pairs(elements) do
 
         local elem_geo = element.layout.geometry
@@ -967,8 +991,24 @@ local function prepare_elements()
         if element.type == "box" then
             --draw box
             static_ass:draw_start()
-            ass_draw_rr_h_cw(static_ass, 0, 0, elem_geo.w, elem_geo.h,
-                             element.layout.box.radius, element.layout.box.hexagon)
+            if element.name == "seekbarbg" and chapter_cut_positions ~= nil and #chapter_cut_positions > 0 then
+                -- draw the bar as segments, leaving a gap at each chapter position
+                local cut_w = 2
+                local last = 0
+                for _, s in ipairs(chapter_cut_positions) do
+                    local seg_end = math.max(last, math.min(elem_geo.w, s - cut_w))
+                    if seg_end > last then
+                        static_ass:rect_cw(last, 0, seg_end, elem_geo.h)
+                    end
+                    last = math.max(last, math.min(elem_geo.w, s + cut_w))
+                end
+                if elem_geo.w > last then
+                    static_ass:rect_cw(last, 0, elem_geo.w, elem_geo.h)
+                end
+            else
+                ass_draw_rr_h_cw(static_ass, 0, 0, elem_geo.w, elem_geo.h,
+                                 element.layout.box.radius, element.layout.box.hexagon)
+            end
             static_ass:draw_stop()
 
         elseif element.type == "slider" then
@@ -985,7 +1025,7 @@ local function prepare_elements()
             static_ass:rect_cw(0, 0, elem_geo.w, elem_geo.h)
             static_ass:rect_ccw(0, 0, elem_geo.w, elem_geo.h)
             -- marker nibbles
-            if element.slider.markerF ~= nil and slider_lo.gap > 0 then
+            if element.slider.markerF ~= nil and slider_lo.gap > 0 and slider_lo.nibbles_style ~= "cut" then
                 local markers = element.slider.markerF()
                 for _,marker in pairs(markers) do
                     if marker >= element.slider.min.value and
@@ -1143,7 +1183,23 @@ local function draw_seekbar_progress(element, elem_ass)
     local xp = get_slider_ele_pos_for(element, pos)
     local slider_lo = element.layout.slider
     local elem_geo = element.layout.geometry
-    elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+
+    if slider_lo.nibbles_style == "cut" and element.chapter_cut_positions ~= nil and #element.chapter_cut_positions > 0 then
+        local cut_w = 2
+        local last = 0
+        for _, s in ipairs(element.chapter_cut_positions) do
+            local seg_end = math.max(last, math.min(xp, s - cut_w))
+            if seg_end > last then
+                elem_ass:rect_cw(last, slider_lo.gap, seg_end, elem_geo.h - slider_lo.gap)
+            end
+            last = math.max(last, math.min(xp, s + cut_w))
+        end
+        if xp > last then
+            elem_ass:rect_cw(last, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+        end
+    else
+        elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+    end
 end
 
 local function render_elements(master_ass)
