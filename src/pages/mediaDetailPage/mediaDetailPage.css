@@ -399,6 +399,58 @@ p{
  border:2px solid rgba(255,255,255,100%);
  background-color:  rgba(255,255,255,30%);
 }
+
+.btn-CollectionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px 9px 11px;
+  border-radius: 14px;
+  border: 1px solid rgba(var(--text-color), 0.14);
+  background: linear-gradient(135deg, rgba(var(--text-color), 0.10), rgba(var(--text-color), 0.03));
+  color: rgb(var(--text-color));
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-CollectionLink:hover {
+  background: linear-gradient(135deg, rgba(var(--text-color), 0.16), rgba(var(--text-color), 0.05));
+  border-color: rgba(var(--text-color), 0.26);
+  transform: translateY(-1px);
+}
+
+.btn-CollectionLink:active {
+  transform: translateY(0);
+}
+
+.collectionLinkIcon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: rgba(var(--text-color), 0.8);
+}
+
+.collectionLinkName {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+.collectionLinkArrow {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: rgba(var(--text-color), 0.45);
+  transition: transform 0.2s ease;
+}
+
+.btn-CollectionLink:hover .collectionLinkArrow {
+  transform: translateX(3px);
+  color: rgba(var(--text-color), 0.75);
+}
 #div-directorInfos,
 #div-genresInfos,
 #div-genelareInfos,
@@ -406,6 +458,9 @@ p{
 #div-movieSummary{
   background-color: rgba(255,255,255,0%);
   padding-bottom: 9px;
+}
+#div-collectionInfos {
+  margin: 0 0 18px 1vh;
 }
 #div-genelareInfos {
   display:flex;

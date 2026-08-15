@@ -1,0 +1,190 @@
+#div-collection-hero {
+  position: relative;
+  width: 100%;
+  height: 50vh;
+  min-height: 340px;
+  max-height: 560px;
+  border-radius: 22px 22px 0px 0px;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.04);
+  background-size: cover;
+  background-position: center;
+  box-sizing: border-box;
+  margin-top: 5px;
+}
+
+#div-collection-hero.no-backdrop {
+  background:
+    radial-gradient(120% 140% at 12% 15%, rgba(var(--text-color), 0.10), transparent 60%),
+    linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+}
+
+#div-collection-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(var(--primary-color),0.98) 0%, rgba(var(--primary-color),0.62) 32%, rgba(var(--primary-color),0.10) 62%, rgba(var(--primary-color),0) 85%),
+    linear-gradient(to right, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0) 48%);
+  }
+
+#div-collection-hero-content {
+  position: absolute;
+  left: 44px;
+  right: 44px;
+  bottom: 38px;
+  z-index: 2;
+}
+
+.collection-eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: rgba(var(--text-color), 0.6);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  animation: collection-rise 520ms ease both;
+}
+
+#collection-title-logo {
+  display: block;
+  max-width: min(560px, 60%);
+  max-height: 140px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: left bottom;
+  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.55));
+  animation: collection-rise 620ms 60ms ease both;
+}
+
+#collection-title {
+  margin: 0;
+  padding: 0;
+  font-family: 'Bebas Neue', 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: clamp(36px, 5.4vw, 64px);
+  letter-spacing: 2px;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+  animation: collection-rise 620ms 60ms ease both;
+}
+
+#collection-overview {
+  margin: 16px 0 0;
+  max-width: 700px;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: rgba(var(--text-color), 0.85);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  animation: collection-rise 680ms 120ms ease both;
+}
+
+.collection-meta {
+  margin: 16px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: rgba(var(--text-color), 0.55);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  animation: collection-rise 680ms 180ms ease both;
+}
+
+.collection-meta:empty {
+  display: none;
+}
+
+@keyframes collection-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collection-eyebrow,
+  #collection-title-logo,
+  #collection-title,
+  #collection-overview,
+  .collection-meta {
+    animation: none;
+  }
+}
+
+
+/* ===================== GRID SEPARATION ===================== */
+
+#div-collection-grid-divider {
+  margin: 38px 5px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(var(--text-color), 0.09);
+}
+
+#collection-grid-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: rgba(var(--text-color), 0.9);
+}
+
+/* ===================== GRID (wraps instead of horizontal-scrolling) ===================== */
+
+.div-collectionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 22px 18px;
+  margin-top: 22px;
+  padding-left: 5px;
+  padding-bottom: 4px;
+  box-sizing: border-box;
+}
+
+
+/* ===================== RESPONSIVE ===================== */
+
+@media (max-width: 900px) {
+  #div-collection-hero {
+    height: 42vh;
+    min-height: 300px;
+  }
+
+  #div-collection-hero-content {
+    left: 26px;
+    right: 26px;
+    bottom: 26px;
+  }
+
+  #collection-title-logo {
+    max-width: 75%;
+    max-height: 110px;
+  }
+
+  #collection-overview {
+    -webkit-line-clamp: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  #div-collection-hero {
+    border-radius: 16px;
+    height: 38vh;
+    min-height: 260px;
+  }
+
+  #collection-title {
+    font-size: clamp(28px, 9vw, 44px);
+  }
+
+  .div-collectionGrid {
+    margin-top: 18px;
+  }
+
+  #div-collection-grid-divider {
+    margin-top: 28px;
+  }
+}

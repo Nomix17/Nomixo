@@ -329,7 +329,7 @@ function refreshEpisodes() {
 }
 
 async function renderMediaPage(data) {
-  const [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons] = 
+  const [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons,Collection] = 
     await extractMediaInfoFromApiResponse(data);
 
   GlobalTitle = Title;
@@ -342,6 +342,7 @@ async function renderMediaPage(data) {
   const mediaGeneraleInfo = [Duration,ReleaseYear,Rating,Summary];
   await insertMediaGeneraleInformation(mediaGeneraleInfo);
   insertGenresOfMedia(Genres);
+  insertCollectionOfMedia(Collection);
 
   if(Duration === "TV Show") torrentResultsList.classList.add("hidden");
   else episodeResultsList.classList.add("hidden");
@@ -410,7 +411,10 @@ async function extractMediaInfoFromApiResponse(data){
 
   const logoFileName = await loadLogoImage(mediaOriginalLanguage);
   const Seasons = data?.seasons ?? 0;
-  return [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons];
+  const Collection = data?.belongs_to_collection
+    ? { id: data.belongs_to_collection.id, name: data.belongs_to_collection.name }
+    : null;
+  return [Title,Duration,ReleaseYear,Rating,Adult,Genres,logoFileName,Summary,Seasons,Collection];
 }
 
 function insertLogoTitleInformation(logoFileName,Title){
@@ -548,6 +552,34 @@ function insertGenresOfMedia(Genres){
     newGenreElement.innerText = genre.name;
     DivGenresContainer.append(newGenreElement);
   }
+}
+
+function insertCollectionOfMedia(Collection){
+  const DivCollectionContainer = document.getElementById("div-collectionInfos");
+  if(!Collection){
+    DivCollectionContainer.style.display = "none";
+    return;
+  }
+
+  const collectionName = Collection.name.replace(/\s*collection\s*$/i, "").trim() || Collection.name;
+
+  const newCollectionElement = document.createElement("button");
+  newCollectionElement.onclick = ()=>{openCollectionPage(Collection.id)};
+  newCollectionElement.classList.add("btn-CollectionLink");
+  newCollectionElement.innerHTML = `
+    <svg class="collectionLinkIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="8" width="13" height="13" rx="2.4"></rect>
+      <path d="M7.5 8V4.6A1.6 1.6 0 0 1 9.1 3h10.3A1.6 1.6 0 0 1 21 4.6v10.3a1.6 1.6 0 0 1-1.6 1.6H16"></path>
+    </svg>
+    <span class="collectionLinkName"></span>
+    <svg class="collectionLinkArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 6l6 6-6 6"></path>
+    </svg>
+  `;
+  newCollectionElement.querySelector(".collectionLinkName").textContent = collectionName;
+
+  DivCollectionContainer.append(newCollectionElement);
+  DivCollectionContainer.style.display = "";
 }
 
 function createSeasonOptionElement(season){

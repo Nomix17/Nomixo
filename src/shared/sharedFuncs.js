@@ -140,6 +140,10 @@ function OpenLibaryPage(typeOfSave = "All"){
   return navigate(`../pages/libraryPage/libraryPage.html?typeOfSave=${typeOfSave}`);
 }
 
+function openCollectionPage(collectionId){
+  return navigate(`../pages/collectionPage/collectionPage.html?CollectionId=${collectionId}`);
+}
+
 function OpenDownloadPage(){
   return navigate("../pages/downloadPage/downloadPage.html");
 }
