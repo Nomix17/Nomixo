@@ -260,6 +260,18 @@ body, html {
   transition: border-color 0.4s ease !important;
 }
 
+.svg-notFoundImage{
+  overflow: hidden;
+}
+
+.svg-notFound-bg{
+  fill: rgba(var(--secondary-color));
+}
+
+.svg-notFound-fg{
+  fill: rgb(var(--text-color));
+}
+
 .parag-MovieTitle {
   margin-top: 10px;
   text-align: center;

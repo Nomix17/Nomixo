@@ -1,37 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1456 816" width="1456" height="816">
-  <defs>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&amp;display=swap');
-    </style>
-  </defs>
-  <rect width="1456" height="816" fill="#3a4352"/>
-  <text
-    x="120"
-    y="208"
-    dominant-baseline="middle"
-    font-family="'JetBrains Mono', monospace"
-    font-size="112"
-    font-weight="700"
-    fill="#ffffff"
-  >No Episode</text>
-  <text
-    x="728"
-    y="418"
-    text-anchor="middle"
-    dominant-baseline="middle"
-    font-family="'JetBrains Mono', monospace"
-    font-size="112"
-    font-weight="700"
-    fill="#ffffff"
-  >Image</text>
-  <text
-    x="1336"
-    y="628"
-    text-anchor="end"
-    dominant-baseline="middle"
-    font-family="'JetBrains Mono', monospace"
-    font-size="112"
-    font-weight="700"
-    fill="#ffffff"
-  >Was Found</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1456 822" width="1456" height="822">
+  <rect width="1456" height="816" class="svg-notFound-bg"/>
+
+  <clipPath id="screenClip">
+    <rect x="578" y="303" width="300" height="210" rx="24" ry="24"/>
+  </clipPath>
+
+  <!-- faint scanlines for a "static" feel -->
+  <g clip-path="url(#screenClip)">
+    <rect x="578" y="333" width="300" height="6" class="svg-notFound-fg" opacity="0.08"/>
+    <rect x="578" y="363" width="300" height="6" class="svg-notFound-fg" opacity="0.08"/>
+    <rect x="578" y="393" width="300" height="6" class="svg-notFound-fg" opacity="0.08"/>
+    <rect x="578" y="423" width="300" height="6" class="svg-notFound-fg" opacity="0.08"/>
+    <rect x="578" y="453" width="300" height="6" class="svg-notFound-fg" opacity="0.08"/>
+    <rect x="578" y="483" width="300" height="6" class="svg-notFound-fg" opacity="0.08"/>
+  </g>
+
+  <!-- snapped antenna: left arm intact, right arm broken - "no signal" -->
+  <line x1="650" y1="303" x2="613" y2="238" stroke="rgb(var(--text-color))" stroke-width="8"
+    stroke-linecap="round" class="svg-notFound-fg-stroke"/>
+  <line x1="806" y1="303" x2="826" y2="268" stroke="rgb(var(--text-color))" stroke-width="8"
+    stroke-linecap="round" class="svg-notFound-fg-stroke"/>
+  <line x1="834" y1="253" x2="843" y2="238" stroke="rgb(var(--text-color))" stroke-width="8"
+    stroke-linecap="round" class="svg-notFound-fg-stroke"/>
+
+  <!-- monitor screen -->
+  <rect x="578" y="303" width="300" height="210" rx="24" ry="24" fill="none"
+    stroke="rgb(var(--text-color))" stroke-width="14" class="svg-notFound-fg-stroke"/>
+
+  <!-- play triangle, slightly right of centre for optical balance -->
+  <path d="M710 373 L710 443 L764 408 Z" class="svg-notFound-fg" opacity="0.9"/>
+
+  <!-- stand -->
+  <rect x="718" y="513" width="20" height="26" class="svg-notFound-fg"/>
+  <rect x="683" y="539" width="90" height="14" rx="7" class="svg-notFound-fg"/>
 </svg>

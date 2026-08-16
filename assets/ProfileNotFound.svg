@@ -1,12 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 474 796" width="474" height="796">
-
-  <!-- Solid black background -->
-  <rect width="474" height="796" fill="#3a4352"/>
-
+  <!-- Background -->
+  <rect width="474" height="796" class="svg-notFound-bg"/>
   <!-- Head (circle) -->
-  <circle cx="237" cy="290" r="100" fill="#ffffff"/>
-
+  <circle cx="237" cy="313" r="80" class="svg-notFound-fg"/>
   <!-- Body (half ellipse) -->
-  <path d="M 57 590 A 180 180 0 0 1 417 590 Z" fill="#ffffff"/>
-
+  <path d="M 93 553 A 144 144 0 0 1 381 553 Z" class="svg-notFound-fg"/>
 </svg>

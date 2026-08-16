@@ -588,18 +588,39 @@ h1{
 }
 
 .episode-image-container{
+  display:flex;
+  justify-content: center;
+  align-items: center;
   border-radius:10px;
   margin:0;
   height:63px;
   width:111.6px;
+  overflow: hidden;
 }
 
 .episode-image-container .episode-image {
   height: 63px;
   width: 111.6px;
   display: block;
+  border-radius:10px;
   transition: opacity 0.3s;
   opacity: 1;
+}
+
+.svg-notFoundImage{
+  overflow: hidden;
+}
+
+.svg-notFound-bg{
+  fill: rgba(var(--secondary-color));
+}
+
+.svg-notFound-fg{
+  fill: rgb(var(--text-color));
+}
+
+.svg-notFound-fg-stroke{
+  stroke: rgb(var(--text-color));
 }
 
 .div-episodes-element img{

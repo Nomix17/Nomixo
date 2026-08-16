@@ -122,6 +122,77 @@ const downArrowIcon = `
 const downloadIcon = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
 `;
+
+// ################################### NOT-FOUND SVG MODULES ###################################
+
+const notFoundSvgPaths = {
+  ProfileNotFound: "../../../assets/ProfileNotFound.svg",
+  PosterNotFound: "../../../assets/PosterNotFound.svg",
+  EpisodeNotFound: "../../../assets/noEpisodeImageFound.svg"
+};
+
+const notFoundSvgStyleClass = {
+  ProfileNotFound: "img-MoviePoster",
+  PosterNotFound: "img-MoviePoster",
+  EpisodeNotFound: "episode-image"
+};
+
+const notFoundSvgCache = {};
+
+function isNotFoundAssetPath(path) {
+  return Object.values(notFoundSvgPaths).includes(path);
+}
+
+function resolveNotFoundAssetName(assetNameOrPath) {
+  if (notFoundSvgPaths[assetNameOrPath]) return assetNameOrPath;
+
+  const matchedEntry = Object.entries(notFoundSvgPaths)
+    .find(([, path]) => path === assetNameOrPath);
+  if (matchedEntry) return matchedEntry[0];
+
+  console.warn(`Unknown not-found svg asset "${assetNameOrPath}", falling back to PosterNotFound`);
+  return "PosterNotFound";
+}
+
+async function loadNotFoundSvg(assetNameOrPath) {
+  const assetName = resolveNotFoundAssetName(assetNameOrPath);
+
+  if (notFoundSvgCache[assetName]) return notFoundSvgCache[assetName];
+
+  const cacheKey = `cache_notFoundSvg_v3_${assetName}`;
+  const cachedSvg = localStorage.getItem(cacheKey);
+  if (cachedSvg) {
+    notFoundSvgCache[assetName] = cachedSvg;
+    return cachedSvg;
+  }
+
+  try {
+    const response = await fetch(notFoundSvgPaths[assetName]);
+    if (!response.ok) throw new Error(`Failed to fetch ${assetName}: ${response.statusText}`);
+    const svgText = await response.text();
+    notFoundSvgCache[assetName] = svgText;
+    localStorage.setItem(cacheKey, svgText);
+    return svgText;
+  } catch (err) {
+    console.error(`Error loading not-found svg (${assetName}):`, err.message);
+    return "";
+  }
+}
+
+async function injectNotFoundSvg(container, assetNameOrPath = "PosterNotFound", matchClassName) {
+  const assetName = resolveNotFoundAssetName(assetNameOrPath);
+  const svgText = await loadNotFoundSvg(assetName);
+  if (!svgText) return null;
+
+  container.innerHTML = svgText;
+  const svgElement = container.querySelector("svg");
+  if (svgElement) {
+    svgElement.setAttribute("preserveAspectRatio", "xMidYMid slice");
+    svgElement.classList.add("svg-notFoundImage", matchClassName ?? notFoundSvgStyleClass[assetName]);
+  }
+  return svgElement;
+}
+
 // ################################### NAVIGATION ###################################
 
 function goBack(){
@@ -711,10 +782,16 @@ function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,
   mediaNameElement.innerHTML = `<p>${Title}</p>`;
 
   PosterImage = normalizeRootUrl(PosterImage);
-  if(imageLoadingAnimation)
-    loadImageWithAnimation(mediaPosterContainer,mediaPosterElement, PosterImage);
-  else
+  const fallbackAssetName = ThisMediaType === "person" ? "ProfileNotFound" : "PosterNotFound";
+
+  if(imageLoadingAnimation) {
+    loadImageWithAnimation(mediaPosterContainer, mediaPosterElement, PosterImage, fallbackAssetName);
+  } else if(!PosterImage || isNotFoundAssetPath(PosterImage)) {
+    mediaPosterElement.remove();
+    injectNotFoundSvg(mediaPosterContainer, fallbackAssetName);
+  } else {
     mediaPosterElement.src = PosterImage;
+  }
 
   mediaDomElement.classList.add("div-MovieElement");
   mediaDomElement.setAttribute("tabindex",0);
@@ -1346,14 +1423,15 @@ async function loadIconsDynamically() {
   document.querySelectorAll(".floating-x-remove-btn").forEach(element => element.innerHTML = xRemoveIcon);
 }
 
-function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeImage = "../../../assets/PosterNotFound.svg") {
+function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeAssetName = "PosterNotFound") {
   return new Promise((resolve) => {
-    if (!imagePath) {
-      imageElement.src = alternativeImage;
+    if (!imagePath || isNotFoundAssetPath(imagePath)) {
+      imageElement.remove();
+      injectNotFoundSvg(imageContainer, alternativeAssetName);
       resolve(false);
       return;
     }
-    
+
     imageElement.style.display = 'none';
     imageElement.style.transition = 'opacity 0.3s ease';
     imageContainer.classList.add("flashing-Div");
@@ -1369,9 +1447,8 @@ function loadImageWithAnimation(imageContainer, imageElement, imagePath, alterna
       resolve(true);
     };
     img.onerror = () => {
-      imageElement.src = alternativeImage;
-      imageElement.style.display = 'block';
-      imageElement.style.opacity = '1';
+      imageElement.remove();
+      injectNotFoundSvg(imageContainer, alternativeAssetName);
       imageContainer.classList.remove("flashing-Div");
       resolve(false);
     };
@@ -1735,4 +1812,3 @@ function triggerLoadingGif() {
     catch (err) { console.log(err) } 
   }, 30);
 }
-

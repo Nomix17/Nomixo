@@ -1,40 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1050" width="700" height="1050">
-  <defs>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&amp;display=swap');
-    </style>
-  </defs>
-  <rect width="700" height="1050" fill="#3a4352"/>
-  <text
-    x="60"
-    y="280"
-    dominant-baseline="middle"
-    font-family="'JetBrains Mono', monospace"
-    font-size="108"
-    font-weight="700"
-    fill="#ffffff"
-    letter-spacing="-2"
-  >Poster</text>
-  <text
-    x="350"
-    y="525"
-    text-anchor="middle"
-    dominant-baseline="middle"
-    font-family="'JetBrains Mono', monospace"
-    font-size="108"
-    font-weight="700"
-    fill="#ffffff"
-    letter-spacing="-2"
-  >Not</text>
-  <text
-    x="640"
-    y="770"
-    text-anchor="end"
-    dominant-baseline="middle"
-    font-family="'JetBrains Mono', monospace"
-    font-size="108"
-    font-weight="700"
-    fill="#ffffff"
-    letter-spacing="-2"
-  >Found</text>
+  <rect width="700" height="1050" class="svg-notFound-bg"/>
+
+  <g transform="translate(174 349) scale(22)">
+    <path d="m 4 1 c -1.644531 0 -3 1.355469 -3 3 v 1 h 1 v -1 c 0 -1.109375 0.890625 -2 2 -2 h 1 v -1 z m 2 0 v 1 h 4 v -1 z m 5 0 v 1 h 1 c 1.109375 0 2 0.890625 2 2 v 1 h 1 v -1 c 0 -1.644531 -1.355469 -3 -3 -3 z m -5 4 c -0.550781 0 -1 0.449219 -1 1 s 0.449219 1 1 1 s 1 -0.449219 1 -1 s -0.449219 -1 -1 -1 z m -5 1 v 4 h 1 v -4 z m 13 0 v 4 h 1 v -4 z m -4.5 2 l -2 2 l -1.5 -1 l -2 2 v 0.5 c 0 0.5 0.5 0.5 0.5 0.5 h 7 s 0.472656 -0.035156 0.5 -0.5 v -1 z m -8.5 3 v 1 c 0 1.644531 1.355469 3 3 3 h 1 v -1 h -1 c -1.109375 0 -2 -0.890625 -2 -2 v -1 z m 13 0 v 1 c 0 1.109375 -0.890625 2 -2 2 h -1 v 1 h 1 c 1.644531 0 3 -1.355469 3 -3 v -1 z m -8 3 v 1 h 4 v -1 z m 0 0"
+      class="svg-notFound-fg" fill-opacity="0.9"/>
+  </g>
 </svg>
