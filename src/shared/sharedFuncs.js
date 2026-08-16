@@ -489,7 +489,20 @@ function setupKeyPressesForInputElement(searchInput) {
     items.forEach((item, i) => item.classList.toggle('selected', i === index));
     const item = items[index];
     item?.scrollIntoView({ block: 'nearest' });
-    return item.querySelector(".recent-search-query")?.textContent;
+    return item?.querySelector(".recent-search-query")?.textContent;
+  }
+
+  function getNextIndex(offset) {
+    const items = getDropdownItems();
+    const visibleItems = items.filter(item => item.checkVisibility());
+    if (visibleItems.length === 0) return -1;
+
+    const currentIndex = visibleItems.indexOf(items[selectedIndex]);
+    if (currentIndex === -1)
+      return items.indexOf(offset > 0 ? visibleItems[0] : visibleItems[visibleItems.length - 1]);
+
+    const nextIndex = (currentIndex + offset + visibleItems.length) % visibleItems.length;
+    return items.indexOf(visibleItems[nextIndex]);
   }
 
   searchInput.addEventListener('focus', () => {
@@ -511,7 +524,7 @@ function setupKeyPressesForInputElement(searchInput) {
     } else if (event.key === 'ArrowDown') {
       if (items.length === 0) return;
       event.preventDefault();
-      selectedIndex = (selectedIndex + 1) % items.length;
+      selectedIndex = getNextIndex(1);
       const query = updateSelection(items, selectedIndex);
       if(query)
         searchInput.value = query;
@@ -519,45 +532,40 @@ function setupKeyPressesForInputElement(searchInput) {
     } else if (event.key === 'ArrowUp') {
       if (items.length === 0) return;
       event.preventDefault();
-      selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+      selectedIndex = getNextIndex(-1);
       const query = updateSelection(items, selectedIndex);
       if(query)
         searchInput.value = query;
     }
-
-    searchInput.addEventListener("input", () => {
-      let showDropdown = false; 
-      selectedIndex = -1;
-      const dropdown = document.getElementById('recent-searches-dropdown');
-      const dropdownItems = dropdown.querySelectorAll(".recent-search-item");
-      const typedValue = searchInput.value.trim().toLowerCase();
-
-      dropdownItems.forEach((item) => {
-        const query = item.querySelector(".recent-search-query").textContent.toLowerCase();
-        const hideItem = typedValue !== "" && !query.startsWith(typedValue);
-        item.classList.toggle("hide", hideItem);
-        if (!hideItem) {
-          showDropdown = true;
-        }
-      });
-      const shouldBeVisible = (typedValue === "" && dropdown.children.length !== 0) || showDropdown;
-      dropdown.classList.toggle("visible", shouldBeVisible);
-    });
-
     event.stopPropagation();
   });
 
   searchInput.addEventListener('input', () => {
-    selectedIndex = -1; 
-    const dropdown = document.getElementById('recent-searches-dropdown');
-    const dropdownItems = dropdown ? dropdown.querySelectorAll(".recent-search-item") : [];
-    const typedValue = searchInput.value.trim().toLowerCase();
-
-    dropdownItems.forEach((item) => {
-      const query = item.querySelector(".recent-search-query").textContent.toLowerCase();
-      item.classList.toggle("hide", typedValue !== "" && !query.includes(typedValue));
-    });
+    selectedIndex = -1;
+    filterDropdown(searchInput.value.trim().toLowerCase());
   });
+}
+
+function filterDropdown(typedValue) {
+  const dropdown = document.getElementById('recent-searches-dropdown');
+  if (!dropdown) return;
+
+  const dropdownItems = dropdown.querySelectorAll('.recent-search-item');
+
+  let showDropdown = false;
+  dropdownItems.forEach((item) => {
+    const query = item
+      .querySelector('.recent-search-query')
+      ?.textContent
+      .toLowerCase() ?? '';
+
+    const hideItem = typedValue !== '' && !query.includes(typedValue);
+    item.classList.toggle('hide', hideItem);
+    if (!hideItem) showDropdown = true;
+  });
+
+  const shouldBeVisible = dropdownItems.length > 0 && showDropdown;
+  dropdown.classList.toggle('visible', shouldBeVisible);
 }
 
 function handleNavigationButtonsHandler(focusFunction) {
@@ -1628,9 +1636,9 @@ function createSearchHistoryDropDown() {
 
   input.addEventListener('focus', async () => {
     await renderHistory(dropdown, input);
-    if (dropdown.children.length > 0) {
+    if (dropdown.children.length > 0)
       dropdown.classList.add('visible');
-    }
+    filterDropdown(input.value.trim().toLowerCase())
   });
 
   input.addEventListener('blur', () => {
