@@ -130,6 +130,9 @@ class TorrentDownloadManager {
       let libraryStartTime = 0;
       let pipingStartTime = 0;
 
+      let targetReachedFullAt = null;
+      const COMPLETION_GRACE_MS = 3000;
+
       torrent.on("download", () => {
         const now = Date.now();
         const downloadedDataLength = targetFile.downloaded;
@@ -145,6 +148,20 @@ class TorrentDownloadManager {
         if (now - pipingStartTime >= DELAY_BEFORE_PIPING_MS) {
           this.pipeDownloadProgressToRenderer(torrentEntry, torrent.downloadSpeed, totalSize, downloadedDataLength);
           pipingStartTime = now;
+        }
+
+        if (downloadedDataLength >= totalSize) {
+          if (targetReachedFullAt === null) {
+            targetReachedFullAt = now;
+          } else if (!torrent.done && now - targetReachedFullAt >= COMPLETION_GRACE_MS) {
+            log.warn(
+              `Target file for ${torrentEntry.torrentId} finished but torrent.done didn't trigger`
+            );
+            targetReachedFullAt = -Infinity;
+            torrent.emit('done');
+          }
+        } else {
+          targetReachedFullAt = null;
         }
       });
     });
