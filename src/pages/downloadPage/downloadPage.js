@@ -252,7 +252,7 @@ function handleCancelButton(mediaInfo,cancelDownloadButton) {
       if(MediaDownloadElementContainer.innerHTML.trim() === "")
         putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
       const res = await window.electronAPI.cancelDownload(mediaInfo);
-      handleDownloadCategorieChanging(res);
+      // handleDownloadCategorieChanging(res);
       updateDownloadUI();
     });
   }
@@ -264,7 +264,7 @@ function handleTogglingPauseButton(torrentId,MediaDownloadElement) {
   if(PausePlayButton) {
     PausePlayButton.addEventListener("click",async ()=>{
       let pauseResponces = await window.electronAPI.toggleTorrentDownload(torrentId);
-      await handleDownloadCategorieChanging(pauseResponces);
+      // await handleDownloadCategorieChanging(pauseResponces);
     });
   }
 }
@@ -380,7 +380,7 @@ async function createPausedDownloadsContextMenu(torrentId) {
     hideContextMenu(menuDiv);
     if(targetLibInfo != null) {
       const res = await window.electronAPI.addTorrentToDownloadQueue(torrentId);
-      await handleDownloadCategorieChanging(res);
+      // await handleDownloadCategorieChanging(res);
     }
   });
 
@@ -989,7 +989,7 @@ function setupCategoryBtn() {
     for(const entry of pausedEntries) {
       if(entry?.torrentId != null) {
         const res = await window.electronAPI.addTorrentToDownloadQueue(entry?.torrentId);
-        await handleDownloadCategorieChanging(res);
+        // await handleDownloadCategorieChanging(res);
       } else {
         console.log("Failed to load torrent id");
       }
@@ -1005,7 +1005,7 @@ function setupCategoryBtn() {
     for(const entry of queuedEntries) {
       if(entry?.torrentId != null) {
         const res = await window.electronAPI.removeTorrentFromDownloadQueue(entry.torrentId);
-        await handleDownloadCategorieChanging(res);
+        // await handleDownloadCategorieChanging(res);
       } else {
         console.log("Failed to load torrent id");
       }
