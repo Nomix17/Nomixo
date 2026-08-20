@@ -2,7 +2,7 @@ const data = new URLSearchParams(window.location.search);
 const MediaId = data.get("MovieId");
 const MediaType = data.get("MediaType");
 const apiKeyPromise = window.electronAPI.getTMDBAPIKEY();
-const IMDB_IDPromise = getIMDB_ID();
+const IMDB_IDPromise = getIMDB_ID(MediaType, MediaId, apiKeyPromise);
 const trailerPromise = getMediaTrailer();
 
 let backgroundImage;
@@ -273,15 +273,6 @@ async function fetchMediaTorrent(episodeInfo={}) {
       refreshTorrent
     );
   }
-}
-
-async function getIMDB_ID() {
-  const apiKey = await apiKeyPromise;
-  const mediaExternalIdsRes = await fetch(
-    `https://api.themoviedb.org/3/${MediaType}/${MediaId}/external_ids?api_key=${apiKey}`
-  );
-  const mediaExternalIdsData = await mediaExternalIdsRes.json();
-  return mediaExternalIdsData?.imdb_id
 }
 
 async function getMediaTrailer() {
@@ -1070,22 +1061,14 @@ function setupDownloadDivEvents(DownloadTargetInfo) {
   });
 }
 
-async function DownloadTorrent(DownloadTargetInfo,downloadSubtitles) {
+async function DownloadTorrent(DownloadTargetInfo, hasToDownloadSubs) {
   const apiKey = await apiKeyPromise;
   const userDownloadPath = document.getElementById("downloadPath")?.value;
   const posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   DownloadTargetInfo["posterUrl"] = `https://image.tmdb.org/t/p/w500${posterPath}`;
   DownloadTargetInfo["bgImageUrl"] = backgroundImage;
   DownloadTargetInfo["userDownloadPath"] = userDownloadPath;
-  const subsObjects = 
-    (downloadSubtitles) 
-    ? await loadingAllSubs(
-      DownloadTargetInfo.IMDB_ID,
-      DownloadTargetInfo.episodeNumber,
-      DownloadTargetInfo.seasonNumber
-    ) : [];
-
-  window.electronAPI.downloadTorrent([DownloadTargetInfo],subsObjects);
+  window.electronAPI.downloadTorrent([DownloadTargetInfo], hasToDownloadSubs);
 }
 
 async function loadLogoImage(movieLanguage) {

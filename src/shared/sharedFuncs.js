@@ -1068,6 +1068,15 @@ async function continueWatchingEventListener(continueVideoButton,mediaEntryPoint
   });
 }
 
+async function getIMDB_ID(MediaType, MediaId, apiKeyPromise) {
+  const apiKey = await apiKeyPromise;
+  const mediaExternalIdsRes = await fetch(
+    `https://api.themoviedb.org/3/${MediaType}/${MediaId}/external_ids?api_key=${apiKey}`
+  );
+  const mediaExternalIdsData = await mediaExternalIdsRes.json();
+  return mediaExternalIdsData?.imdb_id
+}
+
 function addContrastForPlayIcon() {
   const root = document.documentElement;
   const primaryColor = getComputedStyle(root).getPropertyValue('--primary-color').trim();
@@ -1251,32 +1260,6 @@ async function getPosterPath(imdbId, apiKey) {
 
   return poster ?? null;
 }
-
-async function loadingAllSubs(id,episodeNumber,seasonNumber){
-  try{
-    const params = new URLSearchParams({
-      id,
-      ...((
-        episodeNumber && seasonNumber &&
-        episodeNumber != "undefined" && seasonNumber != "undefined"
-      ) && { season: seasonNumber, episode: episodeNumber })
-    });
-    const WYZIE_API_KEY = await window.electronAPI.getWyzieAPIKey();
-    const requestUrl = `https://sub.wyzie.ru/search?${params}&key=${WYZIE_API_KEY}`;
-    const res = await fetch(requestUrl);
-    
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    const data = await res.json();
-    return data;
-
-  }catch(err){
-    console.error(err);
-    return [];
-  }
-}
-
 
 // ################################### UI COMPONENTS & FEEDBACK ###################################
 

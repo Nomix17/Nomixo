@@ -45,10 +45,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   loadDownloadLibraryInfo: (targetIdentification) => ipcRenderer.invoke("load-from-download-lib",targetIdentification),
   
   downloadSubtitles: (mediaInfo, subsObjects) => ipcRenderer.invoke("download-subtitles", mediaInfo, subsObjects),
+  fetchSubtitles: (mediaInfo) => ipcRenderer.invoke("fetch-subtitles", mediaInfo),
   loadLocalSubs: (videoPath,identifyingElements) => ipcRenderer.invoke("load-local-subs",videoPath,identifyingElements),
   readSubFile: (filePath) => ipcRenderer.invoke("read-sub-file",filePath),
 
-  downloadTorrent: (torrentInformation,subsObjects) => ipcRenderer.invoke("download-torrent",torrentInformation,subsObjects),
+  downloadTorrent: (torrentInformation, hasToDownloadSubs) => ipcRenderer.invoke("download-torrent",torrentInformation, hasToDownloadSubs),
   pauseTorrentDownload: (torrentId) => ipcRenderer.invoke("pause-torrent-download", torrentId),
   continueTorrentDownload: (torrentId) => ipcRenderer.invoke("continue-torrent-download", torrentId),
   toggleTorrentDownload: (torrentId) => ipcRenderer.invoke("toggle-torrent-download", torrentId),
@@ -64,6 +65,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDownloadErrorsReports: (fn)=> ipcRenderer.on("report-download-errors",(event,data)=>fn(data)),
   getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
   getTorrentStreamingReport:(fn) => ipcRenderer.on("torrent-streaming-report",(event,data) => fn(data)),
+  updateDownloadStatus:(fn) => ipcRenderer.on("update-download-status",(event,data) => fn(data)),
+
 
   downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl),
   downloadBackdrop: (backgroundImageUrl) => ipcRenderer.invoke("download-backdrop", backgroundImageUrl),

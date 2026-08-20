@@ -2,6 +2,7 @@ import { BrowserWindow, app, nativeTheme, protocol, screen } from "electron";
 import Store from 'electron-store';
 import TorrentDownloadManager from "./TorrentDownloadManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
+import { SubDownloadManager } from "./SubDownloadManager.js";
 import { markMediaDownloadsAsPaused } from "./storageManagement.js";
 import { generateUniqueId } from "./utils.js";
 import { Paths } from "./FilesManager.js";
@@ -14,8 +15,6 @@ export class AppManager {
   mainZoomFactor = 1;
   pagesCachedHistory = {};
   browserWindow = null;
-  TMDB_API_KEY = null;
-  Wyzie_API_KEY = null;
   defaultSettingsPromise = null;
   positionWasChangedViaGoBackButton = false;
 
@@ -30,14 +29,12 @@ export class AppManager {
   }
 
   initializeApp() {
+    this.#initAppIdentity();
     let entryPointFile;
     if (!process.env.TMDB_API_KEY) {
       log.warn(`Missing TMDB API key. Please set TMDB_API_KEY in your environment or add it to ${Paths.__envfile}`);
       entryPointFile = "./src/pages/loginPage/loginPage.html";
     } else {
-      this.TMDB_API_KEY = process.env.TMDB_API_KEY;
-      this.Wyzie_API_KEY = process.env.Wyzie_API_KEY;
-      this.#initAppIdentity();
       entryPointFile = "./src/pages/homePage/homePage.html";
     }
 
@@ -67,7 +64,7 @@ export class AppManager {
       this.torrentDownloadManager = new TorrentDownloadManager(
         this.browserWindow,
         (entry) => this.mpvPlayerManager.playVideoOverMpv(entry)
-      );
+      )
       await markMediaDownloadsAsPaused();
     });
 

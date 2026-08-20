@@ -33,7 +33,7 @@ export async function getDownloadEntry(torrentId) {
     let targetLibraryInfo = LibraryInfo.downloads.filter(
       element => element.torrentId === torrentId
     );
-    if (targetLibraryInfo.length) return targetLibraryInfo;
+    if (targetLibraryInfo.length) return targetLibraryInfo?.[0];
   }
   return undefined;
 }
@@ -60,93 +60,114 @@ export async function overwriteStorageFile(filePath, newData) {
   }
 }
 
+const fileLocks = new Map();
+function withFileLock(filePath, task) {
+  const previous = fileLocks.get(filePath) ?? Promise.resolve();
+  const run = previous.catch(() => {}).then(task);
+  fileLocks.set(filePath, run.catch(() => {}));
+  return run;
+}
+
 export async function insertNewDownloadEntry(torrentEntry, Status = "Loading") {
-  const downloadLib = await loadDownloadStorage();
+  const posterDownloadPath = torrentEntry?.downloadPath
+    ? path.join(torrentEntry.downloadPath, "POSTERS")
+    : Paths.postersDirPath;
 
-  const existingIndex = downloadLib.downloads.findIndex(
-    item => item.torrentId === torrentEntry.torrentId
-  );
+  const bgImageUrl = torrentEntry?.bgImageUrl;
+  const posterUrl = torrentEntry?.posterUrl;
+  const bgImagePath = bgImageUrl ? path.join(posterDownloadPath, bgImageUrl.split("/").pop()) : "";
+  const posterPath = posterUrl ? path.join(posterDownloadPath, posterUrl.split("/").pop()) : "";
 
-  if (existingIndex === -1) {
-    const posterDownloadPath = torrentEntry?.downloadPath
-      ? path.join(torrentEntry.downloadPath, "POSTERS")
-      : Paths.postersDirPath;
+  const newEntry = {
+    ...torrentEntry,
+    posterPath: posterPath ?? "undefined",
+    bgImagePath: bgImagePath ?? "undefined",
+    Status,
+    StatusUpdateTime: Date.now(),
+  };
 
-    const bgImageUrl = torrentEntry?.bgImageUrl;
-    const posterUrl = torrentEntry?.posterUrl;
-    const bgImagePath = bgImageUrl ? path.join(posterDownloadPath, bgImageUrl.split("/").pop()) : "";
-    const posterPath = posterUrl ? path.join(posterDownloadPath, posterUrl.split("/").pop()) : "";
+  const wasInserted = await withFileLock(Paths.downloadLibraryFilePath, async () => {
+    const downloadLib = await loadDownloadStorage();
+
+    const existingIndex = downloadLib.downloads.findIndex(
+      item => item.torrentId === torrentEntry.torrentId
+    );
+
+    if (existingIndex !== -1) return false;
+
     downloadImage(posterDownloadPath, torrentEntry?.bgImageUrl);
     downloadImage(posterDownloadPath, torrentEntry?.posterUrl);
 
-    const newEntry = {
-      ...torrentEntry,
-      posterPath: posterPath ?? "undefined",
-      bgImagePath: bgImagePath ?? "undefined",
-      Status,
-      StatusUpdateTime: Date.now(),
-    };
     downloadLib.downloads.push(newEntry);
-
-    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+    overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
     log.info("Creating Download Library Entry Point for: " + torrentEntry.torrentId);
     return true;
-  } else {
+  });
+
+  if (!wasInserted) {
     log.info("Editing Download Status of: " + torrentEntry.torrentId);
     await editDownloadStorageEntry([torrentEntry.torrentId], "Status", Status);
-    return false;
   }
+  return wasInserted;
 }
 
 export async function saveDownloadProgress(torrentEntry, downloadedBytes, totalSize) {
-  const downloadLib = await loadDownloadStorage();
+  await withFileLock(Paths.downloadLibraryFilePath, async () => {
+    const downloadLib = await loadDownloadStorage();
 
-  const existingIndex = downloadLib.downloads.findIndex(
-    item => item.torrentId === torrentEntry.torrentId
-  );
+    const existingIndex = downloadLib.downloads.findIndex(
+      item => item.torrentId === torrentEntry.torrentId
+    );
 
-  if (existingIndex !== -1) {
-    downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
-    downloadLib.downloads[existingIndex]["typeOfSave"] =
-      torrentEntry.Status === "Done" ? "Download-Complete" : "Download";
-    downloadLib.downloads[existingIndex]["Total"] = totalSize;
+    if (existingIndex !== -1) {
+      downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
+      downloadLib.downloads[existingIndex]["typeOfSave"] =
+        torrentEntry.Status === "Done" ? "Download-Complete" : "Download";
+      downloadLib.downloads[existingIndex]["Total"] = totalSize;
 
-    if (torrentEntry.Status === "Done")
-      downloadLib.downloads[existingIndex]["Status"] = "Done";
+      if (torrentEntry.Status === "Done")
+        downloadLib.downloads[existingIndex]["Status"] = "Done";
 
-    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
-  }
+      overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+    }
+  });
 }
 
 export async function editDownloadStorageEntry(torrentsIds, key, value) {
-  const downloadLibraryInfo = await loadDownloadStorage();
-  for (let torrentId of torrentsIds) {
-    for (let index = 0; index < downloadLibraryInfo.downloads.length; index++) {
-      if (downloadLibraryInfo.downloads[index].torrentId === torrentId) {
-        if (key === "Status")
-          downloadLibraryInfo.downloads[index]["StatusUpdateTime"] = Date.now();
-        downloadLibraryInfo.downloads[index][key] = value;
-        break;
+  await withFileLock(Paths.downloadLibraryFilePath, async () => {
+    const downloadLibraryInfo = await loadDownloadStorage();
+    for (let torrentId of torrentsIds) {
+      for (let index = 0; index < downloadLibraryInfo.downloads.length; index++) {
+        if (downloadLibraryInfo.downloads[index].torrentId === torrentId) {
+          if (key === "Status")
+            downloadLibraryInfo.downloads[index]["StatusUpdateTime"] = Date.now();
+          downloadLibraryInfo.downloads[index][key] = value;
+          break;
+        }
       }
     }
-  }
-  await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLibraryInfo);
+    overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLibraryInfo);
+  });
 }
 
 export async function removeDownloadStorageEntry(torrentId) {
-  const downloadLib = await loadDownloadStorage();
-  downloadLib.downloads = downloadLib.downloads.filter(
-    element => element.torrentId !== torrentId
-  );
-  await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+  await withFileLock(Paths.downloadLibraryFilePath, async () => {
+    const downloadLib = await loadDownloadStorage();
+    downloadLib.downloads = downloadLib.downloads.filter(
+      element => element.torrentId !== torrentId
+    );
+    overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+  });
 }
 
 export async function removeLibraryStorageEntry(torrentId) {
-  const LibraryInfo = await loadLibraryStorage();
-  LibraryInfo.media = LibraryInfo.media.filter(
-    element => element.torrentId !== torrentId
-  );
-  await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+  await withFileLock(Paths.libraryFilePath, async () => {
+    const LibraryInfo = await loadLibraryStorage();
+    LibraryInfo.media = LibraryInfo.media.filter(
+      element => element.torrentId !== torrentId
+    );
+    overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+  });
 }
 
 export async function markMediaDownloadsAsPaused() {

@@ -1,14 +1,15 @@
 import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
-import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import { copyFile, writeFile, readFile, unlink} from 'fs/promises';
 
 import { log } from "./debugging.js";
+import dotenv from "dotenv";
+import { config } from "./config.js";
 import { AppManager } from "./AppManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
 import { initTorrentTrackers } from "./torrentTracker.js";
-import SubDownloadManager from "./SubDownloadManager.js";
+import { SubDownloadManager } from "./SubDownloadManager.js";
 import { Paths, FilesManager } from "./FilesManager.js";
 import {
   generateUniqueId,
@@ -26,9 +27,8 @@ import {
   writeSearchHistory
 } from "./storageManagement.js";
 
-
 dotenv.config({ path: Paths.__envfile });
-
+config.init();
 // ======================= APP INITIALIZATION =======================
 
 FilesManager.initializeDataFiles();
@@ -241,8 +241,8 @@ ipcMain.handle("open-external-link", (event, url) => {
   shell.openExternal(url);
 });
 
-ipcMain.handle("get-tmdb-api-key", () => appManager.TMDB_API_KEY);
-ipcMain.handle("get-wyzie-api-key", () => appManager.Wyzie_API_KEY);
+ipcMain.handle("get-tmdb-api-key", () => config.getTMDBKey());
+ipcMain.handle("get-wyzie-api-key", () => config.getWyzieKey());
 
 ipcMain.handle("validate-tmdb-api-key", async (event, inputedApiKey) => {
   return validateTMDBApiKey(inputedApiKey);
@@ -253,8 +253,8 @@ ipcMain.handle("validate-wyzie-api-key", async (event, inputedApiKey) => {
 });
 
 ipcMain.handle("save-api-key", async (event, apiKeys) => {
-  appManager.TMDB_API_KEY = apiKeys["TMDB_API_KEY"];
-  appManager.Wyzie_API_KEY = apiKeys["Wyzie_API_KEY"];
+  config.setTMDBKey(apiKeys["TMDB_API_KEY"]);
+  config.setWyzieKey(apiKeys["Wyzie_API_KEY"]);
   try {
     await FilesManager.writeAPIKEYIntoEnvFile(apiKeys);
   } catch (err) {
@@ -270,14 +270,14 @@ ipcMain.handle("get-video-url", async (event, magnet, fileName) => {
   return appManager.mpvPlayerManager.getVideoUrl(magnet, fileName);
 });
 
-ipcMain.handle("play-torrent-over-mpv", async (event, metaData, subsObjects) => {
+ipcMain.handle("play-torrent-over-mpv", async (event, metaData) => {
   const settings = await loadSettings();
-  return appManager.mpvPlayerManager.playTorrentOverMpv(metaData, subsObjects, settings);
+  return appManager.mpvPlayerManager.playTorrentOverMpv(metaData, settings);
 });
 
 ipcMain.handle("play-video-over-mpv", async (event, metaData) => {
   const subsPaths = loadSubsFromSubDir({
-    IMDB_ID: metaData.mediaImdbId,
+    IMDB_ID: metaData.IMDB_ID,
     episodeNumber: metaData.episodeNumber,
     seasonNumber: metaData.seasonNumber,
     DownloadDir: metaData.downloadPath,
@@ -289,18 +289,8 @@ ipcMain.handle("play-video-over-mpv", async (event, metaData) => {
 
 // ======================= TORRENT DOWNLOADING =======================
 
-ipcMain.handle("download-torrent", async (event, torrentsEntries, subsObjects) => {
-  return appManager.torrentDownloadManager.scheduleTorrentDownloads(torrentsEntries, subsObjects);
-});
-
-ipcMain.handle("download-subtitles", async (event, torrentEntry, subsObjects) => {
-  try {
-    await SubDownloadManager.downloadSubs(subsObjects, torrentEntry.torrentId, torrentEntry.downloadPath);
-  } catch (err) {
-    log.error("Failed To Download Subtitles", torrentEntry.torrentId + ":", err.message);
-    return { updated: false };
-  }
-  return { updated: true };
+ipcMain.handle("download-torrent", async (event, torrentsEntries, hasToDownloadSubs) => {
+  return appManager.torrentDownloadManager.scheduleTorrentDownloads(torrentsEntries, hasToDownloadSubs);
 });
 
 ipcMain.handle("pause-torrent-download", async (event, torrentId) => {
@@ -320,7 +310,7 @@ ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
 });
 
 ipcMain.handle("add-torrent-to-download-queue", async (event, torrentId) => {
-  return appManager.torrentDownloadManager.downloadOrQueueTorrent(torrentId);
+  return await appManager.torrentDownloadManager.addToQueue(torrentId);
 });
 
 ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) => {
@@ -328,11 +318,11 @@ ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) =>
 });
 
 ipcMain.handle("shift-download-queue-element", (event, torrentId, offset) => {
-  return appManager.torrentDownloadManager.shiftQueuedElement(torrentId, offset);
+  return appManager.torrentDownloadManager.downloadClient.shiftQueuedItem(torrentId, offset);
 });
 
 ipcMain.handle("get-download-queue-list", () => {
-  return appManager.torrentDownloadManager.downloadQueue.map((el) => el.torrentId);
+  return appManager.torrentDownloadManager.downloadClient.getQueueTorrentIds();
 });
 
 // ======================= DOWNLOAD OTHER THINGS =======================
@@ -493,7 +483,21 @@ ipcMain.handle("load-from-download-lib", async () => {
   return await loadDownloadStorage();
 });
 
-// ======================= SUBTITLES FILES MANAGEMENT =======================
+// ======================= SUBTITLES MANAGEMENT =======================
+
+ipcMain.handle("download-subtitles", async (event, torrentEntry) => {
+  try {
+    await SubDownloadManager.downloadSubsForMedia(torrentEntry, torrentEntry.torrentId, torrentEntry.downloadPath);
+  } catch (err) {
+    log.error("Failed To Download Subtitles", torrentEntry.torrentId + ":", err.message);
+    return { updated: false };
+  }
+  return { updated: true };
+});
+
+ipcMain.handle("fetch-subtitles", async(event, mediaInfo) => {
+  return await SubDownloadManager.fetchSubtitlesInfo(mediaInfo);
+});
 
 ipcMain.handle("load-local-subs", async (event, videoPath, identifyingElements) => {
   const localBuiltInSubs = loadSubsFromVideoDirectory(videoPath);
