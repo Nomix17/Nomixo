@@ -13,16 +13,18 @@ async function loadJsonFile(filePath) {
 export async function loadDownloadStorage() {
   try {
     return await loadJsonFile(Paths.downloadLibraryFilePath);
-  } catch {
-    return { downloads: [] };
+  } catch(err) {
+    if(err.code === "ENOENT") return { media : [] };
+    log.error("Failed to load Download Storage:", err);
   }
 }
 
 export async function loadLibraryStorage() {
   try {
     return await loadJsonFile(Paths.libraryFilePath);
-  } catch {
-    return { media: [] };
+  } catch(err) {
+    if(err.code === "ENOENT") return { media : [] };
+    log.error("Failed to load Library Storage:", err); 
   }
 }
 
