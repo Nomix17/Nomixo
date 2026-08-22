@@ -101,7 +101,7 @@ export async function insertNewDownloadEntry(torrentEntry, Status = "Loading") {
     downloadImage(posterDownloadPath, torrentEntry?.posterUrl);
 
     downloadLib.downloads.push(newEntry);
-    overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
     log.info("Creating Download Library Entry Point for: " + torrentEntry.torrentId);
     return true;
   });
@@ -130,7 +130,7 @@ export async function saveDownloadProgress(torrentEntry, downloadedBytes, totalS
       if (torrentEntry.Status === "Done")
         downloadLib.downloads[existingIndex]["Status"] = "Done";
 
-      overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+      await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
     }
   });
 }
@@ -148,7 +148,7 @@ export async function editDownloadStorageEntry(torrentsIds, key, value) {
         }
       }
     }
-    overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLibraryInfo);
+    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLibraryInfo);
   });
 }
 
@@ -158,7 +158,7 @@ export async function removeDownloadStorageEntry(torrentId) {
     downloadLib.downloads = downloadLib.downloads.filter(
       element => element.torrentId !== torrentId
     );
-    overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
   });
 }
 
@@ -168,7 +168,7 @@ export async function removeLibraryStorageEntry(torrentId) {
     LibraryInfo.media = LibraryInfo.media.filter(
       element => element.torrentId !== torrentId
     );
-    overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+    await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
   });
 }
 
