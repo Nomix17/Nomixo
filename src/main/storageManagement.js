@@ -14,7 +14,7 @@ export async function loadDownloadStorage() {
   try {
     return await loadJsonFile(Paths.downloadLibraryFilePath);
   } catch(err) {
-    if(err.code === "ENOENT") return { media : [] };
+    if(err.code === "ENOENT") return { downloads : [] };
     log.error("Failed to load Download Storage:", err);
   }
 }
