@@ -993,17 +993,20 @@ local function prepare_elements()
             static_ass:draw_start()
             if element.name == "seekbarbg" and chapter_cut_positions ~= nil and #chapter_cut_positions > 0 then
                 -- draw the bar as segments, leaving a gap at each chapter position
-                local cut_w = 2
+                local cut_w = 1.5
+                local seg_r = element.layout.box.radius
                 local last = 0
                 for _, s in ipairs(chapter_cut_positions) do
                     local seg_end = math.max(last, math.min(elem_geo.w, s - cut_w))
                     if seg_end > last then
-                        static_ass:rect_cw(last, 0, seg_end, elem_geo.h)
+                        local r = math.max(0, math.min(seg_r, (seg_end - last) / 2))
+                        ass_draw_rr_h_cw(static_ass, last, 0, seg_end, elem_geo.h, r, false, r)
                     end
                     last = math.max(last, math.min(elem_geo.w, s + cut_w))
                 end
                 if elem_geo.w > last then
-                    static_ass:rect_cw(last, 0, elem_geo.w, elem_geo.h)
+                    local r = math.max(0, math.min(seg_r, (elem_geo.w - last) / 2))
+                    ass_draw_rr_h_cw(static_ass, last, 0, elem_geo.w, elem_geo.h, r, false, r)
                 end
             else
                 ass_draw_rr_h_cw(static_ass, 0, 0, elem_geo.w, elem_geo.h,
@@ -1183,22 +1186,28 @@ local function draw_seekbar_progress(element, elem_ass)
     local xp = get_slider_ele_pos_for(element, pos)
     local slider_lo = element.layout.slider
     local elem_geo = element.layout.geometry
+    local bar_h = elem_geo.h - 2 * slider_lo.gap
 
     if slider_lo.nibbles_style == "cut" and element.chapter_cut_positions ~= nil and #element.chapter_cut_positions > 0 then
-        local cut_w = 2
+        local cut_w = 0.1
+        local seg_r = bar_h / 2
         local last = 0
         for _, s in ipairs(element.chapter_cut_positions) do
             local seg_end = math.max(last, math.min(xp, s - cut_w))
             if seg_end > last then
-                elem_ass:rect_cw(last, slider_lo.gap, seg_end, elem_geo.h - slider_lo.gap)
+                local r = math.max(0, math.min(seg_r, (seg_end - last) / 2))
+                ass_draw_rr_h_cw(elem_ass, last, slider_lo.gap, seg_end, elem_geo.h - slider_lo.gap, r, false, r)
             end
             last = math.max(last, math.min(xp, s + cut_w))
         end
         if xp > last then
-            elem_ass:rect_cw(last, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+            local r = math.max(0, math.min(seg_r, (xp - last) / 2))
+            ass_draw_rr_h_cw(elem_ass, last, slider_lo.gap, xp, elem_geo.h - slider_lo.gap, r, false, r)
         end
     else
-        elem_ass:rect_cw(0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap)
+        -- round the left/right ends of the filled progress bar (pill shape)
+        local r = math.max(0, math.min(bar_h / 2, xp / 2))
+        ass_draw_rr_h_cw(elem_ass, 0, slider_lo.gap, xp, elem_geo.h - slider_lo.gap, r, false, r)
     end
 end
 
@@ -1849,6 +1858,7 @@ layouts["modern"] = function ()
     lo.style = osc_styles.seekbar_bg
     lo.alpha[1] = 128
     lo.alpha[3] = 128
+    lo.box.radius = seekbar_bg_h / 2
 
     lo = add_layout("seekbar")
     local seekbar_h = 18
