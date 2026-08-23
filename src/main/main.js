@@ -335,9 +335,11 @@ ipcMain.handle("download-image", async (event, downloadPath, imageUrl) => {
     : { download_result: "failed" };
 });
 
-ipcMain.handle("download-backdrop", async (event, backgroundImageUrl) => {
+ipcMain.handle("download-backdrop", async (event, backgroundImageUrl, title) => {
+  const ext = path.extname(backgroundImageUrl);
+  const fileName = `${title}${ext}`;
   const { canceled, filePath } = await dialog.showSaveDialog({
-    defaultPath: path.join(app.getPath("home"), path.basename(backgroundImageUrl)),
+    defaultPath: path.join(app.getPath("home"), fileName),
     filters: [ { name: "Images", extensions: ["png", "jpg", "jpeg", "webp"] }, ],
   });
   if (canceled || !filePath)

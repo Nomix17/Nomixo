@@ -526,7 +526,7 @@ function addInspectBackdropImage(titleElement) {
 
 async function downloadBackdrop(event) {
   try {
-    const filePath = await window.electronAPI.downloadBackdrop(backgroundImage);
+    const filePath = await window.electronAPI.downloadBackdrop(backgroundImage, GlobalTitle);
     if (filePath)
       displayMessage(`<div class="display-message"><p class="main-p">Backdrop Saved!</p><p class="secondary-p">${filePath}</p></div>`);
   } catch (err) {
