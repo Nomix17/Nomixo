@@ -315,6 +315,7 @@ class TorrentDownloadManager {
       log.error(err.message);
       this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
     });
+    this.pushStatusUpdate(optimistic);
     return optimistic;
   }
 
@@ -325,7 +326,6 @@ class TorrentDownloadManager {
     }
     const res = await this.downloadClient.cancelDownload(torrentId);
     await editDownloadStorageEntry([torrentId], "Status", "Paused");
-    this.pushStatusUpdate(res);
   }
 
   static WRAPPER_STATUS_TO_UI_STATUS = {
