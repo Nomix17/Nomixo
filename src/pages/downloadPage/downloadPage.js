@@ -193,6 +193,8 @@ function monitorDownloads() {
     let DownloadElementIdentifier = JsonData.TorrentId;
 
     let TargetDownloadElement = document.getElementById(DownloadElementIdentifier);
+    if(!TargetDownloadElement) return;
+
     let TotalSizeTextElement = TargetDownloadElement.querySelector(".total-size");
     let PosterElement = TargetDownloadElement.querySelector(".poster-img");
     let DownloadedSizeTextElement = TargetDownloadElement.querySelector(".downloaded-size");
@@ -931,15 +933,19 @@ function handleDownloadCategoryUpdateFromMain() {
 
 async function handleDownloadCategorieChanging(categorieChangedTorrents) {
   const DOWNLOAD_CATEGORIES = {
-    "paused": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, SaveStatus: "Paused" },
-    "queued": {categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued, SaveStatus: "Queued"},
-    "continued": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading, SaveStatus: "Loading"},
-    "new-download": {categoryDiv: currentlyDownloadingDiv, applyUIState: createDownloadElementFromId, SaveStatus: "Loading"},
-    "subs-download": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs, SaveStatus: "Download-Subs"},
-    "failed": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, SaveStatus: null}
+    "paused": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: "Paused" },
+    "queued": {categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued, saveStatus: "Queued"},
+    "continued": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading, saveStatus: "Loading"},
+    "subs-download": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs, saveStatus: "Download-Subs"},
+    "failed": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: null}
   };
 
   for(const res of categorieChangedTorrents) {
+    if(res?.status === "new-download") {
+      await createDownloadElementFromId(res?.torrentId);
+      continue;
+    }
+
     let targetElement = document.getElementById(res?.torrentId);
     if(!targetElement) {
       console.error("Cannot find Download Element with Id:", res?.torrentId);
@@ -957,11 +963,7 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
       continue;
     }
 
-    if(res?.status === "new-download") {
-      category?.applyUIState(res?.torrentId);
-    } else {
-      category?.applyUIState(targetElement);
-    }
+    category.applyUIState(targetElement);
 
     if(res?.status === "failed") {
       console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
