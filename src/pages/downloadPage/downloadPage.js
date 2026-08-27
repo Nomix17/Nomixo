@@ -225,8 +225,8 @@ function monitorDownloads() {
     PausePlayButton.innerHTML = pauseIcon;
     CancelButton.innerHTML = xRemoveIcon;
 
-      const library = await libraryDumpPromise;
     if(JsonData?.Status === "DONE"){
+      const library = await window.electronAPI.loadDownloadLibraryInfo();
       const libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
       let doneDownloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
       if(doneDownloadContainer)
@@ -374,7 +374,7 @@ async function createPausedDownloadsContextMenu(torrentId) {
   cancelDownload.textContent = "Cancel the download";
   cancelDownload.classList.add("select-option");
 
-  const library = await libraryDumpPromise;
+  const library = await window.electronAPI.loadDownloadLibraryInfo();
   const targetLibInfo = library?.downloads.find(element => element.torrentId === torrentId);
 
   addToQueue.addEventListener("click", async (e) => {
