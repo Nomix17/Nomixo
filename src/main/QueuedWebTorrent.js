@@ -109,7 +109,14 @@ export class QueuedWebTorrent {
     });
 
     if (this.current?.info?.torrentId !== item.torrentInfo.torrentId) {
-      return torrent;
+      log.info(`Discarding orphaned torrent (superseded during add): ${item.torrentInfo.torrentId}`);
+      await new Promise((resolve) => {
+        torrent.destroy({ destroyStore: false }, (err) => {
+          if (err) log.error(`Error destroying orphaned torrent ${item.torrentInfo.torrentId}:`, err);
+          resolve();
+        });
+      });
+      return null;
     }
 
     this.current.instance = torrent;

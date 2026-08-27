@@ -81,7 +81,7 @@ class TorrentDownloadManager {
     if (status !== 'PAUSED') {
       const isNewEntry = await insertNewDownloadEntry(torrentEntry, status, priority);
       if (isNewEntry) {
-        this.pushStatusUpdate([{ status: "NEW_DOWNLOAD", torrentId: torrentEntry.torrentId }]);
+        this.pushStatusUpdate([{ status: status, torrentId: torrentEntry.torrentId }]);
       }
     }
     this.watchForOutcome(donePromise, torrentEntry);
