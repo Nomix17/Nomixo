@@ -35,7 +35,7 @@ export class QueuedWebTorrent {
       const torrentInstance = await this._startTorrent(item);
       return {
         torrent: torrentInstance,
-        status: torrentInstance ? 'Loading' : 'Paused',
+        status: torrentInstance ? 'LOADING' : 'QUEUED',
         donePromise
       };
     }
@@ -45,7 +45,7 @@ export class QueuedWebTorrent {
     } else {
       this.queue.push(item);
     }
-    return { torrent: null, status: 'Queued', donePromise };
+    return { torrent: null, status: 'QUEUED', donePromise };
   }
 
   async _pauseCurrentToFront() {
@@ -116,6 +116,7 @@ export class QueuedWebTorrent {
     item.onStart?.(torrent);
 
     torrent.on('done', () => {
+      if (this.current?.info?.torrentId !== item.torrentInfo.torrentId) return;
       log.info(`Finished: ${torrent.name}`);
       item.resolve(torrent);
       this.current = null;
@@ -123,6 +124,7 @@ export class QueuedWebTorrent {
     });
 
     torrent.on('error', (err) => {
+      if (this.current?.info?.torrentId !== item.torrentInfo.torrentId) return;
       log.error(`Error on ${item.torrentInfo.torrentId}:`, err);
       item.reject(err);
       this.current = null;
@@ -143,9 +145,9 @@ export class QueuedWebTorrent {
       log.info(`Torrent cancelled: ${torrentId}`);
       await this._destroyAndCleanup(this.current);
 
-      const changes = [{ status: 'paused', torrentId }];
+      const changes = [{ status: 'PAUSED', torrentId }];
       if (this.current) {
-        changes.push({ status: 'continued', torrentId: this.current.info.torrentId });
+        changes.push({ status: 'LOADING', torrentId: this.current.info.torrentId });
       }
       return changes;
     }
@@ -154,7 +156,7 @@ export class QueuedWebTorrent {
     if (queuedItem) {
       log.info(`Torrent cancelled: ${torrentId}`);
       await this._destroyAndCleanup(queuedItem, { removeFromQueue: true });
-      return [{ status: 'paused', torrentId }];
+      return [{ status: 'PAUSED', torrentId }];
     }
 
     this._processQueue();
@@ -167,7 +169,7 @@ export class QueuedWebTorrent {
       itemsToCancel.map(item => this._destroyAndCleanup(item, { removeFromQueue: true }))
     );
     return itemsToCancel.map(item => ({
-      status: 'paused',
+      status: 'PAUSED',
       torrentId: item.torrentInfo.torrentId
     }));
   }
@@ -182,6 +184,8 @@ export class QueuedWebTorrent {
     SubDownloadManager.abortDownload(item.info.torrentId);
 
     if (item.instance) {
+      item.instance.removeAllListeners('done');
+      item.instance.removeAllListeners('error');
       await new Promise((resolve, reject) => {
         item.instance.destroy({ destroyStore: false }, (err) => {
           if (err) return reject(err);
@@ -245,7 +249,7 @@ export class QueuedWebTorrent {
     if (this.current && this.current.info.torrentId !== torrentId) {
       const previousId = this.current.info.torrentId;
       await this.requeueDownload();
-      changes.push({ status: 'queued', torrentId: previousId });
+      changes.push({ status: 'QUEUED', torrentId: previousId });
     }
 
     const idx = this.queue.findIndex(
@@ -263,7 +267,7 @@ export class QueuedWebTorrent {
     log.info(`Starting queued torrent: ${torrentId}`);
     this._processQueue();
 
-    changes.push({ status: 'continued', torrentId });
+    changes.push({ status: 'LOADING', torrentId });
     return changes;
   }
 

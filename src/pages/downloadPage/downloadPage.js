@@ -89,8 +89,8 @@ async function createDownloadElement(mediaLibEntryPoint) {
   makeSureBgImageIsDownloaded(mediaLibEntryPoint);
 
   let downloadCategorie;
-  const activeDownloadStatus = ["downloading", "loading", "subs-download"];
-  if (activeDownloadStatus.includes(downloadStatus.toLowerCase())) {
+  const activeDownloadStatus = ["DOWNLOADING", "LOADING", "SUBS_DOWNLOAD", "NEW_DOWNLOAD"];
+  if (activeDownloadStatus.includes(downloadStatus)) {
     downloadCategorie = currentlyDownloadingDiv;
     addBackgroundImageToDownloadingDiv(
       MediaDownloadElement,
@@ -100,23 +100,23 @@ async function createDownloadElement(mediaLibEntryPoint) {
 
     MarkDownloadElementAsLoading(
       MediaDownloadElement,
-      downloadStatus.toLowerCase() === "subs-download" 
+      downloadStatus === "SUBS_DOWNLOAD" 
         ? SUBS_DOWNLOADING_MSG 
         : LOADING_MSG
     );
 
-  } else if(downloadStatus.toLowerCase() === "done") {
+  } else if(downloadStatus === "DONE") {
     downloadCategorie = doneDownloadsDiv;
     MarkDownloadElementAsFinished(MediaDownloadElement,mediaLibEntryPoint);
 
-  } else if(downloadStatus.toLowerCase() === "queued") {
+  } else if(downloadStatus === "QUEUED") {
     downloadCategorie = queuedDownloadsDiv;
     MarkDownloadElementAsQueued(MediaDownloadElement);
 
   } else {
     downloadCategorie = pausedDownloadsDiv;
     MarkDownloadElementAsPaused(MediaDownloadElement);
-    if(downloadStatus.toLowerCase() !== "paused")
+    if(!["PAUSED", "FAILED"].includes(downloadStatus))
       console.error(downloadStatus, "Is Unknown Download Status");
   }
 
@@ -213,7 +213,7 @@ function monitorDownloads() {
 
     if(loadingIntervals?.[DownloadElementIdentifier]) {
       removeLoadingAnimation(DownloadElementIdentifier,PausePlayButton);
-      SaveDownloadStatus(DownloadElementIdentifier, "Downloading");
+      SaveDownloadStatus(DownloadElementIdentifier, "DOWNLOADING");
     }
 
     DownloadedSizeTextElement.innerText =  calculatedDownloadedSize + " GB";
@@ -225,8 +225,8 @@ function monitorDownloads() {
     PausePlayButton.innerHTML = pauseIcon;
     CancelButton.innerHTML = xRemoveIcon;
 
-    if(JsonData?.Status.toLowerCase() === "done"){
       const library = await libraryDumpPromise;
+    if(JsonData?.Status === "DONE"){
       const libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
       let doneDownloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
       if(doneDownloadContainer)
@@ -665,7 +665,7 @@ async function MarkDownloadElementAsIdle(MediaDownloadElement) {
 
 async function MarkDownloadElementAsPaused(MediaDownloadElement) {
   const elementId = MediaDownloadElement.id;
-  SaveDownloadStatus(elementId, "Paused");
+  SaveDownloadStatus(elementId, "PAUSED");
 
   MarkDownloadElementAsIdle(MediaDownloadElement);
   const oldContextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
@@ -686,7 +686,7 @@ async function MarkDownloadElementAsPaused(MediaDownloadElement) {
 
 async function MarkDownloadElementAsQueued(MediaDownloadElement) {
   const elementId = MediaDownloadElement.id;
-  SaveDownloadStatus(elementId, "Queued");
+  SaveDownloadStatus(elementId, "QUEUED");
 
   MarkDownloadElementAsIdle(MediaDownloadElement);
   removePausedDownloadsContextMenu(MediaDownloadElement);
@@ -933,15 +933,15 @@ function handleDownloadCategoryUpdateFromMain() {
 
 async function handleDownloadCategorieChanging(categorieChangedTorrents) {
   const DOWNLOAD_CATEGORIES = {
-    "paused": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: "Paused" },
-    "queued": {categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued, saveStatus: "Queued"},
-    "continued": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading, saveStatus: "Loading"},
-    "subs-download": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs, saveStatus: "Download-Subs"},
-    "failed": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: null}
+    "PAUSED": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused},
+    "QUEUED": {categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued},
+    "LOADING": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading},
+    "SUBS_DOWNLOAD": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs},
+    "FAILED": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused}
   };
 
   for(const res of categorieChangedTorrents) {
-    if(res?.status === "new-download") {
+    if(res?.status === "NEW_DOWNLOAD") {
       await createDownloadElementFromId(res?.torrentId);
       continue;
     }
@@ -965,13 +965,12 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
 
     category.applyUIState(targetElement);
 
-    if(res?.status === "failed") {
+    if(res?.status === "FAILED") {
       console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
     }
 
     if(category.saveStatus)
       await SaveDownloadStatus(res.torrentId, category.saveStatus);
-
     const targetElementContainer = category?.categoryDiv?.querySelector(".movieContainer");
     targetElementContainer.appendChild(targetElement);
   }
@@ -986,7 +985,7 @@ function setupCategoryBtn() {
     const libraryInfo = await window.electronAPI.loadDownloadLibraryInfo()
     const pausedEntries = libraryInfo?.downloads
       ?.filter(entry =>
-        entry.Status.toLowerCase() === "paused"
+        entry.Status === "PAUSED"
       );
     for(const entry of pausedEntries) {
       if(entry?.torrentId != null) {
@@ -1002,7 +1001,7 @@ function setupCategoryBtn() {
     const libraryInfo = await window.electronAPI.loadDownloadLibraryInfo()
     const queuedEntries = libraryInfo?.downloads
       ?.filter(entry =>
-        entry.Status.toLowerCase() === "queued"
+        entry.Status === "QUEUED"
       );
     for(const entry of queuedEntries) {
       if(entry?.torrentId != null) {

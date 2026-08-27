@@ -73,15 +73,15 @@ class TorrentDownloadManager {
       async () => {
         const isNewEntry = await insertNewDownloadEntry(torrentEntry, "Subs-Download");
         this.pushStatusUpdate([
-          { status: isNewEntry ? "new-download" : "subs-download", torrentId: torrentEntry.torrentId }
+          { status: isNewEntry ? "NEW_DOWNLOAD" : "SUBS_DOWNLOAD", torrentId: torrentEntry.torrentId }
         ]);
       }
     );
 
-    if (status !== 'Paused') {
+    if (status !== 'PAUSED') {
       const isNewEntry = await insertNewDownloadEntry(torrentEntry, status, priority);
       if (isNewEntry) {
-        this.pushStatusUpdate([{ status: "new-download", torrentId: torrentEntry.torrentId }]);
+        this.pushStatusUpdate([{ status: "NEW_DOWNLOAD", torrentId: torrentEntry.torrentId }]);
       }
     }
     this.watchForOutcome(donePromise, torrentEntry);
@@ -192,10 +192,10 @@ class TorrentDownloadManager {
       Downloaded: downloadedDataLength,
       Total: totalSize,
       DownloadPath: torrentEntry.downloadPath,
-      Status: "Done"
+      Status: "DONE"
     };
 
-    torrentEntry.Status = "Done";
+    torrentEntry.Status = "DONE";
     saveDownloadProgress(torrentEntry, downloadedDataLength, totalSize);
 
     try {
@@ -233,22 +233,13 @@ class TorrentDownloadManager {
     });
   }
 
-  static UI_STATUS_TO_STORAGE_STATUS = {
-    "continued": "Loading",
-    "queued": "Queued",
-    "paused": "Paused",
-    "failed": "Paused",
-    "subs-download": "Subs-Download"
-  };
-
-  pushStatusUpdate(changes) {
+  async pushStatusUpdate(changes) {
     this.WINDOW.webContents.send("update-download-status", changes);
 
     for (const change of changes) {
-      const storageStatus = TorrentDownloadManager.UI_STATUS_TO_STORAGE_STATUS[change.status];
-      if (!storageStatus || !change.torrentId) continue;
+      if (!change.status || !change.torrentId) continue;
 
-      editDownloadStorageEntry([change.torrentId], "Status", storageStatus)
+      editDownloadStorageEntry(change.torrentId, "Status", change?.status)
         .catch((err) => log.error(`Failed to persist status for ${change.torrentId}:`, err.message));
     }
   }
@@ -259,11 +250,11 @@ class TorrentDownloadManager {
       : this.continueTorrentDownload(torrentId);
   }
 
-  continueTorrentDownload(torrentId) {
+  async continueTorrentDownload(torrentId) {
     const currentTorrentId = this.downloadClient.current?.info?.torrentId ?? null;
-    const optimistic = [{ status: "continued", torrentId }];
+    const optimistic = [{ status: "LOADING", torrentId }];
     if (currentTorrentId && currentTorrentId !== torrentId) {
-      optimistic.push({ status: "queued", torrentId: currentTorrentId });
+      optimistic.push({ status: "QUEUED", torrentId: currentTorrentId });
     }
 
     this.pushStatusUpdate(optimistic);
@@ -276,7 +267,6 @@ class TorrentDownloadManager {
 
   async _continueTorrentDownload(torrentId) {
     const torrentEntry = await getDownloadEntry(torrentId);
-
     if (torrentEntry == null) {
       log.error("Empty download library, cannot continue download for", torrentId);
       this.pushStatusUpdate([{ status: "empty download library", torrentId }]);
@@ -286,7 +276,7 @@ class TorrentDownloadManager {
     try {
       await editDownloadStorageEntry([torrentEntry.torrentId], "Status", "Loading");
 
-      if (torrentEntry.Status === "Queued") {
+      if (torrentEntry.Status === "QUEUED") {
         const changes = await this.downloadClient.startQueuedTorrent(torrentId);
         this.pushStatusUpdate(changes);
         return;
@@ -295,12 +285,15 @@ class TorrentDownloadManager {
       await this.executeTorrentDownload(torrentEntry, true);
       const queuedTorrents = this.downloadClient
         .getQueueTorrentIds()
-        .map((id) => ({ status: "queued", torrentId: id }));
+        .map((id) => ({ status: "QUEUED", torrentId: id }));
+      
+      return [{ status: "LOADING", torrentId }, ...queuedTorrents];
 
       this.pushStatusUpdate([{ status: "continued", torrentId }, ...queuedTorrents]);
     } catch (err) {
       log.error(err.message);
-      await editDownloadStorageEntry([torrentEntry.torrentId], "Status", "Paused");
+      return [{ status: "FAILED", error: err.message, torrentId }];
+      await editDownloadStorageEntry([torrentEntry.torrentId], "Status", "PAUSED");
       this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
     }
   }
@@ -311,16 +304,16 @@ class TorrentDownloadManager {
 
   pauseTorrentDownload(torrentId) {
     const nextTorrentId = this.predictNextQueuedTorrentId();
-    const optimistic = [{ status: "paused", torrentId }];
+    const optimistic = [{ status: "PAUSED", torrentId }];
     if (nextTorrentId) {
-      optimistic.push({ status: "continued", torrentId: nextTorrentId });
+      optimistic.push({ status: "LOADING", torrentId: nextTorrentId });
     }
     this.pushStatusUpdate(optimistic);
 
     this._pauseTorrentDownload(torrentId).catch((err) => {
       log.error(err.message);
-      const revert = [{ status: "failed", error: err.message, torrentId }];
-      if (nextTorrentId) revert.push({ status: "queued", torrentId: nextTorrentId });
+      const revert = [{ status: "FAILED", error: err.message, torrentId }];
+      if (nextTorrentId) revert.push({ status: "QUEUED", torrentId: nextTorrentId });
       this.pushStatusUpdate(revert);
     });
     return optimistic;
@@ -335,27 +328,18 @@ class TorrentDownloadManager {
     this.pushStatusUpdate(res);
   }
 
-  static WRAPPER_STATUS_TO_UI_STATUS = {
-    Loading: "continued",
-    Queued: "queued"
-  };
-
-  toUIStatus(wrapperStatus) {
-    return TorrentDownloadManager.WRAPPER_STATUS_TO_UI_STATUS[wrapperStatus] ?? wrapperStatus;
-  }
-
   cancelTorrentDownload(torrentEntry) {
     const nextTorrentId = this.predictNextQueuedTorrentId();
-    const optimistic = [{ status: "paused", torrentId: torrentEntry.torrentId }];
+    const optimistic = [{ status: "PAUSED", torrentId: torrentEntry.torrentId }];
     if (nextTorrentId) {
-      optimistic.push({ status: "continued", torrentId: nextTorrentId });
+      optimistic.push({ status: "LOADING", torrentId: nextTorrentId });
     }
 
     this.pushStatusUpdate(optimistic);
 
     this._cancelTorrentDownload(torrentEntry).catch((err) => {
       log.error(err.message);
-      this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId: torrentEntry.torrentId }]);
+      this.pushStatusUpdate([{ status: "FAILED", error: err.message, torrentId: torrentEntry.torrentId }]);
     });
     return optimistic;
   }
@@ -375,14 +359,12 @@ class TorrentDownloadManager {
   addToQueue(torrentId) {
     const queuedTorrents = this.downloadClient
       .getQueueTorrentIds()
-      .map((id) => ({ status: "queued", torrentId: id }));
-    const optimisticStatus = this.downloadClient.current == null ? "continued" : "queued";
-
-    this.pushStatusUpdate([{ torrentId, status: optimisticStatus }]);
+      .map((id) => ({ status: "QUEUED", torrentId: id }));
+    const optimisticStatus = this.downloadClient.current == null ? "LOADING" : "QUEUED";
 
     this._addToQueue(torrentId).catch((err) => {
       log.error(err.message);
-      this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
+      this.pushStatusUpdate([{ status: "FAILED", error: err.message, torrentId }]);
     });
 
     return [...queuedTorrents, { torrentId, status: optimisticStatus }];
@@ -391,7 +373,7 @@ class TorrentDownloadManager {
   async _addToQueue(torrentId) {
     const torrentEntry = await getDownloadEntry(torrentId);
     const { status } = await this.executeTorrentDownload(torrentEntry);
-    this.pushStatusUpdate([{ torrentId, status: this.toUIStatus(status) }]);
+    this.pushStatusUpdate([{ torrentId, status: status }]);
   }
 
   removeTorrentFromQueue(torrentId) {
@@ -401,14 +383,14 @@ class TorrentDownloadManager {
       return [{ status: "torrent not found in queue", torrentId }];
     }
 
-    const optimistic = [{ status: "paused", torrentId }];
+    const optimistic = [{ status: "PAUSED", torrentId }];
     this.pushStatusUpdate(optimistic);
 
     this.downloadClient.cancelDownload(torrentId)
       .then((res) => this.pushStatusUpdate(res))
       .catch((err) => {
         log.error(err.message);
-        this.pushStatusUpdate([{ status: "failed", error: err.message, torrentId }]);
+        this.pushStatusUpdate([{ status: "FAILED", error: err.message, torrentId }]);
       });
     return optimistic;
   }
