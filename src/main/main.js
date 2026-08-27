@@ -302,7 +302,7 @@ ipcMain.handle("continue-torrent-download", async (event, torrentId) => {
 });
 
 ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
-  return appManager.torrentDownloadManager.toggleTorrentDownload(torrentId);
+  return await appManager.torrentDownloadManager.toggleTorrentDownload(torrentId);
 });
 
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {

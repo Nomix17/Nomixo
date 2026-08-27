@@ -244,10 +244,12 @@ class TorrentDownloadManager {
     }
   }
 
-  toggleTorrentDownload(torrentId) {
-    return this.downloadClient.isCurrentlyDownloading(torrentId)
-      ? this.pauseTorrentDownload(torrentId)
-      : this.continueTorrentDownload(torrentId);
+  async toggleTorrentDownload(torrentId) {
+    const torrenEntry = await getDownloadEntry(torrentId)
+    // return this.downloadClient.isCurrentlyDownloading(torrentId)
+    return torrenEntry?.Status === "PAUSED" || torrenEntry?.Status === "QUEUED"
+      ? this.continueTorrentDownload(torrentId)
+      : this.pauseTorrentDownload(torrentId);
   }
 
   async continueTorrentDownload(torrentId) {

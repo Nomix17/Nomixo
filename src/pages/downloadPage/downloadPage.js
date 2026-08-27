@@ -261,11 +261,11 @@ function handleCancelButton(mediaInfo,cancelDownloadButton) {
 }
 
 let loadingIntervals = {};
-function handleTogglingPauseButton(torrentId,MediaDownloadElement) {
+function handleTogglingPauseButton(torrentId, MediaDownloadElement) {
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   if(PausePlayButton) {
     PausePlayButton.addEventListener("click",async ()=>{
-      let pauseResponces = await window.electronAPI.toggleTorrentDownload(torrentId);
+      const pauseResponces = await window.electronAPI.toggleTorrentDownload(torrentId);
       // await handleDownloadCategorieChanging(pauseResponces);
     });
   }
