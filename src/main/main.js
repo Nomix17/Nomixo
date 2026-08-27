@@ -314,7 +314,7 @@ ipcMain.handle("add-torrent-to-download-queue", async (event, torrentId) => {
 });
 
 ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) => {
-  return appManager.torrentDownloadManager.removeTorrentFromQueue(torrentId);
+  return await appManager.torrentDownloadManager.removeTorrentFromQueue(torrentId);
 });
 
 ipcMain.handle("shift-download-queue-element", (event, torrentId, offset) => {
@@ -477,7 +477,7 @@ ipcMain.on("remove-from-download-lib", async (event, torrentId) => {
 });
 
 ipcMain.handle("edit-download-lib", async (event, torrentId, key, value) => {
-  await editDownloadStorageEntry([torrentId], key, value);
+  await editDownloadStorageEntry(torrentId, key, value);
   return null;
 });
 

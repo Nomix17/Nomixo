@@ -108,7 +108,7 @@ export async function insertNewDownloadEntry(torrentEntry, Status = "LOADING") {
 
   if (!wasInserted) {
     log.info("Editing Download Status of: " + torrentEntry.torrentId);
-    await editDownloadStorageEntry([torrentEntry.torrentId], "Status", Status);
+    await editDownloadStorageEntry(torrentEntry.torrentId, "Status", Status);
   }
   return wasInserted;
 }
@@ -135,17 +135,15 @@ export async function saveDownloadProgress(torrentEntry, downloadedBytes, totalS
   });
 }
 
-export async function editDownloadStorageEntry(torrentsIds, key, value) {
+export async function editDownloadStorageEntry(torrentId, key, value) {
   await withFileLock(Paths.downloadLibraryFilePath, async () => {
     const downloadLibraryInfo = await loadDownloadStorage();
-    for (let torrentId of torrentsIds) {
-      for (let index = 0; index < downloadLibraryInfo.downloads.length; index++) {
-        if (downloadLibraryInfo.downloads[index].torrentId === torrentId) {
-          if (key === "Status")
-            downloadLibraryInfo.downloads[index]["StatusUpdateTime"] = Date.now();
-          downloadLibraryInfo.downloads[index][key] = value;
-          break;
-        }
+    for (let index = 0; index < downloadLibraryInfo.downloads.length; index++) {
+      if (downloadLibraryInfo.downloads[index].torrentId === torrentId) {
+        if (key === "Status")
+          downloadLibraryInfo.downloads[index]["StatusUpdateTime"] = Date.now();
+        downloadLibraryInfo.downloads[index][key] = value;
+        break;
       }
     }
     await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLibraryInfo);
@@ -178,7 +176,8 @@ export async function markMediaDownloadsAsPaused() {
     .filter(torrentElement => torrentElement?.Status !== "DONE")
     .map(torrent => torrent.torrentId);
 
-  await editDownloadStorageEntry(torrentsIds,"Status","PAUSED");
+  for(const torrentId of torrentsIds)
+    await editDownloadStorageEntry(torrentId,"Status","PAUSED");
 }
 
 export async function readSearchHistory() {
