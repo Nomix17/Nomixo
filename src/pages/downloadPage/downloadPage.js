@@ -424,18 +424,10 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
         "seasonNumber": MediaInfo.seasonNumber, 
         "episodeNumber": MediaInfo.episodeNumber
       };
-      openMediaVideo(
-        MediaInfo.torrentId,
-        MediaInfo.MediaId, 
-        MediaInfo.MediaType, 
-        MediaInfo.downloadPath,
-        MediaInfo.fileName,
-        MediaInfo.Magnet,
-        MediaInfo.IMDB_ID,
-        MediaInfo.bgImagePath,
-        episodeInfo,
-        (index === 0) ? "external" : "internal"
-      );
+      openMediaVideo({
+        ...MediaInfo,
+        playerType: (index === 0) ? "external" : "internal"
+      });
     });
   });
 
@@ -548,17 +540,7 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
       "seasonNumber": MediaInfo.seasonNumber, 
       "episodeNumber": MediaInfo.episodeNumber
     };
-    openMediaVideo(
-      MediaInfo.torrentId,
-      MediaInfo.MediaId, 
-      MediaInfo.MediaType, 
-      MediaInfo.downloadPath,
-      MediaInfo.fileName,
-      MediaInfo.Magnet,
-      MediaInfo.IMDB_ID,
-      MediaInfo.bgImagePath,
-      episodeInfo
-    );
+    openMediaVideo(MediaInfo);
   });
 
   setupDeleteButtonLogic(MediaInfo, deleteMediaButton);

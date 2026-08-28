@@ -692,17 +692,23 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
   addSpaceToTopOfTorrentContainer();
   const imdb_id = await IMDB_IDPromise;
 
-  data.streams.forEach(torrentInfo => {
-    const { quality, title, size, seedersNumber, fileName, magnetLink } = parseTorrentInfo(torrentInfo);
-    if (fileName.trim() !== "") {
-      const infoToDisplay = [quality, title, size, seedersNumber];
-      const advancedInfo = [MediaId, MediaType, fileName, magnetLink, imdb_id,
-                            backgroundImage, episodeInfo, size, quality, title];
-      const torrentElement = createTorrentElement(infoToDisplay, advancedInfo);
+  data.streams.forEach(streamData => {
+    const parsedTorrentInfo = parseTorrentInfo(streamData);
+    if (parsedTorrentInfo.fileName.trim() !== "") {
+      const torrentInfo = {
+        MediaId: MediaId,
+        MediaType: MediaType,
+        IMDB_ID: imdb_id,
+        ...parsedTorrentInfo,
+        bgImageUrl: backgroundImage,
+        seasonNumber: episodeInfo.seasonNumber,
+        episodeNumber: episodeInfo.episodeNumber
+      };
+      const torrentElement = createTorrentElement(torrentInfo);
 
       const isCurrentlyWatching = 
         MediaLibraryInfo?.typeOfSave?.includes("Currently Watching") &&
-        String(magnetLink) === String(MediaLibraryInfo["Magnet"]) &&
+        String(torrentInfo.MagnetLink) === String(MediaLibraryInfo["MagnetLink"]) &&
         String(episodeInfo.seasonNumber) === String(MediaLibraryInfo["seasonNumber"]) &&
         String(episodeInfo.episodeNumber) === String(MediaLibraryInfo["episodeNumber"]);
 
@@ -721,8 +727,7 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
   torrentSidePanel.classList.remove("preloadingTorrent");
 }
 
-function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
-  const [Quality, Title, Size, SeedersNumber] = torrentInfoToDisplay;
+function createTorrentElement(torrentInfo) {
   const TorrentElement = document.createElement("div");
   TorrentElement.classList.add("div-TorrentMedia");
   TorrentElement.setAttribute("tabindex", "0");
@@ -731,14 +736,14 @@ function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
   qualityDiv.classList.add("div-MediaQuality");
 
   const qualityP = document.createElement("p");
-  qualityP.textContent = Quality;
+  qualityP.textContent = torrentInfo.Quality;
   qualityDiv.appendChild(qualityP);
 
   const descriptionDiv = document.createElement("div");
   descriptionDiv.classList.add("div-MediaDescription");
 
   const titleP = document.createElement("p");
-  titleP.textContent = Title;
+  titleP.textContent = torrentInfo.Title;
 
   const infoDiv = document.createElement("div");
   infoDiv.classList.add("torrent-info-div");
@@ -749,8 +754,8 @@ function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
   const seedIcon = document.createElement("div");
   seedIcon.classList.add("div-seedImage");
 
-  const sizeText = document.createTextNode(` ${Size} \u00A0\u00A0`);
-  const seedText = document.createTextNode(` ${SeedersNumber}`);
+  const sizeText = document.createTextNode(` ${torrentInfo.Size} \u00A0\u00A0`);
+  const seedText = document.createTextNode(` ${torrentInfo.SeedersNumber}`);
 
   infoDiv.appendChild(storageIcon);
   infoDiv.appendChild(sizeText);
@@ -760,19 +765,19 @@ function createTorrentElement(torrentInfoToDisplay, torrentAdvancedInfo) {
   descriptionDiv.appendChild(titleP);
   descriptionDiv.appendChild(infoDiv);
 
-  const downloadBtn = createTorrentDownloadButton(torrentAdvancedInfo);
+  const downloadBtn = createTorrentDownloadButton(torrentInfo);
 
   TorrentElement.appendChild(qualityDiv);
   TorrentElement.appendChild(descriptionDiv);
   TorrentElement.appendChild(downloadBtn);
 
-  addTorrentElementEventListener(TorrentElement,torrentAdvancedInfo);
+  addTorrentElementEventListener(TorrentElement,torrentInfo);
   addFloatingDivToDisplayFullTitle(TorrentElement, ".div-MediaDescription p");
 
   return TorrentElement;
 }
 
-function createTorrentDownloadButton(torrentAdvancedInfo) {
+function createTorrentDownloadButton(torrentInfo) {
   const downloadBtn = document.createElement("button");
   downloadBtn.classList.add("btn-downloadTorrent");
   downloadBtn.setAttribute("type", "button");
@@ -785,7 +790,7 @@ function createTorrentDownloadButton(torrentAdvancedInfo) {
     event.stopPropagation();
     event.preventDefault();
 
-    const DownloadTargetInfo = buildDownloadTargetInfo(torrentAdvancedInfo);
+    const DownloadTargetInfo = buildDownloadTargetInfo(torrentInfo);
     setupDownloadDivEvents(DownloadTargetInfo);
     showDownloadInfoInputDiv(DownloadTargetInfo);
   });
@@ -793,40 +798,42 @@ function createTorrentDownloadButton(torrentAdvancedInfo) {
   return downloadBtn;
 }
 
-function buildDownloadTargetInfo(torrentsInfo) {
-  const [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
-       backgroundImage, episodeInfo, Size, Quality, Title] = torrentsInfo;
-
+function buildDownloadTargetInfo(torrentInfo) {
   const mediaTitle = document.getElementById("h1-MovieTitle").innerText;
   const mediaReleaseYear = document.getElementById("p-movieYearOfRelease").innerText;
 
   return {
-    IMDB_ID:IMDB_ID, Title:mediaTitle, Size:Size,
-    Quality:Quality, Year:mediaReleaseYear, MagnetLink:MagnetLink,
-    fileName:fileName,dirName:Title, MediaId:MediaId, MediaType:MediaType,
-    seasonNumber:episodeInfo.seasonNumber,episodeNumber:episodeInfo.episodeNumber
+    IMDB_ID: torrentInfo.IMDB_ID,
+    Title: mediaTitle,
+    Size: torrentInfo.Size,
+    Quality: torrentInfo.Quality,
+    Year: mediaReleaseYear,
+    MagnetLink: torrentInfo.MagnetLink,
+    fileName: torrentInfo.fileName,
+    dirName: torrentInfo.Title,
+    MediaId: torrentInfo.MediaId,
+    MediaType: torrentInfo.MediaType,
+    seasonNumber: torrentInfo.seasonNumber,
+    episodeNumber: torrentInfo.episodeNumber
   };
 }
 
-function addTorrentElementEventListener(TorrentElement, torrentsInfo) {
-  const [MediaId, MediaType, fileName, MagnetLink, IMDB_ID,
-       backgroundImage, episodeInfo, Size, Quality, Title] = torrentsInfo;
-
-  TorrentElement.addEventListener("click",()=>{
-    openMediaVideo(undefined,MediaId,MediaType,undefined,fileName,MagnetLink,IMDB_ID,backgroundImage,episodeInfo);
+function addTorrentElementEventListener(TorrentElement, torrentInfo) {
+  TorrentElement.addEventListener("click",() => {
+    openMediaVideo(torrentInfo);
   });
 }
 
-function parseTorrentInfo(torrentInfo) {
-  const fullTitle = torrentInfo.title.replace(/\n+/g, "");
-  const title = fullTitle.split("👤")[0].split("\n")[0].replace(/\n+/g, "");
-  const quality = torrentInfo.name.split("Torrentio")[1].replace(/\n+/g, "");
-  const hash = torrentInfo.infoHash;
-  const seedersNumber = fullTitle.split("👤")[1].split("💾")[0].replace(/\n+/g, "");
-  const size = fullTitle.split("💾")[1].split("⚙️")[0].replace(/\n+/g, "");
-  const fileName = torrentInfo?.behaviorHints?.filename || "";
-  const magnetLink = `magnet:?xt=urn:btih:${hash}`
-  return { title, quality, hash, seedersNumber, size, fileName, magnetLink };
+function parseTorrentInfo(streamData) {
+  const fullTitle = streamData.title.replace(/\n+/g, "");
+  const Title = fullTitle.split("👤")[0].split("\n")[0].replace(/\n+/g, "");
+  const Quality = streamData.name.split("Torrentio")[1].replace(/\n+/g, "");
+  const hash = streamData.infoHash;
+  const SeedersNumber = fullTitle.split("👤")[1].split("💾")[0].replace(/\n+/g, "");
+  const Size = fullTitle.split("💾")[1].split("⚙️")[0].replace(/\n+/g, "");
+  const fileName = streamData?.behaviorHints?.filename || "";
+  const MagnetLink = `magnet:?xt=urn:btih:${hash}`
+  return { Title, Quality, hash, SeedersNumber, Size, fileName, MagnetLink };
 }
 
 function displaySeason(seasonIndex) {
@@ -1151,8 +1158,6 @@ async function loadCachedInformations() {
 
     setTimeout(()=>{
       document.getElementById("div-movieMedias").scrollTop = torrentScrollValue
-      console.log(episodeScrollValue);
-      console.log(torrentScrollValue);
     },90);
   },90);
 }

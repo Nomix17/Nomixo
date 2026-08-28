@@ -1,22 +1,5 @@
-const urlParams = new URLSearchParams(window.location.search);
-
-const Magnet = atob(urlParams.get("MagnetLink"));
-const downloadPath = urlParams.get("downloadPath");
-const fileName = urlParams.get("fileName");
-const TorrentIdentification = urlParams.get("TorrentIdentification");
-
-const MediaId = urlParams.get("MediaId");
-const MediaType = urlParams.get("MediaType");
-
-const bgImagePath = urlParams.get("bgPath");
-const IMDB_ID = urlParams.get("ImdbId");
-
-const seasonNumber = urlParams.get("seasonNumber");
-const episodeNumber = urlParams.get("episodeNumber");
-
-const playerTypeRaw = urlParams.get("playerType");
-const playerType = playerTypeRaw === "undefined" ? null : playerTypeRaw;
-
+const metaData = JSON.parse(sessionStorage.getItem("pageArgs") || "{}");
+console.log(metaData);
 const DEFAULT_VOLUME = 0.5;
 const CONTROLS_HIDE_DELAY_MS = 1000;
 const PLAYBACK_SAVE_INTERVAL_MS = 10000;
@@ -66,10 +49,7 @@ VideoElement.volume = DEFAULT_VOLUME;
 
 setBackgroundImage();
 loadSubSettings();
-loadVideo(
-  Magnet, downloadPath, fileName, TorrentIdentification,
-  MediaId, MediaType, IMDB_ID, seasonNumber, episodeNumber
-);
+loadVideo();
 
 SubSizeDivInput.value = "+0%";
 SubDelayDivInput.value = "+0ms";
@@ -120,16 +100,12 @@ VideoElement.addEventListener("timeupdate", () => {
 });
 
 VideoElement.addEventListener("loadedmetadata", async () => {
-  const oldPlayBackPosition = await getLatestPlayBackPosition(MediaId, MediaType, episodeNumber, seasonNumber);
+  const oldPlayBackPosition = await getLatestPlayBackPosition();
   VideoElement.currentTime = oldPlayBackPosition;
 
   setInterval(() => {
     const lastPbPosition = parseInt(VideoElement.currentTime);
-    const metaData = {
-      seasonNumber, episodeNumber, Magnet, bgImagePath, IMDB_ID,
-      MediaId, MediaType, downloadPath, fileName
-    };
-    updateLastSecondBeforeQuit(lastPbPosition, metaData);
+    updateLastSecondBeforeQuit(lastPbPosition);
   }, PLAYBACK_SAVE_INTERVAL_MS);
 }, { once: true });
 
@@ -255,43 +231,37 @@ SubDelayDivInput.addEventListener("blur", () => {
   SubDelayDivInput.value = `${inputedValue}ms`;
 });
 
-async function loadVideo(magnet, downloadPath, fileName, torrentIdentification, mediaId, mediaType, imdbId, seasonNumber, episodeNumber) {
+async function loadVideo() {
   const apiKeyPromise = window.electronAPI.getTMDBAPIKEY();
-  if(!imdbId || imdbId === "undefined") imdbId = await getIMDB_ID(mediaType, mediaId, apiKeyPromise);
-  const usingMagnet = downloadPath === "undefined";
-  const useExternalPlayer = playerType === "external" || playerType == null;
+  if (!metaData.IMDB_ID) metaData.IMDB_ID = await getIMDB_ID(metaData.MediaType, metaData.MediaId, apiKeyPromise);
+
+  const usingMagnet = !metaData.downloadPath;
+  const useExternalPlayer = metaData.playerType === "external" || metaData.playerType == null;
 
   if (useExternalPlayer) {
-    playVideoInMpv(
-      usingMagnet,
-      usingMagnet ? magnet : undefined,
-      usingMagnet ? undefined : downloadPath,
-      fileName,
-      usingMagnet ? undefined : torrentIdentification,
-      mediaId,
-      mediaType,
-      imdbId,
-      seasonNumber,
-      episodeNumber
-    );
+    playVideoInMpv(usingMagnet);
     return;
   }
 
   if (usingMagnet) {
-    await loadRemoteVideo(magnet, fileName, imdbId, seasonNumber, episodeNumber);
+    await loadRemoteVideo();
   } else {
-    await loadLocalVideo(downloadPath, fileName, imdbId, seasonNumber, episodeNumber);
+    await loadLocalVideo();
   }
 }
 
-async function loadRemoteVideo(magnet, fileName, imdbId, seasonNumber, episodeNumber) {
-  const subs = await window.electronAPI.fetchSubtitles({ IMDB_ID: imdbId, seasonNumber, episodeNumber });
+async function loadRemoteVideo() {
+  const subs = await window.electronAPI.fetchSubtitles({
+    IMDB_ID: metaData.IMDB_ID,
+    seasonNumber: metaData.seasonNumber,
+    episodeNumber: metaData.episodeNumber 
+  });
   subtitlesArray = subs;
   insertLanguageButton(subs);
   getSubsViaLanguage("en");
 
   try {
-    const [url, mimeType] = await window.electronAPI.getVideoUrl(magnet, fileName);
+    const [url, mimeType] = await window.electronAPI.getVideoUrl(metaData.MagnetLink, metaData.fileName);
     console.log(`Video Format: ${mimeType}`);
     if (mimeType === "video/x-matroska") {
       throw new Error(`${mimeType} Video Format is Not Supported.`);
@@ -303,9 +273,14 @@ async function loadRemoteVideo(magnet, fileName, imdbId, seasonNumber, episodeNu
   }
 }
 
-async function loadLocalVideo(downloadPath, fileName, imdbId, seasonNumber, episodeNumber) {
-  const videoPath = await window.electronAPI.getFullVideoPath(downloadPath, fileName);
-  const identifyingElements = { IMDB_ID: imdbId, episodeNumber, seasonNumber, DownloadDir: downloadPath };
+async function loadLocalVideo() {
+  const videoPath = await window.electronAPI.getFullVideoPath(metaData.downloadPath, metaData.fileName);
+  const identifyingElements = {
+    IMDB_ID: metaData.IMDB_ID,
+    episodeNumber: metaData.episodeNumber,
+    seasonNumber: metaData.seasonNumber,
+    DownloadDir: metaData.downloadPath
+  };
 
   const subs = await window.electronAPI.loadLocalSubs(videoPath, identifyingElements);
   subtitlesArray = subs;
@@ -332,13 +307,7 @@ function startVideoPlayback(sourceHtml, { showTopBar = false } = {}) {
   videoIsPlaying = true;
 }
 
-async function playVideoInMpv(PlayMagnet, Magnet, downloadPath, fileName, TorrentIdentification, MediaId, MediaType, IMDB_ID, seasonNumber, episodeNumber) {
-  const metaData = {
-    Magnet, downloadPath, fileName, bgImagePath,
-    MediaId, MediaType, TorrentId: TorrentIdentification,
-    IMDB_ID, seasonNumber, episodeNumber
-  };
-
+async function playVideoInMpv(PlayMagnet) {
   if (PlayMagnet) {
     window.electronAPI.StreamTorrentOverMpv(metaData);
   } else {
@@ -623,8 +592,8 @@ function goBack() {
   window.electronAPI.goBack();
 }
 
-async function getLatestPlayBackPosition(MediaId, MediaType, episodeNumber, seasonNumber) {
-  const targetIdentification = { MediaId, MediaType };
+async function getLatestPlayBackPosition() {
+  const targetIdentification = { MediaId: metaData.MediaId, MediaType: metaData.MediaType };
   let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
 
   if (MediaLibraryObject == null) return 0;
@@ -632,7 +601,7 @@ async function getLatestPlayBackPosition(MediaId, MediaType, episodeNumber, seas
 
   const mediaIsAnEpisode = MediaLibraryObject.hasOwnProperty("episodeNumber") && MediaLibraryObject.hasOwnProperty("seasonNumber");
   const isRequestedEpisode = mediaIsAnEpisode
-    ? (MediaLibraryObject["episodeNumber"] === episodeNumber && MediaLibraryObject["seasonNumber"] === seasonNumber)
+    ? (MediaLibraryObject["episodeNumber"] === metaData.episodeNumber && MediaLibraryObject["seasonNumber"] === metaData.seasonNumber)
     : true;
 
   const hasSavedProgress = MediaLibraryObject.hasOwnProperty("typeOfSave")
@@ -643,8 +612,8 @@ async function getLatestPlayBackPosition(MediaId, MediaType, episodeNumber, seas
   return hasSavedProgress ? MediaLibraryObject["lastPlaybackPosition"] : 0;
 }
 
-async function updateLastSecondBeforeQuit(lastPbPosition, metaData) {
-  const targetIdentification = { MediaId: metaData?.MediaId, MediaType: metaData?.MediaType };
+async function updateLastSecondBeforeQuit(lastPbPosition) {
+  const targetIdentification = { MediaId: metaData.MediaId, MediaType: metaData.MediaType };
   let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
 
   if (MediaLibraryObject != null) {
@@ -708,7 +677,7 @@ function gettingformatedTime(time) {
 }
 
 function setBackgroundImage() {
-  document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${bgImagePath}')`;
+  document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${metaData.bgImageUrl || metaData.bgImagePath}')`;
   document.documentElement.style.backgroundRepeat = "no-repeat";
   document.documentElement.style.backgroundPosition = "center center";
   document.documentElement.style.backgroundSize = "cover";

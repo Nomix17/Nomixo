@@ -336,7 +336,7 @@ class MpvPlayerManager {
         LibraryInfo.media[index].lastPlaybackPosition = lastPbPosition;
         LibraryInfo.media[index].seasonNumber = metaData?.seasonNumber;
         LibraryInfo.media[index].episodeNumber = metaData?.episodeNumber;
-        LibraryInfo.media[index].Magnet = metaData?.Magnet;
+        LibraryInfo.media[index].MagnetLink = metaData?.MagnetLink;
         LibraryInfo.media[index].bgImagePath = metaData?.bgImagePath;
         LibraryInfo.media[index].downloadPath = metaData?.downloadPath;
         LibraryInfo.media[index].fileName = metaData?.fileName;
@@ -353,7 +353,7 @@ class MpvPlayerManager {
       LibraryInfo.media.push({
         MediaId: metaData?.MediaId,
         MediaType: metaData?.MediaType,
-        Magnet: metaData?.Magnet,
+        MagnetLink: metaData?.MagnetLink,
         bgImagePath: metaData?.bgImagePath,
         mediaImdbId: metaData?.mediaImdbId,
         downloadPath: metaData?.downloadPath,

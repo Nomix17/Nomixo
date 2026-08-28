@@ -237,38 +237,16 @@ function openSearchPage(){
   return navigate(`../pages/searchPage/searchPage.html?search=${encodeURIComponent(searchKeyword)}`);
 }
 
+function openMediaVideo(mediaEntry) {
+  sessionStorage.setItem("pageArgs", JSON.stringify(mediaEntry));
+  return navigate(`../pages/playerPage/playerPage.html`);
+}
+
 async function navigate(newPath){
   const cachedData = await getCurrentPageCacheData();
   const fromPath = document.URL;
   window.electronAPI.navigateTo(newPath, fromPath, cachedData);
 }
-
-function openMediaVideo(
-  TorrentIdentification,
-  MediaId,
-  MediaType,
-  downloadPath,
-  fileName,
-  MagnetLink,
-  ImdbId,
-  bgPath,
-  episodeInfo,
-  playerType
-) {
-  const {episodeNumber, seasonNumber} = episodeInfo ?? {};
-
-  const params = new URLSearchParams({
-    MagnetLink: btoa(MagnetLink), downloadPath,
-    fileName, TorrentIdentification,
-    MediaId, MediaType,
-    ImdbId, bgPath,
-    episodeNumber, seasonNumber,
-    playerType
-  });
-
-  return navigate(`../pages/playerPage/playerPage.html?${params}`);
-}
-
 
 // ################################### PAGE CACHING ###################################
 
@@ -1039,30 +1017,18 @@ function createContinueWatchingBtn(mediaEntryPoint){
   return continueVideoButton;
 }
 
-async function continueWatchingEventListener(continueVideoButton,mediaEntryPoint) {
-  if(mediaEntryPoint.findInLib === true) {
+async function continueWatchingEventListener(continueVideoButton, mediaEntry) {
+  if(mediaEntry.findInLib === true) {
     const mediaLibraryEntryPointIdentifier = {
-      MediaId:mediaEntryPoint.mediaId,
-      MediaType:mediaEntryPoint.mediaType
+      MediaId: mediaEntry.mediaId,
+      MediaType: mediaEntry.mediaType
     };
-    mediaEntryPoint = await window.electronAPI.loadMediaLibraryInfo(mediaLibraryEntryPointIdentifier);
-    mediaEntryPoint = mediaEntryPoint[0];
+    const res = await window.electronAPI.loadMediaLibraryInfo(mediaLibraryEntryPointIdentifier);
+    mediaEntry = res[0];
   }
 
-  continueVideoButton.addEventListener("click",()=>{
-    openMediaVideo(
-      mediaEntryPoint.TorrentIdentification,
-      mediaEntryPoint.MediaId,
-      mediaEntryPoint.MediaType,
-      mediaEntryPoint.downloadPath,
-      mediaEntryPoint.fileName,
-      mediaEntryPoint.Magnet,
-      mediaEntryPoint.mediaImdbId,
-      mediaEntryPoint.bgImagePath,
-      {"seasonNumber":mediaEntryPoint.seasonNumber,
-      "episodeNumber":mediaEntryPoint.episodeNumber}
-    );
-
+  continueVideoButton.addEventListener("click",() => {
+    openMediaVideo(mediaEntry);
     event.preventDefault();
     event.stopPropagation();
   });

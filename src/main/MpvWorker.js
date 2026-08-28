@@ -35,7 +35,7 @@ function StreamTorrent(
     log.info("Loading Torrent:", metaData?.fileName);
 
     webTorrentClient = new WebTorrent();
-    const torrent = webTorrentClient.add(metaData.Magnet, {
+    const torrent = webTorrentClient.add(metaData.MagnetLink, {
       path: videoCachePath,
       announce: trackers 
     });
