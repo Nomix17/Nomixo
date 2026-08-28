@@ -253,8 +253,7 @@ function handleCancelButton(mediaInfo,cancelDownloadButton) {
       const MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
       if(MediaDownloadElementContainer.innerHTML.trim() === "")
         putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
-      const res = await window.electronAPI.cancelDownload(mediaInfo);
-      // handleDownloadCategorieChanging(res);
+      await window.electronAPI.cancelDownload(mediaInfo);
       updateDownloadUI();
     });
   }
@@ -265,8 +264,7 @@ function handleTogglingPauseButton(torrentId, MediaDownloadElement) {
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   if(PausePlayButton) {
     PausePlayButton.addEventListener("click",async ()=>{
-      const pauseResponces = await window.electronAPI.toggleTorrentDownload(torrentId);
-      // await handleDownloadCategorieChanging(pauseResponces);
+      await window.electronAPI.toggleTorrentDownload(torrentId);
     });
   }
 }
@@ -381,8 +379,7 @@ async function createPausedDownloadsContextMenu(torrentId) {
     e.stopPropagation();
     hideContextMenu(menuDiv);
     if(targetLibInfo != null) {
-      const res = await window.electronAPI.addTorrentToDownloadQueue(torrentId);
-      // await handleDownloadCategorieChanging(res);
+      await window.electronAPI.addTorrentToDownloadQueue(torrentId);
     }
   });
 
@@ -989,8 +986,7 @@ function setupCategoryBtn() {
       );
     for(const entry of pausedEntries) {
       if(entry?.torrentId != null) {
-        const res = await window.electronAPI.addTorrentToDownloadQueue(entry?.torrentId);
-        // await handleDownloadCategorieChanging(res);
+        await window.electronAPI.addTorrentToDownloadQueue(entry?.torrentId);
       } else {
         console.log("Failed to load torrent id");
       }
@@ -1005,8 +1001,7 @@ function setupCategoryBtn() {
       );
     for(const entry of queuedEntries) {
       if(entry?.torrentId != null) {
-        const res = await window.electronAPI.removeTorrentFromDownloadQueue(entry.torrentId);
-        // await handleDownloadCategorieChanging(res);
+        await window.electronAPI.removeTorrentFromDownloadQueue(entry.torrentId);
       } else {
         console.log("Failed to load torrent id");
       }

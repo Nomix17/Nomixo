@@ -294,27 +294,27 @@ ipcMain.handle("download-torrent", async (event, torrentsEntries, hasToDownloadS
 });
 
 ipcMain.handle("pause-torrent-download", async (event, torrentId) => {
-  return appManager.torrentDownloadManager.pauseTorrentDownload(torrentId);
+  await appManager.torrentDownloadManager.pauseTorrentDownload(torrentId);
 });
 
 ipcMain.handle("continue-torrent-download", async (event, torrentId) => {
-  return appManager.torrentDownloadManager.continueTorrentDownload(torrentId);
+  await appManager.torrentDownloadManager.continueTorrentDownload(torrentId);
 });
 
 ipcMain.handle("toggle-torrent-download", async (event, torrentId) => {
-  return await appManager.torrentDownloadManager.toggleTorrentDownload(torrentId);
+  await appManager.torrentDownloadManager.toggleTorrentDownload(torrentId);
 });
 
 ipcMain.handle("cancel-torrent-download", async (event, mediaInfo) => {
-  return appManager.torrentDownloadManager.cancelTorrentDownload(mediaInfo);
+  await appManager.torrentDownloadManager.cancelTorrentDownload(mediaInfo);
 });
 
 ipcMain.handle("add-torrent-to-download-queue", async (event, torrentId) => {
-  return await appManager.torrentDownloadManager.addToQueue(torrentId);
+  await appManager.torrentDownloadManager.addToQueue(torrentId);
 });
 
 ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) => {
-  return await appManager.torrentDownloadManager.removeTorrentFromQueue(torrentId);
+  await appManager.torrentDownloadManager.removeTorrentFromQueue(torrentId);
 });
 
 ipcMain.handle("shift-download-queue-element", (event, torrentId, offset) => {
@@ -478,7 +478,6 @@ ipcMain.on("remove-from-download-lib", async (event, torrentId) => {
 
 ipcMain.handle("edit-download-lib", async (event, torrentId, key, value) => {
   await editDownloadStorageEntry(torrentId, key, value);
-  return null;
 });
 
 ipcMain.handle("load-from-download-lib", async () => {
