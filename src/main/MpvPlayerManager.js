@@ -351,17 +351,9 @@ class MpvPlayerManager {
 
     if (!found) {
       LibraryInfo.media.push({
-        MediaId: metaData?.MediaId,
-        MediaType: metaData?.MediaType,
-        MagnetLink: metaData?.MagnetLink,
-        bgImagePath: metaData?.bgImagePath,
-        mediaImdbId: metaData?.mediaImdbId,
-        downloadPath: metaData?.downloadPath,
-        fileName: metaData?.fileName,
+        ...metaData,
         lastPlaybackPosition: lastPbPosition,
-        seasonNumber: metaData.seasonNumber,
-        episodeNumber: metaData.episodeNumber,
-        typeOfSave: ["Currently Watching"],
+        typeOfSave: ["Currently Watching"]
       });
     }
 
