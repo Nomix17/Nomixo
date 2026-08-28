@@ -32,10 +32,10 @@ export class QueuedWebTorrent {
     }
 
     if (!this.current) {
-      const torrentInstance = await this._startTorrent(item);
+      this._startTorrentSafe(item);
       return {
-        torrent: torrentInstance,
-        status: torrentInstance ? 'LOADING' : 'QUEUED',
+        torrent: null,
+        status: 'LOADING',
         donePromise
       };
     }
@@ -50,18 +50,6 @@ export class QueuedWebTorrent {
 
   async _pauseCurrentToFront() {
     const item = this.current;
-
-    SubDownloadManager.abortDownload(item.info.torrentId);
-
-    if (item.instance) {
-      await new Promise((resolve, reject) => {
-        item.instance.destroy({ destroyStore: false }, (err) => {
-          if (err) return reject(err);
-          resolve();
-        });
-      });
-    }
-
     this.current = null;
 
     this.queue.unshift({
@@ -73,6 +61,22 @@ export class QueuedWebTorrent {
       downloadSubtitles: item.downloadSubtitles,
       onSubtitlesStart: item.onSubtitlesStart
     });
+
+    try {
+      SubDownloadManager.abortDownload(item.info.torrentId);
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        throw error;
+      }
+    }
+
+    if (item.instance) {
+      item.instance.removeAllListeners('done');
+      item.instance.removeAllListeners('error');
+      item.instance.destroy({ destroyStore: false }, (err) => {
+        if (err) log.error(`Error destroying torrent ${item.info.torrentId} while pausing to front:`, err);
+      });
+    }
   }
 
   async _startTorrent(item) {
@@ -144,25 +148,43 @@ export class QueuedWebTorrent {
   _processQueue() {
     if (this.current || this.queue.length === 0) return;
     const item = this.queue.shift();
-    this._startTorrent(item);
+    this._startTorrentSafe(item);
+  }
+
+  _startTorrentSafe(item) {
+    return this._startTorrent(item).catch((err) => {
+      log.error(`Failed to start torrent ${item.torrentInfo.torrentId}:`, err);
+      if (this.current?.info?.torrentId === item.torrentInfo.torrentId) {
+        this.current = null;
+      }
+      item.reject?.(err);
+      this._processQueue();
+    });
   }
 
   async cancelDownload(torrentId) {
     if (this.current?.info?.torrentId === torrentId) {
       log.info(`Torrent cancelled: ${torrentId}`);
-      await this._destroyAndCleanup(this.current);
+
+      const item = this.current;
+      this.current = null;
 
       const changes = [{ status: 'PAUSED', torrentId }];
-      if (this.current) {
-        changes.push({ status: 'LOADING', torrentId: this.current.info.torrentId });
+      const nextItem = this.queue[0];
+      if (nextItem) {
+        this._processQueue();
+        changes.push({ status: 'LOADING', torrentId: nextItem.torrentInfo.torrentId });
       }
+
+      this._retireItem(item);
       return changes;
     }
 
-    const queuedItem = this.queue.find(t => t.torrentInfo.torrentId === torrentId);
-    if (queuedItem) {
+    const queuedIndex = this.queue.findIndex(t => t.torrentInfo.torrentId === torrentId);
+    if (queuedIndex !== -1) {
       log.info(`Torrent cancelled: ${torrentId}`);
-      await this._destroyAndCleanup(queuedItem, { removeFromQueue: true });
+      const [queuedItem] = this.queue.splice(queuedIndex, 1);
+      this._retireItem(queuedItem);
       return [{ status: 'PAUSED', torrentId }];
     }
 
@@ -172,13 +194,34 @@ export class QueuedWebTorrent {
 
   async clearQueue() {
     const itemsToCancel = [...this.queue];
-    await Promise.all(
-      itemsToCancel.map(item => this._destroyAndCleanup(item, { removeFromQueue: true }))
-    );
+    this.queue = [];
+    itemsToCancel.forEach(item => this._retireItem(item));
     return itemsToCancel.map(item => ({
       status: 'PAUSED',
       torrentId: item.torrentInfo.torrentId
     }));
+  }
+
+  _retireItem(item) {
+    const torrentInfo = item.info ?? item.torrentInfo;
+
+    try {
+      SubDownloadManager.abortDownload(torrentInfo.torrentId);
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        throw error;
+      }
+    }
+
+    item.reject?.(new TorrentCancelledError(torrentInfo.torrentId));
+
+    if (item.instance) {
+      item.instance.removeAllListeners('done');
+      item.instance.removeAllListeners('error');
+      item.instance.destroy({ destroyStore: false }, (err) => {
+        if (err) log.error(`Error destroying torrent ${torrentInfo.torrentId}:`, err);
+      });
+    }
   }
 
   async requeueDownload() {
@@ -187,20 +230,6 @@ export class QueuedWebTorrent {
     }
 
     const item = this.current;
-
-    SubDownloadManager.abortDownload(item.info.torrentId);
-
-    if (item.instance) {
-      item.instance.removeAllListeners('done');
-      item.instance.removeAllListeners('error');
-      await new Promise((resolve, reject) => {
-        item.instance.destroy({ destroyStore: false }, (err) => {
-          if (err) return reject(err);
-          resolve();
-        });
-      });
-    }
-
     this.current = null;
 
     this.queue.push({
@@ -212,6 +241,22 @@ export class QueuedWebTorrent {
       downloadSubtitles: item.downloadSubtitles,
       onSubtitlesStart: item.onSubtitlesStart
     });
+
+    try {
+      SubDownloadManager.abortDownload(item.info.torrentId);
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        throw error;
+      }
+    }
+
+    if (item.instance) {
+      item.instance.removeAllListeners('done');
+      item.instance.removeAllListeners('error');
+      item.instance.destroy({ destroyStore: false }, (err) => {
+        if (err) log.error(`Error destroying torrent ${item.info.torrentId} while requeuing:`, err);
+      });
+    }
   }
 
   shiftQueuedItem(torrentId, offset) {
@@ -280,62 +325,6 @@ export class QueuedWebTorrent {
 
   isCurrentlyDownloading(torrentId) {
     return this.current && this.current?.info?.torrentId === torrentId
-  }
-
-  _destroyAndCleanup(item, { removeFromQueue = false } = {}) {
-    return new Promise((resolve) => {
-      if (removeFromQueue) {
-        const idx = this.queue.findIndex(
-          t => t.torrentInfo.torrentId === item.torrentInfo.torrentId
-        );
-        if (idx !== -1) this.queue.splice(idx, 1);
-
-        try {
-          SubDownloadManager.abortDownload(item.torrentInfo.torrentId);
-        } catch (error) {
-          if (error.name !== 'AbortError') {
-            throw error;
-          }
-        }
-
-        item.reject?.(new TorrentCancelledError(item.torrentInfo.torrentId));
-        resolve();
-        return;
-      }
-
-      try {
-        SubDownloadManager.abortDownload(item.info.torrentId);
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          throw error;
-        }
-      }
-
-      if (!item.instance) {
-        item.reject?.(new TorrentCancelledError(item.info.torrentId));
-        if (this.current?.info?.torrentId === item.info.torrentId) {
-          this.current = null;
-        }
-        this._processQueue();
-        resolve();
-        return;
-      }
-
-      item.instance.destroy({ destroyStore: false }, (err) => {
-        if (err) {
-          log.error(`Error destroying torrent ${item.info.torrentId}:`, err);
-        }
-
-        item.reject?.(new TorrentCancelledError(item.info.torrentId));
-
-        if (this.current?.info?.torrentId === item.info.torrentId) {
-          this.current = null;
-        }
-
-        this._processQueue();
-        resolve();
-      });
-    });
   }
 
   getCurrentDownloadInfo() {
