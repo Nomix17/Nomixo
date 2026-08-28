@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { readFile, writeFile, unlink} from 'fs/promises';
+import { readFile, writeFile, rename, unlink } from 'fs/promises';
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
 import { downloadImage } from "./utils.js";
@@ -54,11 +54,16 @@ export async function getLibraryEntry(targetIdentification) {
   return undefined;
 }
 
+
 export async function overwriteStorageFile(filePath, newData) {
+  const tempPath = filePath + ".tmp";
   try {
-    await writeFile(filePath, JSON.stringify(newData));
+    await writeFile(tempPath, JSON.stringify(newData, null, 2), "utf-8");
+    await rename(tempPath, filePath);
+
   } catch (err) {
-    log.error(err);
+    log.error("Failed to overwrite storage file:", err);
+    try { await unlink(tempPath); } catch {}
   }
 }
 
