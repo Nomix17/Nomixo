@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   navigateTo: (newPageURL,currentPageURL,cacheData) => ipcRenderer.send('change-page', newPageURL,currentPageURL,cacheData),
   goBack: (currentPageURL) => ipcRenderer.invoke('go-back',currentPageURL),
   canGoBack: () => ipcRenderer.invoke('can-go-back'),
+  isFirstLaunch: () => ipcRenderer.invoke('is-first-launch'),
 
   getFullVideoPath: (dirPath,fileName) => ipcRenderer.invoke("get-full-video-path",dirPath,fileName),
   getVideoUrl: (magnet,fileName) => ipcRenderer.invoke('get-video-url', magnet,fileName),

@@ -174,6 +174,13 @@ ipcMain.handle("can-go-back", () => {
   return appManager.browserWindow.webContents.navigationHistory.canGoBack();
 });
 
+let isFirstLaunch = true;
+ipcMain.handle("is-first-launch", () => {
+  const oldVal = isFirstLaunch;
+  isFirstLaunch = false;
+  return oldVal;
+});
+
 ipcMain.handle("go-back", (event, currentPageURL) => {
   navigateToPreviousPage();
   appManager.deletePageCachedDataFromHistory(currentPageURL);

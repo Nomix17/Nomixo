@@ -68,6 +68,31 @@ function focusFunction(element) {
   element.focus();
 }
 
+async function handleSplashScreen() {
+  const splashDiv = document.getElementById("div-splash");
+  if (!splashDiv) return;
+
+  let isFirstLaunch = false;
+  try {
+    isFirstLaunch = await window.electronAPI.isFirstLaunch();
+  } catch (err) {};
+
+  if (!isFirstLaunch) {
+    splashDiv.remove();
+    return;
+  }
+
+  splashDiv.classList.add("show-splash");
+
+  const MIN_SPLASH_DURATION = 1000;
+  setTimeout(() => {
+    splashDiv.classList.remove("show-splash");
+    splashDiv.classList.add("hide-splash");
+    splashDiv.addEventListener("transitionend", () => splashDiv.remove(), { once: true });
+  }, MIN_SPLASH_DURATION);
+}
+
+handleSplashScreen();
 triggerLoadingGif();
 loadMovies();
 setupKeyPressesHandler();
