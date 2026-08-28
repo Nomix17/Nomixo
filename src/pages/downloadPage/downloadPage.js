@@ -196,13 +196,10 @@ function monitorDownloads() {
     if(!TargetDownloadElement) return;
 
     let TotalSizeTextElement = TargetDownloadElement.querySelector(".total-size");
-    let PosterElement = TargetDownloadElement.querySelector(".poster-img");
     let DownloadedSizeTextElement = TargetDownloadElement.querySelector(".downloaded-size");
     let PercentageTextElement = TargetDownloadElement.querySelector(".percentage");
-    let ProgressBar = TargetDownloadElement.querySelector(".progress-bar-div");
     let insiderProgressBar = TargetDownloadElement.querySelector(".progress-bar-div .inside");
     let PausePlayButton = TargetDownloadElement.querySelector(".toggle-pause-button");
-    let CancelButton = TargetDownloadElement.querySelector(".cancel-button");
     let downloadSpeedElement = TargetDownloadElement.querySelector(".download-speed-p");
 
     let calculatedProgress = ((JsonData.Downloaded / JsonData.Total) * 100).toFixed(2);
@@ -222,10 +219,7 @@ function monitorDownloads() {
     PercentageTextElement.innerText = calculatedProgress + " %";
     insiderProgressBar.style.width = calculatedProgress+ "%";
 
-    PausePlayButton.innerHTML = pauseIcon;
-    CancelButton.innerHTML = xRemoveIcon;
-
-    if(JsonData?.Status === "DONE"){
+    if(JsonData?.Status === "DONE") {
       const library = await window.electronAPI.loadDownloadLibraryInfo();
       const libraryElement = library.downloads.find(element => element.torrentId === JsonData.TorrentId);
       let doneDownloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
@@ -717,6 +711,7 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
 let currentbgImage = null;
 async function MarkDownloadElementAsLoading(MediaDownloadElement, loadingMsg = LOADING_MSG) {
   const PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
+  const CancelButton = MediaDownloadElement.querySelector(".cancel-button");
   const downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
   const elementId = MediaDownloadElement.id;
   const contextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
@@ -725,6 +720,7 @@ async function MarkDownloadElementAsLoading(MediaDownloadElement, loadingMsg = L
   shiftingArrows.forEach(el => el.remove());
 
   PausePlayButton.innerHTML = pauseIcon;
+  CancelButton.innerHTML = xRemoveIcon;
   downloadSpeedElement.innerHTML = loadingMsg
 
   addingLoadingAnimation(elementId,downloadSpeedElement,PausePlayButton,loadingMsg);
