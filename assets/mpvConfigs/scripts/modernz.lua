@@ -49,7 +49,7 @@ local user_opts = {
     scalefullscreen = 1.0,                 -- osc scale factor when fullscreen
 
     -- Elements display
-    show_title = false,                     -- show title in the OSC (above seekbar)
+    show_title = true,                     -- show title in the OSC (above seekbar)
     title = "${media-title}",              -- title above seekbar format: "${media-title}" or "${filename}"
     title_font_size = 24,                  -- title font size (above seekbar)
     chapter_title_font_size = 14,          -- chapter title font size

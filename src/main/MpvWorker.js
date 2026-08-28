@@ -107,8 +107,8 @@ function StreamTorrent(
             .map(response => response.file);
 
           runMpvProcess(
-            MpvExecPath,
-            url, mpvConfigDirectory,
+            MpvExecPath, url,
+            mpvConfigDirectory, metaData,
             startFromTime, subsPaths,
             mpvWindowConfigs
           );
@@ -154,8 +154,8 @@ async function PlayLocalVideo(
       const videoFullPath = findFile(metaData.downloadPath, metaData.fileName);
       if (videoFullPath)
         runMpvProcess(
-          MpvExecPath,
-          videoFullPath, mpvConfigDirectory,
+          MpvExecPath, videoFullPath,
+          mpvConfigDirectory, metaData,
           startFromTime, subsPaths,
           mpvWindowConfigs, resolve, reject
         );
@@ -172,6 +172,7 @@ function runMpvProcess(
   MpvExecPath,
   videoFullPath,
   mpvConfigDirectory,
+  metaData,
   startFromTime,
   subsPaths,
   mpvWindowConfigs,
@@ -182,6 +183,13 @@ function runMpvProcess(
   const isWindows = os.platform() === 'win32';
   const mpvExecutable = (MpvExecPath ?? (isWindows ? 'mpv.exe' : 'mpv')).trim().replace(/\/$/, '');
 
+  const isValid = (val) => val !== undefined && val !== null && val !== "undefined";
+  const videoTitle = [
+    metaData.Title,
+    isValid(metaData.episodeNumber) ? `E${metaData.episodeNumber}` : null,
+    isValid(metaData.seasonNumber) ? `S${metaData.seasonNumber}` : null,
+  ].filter(Boolean).join(" ");
+
   const childProcessArguments = [
     videoFullPath,
     "--keep-open=yes",
@@ -190,6 +198,7 @@ function runMpvProcess(
     `--geometry=${mpvWindowConfigs.geometry}`,
     `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}`,
     `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`,
+    `--force-media-title=${videoTitle}`,
     ...subsArgument
   ];
 
@@ -202,7 +211,8 @@ function runMpvProcess(
     `--start=${startFromTime}\n` +
     `--geometry=${mpvWindowConfigs.geometry}\n` +
     `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}\n` +
-    `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`
+    `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}\n` +
+    `--force-media-title=${videoTitle}`
   );
 
   mpvProcess.on("error", async (err) => {
