@@ -1189,7 +1189,7 @@ local function draw_seekbar_progress(element, elem_ass)
     local bar_h = elem_geo.h - 2 * slider_lo.gap
 
     if slider_lo.nibbles_style == "cut" and element.chapter_cut_positions ~= nil and #element.chapter_cut_positions > 0 then
-        local cut_w = 0.1
+        local cut_w = 1.5
         local seg_r = bar_h / 2
         local last = 0
         for _, s in ipairs(element.chapter_cut_positions) do
