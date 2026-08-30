@@ -334,13 +334,17 @@ async function getDiscoveryPageCacheData(){
 
 async function getLibraryPageCacheData(){
   const savedMediaContainer = document.getElementById("div-SavedMedia");
-  const pageDropDowns = document.querySelectorAll(".select-dropdown");
   const containersData = savedMediaContainer ? await getContainersHTML([savedMediaContainer]) : null;
-  const dropDownsData = pageDropDowns ? await getDropDownCacheValue(Array.from(pageDropDowns)) : null;
+  const selectMediaType = document.getElementById("select-type");
+  const selectSaveType = document.getElementById("select-save");
+  const selectSortType = document.getElementById("select-sort");
+
   const cacheData = {
     page:"library",
     "containers_data": containersData,
-    "dropdowns_data":dropDownsData,
+    "dropdown_mediaType": getDropdownValue(selectMediaType),
+    "dropdown_saveType": getDropdownValue(selectSaveType),
+    "dropdown_sortType": getDropdownValue(selectSortType),
     "saved_media_container_html":savedMediaContainer.innerHTML,
     ...getRightMiddleDivScrollValue(),
   };

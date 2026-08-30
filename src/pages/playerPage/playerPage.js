@@ -617,7 +617,12 @@ async function updateLastSecondBeforeQuit(lastPbPosition) {
   let MediaLibraryObject = await window.electronAPI.loadMediaLibraryInfo(targetIdentification);
 
   if (MediaLibraryObject != null) {
-    MediaLibraryObject = { ...MediaLibraryObject[0], ...metaData, lastPlaybackPosition: lastPbPosition };
+    MediaLibraryObject = {
+      ...MediaLibraryObject[0],
+      ...metaData,
+      lastPlaybackPosition: lastPbPosition,
+      timeOfSave: Date.now().toString()
+    };
 
     if (!MediaLibraryObject?.["typeOfSave"].includes("Currently Watching")) {
       MediaLibraryObject["typeOfSave"].push("Currently Watching");

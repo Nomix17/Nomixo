@@ -340,6 +340,7 @@ class MpvPlayerManager {
         LibraryInfo.media[index].bgImagePath = metaData?.bgImagePath;
         LibraryInfo.media[index].downloadPath = metaData?.downloadPath;
         LibraryInfo.media[index].fileName = metaData?.fileName;
+        LibraryInfo.media[index].timeOfSave = Date.now().toString();
 
         if (!LibraryInfo.media[index].typeOfSave.includes("Currently Watching")) {
           LibraryInfo.media[index].typeOfSave.push("Currently Watching");
@@ -353,6 +354,7 @@ class MpvPlayerManager {
       LibraryInfo.media.push({
         ...metaData,
         lastPlaybackPosition: lastPbPosition,
+        timeOfSave: Date.now().toString(),
         typeOfSave: ["Currently Watching"]
       });
     }

@@ -184,22 +184,24 @@ async function initPage() {
   if(!cachedMediaInfo?.right_middle_div_top_scroll_value)
     RightmiddleDiv.classList.add("activate");
 
+  const mediaType = cachedMediaInfo?.dropdown_mediaType || "all";
+  const saveType = cachedMediaInfo?.dropdown_saveType || typeOfSave || "All";
+  const sortType = cachedMediaInfo?.dropdown_sortType || "newest";
+
   changeDescriptionTitleValue();
   dropDownInit();
-  setDropdownValue(SelectMediaType, "all");
-  setDropdownValue(SelectSaveType, typeOfSave || "All");
-  setDropdownValue(SelectSortType,"newest");
+  setDropdownValue(SelectMediaType, mediaType);
+  setDropdownValue(SelectSaveType, saveType);
+  setDropdownValue(SelectSortType, sortType);
   addDropDownsEventListener();
 
   await loadMedia();
-
-  filterMedia(getDropdownValue(SelectMediaType), getDropdownValue(SelectSaveType));
-
+  filterMedia(mediaType, saveType);
+  sortMediaELements(sortType)
 
   if(cachedMediaInfo) {
     console.log("Loading Cached Information");
     loadCachedRightDivScrollValue(cachedMediaInfo);
-    loadCachedDropDownValue(cachedMediaInfo);
   }
 
   globalLoadingGif.remove()
