@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { randomUUID } from "crypto";
 import { readFile, writeFile, rename, unlink } from 'fs/promises';
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
@@ -56,7 +57,7 @@ export async function getLibraryEntry(targetIdentification) {
 
 
 export async function overwriteStorageFile(filePath, newData) {
-  const tempPath = filePath + ".tmp";
+  const tempPath = `${filePath}.${randomUUID()}.tmp`;
   try {
     await writeFile(tempPath, JSON.stringify(newData, null, 2), "utf-8");
     await rename(tempPath, filePath);
