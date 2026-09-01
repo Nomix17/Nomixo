@@ -101,7 +101,9 @@ function sortMediaELements(sortingType = SortingCriteria.alphabetical) {
     }
   }
 
-  mediaElements.forEach(ele => {SavedMedia.appendChild(ele)});
+  const fragment = document.createDocumentFragment();
+  mediaElements.forEach(ele => fragment.appendChild(ele));
+  SavedMedia.appendChild(fragment);
 }
 
 
@@ -175,8 +177,6 @@ async function loadCachedMediaData(cachedData){
 async function loadMedia() {
   const apiKey = await window.electronAPI.getTMDBAPIKEY();
   await loadDataFromLibrary(apiKey);
-  const currentSortValue = SortingCriteria[getDropdownValue(SelectSortType)];
-  sortMediaELements(currentSortValue)
 }
 
 async function initPage() {
@@ -197,7 +197,7 @@ async function initPage() {
 
   await loadMedia();
   filterMedia(mediaType, saveType);
-  sortMediaELements(sortType)
+  sortMediaELements(SortingCriteria[sortType])
 
   if(cachedMediaInfo) {
     console.log("Loading Cached Information");

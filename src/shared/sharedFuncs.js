@@ -886,7 +886,6 @@ function fetchMediaDataFromLibrary (apiKey,wholeLibraryInformation,SavedMedia,Ri
       try {
         const libElement = await createMediaElementForLibrary(mediaEntryPoint,apiKey,IsInHomePage);
         SavedMedia.appendChild(libElement);
-        checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
 
       } catch(err) {
         console.error(err);
@@ -903,7 +902,9 @@ function fetchMediaDataFromLibrary (apiKey,wholeLibraryInformation,SavedMedia,Ri
 
       }
     })
-  );
+  ).then(() => {
+    checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
+  });
 }
 
 function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
@@ -1293,40 +1294,72 @@ function displayMessage(messageContent="hello") {
   },2500);
 }
 
+const floatingTooltipSelectors = new Set();
+let floatingTooltipListenersAttached = false;
+let floatingTooltipDiv = null;
+let currentTooltipParagraph = null;
+let tooltipShowTimeoutId = null;
+
 function addFloatingDivToDisplayFullTitle (MediaElement, elementToTrackQuerySelector="p") {
-  const paragraph = MediaElement?.querySelector(elementToTrackQuerySelector);
-  if (paragraph) {
-    const floatingDiv = document.createElement('div');
-    floatingDiv.className = 'floating-tooltip';
-    floatingDiv.textContent = paragraph.textContent;
-    floatingDiv.className = "floatingDiv";
-    document.body.appendChild(floatingDiv);
+  if (!MediaElement) return;
 
-    let displayFloatingDiv = true;
+  const selector = elementToTrackQuerySelector.startsWith(".")
+    ? elementToTrackQuerySelector
+    : `.${Array.from(MediaElement.classList).join(".")} ${elementToTrackQuerySelector}`;
 
-    paragraph.addEventListener('mouseenter', (e) => {
-      displayFloatingDiv=true;
-      const isOverflowing = paragraph.scrollWidth > paragraph.clientWidth || paragraph.scrollHeight > paragraph.clientHeight;
-      setTimeout(()=>{
-        if(displayFloatingDiv){
-          floatingDiv.style.opacity = '1';
-        }
-      },500);
-    });
+  floatingTooltipSelectors.add(selector);
+  setupDelegatedFloatingTooltipListeners();
+}
 
-    paragraph.addEventListener('mousemove', (e) => {
-      const rect = paragraph.getBoundingClientRect();
-      const tooltipRect = floatingDiv.getBoundingClientRect();
-
-      floatingDiv.style.left = rect.left + (rect.width / 2) - (tooltipRect.width / 2) + window.scrollX + 'px';
-      floatingDiv.style.top = rect.top + tooltipRect.height - 8 + window.scrollY + 'px';
-    });
-
-    paragraph.addEventListener('mouseleave', () => {
-      displayFloatingDiv = false;
-      floatingDiv.style.opacity = '0';
-    });
+function findFloatingTooltipMatch(target) {
+  for (const selector of floatingTooltipSelectors) {
+    const match = target.closest?.(selector);
+    if (match) return match;
   }
+  return null;
+}
+
+function setupDelegatedFloatingTooltipListeners() {
+  if (floatingTooltipListenersAttached) return;
+  floatingTooltipListenersAttached = true;
+
+  floatingTooltipDiv = document.createElement('div');
+  floatingTooltipDiv.className = "floatingDiv";
+  document.body.appendChild(floatingTooltipDiv);
+
+  document.body.addEventListener('mouseover', (e) => {
+    const paragraph = findFloatingTooltipMatch(e.target);
+    if (!paragraph || paragraph === currentTooltipParagraph) return;
+
+    currentTooltipParagraph = paragraph;
+    floatingTooltipDiv.textContent = paragraph.textContent;
+    floatingTooltipDiv.style.opacity = '0';
+
+    clearTimeout(tooltipShowTimeoutId);
+    tooltipShowTimeoutId = setTimeout(() => {
+      if (currentTooltipParagraph === paragraph) floatingTooltipDiv.style.opacity = '1';
+    }, 500);
+  });
+
+  document.body.addEventListener('mousemove', (e) => {
+    if (!currentTooltipParagraph) return;
+    const rect = currentTooltipParagraph.getBoundingClientRect();
+    const tooltipRect = floatingTooltipDiv.getBoundingClientRect();
+
+    floatingTooltipDiv.style.left = rect.left + (rect.width / 2) - (tooltipRect.width / 2) + window.scrollX + 'px';
+    floatingTooltipDiv.style.top = rect.top + tooltipRect.height - 8 + window.scrollY + 'px';
+  });
+
+  document.body.addEventListener('mouseout', (e) => {
+    if (!currentTooltipParagraph) return;
+    if (currentTooltipParagraph.contains(e.relatedTarget)) return;
+    const stillOnParagraph = findFloatingTooltipMatch(e.target) === currentTooltipParagraph;
+    if (!stillOnParagraph) return;
+
+    clearTimeout(tooltipShowTimeoutId);
+    currentTooltipParagraph = null;
+    floatingTooltipDiv.style.opacity = '0';
+  });
 }
 
 function putTextIntoDiv(Div,textContent){
