@@ -1143,6 +1143,32 @@ local function draw_seekbar_handle(element, elem_ass, override_alpha)
     return xp, 0
 end
 
+local function draw_cut_aware_segment(elem_ass, x0, x1, y0, y1, bar_h, cut_positions)
+    if not cut_positions or #cut_positions == 0 then
+        local seg_r = math.max(0, math.min(bar_h / 2, (x1 - x0) / 2))
+        ass_draw_rr_h_cw(elem_ass, x0, y0, x1, y1, seg_r, false, seg_r)
+        return
+    end
+
+    local cut_w = 1.5
+    local seg_r = bar_h / 2
+    local last = x0
+    for _, s in ipairs(cut_positions) do
+        if s > x0 and s < x1 then
+            local seg_end = math.max(last, math.min(x1, s - cut_w))
+            if seg_end > last then
+                local r = math.max(0, math.min(seg_r, (seg_end - last) / 2))
+                ass_draw_rr_h_cw(elem_ass, last, y0, seg_end, y1, r, false, r)
+            end
+            last = math.max(last, math.min(x1, s + cut_w))
+        end
+    end
+    if x1 > last then
+        local r = math.max(0, math.min(seg_r, (x1 - last) / 2))
+        ass_draw_rr_h_cw(elem_ass, last, y0, x1, y1, r, false, r)
+    end
+end
+
 -- Draws seekbar ranges according to user_opts
 local function draw_seekbar_ranges(element, elem_ass, xp, rh, override_alpha)
     local handle = xp and rh
@@ -1150,6 +1176,7 @@ local function draw_seekbar_ranges(element, elem_ass, xp, rh, override_alpha)
     rh = rh or 0
     local slider_lo = element.layout.slider
     local elem_geo = element.layout.geometry
+    local bar_h = elem_geo.h - 2 * slider_lo.gap
     local seekRanges = element.slider.seekRangesF()
     if not seekRanges then
         return
@@ -1160,19 +1187,21 @@ local function draw_seekbar_ranges(element, elem_ass, xp, rh, override_alpha)
     elem_ass:append("{\\1cH&" .. osc_color_convert(user_opts.seekbar_cache_color) .. "&}")
     elem_ass:merge(element.static_ass)
 
+    local cut_positions = slider_lo.nibbles_style == "cut" and element.chapter_cut_positions or nil
+
     for _, range in pairs(seekRanges) do
         local pstart = math.max(0, get_slider_ele_pos_for(element, range["start"]) - slider_lo.gap)
         local pend = math.min(elem_geo.w, get_slider_ele_pos_for(element, range["end"]) + slider_lo.gap)
 
         if handle and (pstart < xp + rh and pend > xp - rh) then
             if pstart < xp - rh then
-                elem_ass:rect_cw(pstart, slider_lo.gap, xp - rh, elem_geo.h - slider_lo.gap)
+                draw_cut_aware_segment(elem_ass, pstart, xp - rh, slider_lo.gap, elem_geo.h - slider_lo.gap, bar_h, cut_positions)
             end
             pstart = xp + rh
         end
 
         if pend > pstart then
-            elem_ass:rect_cw(pstart, slider_lo.gap, pend, elem_geo.h - slider_lo.gap)
+            draw_cut_aware_segment(elem_ass, pstart, pend, slider_lo.gap, elem_geo.h - slider_lo.gap, bar_h, cut_positions)
         end
     end
 end
