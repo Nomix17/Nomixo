@@ -21,6 +21,13 @@ let expressServer = null;
 let webTorrentClient = null;
 config.init();
 
+SubDownloadManager.sendProgressCallBack = (progressInfo) => {
+  parentPort.postMessage({
+    type: "subtitles_progress",
+    progressInfo,
+  });
+}
+
 function StreamTorrent(
   MpvExecPath,
   metaData,

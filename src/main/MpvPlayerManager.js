@@ -268,6 +268,15 @@ class MpvPlayerManager {
           stage: msg.stage,
           data: msg.data
         });
+      } else if (msg.type === "subtitles_progress") {
+        this.#browserWindow.webContents.send(
+          "subtitles-download-progress", {
+            torrentId: msg.progressInfo.torrentId,
+            message :msg.progressInfo.message,
+            done :msg.progressInfo.done,
+            error :msg.progressInfo.error
+          }
+        )
       }
       if (msg.type !== "status") return;
       switch (msg.message) {

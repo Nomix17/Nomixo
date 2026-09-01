@@ -3,31 +3,19 @@ import { mkdir } from "fs/promises";
 import { pipeline } from "stream/promises";
 import { Readable } from "stream";
 import { join } from "path";
-import { BrowserWindow } from "electron";
 import { config } from "./config.js";
 import { log } from "./debugging.js";
 
 
-function sendProgress({ torrentId, message, done = false, error = false }) {
-  try {
-    for (const win of BrowserWindow.getAllWindows()) {
-      if (!win.isDestroyed()) {
-        win.webContents.send("subtitles-download-progress", { torrentId, message, done, error });
-      }
-    }
-  } catch (err) {
-    log.error(`Failed to send subtitles progress: ${err.message}`);
-  }
-}
-
 export class SubDownloadManager {
   static activeDownloads = new Map();
+  static sendProgressCallBack = null;
 
   static async scheduleDownloads(subDirectory, subsObjects, signal, torrentId) {
     const results = [];
     const total = subsObjects.length;
 
-    sendProgress({ torrentId, message: `Starting download of ${total} subtitle(s)` });
+    this.sendProgressCallBack?.({ torrentId, message: `Starting download of ${total} subtitle(s)` });
 
     let index = 0;
     for (const obj of subsObjects) {
@@ -39,11 +27,11 @@ export class SubDownloadManager {
         results.push({ status: "success", file: res });
       } catch (err) {
         results.push({ status: "failed", error: err });
-        sendProgress({ torrentId, message: `Failed subtitle ${index}/${total}: ${err.message}`, error: true });
+        this.sendProgressCallBack?.({ torrentId, message: `Failed subtitle ${index}/${total}: ${err.message}`, error: true });
       }
     }
 
-    sendProgress({
+    this.sendProgressCallBack?.({
       torrentId,
       message: `Finished downloading subtitles (${results.filter(r => r.status === "success").length}/${total} succeeded)`,
       done: true
@@ -74,11 +62,11 @@ export class SubDownloadManager {
 
     if (existsSync(fileFullPath)) {
       log.info(`Skip: ${fileName}`);
-      sendProgress({ torrentId, message: `Skipped ${fileName} (already exists)` });
+      this.sendProgressCallBack?.({ torrentId, message: `Skipped ${fileName} (already exists)` });
       return fileFullPath;
     }
 
-    sendProgress({ torrentId, message: `Downloading ${fileName} (${index}/${total})` });
+    this.sendProgressCallBack?.({ torrentId, message: `Downloading ${fileName} (${index}/${total})` });
 
     try {
       const response = await fetch(SubObj.url, { signal: signal });
@@ -94,16 +82,16 @@ export class SubDownloadManager {
       );
 
       log.success(`Done Downloading ${fileName}`);
-      sendProgress({ torrentId, message: `Done downloading ${fileName} (${index}/${total})` });
+      this.sendProgressCallBack?.({ torrentId, message: `Done downloading ${fileName} (${index}/${total})` });
       return fileFullPath;
     } catch (err) {
       if (existsSync(fileFullPath)) unlinkSync(fileFullPath);
       if (signal.aborted) {
         log.info(`Aborted download of ${fileFullPath}`);
-        sendProgress({ torrentId, message: `Aborted download of ${fileName}`, error: true });
+        this.sendProgressCallBack?.({ torrentId, message: `Aborted download of ${fileName}`, error: true });
       } else {
         log.error(`Failed to download ${fileName}: ${err.message}`);
-        sendProgress({ torrentId, message: `Failed to download ${fileName}: ${err.message}`, error: true });
+        this.sendProgressCallBack?.({ torrentId, message: `Failed to download ${fileName}: ${err.message}`, error: true });
       }
       throw err;
     }
@@ -112,7 +100,7 @@ export class SubDownloadManager {
   static async fetchSubtitlesInfo(mediaInfo = {}, signal, torrentId) {
     const {IMDB_ID, seasonNumber, episodeNumber} = mediaInfo;
 
-    sendProgress({ torrentId, message: "Fetching subtitles info..." });
+    this.sendProgressCallBack?.({ torrentId, message: "Fetching subtitles info..." });
 
     try {
       const params = new URLSearchParams({
@@ -130,13 +118,13 @@ export class SubDownloadManager {
 
       const data = await res.json();
 
-      sendProgress({ torrentId, message: `Found ${data.length} subtitle(s)` });
+      this.sendProgressCallBack?.({ torrentId, message: `Found ${data.length} subtitle(s)` });
 
       return data;
 
     } catch (err) {
       console.error(err);
-      sendProgress({ torrentId, message: `Failed to fetch subtitles info: ${err.message}`, error: true, done: true });
+      this.sendProgressCallBack?.({ torrentId, message: `Failed to fetch subtitles info: ${err.message}`, error: true, done: true });
       return [];
     }
   }
@@ -155,7 +143,7 @@ export class SubDownloadManager {
       if (abortController.signal.aborted) return 0;
 
       if (!subsObjects.length) {
-        sendProgress({ torrentId, message: "No subtitles found for this media", done: true, error: true });
+        this.sendProgressCallBack?.({ torrentId, message: "No subtitles found for this media", done: true, error: true });
         return [];
       }
 
@@ -164,10 +152,10 @@ export class SubDownloadManager {
     } catch (err) {
       if (abortController.signal.aborted) {
         log.info(`Subtitle download for ${torrentId} aborted`);
-        sendProgress({ torrentId, message: `Subtitle download aborted`, error: true, done: true });
+        this.sendProgressCallBack?.({ torrentId, message: `Subtitle download aborted`, error: true, done: true });
       } else {
         log.error(`Subtitle download for ${torrentId} failed: ${err}`);
-        sendProgress({ torrentId, message: `Something went Wrong`, error: true, done: true });
+        this.sendProgressCallBack?.({ torrentId, message: `Something went Wrong`, error: true, done: true });
       }
       return [];
     } finally {

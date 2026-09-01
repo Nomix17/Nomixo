@@ -34,6 +34,7 @@ config.init();
 FilesManager.initializeDataFiles();
 const appManager = new AppManager(app, loadSettings());
 appManager.initializeApp();
+SubDownloadManager.sendProgressCallBack = sendProgressCallBack;
 initTorrentTrackers();
 
 // ======================= IPC HANDLERS =======================
@@ -331,6 +332,10 @@ ipcMain.handle("shift-download-queue-element", (event, torrentId, offset) => {
 ipcMain.handle("get-download-queue-list", () => {
   return appManager.torrentDownloadManager.downloadClient.getQueueTorrentIds();
 });
+
+function sendProgressCallBack({ torrentId, message, done = false, error = false }) {
+  appManager.browserWindow.webContents.send("subtitles-download-progress", { torrentId, message, done, error });
+}
 
 // ======================= DOWNLOAD OTHER THINGS =======================
 
