@@ -14,6 +14,38 @@ local msg = require "mp.msg"
 local opt = require "mp.options"
 local utils = require "mp.utils"
 
+local colors = {
+  -- OSC accent / title bar
+  osc_color = "#000000",                     -- accent color of the OSC and title bar
+  window_title_color = "#FFFFFF",            -- color of the title in borderless/fullscreen mode
+  title_color = "#FFFFFF",                   -- color of the title (above seekbar)
+  chapter_title_color = "#FFFFFF",           -- color of the chapter title (above seekbar)
+
+  -- Window controls (borderless/fullscreen)
+  window_controls_color = "#FFFFFF",         -- color of the window controls (close, minimize, maximize)
+  windowcontrols_close_hover = "#FFFFFF",    -- color of close window control on hover
+  windowcontrols_max_hover = "#FFFFFF",      -- color of maximize window control on hover
+  windowcontrols_min_hover = "#FFFFFF",      -- color of minimize window control on hover
+
+  -- Seekbar
+  seekbarfg_color = "#25456f",               -- color of the seekbar progress and handle
+  seekbarbg_color = "#ffffff",               -- color of the remaining seekbar
+  seekbar_cache_color = "#50add8",           -- color of the cache/buffer ranges on the seekbar
+  cache_info_color = "#FFFFFF",              -- color of the cache information text
+  time_color = "#FFFFFF",                    -- color of the timestamps (below seekbar)
+
+  -- Buttons
+  side_buttons_color = "#FFFFFF",            -- color of the side buttons (audio, subtitles, playlist, etc.)
+  middle_buttons_color = "#FFFFFF",          -- color of the middle buttons (skip, jump, chapter, etc.)
+  playpause_color = "#FFFFFF",               -- color of the play/pause button
+  held_element_color = "#999999",            -- color of the element when held down (pressed)
+  hover_effect_color = "#ffffff",            -- color of a hovered button when hover_effect includes "color"
+
+  -- Thumbnails (with thumbfast)
+  thumbnail_border_color = "#111111",        -- color of the border for thumbnails
+  thumbnail_border_outline = "#404040",      -- color of the border outline for thumbnails
+}
+
 -- Parameters
 -- default user option values
 -- do not touch, change them in modernz.conf
@@ -125,27 +157,29 @@ local user_opts = {
     zoom_out_min = -1,                     -- minimum zoom out value
 
     -- Colors and style
-    osc_color = "#000000",                 -- accent color of the OSC and title bar
-    window_title_color = "#FFFFFF",        -- color of the title in borderless/fullscreen mode
-    window_controls_color = "#FFFFFF",     -- color of the window controls (close, minimize, maximize) in borderless/fullscreen mode
-    windowcontrols_close_hover = "#FFFFFF", -- color of close window control on hover
-    windowcontrols_max_hover = "#FFFFFF",  -- color of maximize window controls on hover
-    windowcontrols_min_hover = "#FFFFFF",  -- color of minimize window controls on hover
-    title_color = "#FFFFFF",               -- color of the title (above seekbar)
-    cache_info_color = "#FFFFFF",          -- color of the cache information
-    seekbarfg_color = "#25456f",           -- color of the seekbar progress and handle
-    seekbarbg_color = "#ffffff",           -- color of the remaining seekbar
-    seekbar_cache_color = "#50add8",       -- color of the cache ranges on the seekbar
+    -- See the "Colorscheme" section near the top of this file to customize
+    -- these; individual colors can still be overridden in modernz.conf.
+    osc_color = colors.osc_color,                             -- accent color of the OSC and title bar
+    window_title_color = colors.window_title_color,           -- color of the title in borderless/fullscreen mode
+    window_controls_color = colors.window_controls_color,     -- color of the window controls (close, minimize, maximize) in borderless/fullscreen mode
+    windowcontrols_close_hover = colors.windowcontrols_close_hover, -- color of close window control on hover
+    windowcontrols_max_hover = colors.windowcontrols_max_hover,     -- color of maximize window controls on hover
+    windowcontrols_min_hover = colors.windowcontrols_min_hover,     -- color of minimize window controls on hover
+    title_color = colors.title_color,                         -- color of the title (above seekbar)
+    cache_info_color = colors.cache_info_color,                -- color of the cache information
+    seekbarfg_color = colors.seekbarfg_color,                  -- color of the seekbar progress and handle
+    seekbarbg_color = colors.seekbarbg_color,                  -- color of the remaining seekbar
+    seekbar_cache_color = colors.seekbar_cache_color,          -- color of the cache ranges on the seekbar
     volumebar_match_seek_color = false,    -- match volume bar color with seekbar color (ignores side_buttons_color)
-    time_color = "#FFFFFF",                -- color of the timestamps (below seekbar)
-    chapter_title_color = "#FFFFFF",       -- color of the chapter title (above seekbar)
-    side_buttons_color = "#FFFFFF",        -- color of the side buttons (audio, subtitles, playlist, etc.)
-    middle_buttons_color = "#FFFFFF",      -- color of the middle buttons (skip, jump, chapter, etc.)
-    playpause_color = "#FFFFFF",           -- color of the play/pause button
-    held_element_color = "#999999",        -- color of the element when held down (pressed)
-    hover_effect_color = "#ffffff",        -- color of a hovered button when hover_effect includes "color"
-    thumbnail_border_color = "#111111",    -- color of the border for thumbnails (with thumbfast)
-    thumbnail_border_outline = "#404040",  -- color of the border outline for thumbnails
+    time_color = colors.time_color,                            -- color of the timestamps (below seekbar)
+    chapter_title_color = colors.chapter_title_color,          -- color of the chapter title (above seekbar)
+    side_buttons_color = colors.side_buttons_color,            -- color of the side buttons (audio, subtitles, playlist, etc.)
+    middle_buttons_color = colors.middle_buttons_color,        -- color of the middle buttons (skip, jump, chapter, etc.)
+    playpause_color = colors.playpause_color,                  -- color of the play/pause button
+    held_element_color = colors.held_element_color,            -- color of the element when held down (pressed)
+    hover_effect_color = colors.hover_effect_color,            -- color of a hovered button when hover_effect includes "color"
+    thumbnail_border_color = colors.thumbnail_border_color,    -- color of the border for thumbnails (with thumbfast)
+    thumbnail_border_outline = colors.thumbnail_border_outline, -- color of the border outline for thumbnails
 
     fade_alpha = 130,                      -- alpha of the OSC background (0 to disable)
     fade_blur_strength = 100,              -- blur strength for the OSC alpha fade. caution: high values can take a lot of CPU time to render
@@ -3641,7 +3675,7 @@ local function validate_user_opts()
        end
     end
 
-    local colors = {
+    local color_list = {
         user_opts.osc_color, user_opts.seekbarfg_color, user_opts.seekbarbg_color,
         user_opts.title_color, user_opts.time_color, user_opts.side_buttons_color,
         user_opts.middle_buttons_color, user_opts.playpause_color, user_opts.window_title_color,
@@ -3651,7 +3685,7 @@ local function validate_user_opts()
         user_opts.cache_info_color, user_opts.thumbnail_border_outline,
     }
 
-    for _, color in pairs(colors) do
+    for _, color in pairs(color_list) do
         if color:find("^#%x%x%x%x%x%x$") == nil then
             msg.warn("'" .. color .. "' is not a valid color")
         end
