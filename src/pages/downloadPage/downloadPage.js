@@ -5,7 +5,7 @@ const pausedDownloadsDiv = document.getElementById("download-paused-div");
 const doneDownloadsDiv = document.getElementById("download-done-div");
 const libraryDumpPromise = window.electronAPI.loadDownloadLibraryInfo();
 
-const LOADING_MSG = "Loading metadata";
+const LOADING_MSG = "Starting Download";
 const SUBS_DOWNLOADING_MSG = "Downloading subs";
 
 let monitoringProgress = false;
@@ -120,6 +120,7 @@ async function createDownloadElement(mediaLibEntryPoint) {
       console.error(downloadStatus, "Is Unknown Download Status");
   }
 
+  MediaDownloadElement.dataset.downloadStatus = downloadStatus;
   handleTogglingPauseButton(ElementIdentifier,MediaDownloadElement);
   const downloadContainer = downloadCategorie.querySelector(".movieContainer");
   downloadContainer.appendChild(MediaDownloadElement);
@@ -191,14 +192,22 @@ function monitorSubtitlesDownloadReport() {
     const downloadEl = document.getElementById(data?.torrentId);
     if (!downloadEl) return;
 
-    const totalSizeElement = downloadEl.querySelector(".total-size");
-    let spinnerEl = totalSizeElement.querySelector(".loading-gif");
-    let textEl = totalSizeElement.querySelector(".message-text");
+    const textContainerEl = downloadEl.dataset.downloadStatus === "DONE"
+      ? downloadEl.querySelector(".total-size")
+      : downloadEl.querySelector(".download-speed-p")
+
+    let spinnerEl = textContainerEl.querySelector(".loading-gif");
+    let textEl = textContainerEl.querySelector(".message-text");
 
     if (!spinnerEl || !textEl) {
-      totalSizeElement.innerHTML = `<div class="loading-gif"></div><span class="message-text"></span>`;
-      spinnerEl = totalSizeElement.querySelector(".loading-gif");
-      textEl = totalSizeElement.querySelector(".message-text");
+      textContainerEl.innerHTML = `<div class="loading-gif"></div><span class="message-text"></span>`;
+      spinnerEl = textContainerEl.querySelector(".loading-gif");
+      textEl = textContainerEl.querySelector(".message-text");
+    }
+
+    if (loadingIntervals[data.torrentId]) {
+      const PausePlayButton = downloadEl.querySelector(".toggle-pause-button");
+      removeLoadingAnimation(data.torrentId, PausePlayButton);
     }
 
     if (data.error) {
@@ -214,9 +223,18 @@ function monitorSubtitlesDownloadReport() {
       textEl.classList.remove("download-error");
 
       setTimeout(() => {
-        const storageKey = `totalSizeElement_default_text_${data.torrentId}`;
-        totalSizeElement.innerHTML = localStorage.getItem(storageKey) || "";
+        const storageKey = `subtitles_download_reporting_default_text${data.torrentId}`;
+        const savedDefaultText = localStorage.getItem(storageKey);
         localStorage.removeItem(storageKey);
+
+        if (savedDefaultText != null) {
+          textContainerEl.innerHTML = savedDefaultText;
+        } else if (downloadEl.dataset.downloadStatus === "DONE") {
+          textContainerEl.innerHTML = "";
+        } else if (!loadingIntervals[data.torrentId]) {
+          const PausePlayButton = downloadEl.querySelector(".toggle-pause-button");
+          addingLoadingAnimation(data.torrentId, textContainerEl, PausePlayButton, LOADING_MSG);
+        }
       }, 3000);
     } else {
       spinnerEl.style.display = "inline-block";
@@ -504,7 +522,7 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
     e.stopPropagation();
     hideContextMenu(menuDiv);
     localStorage.setItem(
-      `totalSizeElement_default_text_${MediaInfo.torrentId}`,
+      `subtitles_download_reporting_default_text${MediaInfo.torrentId}`,
       totalSizeElement.innerHTML
     );
     window.electronAPI.downloadSubtitles(MediaInfo);
@@ -974,6 +992,7 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
     }
 
     category.applyUIState(targetElement);
+    targetElement.dataset.downloadStatus = res.status;
 
     if(res?.status === "FAILED") {
       console.log(`Failed to start: ${res.torrentId}: ${res.error}`);

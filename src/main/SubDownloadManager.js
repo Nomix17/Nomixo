@@ -155,7 +155,7 @@ export class SubDownloadManager {
       if (abortController.signal.aborted) return 0;
 
       if (!subsObjects.length) {
-        sendProgress({ torrentId, message: "No subtitles found for this media", done: true });
+        sendProgress({ torrentId, message: "No subtitles found for this media", done: true, error: true });
         return [];
       }
 
