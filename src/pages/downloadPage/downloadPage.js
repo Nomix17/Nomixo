@@ -186,6 +186,46 @@ function imagePathIsValid(imagePath) {
   });
 }
 
+function monitorSubtitlesDownloadReport() {
+  window.electronAPI.getSubtitlesDownloadProgress(async (data) => {
+    const downloadEl = document.getElementById(data?.torrentId);
+    if (!downloadEl) return;
+
+    const totalSizeElement = downloadEl.querySelector(".total-size");
+    let spinnerEl = totalSizeElement.querySelector(".loading-gif");
+    let textEl = totalSizeElement.querySelector(".message-text");
+
+    if (!spinnerEl || !textEl) {
+      totalSizeElement.innerHTML = `<div class="loading-gif"></div><span class="message-text"></span>`;
+      spinnerEl = totalSizeElement.querySelector(".loading-gif");
+      textEl = totalSizeElement.querySelector(".message-text");
+    }
+
+    if (data.error) {
+      spinnerEl.style.display = "none";
+      textEl.textContent = `${data.message} ⨯`;
+      textEl.classList.add("download-error");
+      textEl.classList.remove("download-success");
+
+    } else if (data.done) {
+      spinnerEl.style.display = "none";
+      textEl.textContent = `${data.message} ✔`;
+      textEl.classList.add("download-success");
+      textEl.classList.remove("download-error");
+
+      setTimeout(() => {
+        const storageKey = `totalSizeElement_default_text_${data.torrentId}`;
+        totalSizeElement.innerHTML = localStorage.getItem(storageKey) || "";
+        localStorage.removeItem(storageKey);
+      }, 3000);
+    } else {
+      spinnerEl.style.display = "inline-block";
+      textEl.textContent = data.message;
+      textEl.classList.remove("download-error", "download-success");
+    }
+  });
+}
+
 function monitorDownloads() {
   window.electronAPI.getDownloadProgress(async (data) => {
     let JsonData = data;
@@ -463,16 +503,11 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
   updateSubtitlesOption.addEventListener("click", async(e) => {
     e.stopPropagation();
     hideContextMenu(menuDiv);
-
-    const totalSizeElementContaint = totalSizeElement.innerHTML;
-    totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating subtitles`;
-
-    const res = await window.electronAPI.downloadSubtitles(MediaInfo);
-    totalSizeElement.innerHTML = res?.updated ? "Subtitles Updated ✔" : "Failed To Update Subtitles ⨯";
-    setTimeout(() => {
-      totalSizeElement.innerHTML = totalSizeElementContaint;
-    },3000);
-
+    localStorage.setItem(
+      `totalSizeElement_default_text_${MediaInfo.torrentId}`,
+      totalSizeElement.innerHTML
+    );
+    window.electronAPI.downloadSubtitles(MediaInfo);
   });
 
   menuDiv.appendChild(playWithExternalPlayerOption);
@@ -996,5 +1031,6 @@ loadDownloadMediaFromLib();
 setupCategoryBtn();
 handleDownloadCategoryUpdateFromMain();
 refreshEntries();
+monitorSubtitlesDownloadReport();
 setLeftButtonStyle("btn-download");
 loadIconsDynamically();

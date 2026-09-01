@@ -223,7 +223,8 @@
 }
 
 .downloaded-size,
-.total-size {
+.total-size,
+.message-text {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -696,4 +697,8 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.download-error {
+  color: #ff4d4f;
 }
