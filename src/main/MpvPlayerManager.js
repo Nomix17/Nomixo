@@ -347,6 +347,7 @@ class MpvPlayerManager {
         LibraryInfo.media[index].episodeNumber = metaData?.episodeNumber;
         LibraryInfo.media[index].MagnetLink = metaData?.MagnetLink;
         LibraryInfo.media[index].bgImagePath = metaData?.bgImagePath;
+        LibraryInfo.media[index].bgImageUrl = metaData?.bgImageUrl;
         LibraryInfo.media[index].downloadPath = metaData?.downloadPath;
         LibraryInfo.media[index].fileName = metaData?.fileName;
         LibraryInfo.media[index].timeOfSave = Date.now().toString();

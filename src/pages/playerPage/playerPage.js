@@ -1,5 +1,5 @@
 const metaData = JSON.parse(sessionStorage.getItem("pageArgs") || "{}");
-console.log(metaData);
+
 const DEFAULT_VOLUME = 0.5;
 const CONTROLS_HIDE_DELAY_MS = 1000;
 const PLAYBACK_SAVE_INTERVAL_MS = 10000;
@@ -681,8 +681,23 @@ function gettingformatedTime(time) {
     + String(seconds).padStart(2, "0");
 }
 
-function setBackgroundImage() {
-  document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${metaData.bgImageUrl || metaData.bgImagePath}')`;
+function getBackgroundImage() {
+  const fetchMediaBackgroundImage = async () => {
+    try {
+      const apiKey = await window.electronAPI.getTMDBAPIKEY();
+      const url = `https://api.themoviedb.org/3/${metaData.MediaType}/${metaData.MediaId}?api_key=${apiKey}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data?.backdrop_path) return `https://image.tmdb.org/t/p/original/${data.backdrop_path}` ;
+    } catch(err) {}
+  }
+  return metaData.bgImagePath || metaData.bgImageUrl || fetchMediaBackgroundImage();
+}
+
+async function setBackgroundImage() {
+  const bgImage = await getBackgroundImage();
+  if(!bgImage) return;
+  document.documentElement.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${bgImage}')`;
   document.documentElement.style.backgroundRepeat = "no-repeat";
   document.documentElement.style.backgroundPosition = "center center";
   document.documentElement.style.backgroundSize = "cover";
