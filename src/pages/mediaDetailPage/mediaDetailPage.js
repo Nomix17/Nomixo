@@ -420,7 +420,7 @@ function insertLogoTitleInformation(logoFileName,Title){
   const logoTitleElement = document.getElementById("img-MovieLogoTitle");
 
   if(logoFileName){
-    let logoImage = `https://image.tmdb.org/t/p/original/${logoFileName}`;
+    let logoImage = `https://image.tmdb.org/t/p/w500/${logoFileName}`;
     logoTitleElement.src = logoImage;
     textTitleElement.classList.add("hidden");
     addInspectBackdropImage(logoTitleContainer);
