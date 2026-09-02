@@ -702,5 +702,7 @@
 }
 
 .download-error {
-  color: #ff4d4f;
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 500;
 }

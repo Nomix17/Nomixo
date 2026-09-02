@@ -212,7 +212,7 @@ function monitorSubtitlesDownloadReport() {
 
     if (data.error) {
       spinnerEl.style.display = "none";
-      textEl.textContent = `${data.message} ⨯`;
+      textEl.textContent = `${data.message}`;
       textEl.classList.add("download-error");
       textEl.classList.remove("download-success");
 
@@ -221,7 +221,13 @@ function monitorSubtitlesDownloadReport() {
       textEl.textContent = `${data.message} ✔`;
       textEl.classList.add("download-success");
       textEl.classList.remove("download-error");
+    } else {
+      spinnerEl.style.display = "inline-block";
+      textEl.textContent = data.message;
+      textEl.classList.remove("download-error", "download-success");
+    }
 
+    if(data.done) {
       setTimeout(() => {
         const storageKey = `subtitles_download_reporting_default_text${data.torrentId}`;
         const savedDefaultText = localStorage.getItem(storageKey);
@@ -236,10 +242,6 @@ function monitorSubtitlesDownloadReport() {
           addingLoadingAnimation(data.torrentId, textContainerEl, PausePlayButton, LOADING_MSG);
         }
       }, 3000);
-    } else {
-      spinnerEl.style.display = "inline-block";
-      textEl.textContent = data.message;
-      textEl.classList.remove("download-error", "download-success");
     }
   });
 }

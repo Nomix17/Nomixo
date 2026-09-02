@@ -102,31 +102,29 @@ export class SubDownloadManager {
 
     this.sendProgressCallBack?.({ torrentId, message: "Fetching subtitles info..." });
 
-    try {
-      const params = new URLSearchParams({
-        id: IMDB_ID,
-        ...((
-          episodeNumber && seasonNumber &&
-          episodeNumber != "undefined" && seasonNumber != "undefined"
-        ) && { season: seasonNumber, episode: episodeNumber })
-      });
-      const requestUrl = `https://sub.wyzie.ru/search?${params}&key=${config.getWyzieKey()}`;
+    const params = new URLSearchParams({
+      id: IMDB_ID,
+      ...((
+        episodeNumber && seasonNumber &&
+        episodeNumber != "undefined" && seasonNumber != "undefined"
+      ) && { season: seasonNumber, episode: episodeNumber })
+    });
+    const requestUrl = `https://sub.wyzie.ru/search?${params}&key=${config.getWyzieKey()}`;
 
-      const res = await fetch(requestUrl, { signal: signal });
-      if (!res.ok)
-        throw new Error(`HTTP error! status: ${res.status}`);
-
-      const data = await res.json();
-
-      this.sendProgressCallBack?.({ torrentId, message: `Found ${data.length} subtitle(s)` });
-
-      return data;
-
-    } catch (err) {
-      console.error(err);
-      this.sendProgressCallBack?.({ torrentId, message: `Failed to fetch subtitles info: ${err.message}`, error: true, done: true });
-      return [];
+    const res = await fetch(requestUrl, { signal: signal });
+    if (!res.ok) {
+      const statusCode = res.status || res.response?.status;
+      let errorMessage = (statusCode === 403 || statusCode === 401)
+        ? "Failed to fetch: invalid Wyzie key"
+        : `Failed to fetch subtitles: ${res.status}`;
+      throw new Error(errorMessage);
     }
+
+    const data = await res.json();
+
+    this.sendProgressCallBack?.({ torrentId, message: `Found ${data.length} subtitle(s)` });
+
+    return data;
   }
 
   static async downloadSubsForMedia(mediaInfo, torrentId, torrentDownloadDir) {
@@ -154,8 +152,8 @@ export class SubDownloadManager {
         log.info(`Subtitle download for ${torrentId} aborted`);
         this.sendProgressCallBack?.({ torrentId, message: `Subtitle download aborted`, error: true, done: true });
       } else {
-        log.error(`Subtitle download for ${torrentId} failed: ${err}`);
-        this.sendProgressCallBack?.({ torrentId, message: `Something went Wrong`, error: true, done: true });
+        log.error(`Subtitle download for ${torrentId} failed: ${err.message}`);
+        this.sendProgressCallBack?.({ torrentId, message: err.message, error: true, done: true });
       }
       return [];
     } finally {
