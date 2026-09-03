@@ -497,7 +497,7 @@ p{
 }
 h2{
   font-weight:200;
-  color:rgba(255,255,255,100%);
+  color:rgba(var(--text-color),100%);
 }
 h1{
   font-size:45px;

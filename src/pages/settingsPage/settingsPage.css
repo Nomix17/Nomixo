@@ -89,7 +89,7 @@ table {
 .section-desc {
   font-size: 14.72px !important;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(var(--text-color), 0.45);
   margin: 4.6px 0 0 0 !important;
   padding: 0 !important;
   line-height: 1.4;
@@ -98,7 +98,7 @@ table {
 .subsection-title {
   font-size: 17.5px !important;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--text-color), 0.9);
   margin: 27.6px 0 4.6px 0 !important;
   padding: 0 !important;
 }
@@ -143,7 +143,7 @@ table {
 .setting-label {
   font-size: 16.56px !important;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(var(--text-color), 0.92);
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -151,7 +151,7 @@ table {
 .setting-desc {
   font-size: 13.34px !important;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(var(--text-color), 0.42);
   margin: 3.68px 0 0 0 !important;
   padding: 0 !important;
   line-height: 1.4;
@@ -188,7 +188,7 @@ table {
 .overlay-intro {
   grid-column: 1 / -1;
   font-size: 13.34px !important;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(var(--text-color), 0.45);
   margin: 0 0 4.6px 0 !important;
   padding: 0 !important;
   line-height: 1.4;
@@ -200,7 +200,7 @@ table {
   font-size: 11.5px;
   font-weight: 400;
   white-space: normal;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(var(--text-color), 0.35);
   margin-top: 2px;
 }
 
@@ -331,7 +331,7 @@ output {
   border-radius: 7.36px;
   background: rgba(var(--input-backgroundColor));
   border: 0.5px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  color: rgb(var(--text-color));
   font-size: 14.72px;
   font-family: monospace;
   letter-spacing: 0.03em;
@@ -386,7 +386,7 @@ output {
   border-radius: 7.36px;
   background: rgba(var(--input-backgroundColor));
   border: 0.5px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  color: rgb(var(--text-color));
   font-size: 14.72px;
   font-family: monospace;
   letter-spacing: 0.03em;
@@ -453,7 +453,7 @@ output {
   transition: background 0.12s, transform 0.1s;
   height: 39.56px;
   width: 92px;
-  color: white;
+  color: rgb(var(--text-color));
 }
 
 .input-container .browse-btn {
@@ -560,7 +560,7 @@ output {
   justify-content: center;
   align-items: center;
   font-size: 12.88px;
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(var(--text-color), 0.28);
   text-align: center;
 }
 
@@ -572,7 +572,7 @@ output {
   border: none;
   font-family: inherit;
   font-size: 12.88px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(var(--text-color), 0.45);
   cursor: pointer;
   padding: 0;
   text-decoration: underline;
@@ -582,7 +582,7 @@ output {
 }
 
 .link-btn:hover {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(var(--text-color), 0.75);
   text-decoration-color: rgba(255, 255, 255, 0.35);
 }
 
@@ -791,7 +791,7 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 500;
   margin: 9.2px 0 0 0;
   padding: 0;
-  color: white;
+  color: rgb(var(--text-color));
   text-align: center;
 }
 #details-customizeTheme {
@@ -815,7 +815,7 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 600;
   line-height: 1.3;
   white-space: nowrap;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(var(--text-color), 0.85);
 }
 
 #details-customizeTheme .ElementsTopOfEachOther,
@@ -841,7 +841,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 7.36px;
   background: rgba(255, 255, 255, 0.05);
   border: 0.5px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  color: rgb(var(--text-color));
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -888,7 +888,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 10px;
   background-color: rgba(255, 255, 255, 0.02);
   border: 1.5px dashed rgba(255, 255, 255, 0.15);
-  color: white;
+  color: rgb(var(--text-color));
   font-family: inherit;
   cursor: pointer;
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
@@ -912,12 +912,12 @@ input[type="range"]::-webkit-slider-thumb {
   width: 100%;
   aspect-ratio: 16 / 10; /* match this to your .card svg preview's actual ratio */
   border-radius: 6px;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(var(--text-color), 0.35);
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .prepared-themes-div .theme-add-card:hover .add-preview {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(var(--text-color), 0.85);
   transform: scale(1.08) rotate(90deg);
 }
 
@@ -927,13 +927,13 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 500;
   margin: 9.2px 0 0 0;
   padding: 0;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(var(--text-color), 0.5);
   text-align: center;
   transition: color 0.2s ease;
 }
 
 .prepared-themes-div .theme-add-card:hover p {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--text-color), 0.9);
 }
 
 .prepared-themes-div .theme-add-card:focus-visible {
@@ -1109,7 +1109,7 @@ input.error-shake {
   border-radius: 7.36px;
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   background-color: rgba(255, 255, 255, 0.05);
-  color: white;
+  color: rgb(var(--text-color));
   cursor: pointer;
   transition: background 0.12s, transform 0.1s;
   margin-top: auto;
