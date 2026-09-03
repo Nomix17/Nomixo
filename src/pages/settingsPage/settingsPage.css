@@ -795,17 +795,53 @@ input[type="range"]::-webkit-slider-thumb {
   text-align: center;
 }
 #details-customizeTheme {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  column-gap: 28px;
-  row-gap: 16px;
+  display: flex;
+  flex-direction: column;
   position: relative;
   width: min(460px, 92vw);
   max-height: 85vh;
   padding: 42px 46px;
   border-radius: 12px;
+  overflow: hidden;
+}
+
+.theme-scroll-content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 28px;
+  row-gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   overflow-x: hidden;
+  padding-right: 16px;
+  margin-right: -16px;
+}
+
+.theme-scroll-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.theme-scroll-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.theme-scroll-content::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+}
+
+.theme-scroll-content::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.theme-scroll-content .ElementsTopOfEachOther,
+.theme-scroll-content > input[type="color"] {
+  grid-column: 2;
+  justify-self: end;
 }
 
 #details-customizeTheme h2 {
@@ -818,12 +854,6 @@ input[type="range"]::-webkit-slider-thumb {
   color: rgba(var(--text-color), 0.85);
 }
 
-#details-customizeTheme .ElementsTopOfEachOther,
-#details-customizeTheme > input[type="color"] {
-  grid-column: 2;
-  justify-self: end;
-}
-
 #details-customizeTheme input[type="color"] {
   width: 68px;
   height: 30px;
@@ -834,10 +864,11 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 #theme-title {
-  grid-column: 1 / -1;
+  flex: 0 0 auto;
   width: 100%;
   height: 41.4px;
   padding: 0 11.04px;
+  margin-bottom: 20px;
   border-radius: 7.36px;
   background: rgba(255, 255, 255, 0.05);
   border: 0.5px solid rgba(255, 255, 255, 0.2);
@@ -856,12 +887,14 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .save-new-theme-btn {
+  flex: 0 0 auto;
+  align-self: center;
   width:90px;
   height:35px;
   border-radius: 10px;
   border: 2px solid rgba(255,255,255,0.1);
   background-color: rgba(255,255,255,0.05);
-  margin-top: 10px;
+  margin-top: 16px;
   font-weight: 500;
 }
 .save-new-theme-btn:hover {

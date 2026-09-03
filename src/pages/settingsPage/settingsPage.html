@@ -442,62 +442,66 @@
           <div class = "delete-container" id="details-customizeTheme">
             <input id="theme-title" placeholder="Theme title"/>
             <button class="floating-x-remove-btn"></button>
-            <h2>Primary Color<span class="field-hint">Main app background</span></h2>
-            <div class="ElementsTopOfEachOther">
-              <input id="primary-color" type="color"/>
-              <input name="backgroundGradientValue" id="background-gradient-value" class="alphaRangeValue" type="range"/>
-              <output class="alphaValueFloatingDiv" for="backgroundGradientValue" onforminput="value = foo.valueAsNumber;"></output>
+
+            <div class="theme-scroll-content">
+              <h2>Primary Color<span class="field-hint">Main app background</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input id="primary-color" type="color"/>
+                <input name="backgroundGradientValue" id="background-gradient-value" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="backgroundGradientValue" onforminput="value = foo.valueAsNumber;"></output>
+              </div>
+
+              <h2>Secondary Color<span class="field-hint">Highlights &amp; accents</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input type="color" id="secondary-color"/>
+                <input name="SecondaryColorAlphaRange" id="SecondaryColorAlphaRange" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="SecondaryColorAlphaRange" onforminput="value = foo.valueasnumber;"></output>
+              </div>
+
+              <h2>Main Buttons Color<span class="field-hint">Sidebar navigation buttons</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input type="color" id="main-buttons-color"/>
+                <input name="leftButtonsColorAlphaValueRange" id="leftButtonsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="leftButtonsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+              </div>
+
+              <h2>Small Icons Color<span class="field-hint">Sidebar icons</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input type="color" id="small-icons-color"/>
+                <input name="smallIconsColorAlphaValueRange" id="smallIconsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="smallIconsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+              </div>
+              <h2>Hovered Element Border Color<span class="field-hint">Outline when you hover a poster</span></h2>
+              <input type="color" id="MovieElement-hover-BorderColor"/>
+
+              <h2>Input Background Color<span class="field-hint">Text fields &amp; search boxes</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input type="color" id="input-backgroundColor"/>
+                <input name="InputBgColorAlphaValueRange" id="InputBgColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="InputBgColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+              </div>
+
+              <h2>Drop Down Color<span class="field-hint">Menus &amp; dropdown panels</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input type="color" id="drop-down-color"/>
+                <input name="DropDownAlphaValueRange" id="DropDownAlphaValueRange" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="DropDownAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+              </div>
+
+              <h2>Icon Color<span class="field-hint">Buttons throughout the app</span></h2>
+              <input type="color" id="icon-color"/>
+
+              <h2>Hovered Icon Color<span class="field-hint">Icon color on hover</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input type="color" id="icon-hover-color"/>
+                <input name="HoveredIconsBgAlphaValueRange" id="HoveredIconsBgAlphaValueRange" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="HoveredIconsBgAlphaValueRange" onforminput="value = foo.valueasnumber;"></output>
+              </div>
+
+              <h2>Text Color<span class="field-hint">General body text</span></h2>
+              <input type="color" id="text-color"/>
             </div>
 
-            <h2>Secondary Color<span class="field-hint">Highlights &amp; accents</span></h2>
-            <div class="ElementsTopOfEachOther">
-              <input type="color" id="secondary-color"/>
-              <input name="SecondaryColorAlphaRange" id="SecondaryColorAlphaRange" class="alphaRangeValue" type="range"/>
-              <output class="alphaValueFloatingDiv" for="SecondaryColorAlphaRange" onforminput="value = foo.valueasnumber;"></output>
-            </div>
-
-            <h2>Main Buttons Color<span class="field-hint">Sidebar navigation buttons</span></h2>
-            <div class="ElementsTopOfEachOther">
-              <input type="color" id="main-buttons-color"/>
-              <input name="leftButtonsColorAlphaValueRange" id="leftButtonsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
-              <output class="alphaValueFloatingDiv" for="leftButtonsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-            </div>
-
-            <h2>Small Icons Color<span class="field-hint">Sidebar icons</span></h2>
-            <div class="ElementsTopOfEachOther">
-              <input type="color" id="small-icons-color"/>
-              <input name="smallIconsColorAlphaValueRange" id="smallIconsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
-              <output class="alphaValueFloatingDiv" for="smallIconsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-            </div>
-            <h2>Hovered Element Border Color<span class="field-hint">Outline when you hover a poster</span></h2>
-            <input type="color" id="MovieElement-hover-BorderColor"/>
-
-            <h2>Input Background Color<span class="field-hint">Text fields &amp; search boxes</span></h2>
-            <div class="ElementsTopOfEachOther">
-              <input type="color" id="input-backgroundColor"/>
-              <input name="InputBgColorAlphaValueRange" id="InputBgColorAlphaValueRange" class="alphaRangeValue" type="range"/>
-              <output class="alphaValueFloatingDiv" for="InputBgColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-            </div>
-
-            <h2>Drop Down Color<span class="field-hint">Menus &amp; dropdown panels</span></h2>
-            <div class="ElementsTopOfEachOther">
-              <input type="color" id="drop-down-color"/>
-              <input name="DropDownAlphaValueRange" id="DropDownAlphaValueRange" class="alphaRangeValue" type="range"/>
-              <output class="alphaValueFloatingDiv" for="DropDownAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-            </div>
-
-            <h2>Icon Color<span class="field-hint">Buttons throughout the app</span></h2>
-            <input type="color" id="icon-color"/>
-
-            <h2>Hovered Icon Color<span class="field-hint">Icon color on hover</span></h2>
-            <div class="ElementsTopOfEachOther">
-              <input type="color" id="icon-hover-color"/>
-              <input name="HoveredIconsBgAlphaValueRange" id="HoveredIconsBgAlphaValueRange" class="alphaRangeValue" type="range"/>
-              <output class="alphaValueFloatingDiv" for="HoveredIconsBgAlphaValueRange" onforminput="value = foo.valueasnumber;"></output>
-            </div>
-
-            <h2>Text Color<span class="field-hint">General body text</span></h2>
-            <input type="color" id="text-color"/>
             <button class="save-new-theme-btn">Save</button>
           </div>
         </div>
