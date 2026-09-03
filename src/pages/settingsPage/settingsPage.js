@@ -545,25 +545,23 @@ const SVGThemeMarkupPromise = fetchSVGMarkup();
 async function createThemeCard(themeName, themePath, isDefault = false) {
   const svgMarkup = await SVGThemeMarkupPromise;
   const vars = await extractThemeVars(themePath);
-
   const card = document.createElement("div");
   const cardTitle = document.createElement("p");
-
   const label = themeName.replaceAll(/_/g, " ");
   cardTitle.innerText = label.charAt(0).toUpperCase() + label.slice(1);
-
   card.classList.add("card");
   card.setAttribute("card-file-name", themeName);
   card.appendChild(cardTitle);
   card.insertAdjacentHTML("beforeend", svgMarkup);
 
-  card.classList.toggle("selected", CurrentTheme === themeName);
+  const svgEl = card.querySelector("svg");
   vars.forEach(decl => {
     const [name, value] = decl.split(/:(.+)/).map(s => s.trim());
-    card.style.setProperty(name, value);
+    svgEl.style.setProperty(name, value);
   });
 
-  if(!isDefault) createThemeCardRemovingBtn(card, themeName, themePath);
+  card.classList.toggle("selected", CurrentTheme === themeName);
+  if (!isDefault) createThemeCardRemovingBtn(card, themeName, themePath);
   addCardEventListener(card);
   return card;
 }
