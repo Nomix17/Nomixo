@@ -161,6 +161,35 @@ ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj)
   }
 });
 
+ipcMain.handle("edit-prepared-theme", async (event, themeInfo) => {
+  const { oldThemeName, oldThemePath, newThemeName, newThemeObj } = themeInfo;
+  try {
+    const fileName = newThemeName.toLowerCase();
+    const themeFilePath = path.join(Paths.themesDirPath, `${fileName}.css`);
+    const oldFileName = path.basename(oldThemePath, ".css");
+    const isRename = fileName !== oldFileName;
+
+    if (isRename && fs.existsSync(themeFilePath))
+      throw new Error(`Theme '${newThemeName}' Already Exists`);
+
+    const formatedThemeObj = newThemeObj.theme.map(
+      (obj) => `${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`
+    );
+    const themeFileContent = `:root{\n    ${formatedThemeObj.join(";\n")}\n  ;}`;
+
+    await writeFile(themeFilePath, themeFileContent);
+
+    if (isRename && fs.existsSync(oldThemePath)) {
+      await fs.promises.unlink(oldThemePath);
+    }
+
+    copyThemeFileToMainTheme(fileName, themeFilePath);
+    return { success: true, theme_file_path: themeFilePath };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle("remove-prepared-theme", async (event, themefilePath) => {
   if(
     fs.existsSync(themefilePath) &&

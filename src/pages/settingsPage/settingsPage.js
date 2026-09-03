@@ -119,10 +119,34 @@ ZoomFactorInput.addEventListener("mouseleave",()=>{
   bubble.style.opacity = "0";
 });
 
-addCustomThemeBtn.addEventListener("click", async () => {
-  await loadCurrentTheme();
+let themeDialogState = { mode: "create", themeName: null, themePath: null, cardEl: null };
+
+function resetThemeDialogState() {
+  themeDialogState = { mode: "create", themeName: null, themePath: null, cardEl: null };
+}
+
+async function openThemeDialog(mode, { themeName = null, themePath = null, cardEl = null } = {}) {
+  themeDialogState = { mode, themeName, themePath, cardEl };
+
+  if (mode === "edit") {
+    newThemeNameInput.value = themeName.replaceAll(/_/g, " ");
+    await loadThemeFromPath(themePath);
+  } else {
+    newThemeNameInput.value = "";
+    await loadCurrentTheme();
+  }
+
+  saveNewThemeBtn.textContent = "Save";
   applySelectedColor(ColorInputsWithAlphaValue);
   document.getElementById("theme-overlay").classList.add("active");
+}
+
+function editTheme(cardEl, themeName, themePath) {
+  openThemeDialog("edit", { themeName, themePath, cardEl });
+}
+
+addCustomThemeBtn.addEventListener("click", async () => {
+  await openThemeDialog("create");
 });
 
 const newThemeNameInput = document.getElementById("theme-title");
@@ -147,27 +171,55 @@ saveNewThemeBtn.addEventListener("click", async () => {
     return;
   }
   const newThemeObj = getNewTheme();
-  const res = await window.electronAPI.createPreparedTheme(newThemeName, newThemeObj);
-
-  if(!res.success) {
-    shakeNewThemeInput();
-    displayMessage(res.message);
-    return;
-  }
-  
   const container = document.querySelector(".prepared-themes-div");
-  const newCard = await createThemeCard(newThemeName, res.theme_file_path);
-  container.insertBefore(newCard, addCustomThemeBtn);
-  selectThemeCard(newCard);
 
-  document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
-  displayMessage("new theme was saved.");
+  if (themeDialogState.mode === "edit") {
+    const { themeName: oldThemeName, themePath: oldThemePath, cardEl } = themeDialogState;
+    const themeInfo = { oldThemeName, oldThemePath, newThemeName, newThemeObj };
+    const res = await window.electronAPI.editPreparedTheme(themeInfo);
+
+    if(!res.success) {
+      shakeNewThemeInput();
+      displayMessage(res.message);
+      return;
+    }
+
+    const updatedCard = await createThemeCard(newThemeName, res.theme_file_path);
+    container.insertBefore(updatedCard, cardEl);
+    cardEl.remove();
+
+    if (CurrentTheme === oldThemeName) {
+      CurrentTheme = newThemeName;
+      document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
+    }
+    selectThemeCard(document.querySelector(`[card-file-name="${CurrentTheme}"]`) ?? updatedCard);
+
+    displayMessage("theme was updated.");
+  } else {
+    const res = await window.electronAPI.createPreparedTheme(newThemeName, newThemeObj);
+
+    if(!res.success) {
+      shakeNewThemeInput();
+      displayMessage(res.message);
+      return;
+    }
+
+    const newCard = await createThemeCard(newThemeName, res.theme_file_path);
+    container.insertBefore(newCard, addCustomThemeBtn);
+    selectThemeCard(newCard);
+
+    document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
+    displayMessage("new theme was saved.");
+  }
+
   document.getElementById("theme-overlay").classList.remove("active");
+  resetThemeDialogState();
 });
 
 const closeNewThemeDiv = document.querySelector("#details-customizeTheme .floating-x-remove-btn");
 closeNewThemeDiv.addEventListener("click", () => {
   document.getElementById("theme-overlay").classList.remove("active");
+  resetThemeDialogState();
 });
 
 applyButtonDiv.addEventListener('focusin', () => {
@@ -291,36 +343,59 @@ FontSizeExternalInput.addEventListener("keypress",(event) => {
 
 // global Functions 
 
-async function loadCurrentTheme(){
-  let ThemeObj = await window.electronAPI.loadTheme();
-  ThemeObj.theme.forEach(obj => {
-    let elementId = Object.keys(obj)[0];
-    let elementValue = obj[Object.keys(obj)[0]];
+// Applies a normalized list of [varName, varValue] pairs (varName without the
+// "--" prefix, e.g. "primary-color") to the #details-customizeTheme inputs.
+// Shared by loadCurrentTheme (the currently applied theme) and
+// loadThemeFromPath (an arbitrary theme file, used when editing).
+function populateThemeDialogFromEntries(entries){
+  entries.forEach(([elementId, rawValue]) => {
+    let elementValue = String(rawValue).trim();
 
     if(elementId === "background-gradient-value"){
       document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100); // I want the max value to be 25%
-    }else{
+      return;
+    }
 
+    let inputElement = document.getElementById(elementId);
+    if(!inputElement) return;
+
+    try {
       let inputColor;
       let alphaValue;
 
-      let inputElement = document.getElementById(elementId);
-
-      try {
-        if(elementValue.split(",").length === 4){
-            let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
-            inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
-            alphaValue = elementValue.split(",")[3];
-            alphaInputRange.value = parseFloat(alphaValue)*100;
-        }else{
-          inputColor = elementValue;
-        }
-        inputElement.value = rgbToHex(inputColor);
-      } catch (err) {
-        console.error(err.message);
+      if(elementValue.split(",").length === 4){
+          let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
+          inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
+          alphaValue = elementValue.split(",")[3];
+          if(alphaInputRange) alphaInputRange.value = parseFloat(alphaValue)*100;
+      }else{
+        inputColor = elementValue;
       }
+      inputElement.value = rgbToHex(inputColor);
+    } catch (err) {
+      console.error(err.message);
     }
   });
+}
+
+async function loadCurrentTheme(){
+  let ThemeObj = await window.electronAPI.loadTheme();
+  const entries = ThemeObj.theme.map(obj => {
+    const key = Object.keys(obj)[0];
+    return [key, obj[key]];
+  });
+  populateThemeDialogFromEntries(entries);
+}
+
+// Loads an arbitrary saved theme's CSS file (not necessarily the currently
+// applied one) into the #details-customizeTheme dialog. Used for editing.
+async function loadThemeFromPath(themePath){
+  const varDecls = await extractThemeVars(themePath); // e.g. "--primary-color: 34,34,34,0.9"
+  const entries = varDecls.map(decl => {
+    const [name, value] = decl.split(/:(.+)/).map(s => s.trim());
+    return [name.replace(/^--/, ""), value];
+  });
+  populateThemeDialogFromEntries(entries);
 }
 
 async function loadSettings() {
@@ -561,7 +636,10 @@ async function createThemeCard(themeName, themePath, isDefault = false) {
   });
 
   card.classList.toggle("selected", CurrentTheme === themeName);
-  if (!isDefault) createThemeCardRemovingBtn(card, themeName, themePath);
+  if (!isDefault) {
+    createThemeCardRemovingBtn(card, themeName, themePath);
+    createThemeCardEditBtn(card, themeName, themePath);
+  }
   addCardEventListener(card);
   return card;
 }
@@ -580,6 +658,19 @@ function createThemeCardRemovingBtn(cardEl, themeName, themePath) {
   cardEl.appendChild(removeBtn);
 }
 
+function createThemeCardEditBtn(cardEl, themeName, themePath) {
+  const editBtn = document.createElement('button');
+  editBtn.classList.add('floating-edit-btn');
+  editBtn.innerHTML = editIcon;
+  
+  editBtn.addEventListener('click', async(event) => {
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    editTheme(cardEl, themeName, themePath);
+  });
+
+  cardEl.appendChild(editBtn);
+}
 function createRemoveThemeConfirmationPopup(cardEl, themeName, themePath) {
   const overlay = document.getElementById('deleteOverlay');
   const deleteMsg = overlay.querySelector('.delete-msg');

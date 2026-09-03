@@ -990,9 +990,47 @@ input.error-shake {
   backdrop-filter: none;
   background: transparent;
 }
-
+.card:hover .floating-edit-btn,
 .card:hover .floating-x-remove-btn {
   opacity: 1; 
+}
+
+.floating-edit-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 27px;
+  height: 27px;
+  border: none;
+  color: rgb(var(--text-color));
+  cursor: pointer;
+  border-radius: 11.04px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  transform-origin: center;
+  will-change: transform;
+  backface-visibility: hidden;
+  opacity: 0;
+  background: transparent;
+}
+
+.floating-edit-btn svg {
+  display: block;
+  width: 78%;
+  height: 78%;
+  fill: rgb(var(--text-color));
+  transition: transform 0.3s ease;
+}
+
+.floating-edit-btn:hover {
+  transform: scale(1.11);
+}
+
+.floating-edit-btn:active {
+  transform: scale(1);
 }
 
 .floating-x-remove-btn {
