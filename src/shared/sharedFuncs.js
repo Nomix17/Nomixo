@@ -403,9 +403,11 @@ function getMovieDetailPageCacheData() {
 
 function getDownloadCacheData(){
   const downloadElementsContainers = document.querySelector(".download-categorie-container");
+  const sortingDropdown = document.getElementById("select-sort");
   return {
     page:"download",
-    "download_container_top_scroll_value":downloadElementsContainers.scrollTop
+    "download_container_top_scroll_value":downloadElementsContainers.scrollTop,
+    sort_type: getDropdownValue(sortingDropdown)
   };
 }
 

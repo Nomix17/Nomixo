@@ -13,6 +13,8 @@ let monitoringProgress = false;
 async function loadDownloadMediaFromLib() {
   const library = await libraryDumpPromise;
   const scrollValue = await getCachedScrollValue();
+  const defaultSortType = await getCachedSortTypeValue();
+
   if(scrollValue == 0)
     RightmiddleDiv.classList.add("activate");
 
@@ -25,6 +27,8 @@ async function loadDownloadMediaFromLib() {
     
     const queueList = await window.electronAPI.getDownloadQueueList();
     reorderDownloadCategorie(queuedDownloadsDiv, queueList, false);
+
+    sortDoneDownloadingElements(library, defaultSortType, false);
   }
 
   if(!monitoringProgress) {
@@ -876,6 +880,11 @@ function monitorErrors() {
   });
 }
 
+async function getCachedSortTypeValue() {
+  let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  return cachedData ? cachedData.sort_type : "newest";
+}
+
 async function getCachedScrollValue() {
   let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   return cachedData ? cachedData.download_container_top_scroll_value : 0;
@@ -1129,18 +1138,22 @@ function reorderDownloadCategorie(categoryDownloadDivs, orderedTorrentIds, anima
   updateDownloadUI();
 }
 
+async function sortDoneDownloadingElements(downloadLibraryDump, sortType, animation = true) {
+  const libraryEntryPoints = downloadLibraryDump.downloads.filter(el => el.Status === "DONE");
+  const sortedEntries = await sortDownloadLibrary(libraryEntryPoints, SortingCriteria[sortType]).map(entry => entry.torrentId);
+  reorderDownloadCategorie(doneDownloadsDiv, sortedEntries, animation);
+}
+
 async function initSortingDropdown() {
   dropDownInit();
   sortingDropdown.addEventListener("dropdownChange", async () => {
     const newValue = getDropdownValue(sortingDropdown);
     const libraryElements = await window.electronAPI.loadDownloadLibraryInfo();
     if (!libraryElements?.downloads) return;
-    const doneDownloadingEntries = libraryElements.downloads.filter(el => el.Status === "DONE");
-    const newOrder = sortDownloadLibrary(doneDownloadingEntries, SortingCriteria[newValue])
-      .map(entry => entry.torrentId);
-    reorderDownloadCategorie(doneDownloadsDiv, newOrder);
+    sortDoneDownloadingElements(libraryElements, newValue)
   });
-  setDropdownValue(sortingDropdown, "newest");
+  const defaultSortType = await getCachedSortTypeValue();
+  setDropdownValue(sortingDropdown, defaultSortType);
 }
 
 window.addEventListener("resize",()=>{
