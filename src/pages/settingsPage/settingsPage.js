@@ -674,9 +674,9 @@ function createThemeCardEditBtn(cardEl, themeName, themePath) {
 function createRemoveThemeConfirmationPopup(cardEl, themeName, themePath) {
   const overlay = document.getElementById('deleteOverlay');
   const deleteMsg = overlay.querySelector('.delete-msg');
-  const closeBtn = document.getElementById('closeBtn');
-  const cancelBtn = document.getElementById('cancelBtn');
-  const deleteBtn = document.getElementById('deleteBtn');
+  const closeBtn = overlay.querySelector('#closeBtn');
+  const cancelBtn = overlay.querySelector('#cancelBtn');
+  const deleteBtn = overlay.querySelector('#deleteBtn');
 
   deleteMsg.textContent = `Are you sure you want to delete the theme "${themeName}"?`;
 
