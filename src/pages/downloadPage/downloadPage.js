@@ -28,7 +28,7 @@ async function loadDownloadMediaFromLib() {
     const queueList = await window.electronAPI.getDownloadQueueList();
     reorderDownloadCategorie(queuedDownloadsDiv, queueList, false);
 
-    sortDoneDownloadingElements(library, defaultSortType, false);
+    sortDoneDownloadingElements(library, defaultSortType);
   }
 
   if(!monitoringProgress) {
@@ -771,7 +771,7 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
             elementId,
             (elIndex * 2) - 1 // either 1 or -1
           );
-        reorderDownloadQueue(newOrder);
+        reorderDownloadCategorie(queuedDownloadsDiv, newOrder);
       });
     });
 
@@ -1138,10 +1138,10 @@ function reorderDownloadCategorie(categoryDownloadDivs, orderedTorrentIds, anima
   updateDownloadUI();
 }
 
-async function sortDoneDownloadingElements(downloadLibraryDump, sortType, animation = true) {
+async function sortDoneDownloadingElements(downloadLibraryDump, sortType) {
   const libraryEntryPoints = downloadLibraryDump.downloads.filter(el => el.Status === "DONE");
   const sortedEntries = await sortDownloadLibrary(libraryEntryPoints, SortingCriteria[sortType]).map(entry => entry.torrentId);
-  reorderDownloadCategorie(doneDownloadsDiv, sortedEntries, animation);
+  reorderDownloadCategorie(doneDownloadsDiv, sortedEntries, false);
 }
 
 async function initSortingDropdown() {
