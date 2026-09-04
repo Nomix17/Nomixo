@@ -57,8 +57,17 @@
 
 .downloads-categorie .title-container {
   display: flex;
-  align-items: center;
+  justify-content: space-between;
+}
+
+.title-container .title{
+  display: flex;
+  flex-direction: row;
   gap: 10px;
+}
+
+#custom-sortType-dropdown {
+  margin: 9px 22.5px 9px 9px;
 }
 
 .downloads-categorie h1 {
@@ -468,7 +477,7 @@
   transform: scale(1.1);
 }
 
-.select-dropdown {
+.context-menu-button .select-dropdown {
   position: absolute;
   top: 70%;
   left: 50%;
@@ -486,17 +495,17 @@
   pointer-events: none;
 }
 
-.select-dropdown.show {
+.context-menu-button .select-dropdown.show {
   display: block;
 }
 
-.select-dropdown.visible {
+.context-menu-button .select-dropdown.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
 
-.select-option {
+.context-menu-button .select-option {
   padding: 10.8px 14.4px;
   font-size: 11.7px;
   font-weight: 400;
@@ -507,16 +516,16 @@
   transition: background-color 0.15s ease;
 }
 
-.select-option:last-child {
+.context-menu-button .select-option:last-child {
   border-bottom: none;
 }
 
-.select-option:hover {
+.context-menu-button .select-option:hover {
   background: rgba(255, 255, 255, 0.15);
   color: rgb(var(--text-color));
 }
 
-.select-option:active {
+.context-menu-button .select-option:active {
   background: rgba(255, 255, 255, 0.25);
 }
 

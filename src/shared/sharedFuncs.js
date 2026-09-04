@@ -752,6 +752,11 @@ function setupNavigationBtnHandler() {
   });
 }
 
+const SortingCriteria = {
+  alphabetical: 0,
+  newest: 1,
+  oldest: 2
+}
 
 // ################################### MEDIA ELEMENT CREATION ###################################
 

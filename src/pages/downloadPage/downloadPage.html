@@ -73,8 +73,10 @@
 
             <div class="downloads-categorie" id="currently-downloading-div">
               <div class="title-container">
-                <h1>Currently Downloading</h1>
-                <p class="downloads-counter"></p>
+                <div class="title">
+                  <h1>Currently Downloading</h1>
+                  <p class="downloads-counter"></p>
+                </div>
               </div>
               <div class="movieContainer">
                 <p class="empty-container-text hidden">
@@ -86,8 +88,10 @@
             <div class="downloads-categorie" id="download-queue-div">
               <div class="categorie-top-bar">
                 <div class="title-container">
-                  <h1>Queued Downloads</h1>
-                  <p class="downloads-counter"></p>
+                  <div class="title">
+                    <h1>Queued Downloads</h1>
+                    <p class="downloads-counter"></p>
+                  </div>
                 </div>
                 <button class="categorie-controll">Pause All</button>
               </div>
@@ -101,8 +105,10 @@
             <div class="downloads-categorie" id="download-paused-div">
               <div class="categorie-top-bar">
                 <div class="title-container">
-                  <h1>Paused Downloads</h1>
-                  <p class="downloads-counter"></p>
+                  <div class="title">
+                    <h1>Paused Downloads</h1>
+                    <p class="downloads-counter"></p>
+                  </div>
                 </div>
                 <button class="categorie-controll">Queue All</button>
               </div>
@@ -115,8 +121,21 @@
 
             <div class="downloads-categorie" id="download-done-div">
               <div class="title-container">
-                <h1>Completed Downloads</h1>
-                <p class="downloads-counter"></p>
+                <div class="title">
+                  <h1>Completed Downloads</h1>
+                  <p class="downloads-counter"></p>
+                </div>
+
+              <div class="custom-select" id="custom-sortType-dropdown">
+                <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  Sort items by
+                </button>
+                <div class="select-dropdown" role="listbox" id="select-sort">
+                  <div class="select-option" role="option" value="alphabetical">A – Z</div>
+                  <div class="select-option" role="option" value="newest">Newest First</div>
+                  <div class="select-option" role="option" value="oldest">Oldest First</div>
+                </div>
+              </div>
               </div>
               <div class="movieContainer">
                 <p class="empty-container-text hidden">

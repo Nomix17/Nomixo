@@ -25,7 +25,7 @@ const getCategorieFullName = (value) => {
   return option ? option.textContent : value;
 }
 
-function filterMedia(MediaTypeFilter,SaveTypeFilter){
+function filterMedia(MediaTypeFilter,SaveTypeFilter) {
   let numberOfDisplayedElements = 0;
   for(item of SavedMedia.querySelectorAll(".div-MovieElement")){
     if(
@@ -62,12 +62,6 @@ async function addDropDownsEventListener(){
   });
 
 }
-
-const SortingCriteria = {
-  alphabetical: 0,
-  newest: 1,
-  oldest: 2
-};
 
 function sortMediaELements(sortingType = SortingCriteria.alphabetical) {
   const mediaElements = Array.from(SavedMedia.children);

@@ -4,35 +4,32 @@ const queuedDownloadsDiv  = document.getElementById("download-queue-div");
 const pausedDownloadsDiv = document.getElementById("download-paused-div");
 const doneDownloadsDiv = document.getElementById("download-done-div");
 const libraryDumpPromise = window.electronAPI.loadDownloadLibraryInfo();
+const sortingDropdown = document.getElementById("select-sort");
 
 const LOADING_MSG = "Starting Download";
 const SUBS_DOWNLOADING_MSG = "Downloading subs";
-
 let monitoringProgress = false;
+
 async function loadDownloadMediaFromLib() {
   const library = await libraryDumpPromise;
   const scrollValue = await getCachedScrollValue();
   if(scrollValue == 0)
     RightmiddleDiv.classList.add("activate");
 
-  if(library != null) {
-    const sortedLib = library.downloads
-      .sort((item1, item2) =>
-        (item1?.["StatusUpdateTime"] ?? 0) - (item2?.["StatusUpdateTime"] ?? 0)
-      );
+  if(library != null && library?.downloads != null) {
+    const sortedMediaEntries = sortDownloadLibrary(library.downloads);
 
-    for(let mediaLibEntryPoint of sortedLib) {
-      createDownloadElement(mediaLibEntryPoint);
+    for(const mediaEntry of sortedMediaEntries) {
+      createDownloadElement(mediaEntry);
     }
+    
     const queueList = await window.electronAPI.getDownloadQueueList();
-    reorderDownloadQueue(queueList, false);
+    reorderDownloadCategorie(queuedDownloadsDiv, queueList, false);
   }
 
-  if(library?.downloads?.length !== 0) {
-    if(!monitoringProgress){
-      monitorDownloads();
-      monitorErrors();
-    }
+  if(!monitoringProgress) {
+    monitorDownloads();
+    monitorErrors();
   }
 
   scrollTo(scrollValue);
@@ -287,7 +284,7 @@ function monitorDownloads() {
         doneDownloadContainer.appendChild(TargetDownloadElement);
       MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);
       const downloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
-      downloadContainer.appendChild(TargetDownloadElement);
+      sortedMediaInsert(downloadContainer, TargetDownloadElement, SortingCriteria[getDropdownValue(sortingDropdown)]);
       updateDownloadUI();
     }
   });
@@ -295,8 +292,40 @@ function monitorDownloads() {
   monitoringProgress = true;
 }
 
-function refreshEntries() {
+function belongsBefore(newElement, existingElement, sortingType) {
+  const getElementTitle = (el) => {
+    return el.querySelector(".movie-title-p")?.innerText ?? "";
+  }
+  const getElementStatusUpdateTime = (el) => {
+    return Number(el.dataset.StatusUpdateTime) || 0;
+  }
+  switch (sortingType) {
+    case SortingCriteria.alphabetical: {
+      return getElementTitle(newElement).localeCompare(getElementTitle(existingElement)) < 0;
+    }
+    case SortingCriteria.newest: {
+      return getElementStatusUpdateTime(newElement) > getElementStatusUpdateTime(existingElement);
+    }
+    case SortingCriteria.oldest: {
+      return getElementStatusUpdateTime(newElement) < getElementStatusUpdateTime(existingElement);
+    }
+    default:
+      return false;
+  }
+}
 
+function sortedMediaInsert(container, newElement, sortingType = SortingCriteria.newest) {
+  const existingElements = Array.from(container.children);
+
+  const nextSibling = existingElements.find(el =>
+    belongsBefore(newElement, el, sortingType)
+  );
+
+  if (nextSibling) {
+    container.insertBefore(newElement, nextSibling);
+  } else {
+    container.appendChild(newElement);
+  }
 }
 
 function handleCancelButton(mediaInfo,cancelDownloadButton) {
@@ -580,6 +609,7 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   rightDiv.appendChild(playMediaButton);
   rightDiv.appendChild(deleteMediaButton);
   MediaDownloadElement.appendChild(contextMenuButton);
+  MediaDownloadElement.dataset.StatusUpdateTime = MediaInfo.StatusUpdateTime ?? Date.now();
   contextMenuButton.appendChild(contextMenuDiv);
   
   setTimeout(() => {
@@ -1043,6 +1073,76 @@ function setupCategoryBtn() {
   });
 }
 
+function sortDownloadLibrary(libraryEntryPoints, sortingType = SortingCriteria.newest) {
+  switch (sortingType) {
+    case SortingCriteria.alphabetical: {
+      return libraryEntryPoints.sort((a, b) => {
+        const aTitle =
+          a.seasonNumber && a.episodeNumber
+            ? `${a.Title} S${a.seasonNumber} E${a.episodeNumber}`
+            : a.Title;
+        const bTitle =
+          b.seasonNumber && b.episodeNumber
+            ? `${b.Title} S${b.seasonNumber} E${b.episodeNumber}`
+            : b.Title;
+        return aTitle.localeCompare(bTitle);
+      });
+    }
+
+    case SortingCriteria.newest: {
+      return libraryEntryPoints.sort(
+        (a, b) => (b.StatusUpdateTime || 0) - (a.StatusUpdateTime || 0)
+      );
+    }
+
+    case SortingCriteria.oldest: {
+      return libraryEntryPoints.sort(
+        (a, b) => (a.StatusUpdateTime || 0) - (b.StatusUpdateTime || 0)
+      );
+    }
+  }
+  return libraryEntryPoints;
+}
+
+function reorderDownloadCategorie(categoryDownloadDivs, orderedTorrentIds, animateTransition=true) {
+  try {
+    const queuedElContainer = categoryDownloadDivs.querySelector(".movieContainer");
+    const reordedEls = orderedTorrentIds.map(elId => {
+      const targetEl = document.getElementById(elId);
+      if (!targetEl)
+        throw new Error(`Cannot find media with ID: ${elId}`);
+      return targetEl;
+    });
+
+    const oldPosition = new Map(
+      reordedEls.map(el => [el, el.getBoundingClientRect()])
+    );
+
+    queuedElContainer.append(...reordedEls);
+    if(animateTransition)
+      animateReorder(reordedEls, oldPosition);
+
+  } catch (error) {
+    console.error(error.message);
+  }
+
+  updateDownloadUI();
+}
+
+async function initSortingDropdown() {
+  dropDownInit();
+  sortingDropdown.addEventListener("dropdownChange", async () => {
+    const newValue = getDropdownValue(sortingDropdown);
+    const libraryElements = await window.electronAPI.loadDownloadLibraryInfo();
+    if (!libraryElements?.downloads) return;
+    const doneDownloadingEntries = libraryElements.downloads.filter(el => el.Status === "DONE");
+    const newOrder = sortDownloadLibrary(doneDownloadingEntries, SortingCriteria[newValue])
+      .map(entry => entry.torrentId);
+    reorderDownloadCategorie(doneDownloadsDiv, newOrder);
+  });
+  setDropdownValue(sortingDropdown, "newest");
+}
+
 window.addEventListener("resize",()=>{
   alignSizeDiv();
 });
@@ -1051,7 +1151,7 @@ setupKeyPressesHandler();
 loadDownloadMediaFromLib();
 setupCategoryBtn();
 handleDownloadCategoryUpdateFromMain();
-refreshEntries();
 monitorSubtitlesDownloadReport();
 setLeftButtonStyle("btn-download");
 loadIconsDynamically();
+initSortingDropdown();
