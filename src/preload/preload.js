@@ -70,9 +70,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getTorrentStreamingReport:(fn) => ipcRenderer.on("torrent-streaming-report",(event,data) => fn(data)),
   updateDownloadStatus:(fn) => ipcRenderer.on("update-download-status",(event,data) => fn(data)),
 
-
   downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl),
   downloadBackdrop: (backgroundImageUrl, title) => ipcRenderer.invoke("download-backdrop", backgroundImageUrl, title),
+  checkFileExists: (filePath) => ipcRenderer.invoke("check-file-exists", filePath),
 
   loadPageCachedDataFromHistory: (currentPageURL) => ipcRenderer.invoke("load-cached-data-from-history",currentPageURL),
 
@@ -86,7 +86,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveApiKey: (apiKey) => ipcRenderer.invoke("save-api-key",apiKey),
 
   openExternalLink: (url) => ipcRenderer.invoke("open-external-link",url),
-
   sendSystemNotification: (options) => ipcRenderer.send("send-system-notification", options)
 });
 

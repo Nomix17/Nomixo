@@ -1,7 +1,7 @@
 import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
 import path from "path";
 import fs from "fs";
-import { copyFile, writeFile, readFile, unlink} from 'fs/promises';
+import { copyFile, writeFile, readFile, unlink, access} from 'fs/promises';
 
 import { log } from "./debugging.js";
 import dotenv from "dotenv";
@@ -395,6 +395,15 @@ ipcMain.handle("download-backdrop", async (event, backgroundImageUrl, title) => 
   } catch (err) {
     console.error("Failed to download backdrop:", err);
     throw err;
+  }
+});
+
+ipcMain.handle("check-file-exists", async (event, filePath) => {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
   }
 });
 

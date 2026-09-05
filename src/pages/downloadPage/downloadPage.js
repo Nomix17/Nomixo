@@ -21,10 +21,10 @@ async function loadDownloadMediaFromLib() {
   if(library != null && library?.downloads != null) {
     const sortedMediaEntries = sortDownloadLibrary(library.downloads);
 
-    for(const mediaEntry of sortedMediaEntries) {
+    for(const mediaEntry of sortedMediaEntries)
       createDownloadElement(mediaEntry);
-    }
-    
+    alignSizeDiv();
+
     const queueList = await window.electronAPI.getDownloadQueueList();
     reorderDownloadCategorie(queuedDownloadsDiv, queueList, false);
 
@@ -39,7 +39,7 @@ async function loadDownloadMediaFromLib() {
   scrollTo(scrollValue);
   RightmiddleDiv.classList.add("activate");
 
-  updateDownloadUI();
+  initDownloadUI()
 }
 
 async function createDownloadElementFromId(torrentId) {
@@ -51,14 +51,13 @@ async function createDownloadElementFromId(torrentId) {
 }
 
 async function createDownloadElement(mediaLibEntryPoint) {
+  let ElementIdentifier = mediaLibEntryPoint?.torrentId;
+  if(document.getElementById(ElementIdentifier)) return
+
   let downloadStatus = mediaLibEntryPoint?.Status;
-  
   let currentSize = (mediaLibEntryPoint?.Downloaded / (1024 * 1024 * 1024)).toFixed(2);
   let totalSize = (mediaLibEntryPoint?.Total / (1024 * 1024 * 1024)).toFixed(2);
   let progress = (currentSize/totalSize * 100).toFixed(2);
-
-  let ElementIdentifier = mediaLibEntryPoint?.torrentId;
-  if(document.getElementById(ElementIdentifier)) return
 
   let displayTitle = mediaLibEntryPoint?.Title;
   if(mediaLibEntryPoint.seasonNumber && mediaLibEntryPoint.episodeNumber)
@@ -86,7 +85,7 @@ async function createDownloadElement(mediaLibEntryPoint) {
   let PausePlayButton = MediaDownloadElement.querySelector(".toggle-pause-button");
   let downloadSpeedElement = MediaDownloadElement.querySelector(".download-speed-p");
 
-  makeSurePosterIsLoaded(mediaLibEntryPoint,PosterDiv,PosterElement);
+  makeSurePosterIsLoaded(mediaLibEntryPoint, PosterDiv, PosterElement);
   makeSureBgImageIsDownloaded(mediaLibEntryPoint);
 
   let downloadCategorie;
@@ -127,7 +126,6 @@ async function createDownloadElement(mediaLibEntryPoint) {
   downloadContainer.appendChild(MediaDownloadElement);
 
   handleCancelButton(mediaLibEntryPoint,CancelButton);
-  alignSizeDiv();
 }
 
 async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement) {
@@ -179,13 +177,9 @@ async function makeSureBgImageIsDownloaded(libraryEntryPoint) {
   }
 }
 
-function imagePathIsValid(imagePath) {
-  return new Promise((res)=>{
-    const tmpImg = new Image();
-    tmpImg.onload = ()=>res(true);
-    tmpImg.onerror = ()=>res(false);
-    tmpImg.src = `file://${imagePath}?t=${Date.now()}`;
-  });
+async function imagePathIsValid(imagePath) {
+  if(!imagePath) return false;
+  return await window.electronAPI.checkFileExists(imagePath);
 }
 
 function monitorSubtitlesDownloadReport() {
@@ -381,7 +375,7 @@ async function SaveDownloadStatus(torrentId, Status) {
 }
 
 function alignSizeDiv() {
-  let downloadTorrent = document.querySelectorAll(".download-media");
+  const downloadTorrent = currentlyDownloadingDiv.querySelectorAll(".download-media");
   downloadTorrent.forEach(element=>{
     let ProgressBar = element.querySelector(".progress-bar-div");
     let sizeDiv = element.querySelector(".movie-size-div");
@@ -895,7 +889,12 @@ async function scrollTo(scrollValue) {
   downloadMediaContainer.scrollTop = scrollValue;
 }
 
-async function updateDownloadUI() {
+function initDownloadUI(){
+  updateDownloadUI();
+  initSortingDropdown();
+}
+
+function updateDownloadUI() {
   handleEmptyDownloadCategories();
   updateElementsCounterForEachContainer();
   disableBorderArrowBtnsForQueuedEls();
@@ -1167,4 +1166,3 @@ handleDownloadCategoryUpdateFromMain();
 monitorSubtitlesDownloadReport();
 setLeftButtonStyle("btn-download");
 loadIconsDynamically();
-initSortingDropdown();
