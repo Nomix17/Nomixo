@@ -15,9 +15,6 @@ async function loadDownloadMediaFromLib() {
   const scrollValue = await getCachedScrollValue();
   const defaultSortType = await getCachedSortTypeValue();
 
-  if(scrollValue == 0)
-    RightmiddleDiv.classList.add("activate");
-
   if(library != null && library?.downloads != null) {
     const sortedMediaEntries = sortDownloadLibrary(library.downloads);
 
@@ -37,8 +34,6 @@ async function loadDownloadMediaFromLib() {
   }
 
   scrollTo(scrollValue);
-  RightmiddleDiv.classList.add("activate");
-
   initDownloadUI()
 }
 
@@ -892,6 +887,7 @@ async function scrollTo(scrollValue) {
 function initDownloadUI(){
   updateDownloadUI();
   initSortingDropdown();
+  RightmiddleDiv.classList.add("activate");
 }
 
 function updateDownloadUI() {
@@ -912,19 +908,14 @@ function handleEmptyDownloadCategories() {
       emptyParagraph.classList.toggle('hidden', !isEmpty);
     if(elementCategoryControllBtn)
       elementCategoryControllBtn.classList.toggle("disabled", isEmpty);
-    downloadCategorieDiv.style.display = "block";
 
     if(isEmpty && downloadCategorieDiv.id === "currently-downloading-div")
       removeDownloadBackgroundDiv();
 
-    if (
-      isEmpty && (
-        downloadCategorieDiv.id === "download-queue-div" ||
-        downloadCategorieDiv.id === "download-paused-div"
-      )
-    ) {
-      downloadCategorieDiv.style.display = "none";
-    }
+    downloadCategorieDiv.classList.toggle("hide", isEmpty && (
+      downloadCategorieDiv.id === "download-queue-div" ||
+      downloadCategorieDiv.id === "download-paused-div"
+    ));
   }
 }
 
