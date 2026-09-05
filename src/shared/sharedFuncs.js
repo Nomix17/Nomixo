@@ -1417,36 +1417,25 @@ async function loadIconsDynamically() {
 }
 
 function loadImageWithAnimation(imageContainer, imageElement, imagePath, alternativeAssetName = "PosterNotFound") {
-  return new Promise((resolve) => {
-    if (!imagePath || isNotFoundAssetPath(imagePath)) {
-      imageElement.remove();
-      injectNotFoundSvg(imageContainer, alternativeAssetName);
-      resolve(false);
-      return;
-    }
+  if (!imagePath || isNotFoundAssetPath(imagePath)) {
+    imageElement.remove();
+    injectNotFoundSvg(imageContainer, alternativeAssetName);
+    return;
+  }
+  imageElement.style.transition = 'opacity 0.3s ease';
+  imageElement.style.opacity = '0';
+  imageContainer.classList.add("flashing-Div");
 
-    imageElement.style.display = 'none';
-    imageElement.style.transition = 'opacity 0.3s ease';
-    imageContainer.classList.add("flashing-Div");
-    
-    const img = new Image();
-    img.onload = () => {
-      imageElement.src = normalizeRootUrl(imagePath);
-      imageElement.style.display = 'block';
-      imageElement.style.opacity = '0';
-      imageElement.style.opacity = '1';
-
-      imageContainer.classList.remove("flashing-Div");
-      resolve(true);
-    };
-    img.onerror = () => {
-      imageElement.remove();
-      injectNotFoundSvg(imageContainer, alternativeAssetName);
-      imageContainer.classList.remove("flashing-Div");
-      resolve(false);
-    };
-    img.src = imagePath;
-  });
+  imageElement.onload = () => {
+    imageElement.style.opacity = '1';
+    imageContainer.classList.remove("flashing-Div");
+  };
+  imageElement.onerror = () => {
+    imageElement.remove();
+    injectNotFoundSvg(imageContainer, alternativeAssetName);
+    imageContainer.classList.remove("flashing-Div");
+  };
+  imageElement.src = normalizeRootUrl(imagePath);
 }
 
 async function handleFullScreenIcon() {

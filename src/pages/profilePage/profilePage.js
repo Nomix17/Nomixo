@@ -5,10 +5,12 @@ const MediaSuggestions = document.getElementById("div-MediaSuggestions")
 const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
 globalLoadingGif.style.opacity = "1"
-async function getPersonInfo(apiKey){
-  return fetch(`https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}`)
+async function getPersonInfo(apiKey) {
+
+  const LibraryInformationPromise = loadLibraryInfo();
+  return fetch(`https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}&append_to_response=combined_credits`)
   .then(PersonData => PersonData.json())
-  .then(PersonInfo =>{
+  .then(async PersonInfo => {
     const Name = PersonInfo.name;
     const ProfilePic = PersonInfo.profile_path
     const Department = PersonInfo.known_for_department;
@@ -20,7 +22,9 @@ async function getPersonInfo(apiKey){
 
     insertPersonInformation(personInformation);
 
-    return Department;
+    const libraryInfo = await LibraryInformationPromise;
+    insertPersonFamousWorkIntoSuggestionDiv(PersonInfo.combined_credits, Department, libraryInfo);
+    loadCachedRightMiddleDivScrollValue();
 
   }).catch((err) => {
     err.message = (err.message === "Failed to fetch") 
@@ -40,7 +44,7 @@ async function getPersonInfo(apiKey){
   })
 }
 
-function insertPersonInformation(personInformation){
+function insertPersonInformation(personInformation) {
   const [Name, ProfilePic, Department, Biography, ImdbId] = personInformation;
 
   const personNameElement = document.getElementById("para-personName");
@@ -77,11 +81,11 @@ function insertPersonInformation(personInformation){
   personProfileFullBioElement.src = imagePath;
 }
 
-function hideBiography(){
+function hideBiography() {
   document.querySelector(".bio-wrapper").style.display = "none"
 }
 
-function addDescriptionButtonsEventListener(){
+function addDescriptionButtonsEventListener() {
   const bioReadMoreBtn = document.getElementById('bio-read-more');
   const bioOverlay = document.getElementById('full-bio-overlay');
   const closeBtn = bioOverlay?.querySelector('.floating-x-remove-btn');
@@ -117,24 +121,16 @@ function addDescriptionButtonsEventListener(){
   });
 }
 
-async function fetchData(apiKey, personjob){
-  const LibraryInformation = await loadLibraryInfo();
-  const res = await fetch(`https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${apiKey}`);
-  const MediaData = await res.json();
-  insertPersonFamousWorkIntoSuggestionDiv(MediaData, personjob,LibraryInformation);
-  await loadCachedRightMiddleDivScrollValue();
-}
-
-function insertPersonFamousWorkIntoSuggestionDiv(MediaData, personJob,LibraryInformation){
+async function insertPersonFamousWorkIntoSuggestionDiv(credits, personJob, libraryInfo) {
   const GeneraleWorkData = 
     (personJob === "Acting") 
-      ? [...MediaData.cast,...MediaData.crew] 
-      : [...MediaData.crew,...MediaData.cast];
+      ? [...credits.cast,...credits.crew] 
+      : [...credits.crew,...credits.cast];
 
-  insertMediaElements(GeneraleWorkData,MediaSuggestions,undefined,LibraryInformation);
+  insertMediaElements(GeneraleWorkData, MediaSuggestions, undefined, libraryInfo);
 }
 
-async function loadCachedMediaData(cachedData){
+async function loadCachedMediaData(cachedData) {
   const containersData = cachedData?.containers_data;
   if(containersData){
     MediaSuggestions.innerHTML = "";
@@ -175,7 +171,7 @@ async function loadCachedMediaData(cachedData){
   }
 }
 
-function loadCachedPersonInfo(cachedMediaInfo){
+function loadCachedPersonInfo(cachedMediaInfo) {
   const personCachedInformation = cachedMediaInfo.person_information;
   const personInformationDomElement = document.getElementById("div-Person-description")
   if(personCachedInformation && personInformationDomElement){
@@ -183,25 +179,24 @@ function loadCachedPersonInfo(cachedMediaInfo){
   }
 }
 
-async function loadMedia(apiKey){
-  const cachedMediaInfo = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
-
-  if(cachedMediaInfo){
+async function loadMedia(apiKey, cachedMediaInfo) {
+  if(cachedMediaInfo) {
     console.log("Loading Cached Information");
     loadCachedMediaData(cachedMediaInfo);
     loadCachedRightDivScrollValue(cachedMediaInfo);
     loadCachedPersonInfo(cachedMediaInfo);
-  }else{
-    const personDepartment = await getPersonInfo(apiKey,personId)
-    if(personDepartment)
-      await fetchData(apiKey,personId,personDepartment); 
+  } else {
+    await getPersonInfo(apiKey)
   }
   addDescriptionButtonsEventListener();
 }
 
-async function initPage(){
-  const apiKey = await window.electronAPI.getTMDBAPIKEY();
-  await loadMedia(apiKey);
+async function initPage() {
+  const [apiKey, cachedMediaInfo] = await Promise.all([
+    window.electronAPI.getTMDBAPIKEY(),
+    window.electronAPI.loadPageCachedDataFromHistory(document.URL)
+  ]);
+  await loadMedia(apiKey, cachedMediaInfo);
   globalLoadingGif.remove();
   RightmiddleDiv.classList.add("activate");
 }
