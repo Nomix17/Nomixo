@@ -485,7 +485,7 @@ async function createPausedDownloadsContextMenu(torrentId) {
 
 async function removePausedDownloadsContextMenu(MediaDownloadElement) {
   const contextMenu = MediaDownloadElement.querySelector(".context-menu-button");
-  const contextBtn = document.querySelector(".select-dropdown");
+  const contextBtn = MediaDownloadElement.querySelector(".select-dropdown");
   if(contextMenu) contextMenu.remove();
   if(contextBtn) contextBtn.remove();
 }
