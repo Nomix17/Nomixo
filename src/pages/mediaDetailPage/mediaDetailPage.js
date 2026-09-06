@@ -278,19 +278,23 @@ async function fetchMediaTorrent(episodeInfo={}) {
 async function getMediaTrailer() {
   const apiKey = await apiKeyPromise;
   const res = await fetch(`https://api.themoviedb.org/3/${MediaType}/${MediaId}/videos?api_key=${apiKey}`);
-  if(res.ok) {
-    const data = await res.json();
-    const trailers = data.results.filter(
-      video => video.type === "Trailer" && video.site === "YouTube" && video.official
-    );
-    for(const trailer of trailers) {
-      const videoUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
-      const res = await fetch(
-        `https://www.youtube.com/oembed?url=${videoUrl}&format=json`
-      );
-      if(res.ok)
+  if(!res.ok) return;
+
+  const data = await res.json();
+  const trailers = data.results.filter(
+    video => video.type === "Trailer" && video.site === "YouTube" && video.official
+  );
+
+  try {
+    return await Promise.any(
+      trailers.map(async trailer => {
+        const videoUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
+        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${videoUrl}&format=json`);
+        if(!oembedRes.ok) throw new Error("Invalid trailer");
         return trailer.key;
-    }
+      })
+    );
+  } catch {
     return null;
   }
 }
@@ -349,9 +353,9 @@ async function renderMediaPage(data) {
     });
 
     (async() => {
-      for(const seasonNumber of seasonsNumbers) {
-        await loadAllEpisodesOfSeason(seasonNumber,Title);
-      }
+      await Promise.allSettled(
+        seasonsNumbers.map(seasonNumber => loadAllEpisodesOfSeason(seasonNumber, Title))
+      );
     })().then(async() => {
       const seasonToDisplay = (await loadCachedSeasonNumber()) ?? 1;
       const cachedEpisodeNumber = await loadCachedEpisodeNumber();
