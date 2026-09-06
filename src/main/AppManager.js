@@ -1,4 +1,4 @@
-import { BrowserWindow, app, nativeTheme, protocol, screen } from "electron";
+import { BrowserWindow, app, session, nativeTheme, protocol, screen } from "electron";
 import Store from 'electron-store';
 import TorrentDownloadManager from "./TorrentDownloadManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
@@ -64,11 +64,13 @@ export class AppManager {
         this.browserWindow,
         (entry) => this.mpvPlayerManager.playVideoOverMpv(entry)
       )
+      await session.defaultSession.clearStorageData({ storages: ['localstorage'] });
       await markMediaDownloadsAsPaused();
     });
 
     this.app.on("window-all-closed", async () => {
       if (this.closeWindow) this.app.quit();
+      await session.defaultSession.clearStorageData({ storages: ['localstorage'] });
       await markMediaDownloadsAsPaused();
     });
   }

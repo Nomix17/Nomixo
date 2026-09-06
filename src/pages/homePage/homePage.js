@@ -76,6 +76,15 @@ function isWhiteMode(rgb) {
 
 async function handleSplashScreen() {
   const splashDiv = document.getElementById("div-splash");
+  if (!splashDiv) return;
+
+  const isFirstLaunch = localStorage.getItem("isFirstLaunch") === null;
+  if (!isFirstLaunch) {
+    splashDiv.remove();
+    keyboardPressesHandling();
+    return;
+  }
+
   const themeColors = await window.electronAPI.loadTheme();
   const colorObj = themeColors.theme.find(item => "primary-color" in item);
   const useDarkIcon = colorObj ? isWhiteMode(colorObj["primary-color"]) : false;
@@ -83,19 +92,7 @@ async function handleSplashScreen() {
   const logImg = document.getElementById("img-splash-logo");
   logImg.src = "../../../assets/logo/" + (useDarkIcon ? "dark-icon.png" : "icon.png");
 
-  if (!splashDiv) return;
-
-  let isFirstLaunch = false;
-  try {
-    isFirstLaunch = await window.electronAPI.isFirstLaunch();
-  } catch (err) {};
-
-  if (!isFirstLaunch) {
-    splashDiv.remove();
-    keyboardPressesHandling();
-    return;
-  }
-
+  localStorage.setItem("isFirstLaunch", "false");
   splashDiv.classList.add("show-splash");
 
   const MIN_SPLASH_DURATION = 1000;
