@@ -92,6 +92,7 @@ async function handleSplashScreen() {
 
   if (!isFirstLaunch) {
     splashDiv.remove();
+    keyboardPressesHandling();
     return;
   }
 
@@ -101,19 +102,25 @@ async function handleSplashScreen() {
   setTimeout(() => {
     splashDiv.classList.remove("show-splash");
     splashDiv.classList.add("hide-splash");
-    splashDiv.addEventListener("transitionend", () => splashDiv.remove(), { once: true });
+    splashDiv.addEventListener("transitionend", () => {
+      splashDiv.remove();
+      keyboardPressesHandling();
+    } , { once: true });
   }, MIN_SPLASH_DURATION);
+}
+
+function keyboardPressesHandling() {
+  setupKeyPressesHandler();
+  handleNavigationButtonsHandler(focusFunction);
+  setupKeyPressesForInputElement(searchInput); 
 }
 
 handleSplashScreen();
 triggerLoadingGif();
 loadMovies();
-setupKeyPressesHandler();
-handleNavigationButtonsHandler(focusFunction);
 setLeftButtonStyle("btn-home");
-setupKeyPressesForInputElement(searchInput); 
-setupNavigationBtnHandler();
 resizeMoviesPostersContainers([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
 createSearchHistoryDropDown();
+setupNavigationBtnHandler();
