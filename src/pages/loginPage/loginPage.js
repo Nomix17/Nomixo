@@ -197,6 +197,7 @@ function bindEvents() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  handleSplashScreen();
   handleFullScreenIcon();
   initEyeButtons();
   bindEvents();

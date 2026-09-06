@@ -1386,6 +1386,43 @@ function setLeftButtonStyle(buttonId) {
   buttonIcon.classList.add("active");
 }
 
+function isWhiteMode(rgb) {
+  const [r, g, b] = rgb.split(',').map(val => parseInt(val.trim(), 10));
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance > 150;
+}
+
+async function handleSplashScreen() {
+  const splashDiv = document.getElementById("div-splash");
+  if (!splashDiv) return;
+
+  const isFirstLaunch = localStorage.getItem("isFirstLaunch") === null;
+  if (!isFirstLaunch) {
+    splashDiv.remove();
+    keyboardPressesHandling();
+    return;
+  }
+
+  const themeColors = await window.electronAPI.loadTheme();
+  const colorObj = themeColors.theme.find(item => "primary-color" in item);
+  const useDarkIcon = colorObj ? isWhiteMode(colorObj["primary-color"]) : false;
+
+  const logImg = document.getElementById("img-splash-logo");
+  logImg.src = "../../../assets/logo/" + (useDarkIcon ? "dark-icon.png" : "icon.png");
+
+  localStorage.setItem("isFirstLaunch", "false");
+  splashDiv.classList.add("show-splash");
+
+  const MIN_SPLASH_DURATION = 1000;
+  setTimeout(() => {
+    splashDiv.classList.remove("show-splash");
+    splashDiv.classList.add("hide-splash");
+    splashDiv.addEventListener("transitionend", () => {
+      splashDiv.remove();
+      keyboardPressesHandling();
+    } , { once: true });
+  }, MIN_SPLASH_DURATION);
+}
 
 // ################################### ICONS & ASSET LOADING ###################################
 async function fetchSvg(url) {
