@@ -222,14 +222,11 @@ function monitorSubtitlesDownloadReport() {
         const storageKey = `subtitles_download_reporting_default_text${data.torrentId}`;
         const savedDefaultText = localStorage.getItem(storageKey);
         localStorage.removeItem(storageKey);
-
-        if (savedDefaultText != null) {
-          textContainerEl.innerHTML = savedDefaultText;
-        } else if (downloadEl.dataset.downloadStatus === "DONE") {
-          textContainerEl.innerHTML = "";
-        } else if (!loadingIntervals[data.torrentId]) {
+        if (downloadEl.parentElement === currentlyDownloadingDiv.querySelector(".movieContainer") && !loadingIntervals[data.torrentId]) {
           const PausePlayButton = downloadEl.querySelector(".toggle-pause-button");
           addingLoadingAnimation(data.torrentId, textContainerEl, PausePlayButton, LOADING_MSG);
+        } else {
+          textContainerEl.innerHTML = savedDefaultText != null ? savedDefaultText : "";
         }
       }, 3000);
     }
