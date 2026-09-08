@@ -26,6 +26,16 @@ const DropDownFontMenuExternal = document.getElementById("dropDownMenu-Font");
 const inputTextColorExternal = document.getElementById("input-TextColorExternal");
 const inputMpvExecPath = document.getElementById("input-mpv-exec-path");
 
+// Subtitle Languages
+const toggleAllSubtitleLanguages = document.getElementById("toggleAllSubtitleLanguages");
+const subtitleLangSearchContainer = document.getElementById("div-SubtitleLangSearchContainer");
+const subtitleLangSearchInput = document.getElementById("input-SubtitleLangSearch");
+const subtitleLangDropdown = document.getElementById("dropDownMenu-SubtitleLangSearch");
+const subtitleLangOptions = document.querySelectorAll("#dropDownMenu-SubtitleLangSearch .select-option");
+const addSubtitleLangBtn = document.getElementById("btn-addSubtitleLang");
+const subtitleLangPool = document.getElementById("div-SubtitleLangPool");
+const subtitleLangPoolEmptyMsg = document.getElementById("p-langPoolEmpty");
+
 let ZoomFactorValue=1;
 let somethingChanged = false;
 let supressInputEventListener = false;
@@ -43,6 +53,9 @@ let FontSizeExternalExternal = 24;
 let FontFamilyExternal = "monospace";
 let TextColorExternal = "white";
 let MpvExecPath = "";
+
+let SubtitlesLanguagesAll = false;
+let SubtitlesLanguagesSelected = {};
 
 let TMDB_API_KEY = null;
 let Wyzie_API_KEY = null;
@@ -342,11 +355,6 @@ FontSizeExternalInput.addEventListener("keypress",(event) => {
 });
 
 // global Functions 
-
-// Applies a normalized list of [varName, varValue] pairs (varName without the
-// "--" prefix, e.g. "primary-color") to the #details-customizeTheme inputs.
-// Shared by loadCurrentTheme (the currently applied theme) and
-// loadThemeFromPath (an arbitrary theme file, used when editing).
 function populateThemeDialogFromEntries(entries){
   entries.forEach(([elementId, rawValue]) => {
     let elementValue = String(rawValue).trim();
@@ -387,10 +395,8 @@ async function loadCurrentTheme(){
   populateThemeDialogFromEntries(entries);
 }
 
-// Loads an arbitrary saved theme's CSS file (not necessarily the currently
-// applied one) into the #details-customizeTheme dialog. Used for editing.
 async function loadThemeFromPath(themePath){
-  const varDecls = await extractThemeVars(themePath); // e.g. "--primary-color: 34,34,34,0.9"
+  const varDecls = await extractThemeVars(themePath);
   const entries = varDecls.map(decl => {
     const [name, value] = decl.split(/:(.+)/).map(s => s.trim());
     return [name.replace(/^--/, ""), value];
@@ -416,6 +422,12 @@ async function loadSettings() {
   OpacityInternal = SettingsObj.SubBackgroundOpacityLevelInternal;
 
   MpvExecPath = SettingsObj?.MpvExecPath ?? "";
+
+  SubtitlesLanguagesAll = SettingsObj.DownloadAllSubtitles;
+  SubtitlesLanguagesSelected = SettingsObj.LanguagesToDownload ?? {};
+  toggleAllSubtitleLanguages.checked = SubtitlesLanguagesAll ?? true;
+  createLanguagesTags(SubtitlesLanguagesSelected);
+  setSubtitleLangSearchDisabled(SubtitlesLanguagesAll);
 
   supressInputEventListener = true;
   if(SubtitlesOnByDefaultInternal) toggleButtonInternal.click();
@@ -478,7 +490,9 @@ function getSettings(){
     SubColorInternal: TextColorInternal,
     SubBackgroundColorInternal: BackgroundColorInternal,
     SubBackgroundOpacityLevelInternal: OpacityInternal,
-    MpvExecPath: MpvExecPath
+    MpvExecPath: MpvExecPath,
+    DownloadAllSubtitles: SubtitlesLanguagesAll,
+    LanguagesToDownload: SubtitlesLanguagesSelected
   }
 }
 
@@ -838,6 +852,155 @@ const closeImportConfirmBtn = document.querySelector("#import-confirm-overlay .f
   });
 });
 
+function setSubtitleLangSearchDisabled(disabled) {
+  subtitleLangSearchContainer.classList.toggle("disabled", disabled);
+  subtitleLangSearchInput.disabled = disabled;
+  addSubtitleLangBtn.disabled = disabled;
+  subtitleLangSearchContainer
+    .querySelectorAll("button")
+    .forEach(btn => { btn.disabled = disabled; });
+
+  if (disabled) {
+    if (subtitleLangSearchContainer.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+    subtitleLangDropdown.classList.remove("active");
+  }
+}
+
+function createSubtitleLangTag(language, iso639) {
+  const tag = document.createElement("div");
+  tag.classList.add("lang-tag");
+  tag.dataset.code = iso639;
+
+  const label = document.createElement("span");
+  label.textContent = language;
+
+  const removeBtn = document.createElement("button");
+  removeBtn.classList.add("lang-tag-remove");
+  removeBtn.dataset.code = iso639;
+  removeBtn.setAttribute("aria-label", `Remove ${language}`);
+  removeBtn.innerHTML = xRemoveIcon;
+
+  removeBtn.addEventListener("click", () => {
+    tag.remove();
+    if(
+      subtitleLangPool.children.length <= 1 &&
+      subtitleLangPool.children[0] === subtitleLangPoolEmptyMsg
+    ) subtitleLangPoolEmptyMsg.classList.remove("hide");
+    delete SubtitlesLanguagesSelected[language.toLowerCase()];
+    settingsChanged(true);
+  },{once:true});
+
+  tag.appendChild(label);
+  tag.appendChild(removeBtn);
+  return tag;
+}
+
+function createLanguagesTags(languageDict) {
+  const docFragment = document.createDocumentFragment();
+  for (const {displayName, iso639} of Object.values(languageDict)) { 
+    const tag = createSubtitleLangTag(displayName, iso639);
+    docFragment.appendChild(tag);
+  }
+  subtitleLangPool.appendChild(docFragment);
+  if(subtitleLangPool.children.length > 1) subtitleLangPoolEmptyMsg.classList.add("hide");
+}
+
+const languageDictPromise = window.electronAPI.getLanguageDict();
+async function initLanguageDropdown() {
+  const languageDict = await languageDictPromise;
+  const docFragment = document.createDocumentFragment();
+
+  for (const {displayName, iso639} of Object.values(languageDict)) {
+    const newOpt = createLangOpt(displayName, iso639);
+    docFragment.appendChild(newOpt);
+  }
+  const noResFound = document.createElement("div");
+  noResFound.innerHTML = "No matching language";
+  noResFound.id = "p-noLanguageResults";
+  noResFound.classList.add("no-results");
+  docFragment.appendChild(noResFound);
+
+  subtitleLangDropdown.appendChild(docFragment);
+}
+
+function createLangOpt(language, iso639) {
+  const newOpt = document.createElement("div");
+  const displayLang = language.charAt(0).toUpperCase() + language.slice(1);
+  newOpt.innerHTML = displayLang;
+  newOpt.classList.add("select-option");
+  newOpt.setAttribute("data-code", iso639);
+  newOpt.addEventListener("mousedown", (event) => {
+    subtitleLangSearchInput.value = displayLang;
+    manageAddLangBtnActivation(displayLang);
+  });
+  return newOpt;
+}
+
+function filterLanguageDropdown(query) {
+  if(query == null) return;
+  let langFounded = false;
+  const subOpts = subtitleLangDropdown.querySelectorAll(".select-option");
+  for(const opt of subOpts) {
+    const isValideOpt = opt?.textContent.toLowerCase().includes(query.toLowerCase()) || query.trim() === "";
+    opt.classList.toggle("hidden", !isValideOpt);
+    if(isValideOpt) langFounded = true;
+  }
+  const noLangResEl = document.getElementById("p-noLanguageResults");
+  noLangResEl.classList.toggle("visible", !langFounded);
+}
+
+function manageAddLangBtnActivation(query) {
+  const subOpts = subtitleLangDropdown.querySelectorAll(".select-option");
+  const isValideValue = Array.from(subOpts).filter(opt => opt?.textContent?.toLowerCase() == query.toLowerCase())?.length === 1;
+  addSubtitleLangBtn.classList.toggle("active", isValideValue);
+}
+
+subtitleLangSearchInput.addEventListener("focus", () => {
+  filterLanguageDropdown(event.target.value);
+  manageAddLangBtnActivation(event.target.value);
+  subtitleLangDropdown.classList.add("active");
+});
+
+subtitleLangSearchInput.addEventListener("blur", () => {
+  subtitleLangDropdown.classList.remove("active");
+});
+
+subtitleLangSearchInput.addEventListener("input", (event) => {
+  filterLanguageDropdown(event.target.value);
+  manageAddLangBtnActivation(event.target.value);
+});
+
+addSubtitleLangBtn.addEventListener("click", async () => {
+  if(!subtitleLangSearchInput.value) return;
+  const languageDict = await languageDictPromise;
+  const languageIso = languageDict[subtitleLangSearchInput.value.toLowerCase()]?.iso639;
+  if(!languageIso) return;
+  const oldEl = subtitleLangPool.querySelector(`.lang-tag[data-code='${languageIso}']`);
+  if(oldEl) {
+    oldEl.classList.add("error-shake");
+    setTimeout(() => {
+      oldEl.classList.remove("error-shake");
+    },300);
+    return;
+  };
+
+  const langTag = createSubtitleLangTag(subtitleLangSearchInput.value, languageIso);
+  const displayName = subtitleLangSearchInput.value.toLowerCase();
+  subtitleLangPool.appendChild(langTag);
+  subtitleLangPoolEmptyMsg?.classList.add("hide");
+  SubtitlesLanguagesSelected[displayName] = {displayName, iso639: languageIso};
+  subtitleLangSearchInput.value = "";
+  settingsChanged(true);
+});
+
+toggleAllSubtitleLanguages.addEventListener("change",()=>{
+  SubtitlesLanguagesAll = toggleAllSubtitleLanguages.checked;
+  setSubtitleLangSearchDisabled(SubtitlesLanguagesAll);
+  settingsChanged(true);
+});
+
 document.querySelectorAll(".link-btn").forEach(btn => {
   btn.addEventListener("click",() => {
     const URL = 
@@ -861,3 +1024,4 @@ handlingMiddleRightDivResizing();
 dropDownInit();
 initBackupSection();
 loadSettings();
+initLanguageDropdown();

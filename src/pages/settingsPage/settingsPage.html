@@ -307,6 +307,55 @@
               </div>
             </div>
 
+            <div class="settings-card" id="div-SubtitlesLanguages">
+              <div class="section-header">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M2 12h20"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <div class="section-header-text">
+                  <h1>Subtitle Languages</h1>
+                  <p class="section-desc">Choose which subtitle languages are automatically downloaded when you stream or download media.</p>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-text">
+                  <p class="setting-label">All Languages</p>
+                  <p class="setting-desc">Download subtitles in every available language instead of a specific list.</p>
+                </div>
+                <div class="setting-control">
+                  <label class="custom-toggle">
+                    <input id="toggleAllSubtitleLanguages" type="checkbox" />
+                    <span class="toggle-track">
+                      <span class="toggle-thumb"></span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="setting-text setting-text-standalone">
+                <p class="setting-label">Languages</p>
+                <p class="setting-desc">Search for a language and add it to the list below.</p>
+              </div>
+
+              <div class="subtitle-lang-search-container" id="div-SubtitleLangSearchContainer">
+                <div class="subtitle-lang-search-wrapper">
+                  <div class="input-wrapper">
+                    <input id="input-SubtitleLangSearch" type="text" placeholder="Search language…" autocomplete="off" spellcheck="false"/>
+                    <div id="dropDownMenu-SubtitleLangSearch" class="subtitle-lang-dropdown">
+                    </div>
+                  </div>
+                  <button id="btn-addSubtitleLang" class="subtitle-lang-add-btn" type="button">Add</button>
+                </div>
+
+                <div class="subtitle-lang-pool" id="div-SubtitleLangPool">
+                  <p class="lang-pool-empty" id="p-langPoolEmpty">No languages selected yet.</p>
+                </div>
+              </div>
+            </div>
+
             <div class="settings-card">
               <div class="section-header">
                 <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

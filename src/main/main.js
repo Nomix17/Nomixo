@@ -10,6 +10,7 @@ import { AppManager } from "./AppManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
 import { initTorrentTrackers } from "./torrentTracker.js";
 import { SubDownloadManager } from "./SubDownloadManager.js";
+import languageDict from "./languageDict.js";
 import { Paths, FilesManager } from "./FilesManager.js";
 import {
   generateUniqueId,
@@ -553,6 +554,10 @@ ipcMain.handle("read-sub-file", (event, filePath) => {
   return fs.readFileSync(filePath, "utf8");
 });
 
+ipcMain.handle("get-language-dict", () => {
+  return languageDict;
+});
+
 // ======================= CACHE HISTORY MANAGEMENT =======================
 
 ipcMain.handle("load-cached-data-from-history", (event, currentPageURL) => {
@@ -610,31 +615,6 @@ function navigateToPreviousPage() {
 
 // ======================= SUBTITLE HELPERS =======================
 
-const languageDict = {
-  english: "en", afrikaans: "af", albanian: "sq", amharic: "am", arabic: "ar",
-  armenian: "hy", azerbaijani: "az", basque: "eu", belarusian: "be", bengali: "bn",
-  bosnian: "bs", bulgarian: "bg", catalan: "ca", cebuano: "ceb", chinese: "zh",
-  corsican: "co", croatian: "hr", czech: "cs", danish: "da", dutch: "nl",
-  esperanto: "eo", estonian: "et", finnish: "fi", french: "fr", frisian: "fy",
-  galician: "gl", georgian: "ka", german: "de", greek: "el", gujarati: "gu",
-  haitian_creole: "ht", hausa: "ha", hawaiian: "haw", hebrew: "he", hindi: "hi",
-  hmong: "hmn", hungarian: "hu", icelandic: "is", igbo: "ig", indonesian: "id",
-  irish: "ga", italian: "it", japanese: "ja", javanese: "jv", kannada: "kn",
-  kazakh: "kk", khmer: "km", kinyarwanda: "rw", korean: "ko", kurdish: "ku",
-  kyrgyz: "ky", lao: "lo", latin: "la", latvian: "lv", lithuanian: "lt",
-  luxembourgish: "lb", macedonian: "mk", malagasy: "mg", malay: "ms", malayalam: "ml",
-  maltese: "mt", maori: "mi", marathi: "mr", mongolian: "mn", myanmar: "my",
-  nepali: "ne", norwegian: "no", nyanja: "ny", oromo: "or", pashto: "ps",
-  persian: "fa", polish: "pl", portuguese: "pt", punjabi: "pa", romanian: "ro",
-  russian: "ru", samoan: "sm", scots_gaelic: "gd", serbian: "sr", sesotho: "st",
-  shona: "sn", sindhi: "sd", sinhala: "si", slovak: "sk", slovenian: "sl",
-  somali: "so", spanish: "es", sundanese: "su", swahili: "sw", swedish: "sv",
-  tagalog: "tl", tajik: "tg", tamil: "ta", tatar: "tt", telugu: "te",
-  thai: "th", turkish: "tr", turkmen: "tk", ukrainian: "uk", urdu: "ur",
-  uyghur: "ug", uzbek: "uz", vietnamese: "vi", welsh: "cy", xhosa: "xh",
-  yiddish: "yi", yoruba: "yo", zulu: "zu",
-};
-
 function loadSubsFromSubDir(identifyingElements) {
   const torrentId = generateUniqueId(
     `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.DownloadDir}`
@@ -648,7 +628,7 @@ function loadSubsFromSubDir(identifyingElements) {
       return {
         url: path.join(subsDirectory, subFileName),
         display: displayName,
-        languageCode: languageDict[displayName.toLowerCase()] ?? displayName,
+        languageCode: languageDict[displayName]?.iso639 ?? displayName,
         type: "local",
       };
     });

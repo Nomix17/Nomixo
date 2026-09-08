@@ -345,6 +345,186 @@ output {
   box-shadow: 0 0 0 2px rgba(128, 128, 128, 0.1);
 }
 
+.subtitle-lang-search-container {
+  transition: opacity 0.1s ease;
+}
+
+.subtitle-lang-search-container.disabled {
+  opacity: 0.4;
+}
+.subtitle-lang-search-container.disabled,
+.subtitle-lang-search-container.disabled * {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.subtitle-lang-search-wrapper {
+  padding-right: 60px;
+  display: flex;
+  gap: 11.04px;
+  align-items: flex-start;
+}
+
+.subtitle-lang-search-wrapper .input-wrapper {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#input-SubtitleLangSearch {
+  width: 100%;
+  height: 41.4px;
+  padding: 0 11.04px;
+  border-radius: 7.36px;
+  background: rgba(var(--input-backgroundColor));
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  color: rgb(var(--text-color));
+  font-size: 14.72px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+
+#input-SubtitleLangSearch:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(128, 128, 128, 0.1);
+}
+
+.subtitle-lang-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: rgba(var(--drop-down-color));
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7.36px;
+  z-index: 20;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.subtitle-lang-dropdown.active {
+  display: block;
+}
+
+.subtitle-lang-dropdown .select-option {
+  padding: 9.2px 13.8px;
+  font-size: 13.8px;
+  color: rgb(var(--text-color));
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.subtitle-lang-dropdown .select-option:hover,
+.subtitle-lang-dropdown .select-option.highlighted {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.subtitle-lang-dropdown .select-option.selected {
+  color: rgba(var(--secondary-color));
+}
+
+.subtitle-lang-dropdown .select-option.hidden {
+  display: none;
+}
+
+.subtitle-lang-dropdown .no-results {
+  display: none;
+  padding: 9.2px 13.8px;
+  font-size: 12.88px;
+  color: rgba(var(--text-color), 0.4);
+}
+
+.subtitle-lang-dropdown .no-results.visible {
+  display: block;
+}
+
+.subtitle-lang-add-btn {
+  flex-shrink: 0;
+  height: 41.4px;
+  padding: 0 20.24px;
+  border-radius: 7.36px;
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgb(var(--text-color));
+  font-size: 13.8px;
+  font-weight: 500;
+  transition: background 0.12s, transform 0.1s;
+  opacity: 0.5;
+  cursor: auto !important;
+  pointer-events: none;
+}
+
+.subtitle-lang-add-btn.active {
+  opacity: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.subtitle-lang-add-btn.active:hover {
+  background: transparent;
+}
+
+.subtitle-lang-add-btn.active:active {
+  transform: scale(0.98);
+}
+
+.subtitle-lang-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9.2px;
+  margin-top: 13.8px;
+  min-height: 41.4px;
+}
+
+.lang-pool-empty {
+  font-size: 13.8px !important;
+  color: rgba(var(--text-color), 0.35);
+  margin: 9.2px 0 0 0 !important;
+  padding: 0 !important;
+}
+.lang-pool-empty.hide {
+  display: none;
+}
+
+.lang-tag {
+  display: flex;
+  align-items: center;
+  gap: 7.36px;
+  padding: 7.36px 9.2px 7.36px 13.8px;
+  border-radius: 20px;
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  font-size: 13.34px;
+  color: rgb(var(--text-color));
+}
+
+.lang-tag svg {
+  fill: rgba(var(--text-color));
+}
+
+.lang-tag-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18.4px;
+  height: 18.4px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgb(var(--text-color));
+  font-size: 12.88px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.subtitle-lang-search-container:not(.disabled) .lang-tag-remove:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .api-key-inputs-div {
   display: flex;
   flex-direction: column;
@@ -981,7 +1161,7 @@ input[type="range"]::-webkit-slider-thumb {
   40%, 80% { transform: translateX(6px); }
 }
 
-input.error-shake {
+.error-shake {
   animation: shake 0.3s ease-in-out;
 }
 
