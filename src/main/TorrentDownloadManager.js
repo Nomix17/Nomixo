@@ -18,8 +18,7 @@ import {
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
 import path from "path";
-import { mkdir } from 'fs/promises';
-import fs from 'fs';
+import { mkdir, rm } from 'fs/promises';
 
 const DELAY_BEFORE_LIBRARY_SAVE_MS = 1000;
 const DELAY_BEFORE_PIPING_MS = 400;
@@ -321,8 +320,8 @@ class TorrentDownloadManager {
 
   async _cleanupCancelledTorrentFiles(torrentEntry) {
     const downloadPath = torrentEntry.downloadPath;
-    if (downloadPath && fs.existsSync(downloadPath)) {
-      await fs.promises.rm(downloadPath, { recursive: true, force: true });
+    if (downloadPath) {
+      await rm(downloadPath, { recursive: true, force: true });
       log.info(`Removed directory: ${downloadPath}`);
     }
     await removeDownloadStorageEntry(torrentEntry.torrentId);

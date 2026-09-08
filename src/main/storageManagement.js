@@ -1,10 +1,9 @@
-import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import { readFile, writeFile, rename, unlink } from 'fs/promises';
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
-import { downloadImage } from "./utils.js";
+import { downloadImage, pathExists } from "./utils.js";
 
 async function loadJsonFile(filePath) {
   const content = await readFile(filePath, "utf-8");
@@ -248,7 +247,6 @@ export async function loadSettings() {
 export async function findMpvExecPath() {
   const fromPath = await resolveMpvExecFromPATH();
   if (fromPath) return fromPath;
-
   const knownPaths =
     os.platform() === "win32"
       ? [
@@ -269,14 +267,12 @@ export async function findMpvExecPath() {
           "/flatpak/exports/bin/mpv",
           path.join(os.homedir(), ".local/bin/mpv"),
         ];
-
   for (const candidate of knownPaths) {
-    if (fs.existsSync(candidate)) {
+    if (await pathExists(candidate)) {
       log.info(`Found mpv at: ${candidate}`);
       return candidate;
     }
   }
-
   log.warn("Mpv executable path not found anywhere");
   return null;
 }

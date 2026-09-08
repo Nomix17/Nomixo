@@ -14,7 +14,6 @@ import express from 'express';
 import mime from 'mime';
 import path from 'path';
 import os from 'os';
-import fs from 'fs';
 
 let mpvProcess = null;
 let expressServer = null;
@@ -157,9 +156,9 @@ async function PlayLocalVideo(
   mpvConfigDirectory,
   mpvWindowConfigs
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async(resolve, reject) => {
     try {
-      const videoFullPath = findFile(metaData.downloadPath, metaData.fileName);
+      const videoFullPath = await findFile(metaData.downloadPath, metaData.fileName);
       if (videoFullPath)
         runMpvProcess(
           MpvExecPath, videoFullPath,

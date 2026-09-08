@@ -1,7 +1,7 @@
 import crypto from 'crypto';
-import fs from 'fs';
 import path from 'path';
 import {log} from "./debugging.js";
+import { access, readdir, mkdir, writeFile, stat } from 'fs/promises';
 
 export function generateUniqueId(seed) {
   const hash = crypto.createHash('sha256');
@@ -14,21 +14,30 @@ export function normaliseFileName(fileName) {
   return "";
 }
 
-export function findFile(dir, filename) {
-  if (!fs.existsSync(dir)) return null;
+export async function findFile(dir, filename) {
+  try {
+    await access(dir);
+  } catch {
+    return null;
+  }
+
   const filesPathsHashMap = {};
-  const files = fs.readdirSync(dir);
+  const files = await readdir(dir);
+
   for (const file of files) {
     const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) {
-      const result = findFile(fullPath, filename);
+    const fileStat = await stat(fullPath);
+
+    if (fileStat.isDirectory()) {
+      const result = await findFile(fullPath, filename);
       if (result) return result;
     } else if (file === filename) {
       return fullPath;
     }
+
     filesPathsHashMap[normaliseFileName(file)] = fullPath;
   }
+
   return filesPathsHashMap[normaliseFileName(filename)] ?? null;
 }
 
@@ -64,23 +73,27 @@ export function truncate(text, max = 40) {
 }
 
 export async function downloadImage(downloadDir, posterUrl) {
-  fs.mkdirSync(downloadDir, { recursive: true });
   try {
+    await mkdir(downloadDir, { recursive: true });
     const controller = new AbortController();
-
     const res = await fetch(posterUrl, { signal: controller.signal });
-
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
     const buffer = Buffer.from(await res.arrayBuffer());
     if (!buffer.length) throw new Error('Empty file');
-
     const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
-    fs.writeFileSync(file, buffer);
-
+    await writeFile(file, buffer);
     return file;
   } catch (err) {
     log.error(`Failed to download ${posterUrl}:`, err.message);
     return null;
+  }
+}
+
+export async function pathExists(targetPath) {
+  try {
+    await access(targetPath);
+    return true;
+  } catch {
+    return false;
   }
 }

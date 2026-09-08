@@ -1,7 +1,6 @@
 import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
 import path from "path";
-import fs from "fs";
-import { copyFile, writeFile, readFile, unlink, access} from 'fs/promises';
+import { copyFile, writeFile, readFile, unlink, access, readdir, stat } from 'fs/promises';
 
 import { log } from "./debugging.js";
 import dotenv from "dotenv";
@@ -13,6 +12,7 @@ import { SubDownloadManager } from "./SubDownloadManager.js";
 import languageDict from "./languageDict.js";
 import { Paths, FilesManager } from "./FilesManager.js";
 import {
+  pathExists,
   generateUniqueId,
   findFile,
   sendSystemNotification,
@@ -55,9 +55,9 @@ ipcMain.handle("load-settings", async () => {
   }
 });
 
-ipcMain.handle("load-theme", () => {
+ipcMain.handle("load-theme", async () => {
   try {
-    return loadTheme();
+    return await loadTheme();
   } catch {
     throw new Error("Something Went Wrong When Loading Theme!");
   }
@@ -76,10 +76,11 @@ ipcMain.handle("apply-settings", async (event, SettingsObj) => {
   FullSettings.PageZoomFactor = Math.max(0.1, FullSettings.PageZoomFactor);
   webContents.setZoomFactor(FullSettings.PageZoomFactor);
   appManager.mainZoomFactor = FullSettings.PageZoomFactor;
-  fs.writeFileSync(Paths.SettingsFilePath, JSON.stringify(FullSettings, null, 2), (err) => {
-    if (err) log.error(err);
-    return err;
-  });
+  try {
+    await writeFile(Paths.SettingsFilePath, JSON.stringify(FullSettings, null, 2));
+  } catch (err) {
+    log.error(err);
+  }
   return null;
 });
 
@@ -87,14 +88,16 @@ ipcMain.on("apply-sub-config", (event, SubConfig) => {
   applySubConfigs(SubConfig);
 });
 
-ipcMain.on("apply-theme", (event, ThemeObj) => {
+ipcMain.on("apply-theme", async (event, ThemeObj) => {
   const formatedThemeObj = ThemeObj.theme.map(
     (obj) => `${Object.keys(obj)[0]}:${obj[Object.keys(obj)[0]]}`
   );
   const themeFileContent = `:root{\n    ${formatedThemeObj.join(";\n")}\n  ;}`;
-  fs.writeFile(Paths.ThemeFilePath, themeFileContent, (err) => {
-    if (err) log.error(err);
-  });
+  try {
+    await writeFile(Paths.ThemeFilePath, themeFileContent);
+  } catch (err) {
+    log.error(err);
+  }
 });
 
 async function copyThemeFileToMainTheme(themeFileName, themeFilePath) {
@@ -113,23 +116,28 @@ ipcMain.handle("apply-prepared-theme", async (event, themefileName) => {
   }
 });
 
-ipcMain.handle("get-prepared-themes", () => {
+ipcMain.handle("get-prepared-themes", async () => {
   try {
-    const defaultThemes = 
-      fs.readdirSync(path.join(Paths.__dirname, '../../assets/themes/'))
-        .filter(file => path.extname(file) === ".css")
-        .map(file => path.basename(file, ".css"));
-
-    const files = fs.readdirSync(Paths.themesDirPath);
-    return files
+    const defaultThemeFiles = await readdir(path.join(Paths.__dirname, '../../assets/themes/'));
+    const defaultThemes = defaultThemeFiles
       .filter(file => path.extname(file) === ".css")
-      .map((file) => {
+      .map(file => path.basename(file, ".css"));
+
+    const files = await readdir(Paths.themesDirPath);
+    const cssFiles = files.filter(file => path.extname(file) === ".css");
+
+    const filesWithTime = await Promise.all(
+      cssFiles.map(async (file) => {
+        const fileStat = await stat(path.join(Paths.themesDirPath, file));
         return {
           name: path.basename(file, ".css"),
           path: path.join(Paths.themesDirPath, file),
-          time: fs.statSync(path.join(Paths.themesDirPath, file)).mtime.getTime()
+          time: fileStat.mtime.getTime()
         };
       })
+    );
+
+    return filesWithTime
       .sort((a, b) => a.time - b.time)
       .map((el) => {
         return {
@@ -148,7 +156,7 @@ ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj)
   try {
     const fileName = newThemeName.toLowerCase();
     const themeFilePath = path.join(Paths.themesDirPath, `${fileName}.css`);
-    if(fs.existsSync(themeFilePath))
+    if(await pathExists(themeFilePath))
       throw new Error(`Theme '${newThemeName}' Already Exists`);
 
     const formatedThemeObj = newThemeObj.theme.map(
@@ -156,7 +164,7 @@ ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj)
     );
     const themeFileContent = `:root{\n    ${formatedThemeObj.join(";\n")}\n  ;}`;
     await writeFile(themeFilePath, themeFileContent);
-    copyThemeFileToMainTheme(fileName, themeFilePath);
+    await copyThemeFileToMainTheme(fileName, themeFilePath);
     return { success:true, theme_file_path: themeFilePath };
   } catch(error) {
     return { success:false, message: error.message };
@@ -171,7 +179,7 @@ ipcMain.handle("edit-prepared-theme", async (event, themeInfo) => {
     const oldFileName = path.basename(oldThemePath, ".css");
     const isRename = fileName !== oldFileName;
 
-    if (isRename && fs.existsSync(themeFilePath))
+    if (isRename && await pathExists(themeFilePath))
       throw new Error(`Theme '${newThemeName}' Already Exists`);
 
     const formatedThemeObj = newThemeObj.theme.map(
@@ -181,11 +189,11 @@ ipcMain.handle("edit-prepared-theme", async (event, themeInfo) => {
 
     await writeFile(themeFilePath, themeFileContent);
 
-    if (isRename && fs.existsSync(oldThemePath)) {
-      await fs.promises.unlink(oldThemePath);
+    if (isRename && await pathExists(oldThemePath)) {
+      await unlink(oldThemePath);
     }
 
-    copyThemeFileToMainTheme(fileName, themeFilePath);
+    await copyThemeFileToMainTheme(fileName, themeFilePath);
     return { success: true, theme_file_path: themeFilePath };
   } catch (error) {
     return { success: false, message: error.message };
@@ -194,7 +202,7 @@ ipcMain.handle("edit-prepared-theme", async (event, themeInfo) => {
 
 ipcMain.handle("remove-prepared-theme", async (event, themefilePath) => {
   if(
-    fs.existsSync(themefilePath) &&
+    (await pathExists(themefilePath)) &&
     path.dirname(themefilePath) == Paths.themesDirPath
   )
     await unlink(themefilePath);
@@ -308,12 +316,13 @@ ipcMain.handle("play-torrent-over-mpv", async (event, metaData) => {
 });
 
 ipcMain.handle("play-video-over-mpv", async (event, metaData) => {
-  const subsPaths = loadSubsFromSubDir({
+  const localSubs = await loadSubsFromSubDir({
     IMDB_ID: metaData.IMDB_ID,
     episodeNumber: metaData.episodeNumber,
     seasonNumber: metaData.seasonNumber,
     DownloadDir: metaData.downloadPath,
-  }).map((sub) => sub.url);
+  });
+  const subsPaths = localSubs.map((sub) => sub.url);
 
   const settings = await loadSettings();
   return appManager.mpvPlayerManager.playVideoOverMpv(metaData, subsPaths, settings);
@@ -555,13 +564,13 @@ ipcMain.handle("fetch-subtitles", async(event, mediaInfo) => {
 });
 
 ipcMain.handle("load-local-subs", async (event, videoPath, identifyingElements) => {
-  const localBuiltInSubs = loadSubsFromVideoDirectory(videoPath);
-  const localDownloadedSubs = loadSubsFromSubDir(identifyingElements);
+  const localBuiltInSubs = await loadSubsFromVideoDirectory(videoPath);
+  const localDownloadedSubs = await loadSubsFromSubDir(identifyingElements);
   return [...localBuiltInSubs, ...localDownloadedSubs];
 });
 
-ipcMain.handle("read-sub-file", (event, filePath) => {
-  return fs.readFileSync(filePath, "utf8");
+ipcMain.handle("read-sub-file", async (event, filePath) => {
+  return await readFile(filePath, "utf8");
 });
 
 ipcMain.handle("get-language-dict", () => {
@@ -625,15 +634,16 @@ function navigateToPreviousPage() {
 
 // ======================= SUBTITLE HELPERS =======================
 
-function loadSubsFromSubDir(identifyingElements) {
+async function loadSubsFromSubDir(identifyingElements) {
   const torrentId = generateUniqueId(
     `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.DownloadDir}`
   );
   const subsDirectory = path.join(identifyingElements.DownloadDir, `SUBS_${torrentId}`);
   try {
-    if (!fs.existsSync(subsDirectory))
+    if (!(await pathExists(subsDirectory)))
       throw new Error(`Subtitles aren't downloaded in: ${subsDirectory}`);
-    return fs.readdirSync(subsDirectory).map((subFileName) => {
+    const subFileNames = await readdir(subsDirectory);
+    return subFileNames.map((subFileName) => {
       const displayName = subFileName.split("-")[0];
       return {
         url: path.join(subsDirectory, subFileName),
@@ -648,10 +658,11 @@ function loadSubsFromSubDir(identifyingElements) {
   }
 }
 
-function loadSubsFromVideoDirectory(videoPath) {
+async function loadSubsFromVideoDirectory(videoPath) {
   const videoParentsPath = path.dirname(videoPath);
   try {
-    return fs.readdirSync(videoParentsPath).flatMap((subFileName) => {
+    const subFileNames = await readdir(videoParentsPath);
+    return subFileNames.flatMap((subFileName) => {
       const fileExtension = path.extname(subFileName);
       if (fileExtension === ".srt" || fileExtension === ".vtt") {
         return [{
@@ -671,9 +682,9 @@ function loadSubsFromVideoDirectory(videoPath) {
 }
 
 // ======================= SETTINGS HELPERS =======================
-function loadTheme() {
+async function loadTheme() {
   try {
-    let savedTheme = fs.readFileSync(Paths.ThemeFilePath, "utf-8");
+    let savedTheme = await readFile(Paths.ThemeFilePath, "utf-8");
     savedTheme = savedTheme
       .replaceAll(":root{", "")
       .replaceAll("}", "")
@@ -690,8 +701,8 @@ function loadTheme() {
   } catch (err) {
     log.error("Failed to Load Theme File");
     log.error(err.message);
-    FilesManager.initializeDataFiles();
-    return loadTheme();
+    await FilesManager.initializeDataFiles();
+    return await loadTheme();
   }
 }
 

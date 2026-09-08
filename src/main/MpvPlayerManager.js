@@ -1,10 +1,11 @@
 import { Worker } from "worker_threads";
 import { spawn } from "child_process";
+import { access, mkdir } from 'fs/promises';
+import { pathExists } from "./utils.js";
 import WebTorrent from "webtorrent";
 import http from "http";
 import path from "path";
 import os from "os";
-import fs from "fs";
 
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
@@ -24,12 +25,15 @@ class MpvPlayerManager {
   }
 
   async getVideoUrl(magnet, fileName) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       this.#inVideoPlayerPage = true;
 
       log.info("Loading Torrent:", fileName);
-      if (!fs.existsSync(Paths.videoCachePath)) {
-        fs.mkdirSync(Paths.videoCachePath, { recursive: true });
+      if (!(await pathExists(Paths.videoCachePath))) {
+        await mkdir(Paths.videoCachePath, { recursive: true });
+      }
+      if (!(await pathExists(Paths.videoCachePath))) {
+        await mkdir(Paths.videoCachePath, { recursive: true });
       }
 
       const client = new WebTorrent();
