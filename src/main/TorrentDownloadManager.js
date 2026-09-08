@@ -7,6 +7,7 @@ import {
 } from './utils.js';
 
 import {
+  loadSettings,
   getDownloadEntry,
   insertNewDownloadEntry,
   saveDownloadProgress,
@@ -65,11 +66,16 @@ class TorrentDownloadManager {
 
   async executeTorrentDownload(torrentEntry, priority = false, downloadSubtitles = torrentEntry.downloadSubtitles ?? true) {
     torrentEntry.downloadSubtitles = downloadSubtitles;
-
+    const settings = await loadSettings();
+    const subtitleSettings = {
+      LanguagesToDownload: settings.LanguagesToDownload,
+      DownloadAllSubtitles: settings.DownloadAllSubtitles
+    };
     const { status, donePromise } = await this.downloadClient.add(
       torrentEntry, {}, priority,
       (startedTorrent) => this.attachTorrentHandlers(startedTorrent, torrentEntry),
       downloadSubtitles,
+      subtitleSettings,
       async () => {
         const isNewEntry = await insertNewDownloadEntry(torrentEntry, "Subs-Download");
         this.pushStatusUpdate([

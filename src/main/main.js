@@ -19,6 +19,7 @@ import {
   downloadImage,
 } from "./utils.js";
 import {
+  loadSettings,
   loadDownloadStorage,
   loadLibraryStorage,
   editDownloadStorageEntry,
@@ -532,7 +533,16 @@ ipcMain.handle("load-from-download-lib", async () => {
 
 ipcMain.handle("download-subtitles", async (event, torrentEntry) => {
   try {
-    await SubDownloadManager.downloadSubsForMedia(torrentEntry, torrentEntry.torrentId, torrentEntry.downloadPath);
+    const settings = await loadSettings();
+    await SubDownloadManager.downloadSubsForMedia(
+      torrentEntry,
+      torrentEntry.torrentId,
+      torrentEntry.downloadPath,
+      {
+        LanguagesToDownload: settings.LanguagesToDownload,
+        DownloadAllSubtitles: settings.DownloadAllSubtitles
+      }
+    );
   } catch (err) {
     log.error("Failed To Download Subtitles", torrentEntry.torrentId + ":", err.message);
     return { updated: false };
@@ -661,36 +671,6 @@ function loadSubsFromVideoDirectory(videoPath) {
 }
 
 // ======================= SETTINGS HELPERS =======================
-
-async function loadSettings() {
-  try {
-    const data = fs.readFileSync(Paths.SettingsFilePath, "utf-8");
-    if (data.trim() === "" || !("TurnOnSubsByDefaultInternal" in JSON.parse(data)))
-      throw new Error("empty Settings File");
-
-    const JData = JSON.parse(data);
-    if (JData?.MpvExecPath == null || JData?.MpvExecPath.trim() === "")
-      JData.MpvExecPath = await MpvPlayerManager.findMpvExecPath();
-
-    return JData;
-  } catch (err) {
-    log.error(err.message);
-    return {
-      PageZoomFactor: 1,
-      TurnOnSubsByDefaultInternal: true,
-      SubFontSizeInternal: 16,
-      SubFontFamilyInternal: "Montserrat",
-      SubColorInternal: "#ffffff",
-      SubBackgroundColorInternal: "#000000",
-      SubBackgroundOpacityLevelInternal: 0,
-      DefaultDownloadPath: Paths.__downloads,
-      rememberDownloadLocationByDefault: true,
-      DownloadSubtitlesByDefault: true,
-      MpvExecPath: await MpvPlayerManager.findMpvExecPath(),
-    };
-  }
-}
-
 function loadTheme() {
   try {
     let savedTheme = fs.readFileSync(Paths.ThemeFilePath, "utf-8");

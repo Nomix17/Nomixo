@@ -35,7 +35,8 @@ function StreamTorrent(
   videoCachePath,
   subDirectory,
   mpvConfigDirectory,
-  mpvWindowConfigs
+  mpvWindowConfigs,
+  subtitleSettings
 ) {
   return new Promise(async (resolve, reject) => {
     const trackers = await getTorrentTrackers()
@@ -107,7 +108,7 @@ function StreamTorrent(
 
           const tmpSubDir = path.join(subDirectory, `SUB_${subsId}`);
           log.info("Downloading subtitles to:", tmpSubDir);
-          const downloadResponse = await SubDownloadManager.downloadSubsForMedia(metaData, metaData.torrentId, tmpSubDir);
+          const downloadResponse = await SubDownloadManager.downloadSubsForMedia(metaData, metaData.torrentId, tmpSubDir, subtitleSettings);
           log.info("Finished downloading subtitles");
           const subsPaths = downloadResponse
             .filter(response => response.status === "success")
@@ -320,7 +321,8 @@ if (workerData.typeOfPlay === "StreamTorrent") {
     workerData.videoCachePath,
     workerData.subDirectory,
     workerData.mpvConfigDirectory,
-    workerData.mpvWindowConfigs
+    workerData.mpvWindowConfigs,
+    workerData.subtitleSettings
   )
   .catch(async (err) => {
     parentPort.postMessage({

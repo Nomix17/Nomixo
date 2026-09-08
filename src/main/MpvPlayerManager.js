@@ -94,7 +94,7 @@ class MpvPlayerManager {
 
   async playTorrentOverMpv(metaData, settings) {
     const startFromTime = await this.#getLatestPlaybackPosition(metaData);
-    const { MpvExecPath } = settings;
+    const { MpvExecPath, LanguagesToDownload, DownloadAllSubtitles } = settings;
 
     this.#worker = new Worker(Paths.MpvWorkerPath, {
       workerData: {
@@ -106,6 +106,7 @@ class MpvPlayerManager {
         subDirectory: Paths.subDirectory,
         mpvConfigDirectory: Paths.mpvConfigDirectory,
         mpvWindowConfigs: this.#getWindowConfigs(),
+        subtitleSettings: { LanguagesToDownload, DownloadAllSubtitles },
       },
       type: "module",
     });
@@ -145,66 +146,6 @@ class MpvPlayerManager {
       this.#worker.postMessage({ type: "shutdown" });
       this.#worker = null;
     }
-  }
-
-  static async findMpvExecPath() {
-    const fromPath = await MpvPlayerManager.#resolveMpvExecFromPATH();
-    if (fromPath) return fromPath;
-
-    const knownPaths =
-      os.platform() === "win32"
-        ? [
-            path.join(process.resourcesPath, "mpvBinary", "mpv.exe"),
-            "C:\\Program Files\\mpv\\mpv.exe",
-            "C:\\Program Files (x86)\\mpv\\mpv.exe",
-            path.join(os.homedir(), "AppData", "Local", "Programs", "mpv", "mpv.exe"),
-            path.join(os.homedir(), "scoop", "apps", "mpv", "current", "mpv.exe"),
-            "C:\\tools\\mpv\\mpv.exe",
-            path.join(process.env.LOCALAPPDATA || "", "Microsoft", "WinGet", "Packages", "mpv.exe"),
-          ]
-        : [
-            path.join(process.resourcesPath, "mpvBinary", "mpv"),
-            "/usr/bin/mpv",
-            "/usr/local/bin/mpv",
-            "/opt/homebrew/bin/mpv",
-            "/snap/bin/mpv",
-            "/flatpak/exports/bin/mpv",
-            path.join(os.homedir(), ".local/bin/mpv"),
-          ];
-
-    for (const candidate of knownPaths) {
-      if (fs.existsSync(candidate)) {
-        log.info(`Found mpv at: ${candidate}`);
-        return candidate;
-      }
-    }
-
-    log.warn("Mpv executable path not found anywhere");
-    return null;
-  }
-
-  static async #resolveMpvExecFromPATH() {
-    const isWindows = os.platform() === "win32";
-    const whichCommand = isWindows ? "where" : "which";
-
-    return new Promise((resolve) => {
-      const proc = spawn(whichCommand, ["mpv"], { encoding: "utf8" });
-      let stdout = "";
-      proc.stdout.on("data", (data) => (stdout += data.toString()));
-      proc.on("close", (code) => {
-        if (code !== 0 || !stdout.trim()) {
-          log.warn("mpv not found in PATH");
-          return resolve(null);
-        }
-        const result = stdout.trim().split("\n")[0].trim();
-        log.info(`Found mpv at: ${result}`);
-        resolve(result);
-      });
-      proc.on("error", () => {
-        log.warn("mpv not found in PATH");
-        resolve(null);
-      });
-    });
   }
 
   #getWindowConfigs() {

@@ -208,3 +208,99 @@ export async function writeSearchHistory(history) {
     log.error("Failed to save search history: ", error.message);
   }
 }
+
+export async function loadSettings() {
+  try {
+    const data = await readFile(Paths.SettingsFilePath, "utf-8");
+    if (data.trim() === "" || !("TurnOnSubsByDefaultInternal" in JSON.parse(data)))
+      throw new Error("empty Settings File");
+
+    const JData = JSON.parse(data);
+    if (JData?.MpvExecPath == null || JData?.MpvExecPath.trim() === "")
+      JData.MpvExecPath = await findMpvExecPath();
+
+    JData.LanguagesToDownload ??= { English: { displayName: "English", iso639: "en" } };
+    JData.DownloadAllSubtitles ??= true;
+
+    return JData;
+  } catch (err) {
+    log.error(err.message);
+    return {
+      PageZoomFactor: 1,
+      TurnOnSubsByDefaultInternal: true,
+      SubFontSizeInternal: 16,
+      SubFontFamilyInternal: "Montserrat",
+      SubColorInternal: "#ffffff",
+      SubBackgroundColorInternal: "#000000",
+      SubBackgroundOpacityLevelInternal: 0,
+      DefaultDownloadPath: Paths.__downloads,
+      rememberDownloadLocationByDefault: true,
+      DownloadSubtitlesByDefault: true,
+      LanguagesToDownload: {
+        English: { displayName: "English", iso639: "en" }
+      },
+      DownloadAllSubtitles: true,
+      MpvExecPath: await findMpvExecPath(),
+    };
+  }
+}
+
+export async function findMpvExecPath() {
+  const fromPath = await resolveMpvExecFromPATH();
+  if (fromPath) return fromPath;
+
+  const knownPaths =
+    os.platform() === "win32"
+      ? [
+          path.join(process.resourcesPath, "mpvBinary", "mpv.exe"),
+          "C:\\Program Files\\mpv\\mpv.exe",
+          "C:\\Program Files (x86)\\mpv\\mpv.exe",
+          path.join(os.homedir(), "AppData", "Local", "Programs", "mpv", "mpv.exe"),
+          path.join(os.homedir(), "scoop", "apps", "mpv", "current", "mpv.exe"),
+          "C:\\tools\\mpv\\mpv.exe",
+          path.join(process.env.LOCALAPPDATA || "", "Microsoft", "WinGet", "Packages", "mpv.exe"),
+        ]
+      : [
+          path.join(process.resourcesPath, "mpvBinary", "mpv"),
+          "/usr/bin/mpv",
+          "/usr/local/bin/mpv",
+          "/opt/homebrew/bin/mpv",
+          "/snap/bin/mpv",
+          "/flatpak/exports/bin/mpv",
+          path.join(os.homedir(), ".local/bin/mpv"),
+        ];
+
+  for (const candidate of knownPaths) {
+    if (fs.existsSync(candidate)) {
+      log.info(`Found mpv at: ${candidate}`);
+      return candidate;
+    }
+  }
+
+  log.warn("Mpv executable path not found anywhere");
+  return null;
+}
+
+async function resolveMpvExecFromPATH() {
+  const isWindows = os.platform() === "win32";
+  const whichCommand = isWindows ? "where" : "which";
+
+  return new Promise((resolve) => {
+    const proc = spawn(whichCommand, ["mpv"], { encoding: "utf8" });
+    let stdout = "";
+    proc.stdout.on("data", (data) => (stdout += data.toString()));
+    proc.on("close", (code) => {
+      if (code !== 0 || !stdout.trim()) {
+        log.warn("mpv not found in PATH");
+        return resolve(null);
+      }
+      const result = stdout.trim().split("\n")[0].trim();
+      log.info(`Found mpv at: ${result}`);
+      resolve(result);
+    });
+    proc.on("error", () => {
+      log.warn("mpv not found in PATH");
+      resolve(null);
+    });
+  });
+}

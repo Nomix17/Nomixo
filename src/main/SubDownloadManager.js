@@ -127,7 +127,22 @@ export class SubDownloadManager {
     return data;
   }
 
-  static async downloadSubsForMedia(mediaInfo, torrentId, torrentDownloadDir) {
+  static filterSubtitlesByLanguage(subsObjects, LanguagesToDownload) {
+    const targetIsoCodes = new Set(
+      Object.values(LanguagesToDownload || {})
+        .map(lang => lang.iso639?.toLowerCase())
+        .filter(Boolean)
+    );
+
+    if (!Array.isArray(subsObjects)) return [];
+
+    return subsObjects.filter(sub => {
+      const subLang = sub?.language?.toLowerCase();
+      return targetIsoCodes.has(subLang);
+    });
+  }
+
+  static async downloadSubsForMedia(mediaInfo, torrentId, torrentDownloadDir, subtitleSettings) {
     const abortController = new AbortController();
     this.activeDownloads.set(torrentId, abortController);
 
@@ -145,14 +160,30 @@ export class SubDownloadManager {
         return [];
       }
 
-      return await this.scheduleDownloads(subsDownloadDir, subsObjects, abortController.signal, torrentId);
+      log.info("Download All Subtitles:", subtitleSettings?.DownloadAllSubtitles);
+      log.info("Languages To Download:",
+        Object.values(subtitleSettings?.LanguagesToDownload || {}).map(lang => lang.displayName?.toLowerCase())
+      );
+
+      const filteredSubsObjects = 
+        subtitleSettings && !subtitleSettings.DownloadAllSubtitles
+          ? this.filterSubtitlesByLanguage(subsObjects, subtitleSettings.LanguagesToDownload)
+          : subsObjects;
+
+      console.debug();
+      if (!filteredSubsObjects.length) {
+        this.sendProgressCallBack?.({ torrentId, message: "No subtitles found matching your selected languages", done: true, error: true });
+        return [];
+      }
+
+      return await this.scheduleDownloads(subsDownloadDir, filteredSubsObjects, abortController.signal, torrentId);
 
     } catch (err) {
       if (abortController.signal.aborted) {
         log.info(`Subtitle download for ${torrentId} aborted`);
         this.sendProgressCallBack?.({ torrentId, message: `Subtitle download aborted`, error: true, done: true });
       } else {
-        log.error(`Subtitle download for ${torrentId} failed: ${err.message}`);
+        log.error(`Subtitle download for ${torrentId} failed: ${err}`);
         this.sendProgressCallBack?.({ torrentId, message: err.message, error: true, done: true });
       }
       return [];

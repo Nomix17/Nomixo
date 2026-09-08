@@ -18,8 +18,8 @@ export class QueuedWebTorrent {
     this.current = null;
   }
 
-  async add(torrentInfo, opts = {}, priority = false, onStart = null, downloadSubtitles = true, onSubtitlesStart = null) {
-    const item = { torrentInfo, opts, onStart, downloadSubtitles, onSubtitlesStart };
+  async add(torrentInfo, opts = {}, priority = false, onStart = null, downloadSubtitles = true, subtitleSettings = null, onSubtitlesStart = null) {
+    const item = { torrentInfo, opts, onStart, downloadSubtitles, onSubtitlesStart, subtitleSettings };
     const donePromise = new Promise((resolve, reject) => {
       item.resolve = resolve;
       item.reject = reject;
@@ -59,7 +59,8 @@ export class QueuedWebTorrent {
       reject: item.reject,
       onStart: item.onStart,
       downloadSubtitles: item.downloadSubtitles,
-      onSubtitlesStart: item.onSubtitlesStart
+      onSubtitlesStart: item.onSubtitlesStart,
+      subtitleSettings: item.subtitleSettings
     });
 
     try {
@@ -88,7 +89,8 @@ export class QueuedWebTorrent {
       reject: item.reject,
       onStart: item.onStart,
       downloadSubtitles: item.downloadSubtitles,
-      onSubtitlesStart: item.onSubtitlesStart
+      onSubtitlesStart: item.onSubtitlesStart,
+      subtitleSettings: item.subtitleSettings
     };
 
     if (item.downloadSubtitles) {
@@ -97,7 +99,8 @@ export class QueuedWebTorrent {
       await SubDownloadManager.downloadSubsForMedia(
         item.torrentInfo,
         item.torrentInfo.torrentId,
-        item.torrentInfo.downloadPath
+        item.torrentInfo.downloadPath,
+        item.subtitleSettings
       ).catch(err => log.error(`Subtitle download failed for ${item.torrentInfo.torrentId}:`, err));
 
       if (this.current?.info?.torrentId !== item.torrentInfo.torrentId) {
@@ -239,7 +242,8 @@ export class QueuedWebTorrent {
       reject: item.reject,
       onStart: item.onStart,
       downloadSubtitles: item.downloadSubtitles,
-      onSubtitlesStart: item.onSubtitlesStart
+      onSubtitlesStart: item.onSubtitlesStart,
+      subtitleSettings: item.subtitleSettings
     });
 
     try {
