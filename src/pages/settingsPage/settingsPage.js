@@ -138,6 +138,7 @@ function resetThemeDialogState() {
   themeDialogState = { mode: "create", themeName: null, themePath: null, cardEl: null };
 }
 
+let hideThemeCustomizeOverlay = null;
 async function openThemeDialog(mode, { themeName = null, themePath = null, cardEl = null } = {}) {
   themeDialogState = { mode, themeName, themePath, cardEl };
 
@@ -152,6 +153,18 @@ async function openThemeDialog(mode, { themeName = null, themePath = null, cardE
   saveNewThemeBtn.textContent = "Save";
   applySelectedColor(ColorInputsWithAlphaValue);
   document.getElementById("theme-overlay").classList.add("active");
+  dontGoBack = true;
+
+  if (hideThemeCustomizeOverlay) {
+    document.removeEventListener("keydown", hideThemeCustomizeOverlay);
+  }
+  
+  hideThemeCustomizeOverlay = (event) => {
+    if(event.key === "Escape")
+      closeThemeOverlay();
+  };
+  
+  document.addEventListener("keydown", hideThemeCustomizeOverlay);
 }
 
 function editTheme(cardEl, themeName, themePath) {
@@ -229,11 +242,12 @@ saveNewThemeBtn.addEventListener("click", async () => {
   resetThemeDialogState();
 });
 
-const closeNewThemeDiv = document.querySelector("#details-customizeTheme .floating-x-remove-btn");
-closeNewThemeDiv.addEventListener("click", () => {
+const closeThemeOverlay = () => {
   document.getElementById("theme-overlay").classList.remove("active");
   resetThemeDialogState();
-});
+}
+const closeNewThemeDiv = document.querySelector("#details-customizeTheme .floating-x-remove-btn");
+closeNewThemeDiv.addEventListener("click", closeThemeOverlay);
 
 applyButtonDiv.addEventListener('focusin', () => {
   applyButtonDiv.classList.add('visible');
@@ -685,6 +699,8 @@ function createThemeCardEditBtn(cardEl, themeName, themePath) {
 
   cardEl.appendChild(editBtn);
 }
+
+let hideDeletePreparedThemeOverlay = null;
 function createRemoveThemeConfirmationPopup(cardEl, themeName, themePath) {
   const overlay = document.getElementById('deleteOverlay');
   const deleteMsg = overlay.querySelector('.delete-msg');
@@ -708,6 +724,18 @@ function createRemoveThemeConfirmationPopup(cardEl, themeName, themePath) {
     overlay.classList.remove('active');
     cardEl.remove();
   });
+
+  if (hideDeletePreparedThemeOverlay) {
+    document.removeEventListener("keydown", hideDeletePreparedThemeOverlay);
+  }
+  
+  hideDeletePreparedThemeOverlay = (event) => {
+    if(event.key === "Escape")
+      overlay.classList.remove('active');
+  };
+  
+  document.addEventListener("keydown", hideDeletePreparedThemeOverlay);
+  dontGoBack = true;
 }
 
 function addCardEventListener(cardEl) {
