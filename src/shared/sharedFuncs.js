@@ -823,7 +823,12 @@ function addEventListenerToMediaDomElementToOpenDetailPage(mediaDomElement,media
 
 const renderedMedia = new Set();
 function insertMediaElements(MediaSearchResults, MediaContainer, MediaType, LibraryInformation) {
-  if(!MediaSearchResults?.length) throw new Error("No data was Fetched");
+  if (!MediaSearchResults?.length) throw new Error("No data was Fetched");
+  const isMultiContainer = Array.isArray(MediaContainer);
+
+  const fragments = isMultiContainer
+    ? [document.createDocumentFragment(), document.createDocumentFragment(), document.createDocumentFragment(), document.createDocumentFragment()]
+    : [document.createDocumentFragment()];
 
   MediaSearchResults.forEach(obj => {
     const mediaId = obj?.["id"] ?? "Unknown";
@@ -832,29 +837,46 @@ function insertMediaElements(MediaSearchResults, MediaContainer, MediaType, Libr
     const thisMediaType = obj?.["media_type"] ?? MediaType;
     const mediaKey = `${mediaId}-${thisMediaType}`;
     let posterImage;
-    
-    if(!renderedMedia.has(mediaKey)) {
-      if(obj?.["poster_path"]) posterImage = ("https://image.tmdb.org/t/p/w500/"+obj["poster_path"]).replace(/([^:]\/)\/+/g, '$1');
-      else if(obj?.["profile_path"])  posterImage = ("https://image.tmdb.org/t/p/w500/"+obj["profile_path"]).replace(/([^:]\/)\/+/g, '$1');
-      else if(thisMediaType === "person") posterImage = "../../../assets/ProfileNotFound.svg"
-      else posterImage = "../../../assets/PosterNotFound.svg"
 
-      const mediaDomElement = creatingTheBaseOfNewMediaElement(mediaTitle, posterImage, mediaId, thisMediaType);
-      const toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, mediaId, thisMediaType, mediaTitle, posterImage)
-      if(thisMediaType.toLowerCase() !== "person")
-        mediaDomElement.appendChild(toggleInLibraryBtn);
+    if (renderedMedia.has(mediaKey)) return;
 
-      if(!Array.isArray(MediaContainer)) {
-        MediaContainer.appendChild(mediaDomElement);
-      } else {
-        if(thisMediaType.toLowerCase() === "movie") MediaContainer[0].append(mediaDomElement);
-        else if(thisMediaType.toLowerCase() === "tv") MediaContainer[1].append(mediaDomElement);
-        else if(thisMediaType.toLowerCase() === "person") MediaContainer[2].append(mediaDomElement);
-        else MediaContainer[3].append(mediaDomElement);
-      }
-      renderedMedia.add(mediaKey);
+    if (obj?.["poster_path"]) {
+      posterImage = ("https://image.tmdb.org/t/p/w500/" + obj["poster_path"]).replace(/([^:]\/)\/+/g, '$1');
+    } else if (obj?.["profile_path"]) {
+      posterImage = ("https://image.tmdb.org/t/p/w500/" + obj["profile_path"]).replace(/([^:]\/)\/+/g, '$1');
+    } else if (thisMediaType === "person") {
+      posterImage = "../../../assets/ProfileNotFound.svg";
+    } else {
+      posterImage = "../../../assets/PosterNotFound.svg";
     }
+
+    const mediaDomElement = creatingTheBaseOfNewMediaElement(mediaTitle, posterImage, mediaId, thisMediaType);
+    const toggleInLibraryBtn = createToggleToLibraryButton(LibraryInformation, mediaId, thisMediaType, mediaTitle, posterImage);
+
+    if (thisMediaType.toLowerCase() !== "person") {
+      mediaDomElement.appendChild(toggleInLibraryBtn);
+    }
+
+    if (!isMultiContainer) {
+      fragments[0].appendChild(mediaDomElement);
+    } else {
+      const typeLower = thisMediaType.toLowerCase();
+      if (typeLower === "movie") fragments[0].appendChild(mediaDomElement);
+      else if (typeLower === "tv") fragments[1].appendChild(mediaDomElement);
+      else if (typeLower === "person") fragments[2].appendChild(mediaDomElement);
+      else fragments[3].appendChild(mediaDomElement);
+    }
+
+    renderedMedia.add(mediaKey);
   });
+
+  if (!isMultiContainer) {
+    MediaContainer.appendChild(fragments[0]);
+  } else {
+    fragments.forEach((fragment, i) => {
+      if (fragment.hasChildNodes()) MediaContainer[i].appendChild(fragment);
+    });
+  }
 }
 
 async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePage = false) {
