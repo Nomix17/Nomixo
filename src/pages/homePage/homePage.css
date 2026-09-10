@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+@font-face {
+  font-family: 'Noto Sans SC';
+  src: url("../../../assets/fonts/NotoSansSC-VariableFont_wght.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 @font-face{
   font-family: Montserrat;
   src: url("../../../assets/fonts/Montserrat-VariableFont_wght.ttf");
