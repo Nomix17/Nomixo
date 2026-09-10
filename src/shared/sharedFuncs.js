@@ -1510,11 +1510,12 @@ async function handleFullScreenIcon() {
 async function handleGoBackIcon(){
   const goBackButton = document.querySelector("#btn-goBack");
   const goBackIcon = goBackButton.querySelector("svg");
-  const canGoBack = await window.electronAPI.canGoBack();
-  if(canGoBack){
+  const canGoBack = window.__initialNavState.canGoBack;
+
+  if(canGoBack) {
     goBackIcon.style.opacity = "1";
     goBackButton.style.cursor = "cursor";
-  }else{
+  } else {
     goBackIcon.style.opacity = "0.1";
     goBackButton.style.cursor = "auto";
     goBackButton.style.backgroundColor = "transparent";

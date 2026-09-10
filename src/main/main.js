@@ -208,8 +208,8 @@ ipcMain.handle("remove-prepared-theme", async (event, themefilePath) => {
 
 // ======================= NAVIGATION =======================
 
-ipcMain.handle("can-go-back", () => {
-  return appManager.browserWindow.webContents.navigationHistory.canGoBack();
+ipcMain.on("can-go-back", (event) => {
+  event.returnValue =  appManager.browserWindow.webContents.navigationHistory.canGoBack();
 });
 
 ipcMain.handle("go-back", (event, currentPageURL) => {

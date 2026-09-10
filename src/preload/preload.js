@@ -89,8 +89,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendSystemNotification: (options) => ipcRenderer.send("send-system-notification", options)
 });
 
-
 const zoomFactor = ipcRenderer.sendSync('get-zoom-factor');
 if (zoomFactor) {
   webFrame.setZoomFactor(zoomFactor);
 }
+
+const canGoBack = ipcRenderer.sendSync("can-go-back");
+contextBridge.exposeInMainWorld("__initialNavState", {
+  canGoBack: canGoBack,
+});
