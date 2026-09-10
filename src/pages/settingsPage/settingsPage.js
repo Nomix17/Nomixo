@@ -541,17 +541,11 @@ function getSubConfig(){
 function setFloatingZoomFactorDiv(value) {
   let bubble = document.querySelector('output[for="foo"]');
   bubble.innerHTML = Math.round(value * 100) + " %";
-  let marginLeft = 0;
-  let min = 0;
-  let max = 2;
-
-  let percent = (value - min) / (max - min);
-
-  let inputBarSize = ZoomFactorInput.offsetWidth;
-
-  let newLeft = percent * inputBarSize;
-
-  bubble.style.left = marginLeft+newLeft + "px";
+  let percent = (value - 0) / (2 - 0);
+  requestAnimationFrame(() => {
+    let inputBarSize = ZoomFactorInput.offsetWidth;
+    bubble.style.left = percent * inputBarSize + "px";
+  });
 }
 
 function rgbToHex(rgb){
@@ -771,7 +765,6 @@ async function renderPreparedThemeCards() {
   const themesFiles = await window.electronAPI.getPreparedThemes();
   const container = document.querySelector(".prepared-themes-div");
   container.innerHTML = "";
-  container.appendChild(addCustomThemeBtn);
 
   const cards = await Promise.all(
     themesFiles.map(
@@ -786,7 +779,10 @@ async function renderPreparedThemeCards() {
     cards.unshift(defaultCard);
   }
 
-  cards.forEach(card => container.insertBefore(card, addCustomThemeBtn));
+  const docFragment = document.createDocumentFragment();
+  docFragment.appendChild(addCustomThemeBtn);
+  cards.forEach(card => docFragment.insertBefore(card, addCustomThemeBtn));
+  container.appendChild(docFragment);
 }
 
 document.querySelectorAll(".edit-btn").forEach(btn => {
