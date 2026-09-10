@@ -170,7 +170,6 @@ export class SubDownloadManager {
           ? this.filterSubtitlesByLanguage(subsObjects, subtitleSettings.LanguagesToDownload)
           : subsObjects;
 
-      console.debug();
       if (!filteredSubsObjects.length) {
         this.sendProgressCallBack?.({ torrentId, message: "No subtitles found matching your selected languages", done: true, error: true });
         return [];
