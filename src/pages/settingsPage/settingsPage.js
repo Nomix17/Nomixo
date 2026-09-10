@@ -918,7 +918,7 @@ function createSubtitleLangTag(language, iso639) {
   tag.dataset.code = iso639;
 
   const label = document.createElement("span");
-  label.textContent = language;
+  label.textContent = language.charAt(0).toUpperCase() + language.slice(1);
 
   const removeBtn = document.createElement("button");
   removeBtn.classList.add("lang-tag-remove");
