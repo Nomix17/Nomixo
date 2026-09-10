@@ -223,6 +223,7 @@ function createEpisodeEventListeners(SeasonDiv, EpisodeElement, episodeInfo) {
       const defaultRatio = await getDefaultRatio();
       resizeTorrentAndEpisodeElement(defaultRatio,episodeResultsList);
       resizeTorrentAndEpisodeElement(defaultRatio,torrentResultsList);
+      addSpaceToTopOfTorrentContainer();
 
       document.documentElement.classList.add("torrent-panel-open");
       torrentResultsList.innerHTML = "";
@@ -249,18 +250,18 @@ function handleEpisodeElementColoring(DivContainer, currentEpisodeElement) {
 }
 
 async function fetchMediaTorrent(episodeInfo={}) {
-  let libraryInfo = await loadMediaEntryPointLibraryInfo();
-
   try {
     const imdb_id = await IMDB_IDPromise;
     const seasonNum = Number(episodeInfo.seasonNumber);
     const episodeNum = Number(episodeInfo.episodeNumber);
-    const url = (MediaType === "tv") 
+    const url = (MediaType === "tv")
       ? `https://torrentio.strem.fun/stream/series/${imdb_id}:${seasonNum}:${episodeNum}.json`
       : `https://torrentio.strem.fun/stream/movie/${imdb_id}.json`;
 
-    const mediaTorrentRes = await fetch(url);
-    const mediaTorrentInformation = await mediaTorrentRes.json();
+    const [libraryInfo, mediaTorrentInformation] = await Promise.all([
+      loadMediaEntryPointLibraryInfo(),
+      fetch(url).then(res => res.json())
+    ]);
     await renderMediaTorrent(mediaTorrentInformation, libraryInfo?.[0],episodeInfo);
 
   } catch (error) {
@@ -699,9 +700,9 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
   torrentResultsList.innerHTML = "";
   torrentResultsList.classList.remove("visible-flex");
 
-  addSpaceToTopOfTorrentContainer();
   const imdb_id = await IMDB_IDPromise;
 
+  const docFragment = document.createDocumentFragment();
   data.streams.forEach(streamData => {
     const parsedTorrentInfo = parseTorrentInfo(streamData);
     if (parsedTorrentInfo.fileName.trim() !== "") {
@@ -716,16 +717,16 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
         episodeNumber: episodeInfo.episodeNumber
       };
       const torrentElement = createTorrentElement(torrentInfo);
+      // const isCurrentlyWatching = isWatchingLater(
+      //   torrentInfo,
+      //   episodeInfo,
+      //   MediaLibraryInfo
+      // );
 
-      const isCurrentlyWatching = 
-        MediaLibraryInfo?.typeOfSave?.includes("Currently Watching") &&
-        String(torrentInfo.MagnetLink) === String(MediaLibraryInfo["MagnetLink"]) &&
-        String(episodeInfo.seasonNumber) === String(MediaLibraryInfo["seasonNumber"]) &&
-        String(episodeInfo.episodeNumber) === String(MediaLibraryInfo["episodeNumber"]);
-
-      torrentResultsList.append(torrentElement);
+      docFragment.appendChild(torrentElement);
     }
   });
+  torrentResultsList.append(docFragment);
 
   if (torrentResultsList.innerHTML.trim() === "")
     throw new Error("No Useful Results Were found !");
@@ -735,6 +736,13 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
   document.getElementById("div-movieMedias").scrollTop = torrentScrollValue
   torrentSidePanel.classList.remove("preloadingTorrent");
 }
+
+const isWatchingLater = (torrentInfo, episodeInfo, mediaLibraryInfo) => {
+  return mediaLibraryInfo?.typeOfSave?.includes("Currently Watching") &&
+  String(torrentInfo.MagnetLink) === String(mediaLibraryInfo["MagnetLink"]) &&
+  String(episodeInfo.seasonNumber) === String(mediaLibraryInfo["seasonNumber"]) &&
+  String(episodeInfo.episodeNumber) === String(mediaLibraryInfo["episodeNumber"]);
+};
 
 function createTorrentElement(torrentInfo) {
   const TorrentElement = document.createElement("div");
@@ -896,7 +904,6 @@ async function handleDivsResize() {
 function resizeTorrentAndEpisodeElement(radio,DivElement) {
   DivElement.style.maxWidth = window.innerWidth*radio+"px";
   DivElement.style.minWidth = window.innerWidth*radio+"px";
-  addSpaceToTopOfTorrentContainer();
 }
 
 function addMediaToLibrary(typeOfSave = "Watch Later", setAsPressed = false) {
@@ -988,23 +995,26 @@ function moveDiv(event,ToResizeDiv) {
 }
 
 function getSelectSeasonContainerHeight() {
-  return selectSeasonContainer.offsetHeight > 0 
-    ? selectSeasonContainer.offsetHeight + "px" 
-    : "15px";
+  const height = selectSeasonContainer.offsetHeight;
+  return height > 0 ? height + "px" : "15px";
 }
 
 function addSpaceToTopOfTorrentContainer() {
   const dummyDiv = document.getElementById("dummyDiv");
-  const selectSeasonContainerHeight = getSelectSeasonContainerHeight();
 
-  dummyDiv.style.height = selectSeasonContainerHeight;
-  torrentSidePanel.style.paddingBottom = selectSeasonContainerHeight;
+  requestAnimationFrame(() => {
+    const selectSeasonContainerHeight = getSelectSeasonContainerHeight();
+    dummyDiv.style.height = selectSeasonContainerHeight;
+    torrentSidePanel.style.paddingBottom = selectSeasonContainerHeight;
+  });
 }
 
 function addNothingWasFoundDivMargin(nothingWasFoundDiv) {
-  const selectSeasonContainerHeight = getSelectSeasonContainerHeight();
-  if(nothingWasFoundDiv)
-    nothingWasFoundDiv.style.marginBottom = selectSeasonContainerHeight;
+  requestAnimationFrame(() => {
+    const selectSeasonContainerHeight = getSelectSeasonContainerHeight();
+    if(nothingWasFoundDiv)
+      nothingWasFoundDiv.style.marginBottom = selectSeasonContainerHeight;
+  });
 }
 
 async function showDownloadInfoInputDiv(DownloadTargetInfo) {
