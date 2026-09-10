@@ -163,8 +163,12 @@ async function openThemeDialog(mode, { themeName = null, themePath = null, cardE
     if(event.key === "Escape")
       closeThemeOverlay();
   };
-  
+
+  const themeTitleErrorMsg = document.getElementById("theme-title-error-msg");
+  themeTitleErrorMsg.textContent = "";
+  themeTitleErrorMsg.classList.add("active");
   document.addEventListener("keydown", hideThemeCustomizeOverlay);
+  newThemeNameInput.addEventListener("keydown", handleNewThemeNameInputKeyDown);
 }
 
 function editTheme(cardEl, themeName, themePath) {
@@ -175,14 +179,20 @@ addCustomThemeBtn.addEventListener("click", async () => {
   await openThemeDialog("create");
 });
 
-const newThemeNameInput = document.getElementById("theme-title");
-newThemeNameInput.addEventListener("input", () => {
+const handleNewThemeNameInputKeyDown = (event) => {
+  const themeTitleErrorMsg = document.getElementById("theme-title-error-msg");
+  themeTitleErrorMsg.textContent = "";
+  themeTitleErrorMsg.classList.remove("active");
   newThemeNameInput.classList.remove("error-shake");
-});
+  if(event.key === "Enter")
+    saveNewTheme();
+};
 
-const saveNewThemeBtn = document.querySelector(".save-new-theme-btn");
-saveNewThemeBtn.addEventListener("click", async () => {
+const newThemeNameInput = document.getElementById("theme-title");
+newThemeNameInput.addEventListener("keydown", handleNewThemeNameInputKeyDown);
 
+
+const saveNewTheme = async() => {
   const shakeNewThemeInput = () => {
     newThemeNameInput.focus();
     newThemeNameInput.classList.add("error-shake");
@@ -192,7 +202,11 @@ saveNewThemeBtn.addEventListener("click", async () => {
   }
 
   const newThemeName = newThemeNameInput?.value;
-  if(newThemeName == null || newThemeName.trim() == "") {
+  const fileNameValidation = validateThemeName(newThemeName);
+  if(!fileNameValidation.valid && fileNameValidation.reason != null) {
+    const themeTitleErrorMsg = document.getElementById("theme-title-error-msg");
+    themeTitleErrorMsg.textContent = fileNameValidation.reason 
+    themeTitleErrorMsg.classList.add("active");
     shakeNewThemeInput();
     return;
   }
@@ -238,11 +252,16 @@ saveNewThemeBtn.addEventListener("click", async () => {
     displayMessage("new theme was saved.");
   }
 
+  newThemeNameInput.removeEventListener("keydown", handleNewThemeNameInputKeyDown);
   document.getElementById("theme-overlay").classList.remove("active");
   resetThemeDialogState();
-});
+};
+
+const saveNewThemeBtn = document.querySelector(".save-new-theme-btn");
+saveNewThemeBtn.addEventListener("click", saveNewTheme);
 
 const closeThemeOverlay = () => {
+  newThemeNameInput.removeEventListener("keydown", handleNewThemeNameInputKeyDown);
   document.getElementById("theme-overlay").classList.remove("active");
   resetThemeDialogState();
 }

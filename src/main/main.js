@@ -1,6 +1,6 @@
 import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
 import path from "path";
-import { copyFile, writeFile, readFile, unlink, access, readdir, stat } from 'fs/promises';
+import { copyFile, writeFile, readFile, unlink, rm, access, readdir, stat } from 'fs/promises';
 
 import { log } from "./debugging.js";
 import dotenv from "dotenv";
@@ -12,6 +12,7 @@ import { SubDownloadManager } from "./SubDownloadManager.js";
 import languageDict from "./languageDict.js";
 import { Paths, FilesManager } from "./FilesManager.js";
 import {
+  sanitizeFileName,
   pathExists,
   generateUniqueId,
   findFile,
@@ -154,7 +155,7 @@ ipcMain.handle("get-prepared-themes", async () => {
 
 ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj) => {
   try {
-    const fileName = newThemeName.toLowerCase();
+    const fileName = sanitizeFileName(newThemeName.toLowerCase());
     const themeFilePath = path.join(Paths.themesDirPath, `${fileName}.css`);
     if(await pathExists(themeFilePath))
       throw new Error(`Theme '${newThemeName}' Already Exists`);
@@ -174,7 +175,7 @@ ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj)
 ipcMain.handle("edit-prepared-theme", async (event, themeInfo) => {
   const { oldThemeName, oldThemePath, newThemeName, newThemeObj } = themeInfo;
   try {
-    const fileName = newThemeName.toLowerCase();
+    const fileName = sanitizeFileName(newThemeName.toLowerCase());
     const themeFilePath = path.join(Paths.themesDirPath, `${fileName}.css`);
     const oldFileName = path.basename(oldThemePath, ".css");
     const isRename = fileName !== oldFileName;
@@ -201,11 +202,8 @@ ipcMain.handle("edit-prepared-theme", async (event, themeInfo) => {
 });
 
 ipcMain.handle("remove-prepared-theme", async (event, themefilePath) => {
-  if(
-    (await pathExists(themefilePath)) &&
-    path.dirname(themefilePath) == Paths.themesDirPath
-  )
-    await unlink(themefilePath);
+  if(path.dirname(themefilePath) !== Paths.themesDirPath) return;
+  await rm(themefilePath, { force: true });
 });
 
 // ======================= NAVIGATION =======================

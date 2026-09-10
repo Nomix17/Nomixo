@@ -1831,3 +1831,30 @@ function triggerLoadingGif() {
     catch (err) { console.log(err) } 
   }, 30);
 }
+
+const RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i;
+const ILLEGAL_CHARS = /[/\\?%*:|"<>\x00-\x1f\x7f]/;
+const MAX_LENGTH = 200;
+
+function validateThemeName(name) {
+  if (name == null || name === '')
+    return { valid: false, reason: 'Theme name cannot be empty.' };
+
+  const trimmed = name.trim();
+  if (trimmed === '')
+    return { valid: false, reason: 'Theme name cannot be just whitespace.' };
+
+  if (/^\.+$/.test(trimmed))
+    return { valid: false, reason: 'Theme name cannot consist only of dots.' };
+
+  if (ILLEGAL_CHARS.test(trimmed))
+    return { valid: false, reason: 'Theme name contains invalid characters: / \\ ? % * : | " < >', };
+
+  if (RESERVED_NAMES.test(trimmed))
+    return { valid: false, reason: `"${trimmed}" is a reserved system name.` };
+
+  if (Array.from(trimmed).length > MAX_LENGTH)
+    return { valid: false, reason: `Theme name must be ${MAX_LENGTH} characters or fewer.` }
+
+  return { valid: true, reason: null };
+}

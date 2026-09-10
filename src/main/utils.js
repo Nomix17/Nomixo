@@ -47,6 +47,26 @@ export function sanitizeUrl(urlString) {
   return u.toString();
 }
 
+export function sanitizeFileName(fileName) {
+  const name = fileName
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\x00-\x1f\x7f]/g, '')
+    .trim()
+    .replace(/[/\\?%*:|"<>]/g, '')
+    .replace(/^\.+/, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 200);
+
+  if (!name) {
+    throw new Error('Invalid file name: empty after sanitization');
+  }
+
+  return name;
+}
+
 export async function sendSystemNotification({
   title = "Notification", body = "",
   icon = null, onClick = null,
