@@ -491,11 +491,20 @@ function CalculateMoviePostersContainer(divsToResize){
 }
 
 function checkIfDivShouldHaveMoveToRightOrLeftButton(MediaDivs) {
-  MediaDivs.forEach(MediaDiv => {
-    if(MediaDiv.scrollWidth === MediaDiv.clientWidth)
-       MediaDiv.parentElement.querySelectorAll(".movingArrowButton").forEach(btn => btn.style.display = "none");
-    else
-      MediaDiv.parentElement.querySelectorAll(".movingArrowButton").forEach(btn => btn.style.display = "flex");
+  requestAnimationFrame(() => {
+    MediaDivs.forEach(MediaDiv => {
+      const parent = MediaDiv.parentElement;
+      if (!parent) return;
+
+      const arrowButtons = parent.querySelectorAll(".movingArrowButton");
+      if (!arrowButtons.length) return;
+      const isScrollable = MediaDiv.scrollWidth > MediaDiv.clientWidth;
+      const displayStyle = isScrollable ? "flex" : "none";
+
+      arrowButtons.forEach(btn => {
+        btn.style.display = displayStyle;
+      });
+    });
   });
 }
 
@@ -762,7 +771,7 @@ const SortingCriteria = {
 
 // ################################### MEDIA ELEMENT CREATION ###################################
 
-function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,imageLoadingAnimation=true){
+function creatingTheBaseOfNewMediaElement(Title, PosterImage, Id, ThisMediaType,imageLoadingAnimation=true) {
   const mediaDomElement = document.createElement("div");
   const mediaPosterContainer = document.createElement("div");
   const mediaPosterElement = document.createElement("img");
@@ -848,38 +857,48 @@ function insertMediaElements(MediaSearchResults, MediaContainer, MediaType, Libr
   });
 }
 
-async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePage=false){
-  const ThisMediaId = mediaEntryPoint?.MediaId;
-  const ThisMediaType = mediaEntryPoint?.MediaType;
-  const ThisSaveType = mediaEntryPoint?.typeOfSave;
-  const ThisSaveTime = mediaEntryPoint?.timeOfSave;
+async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePage = false) {
+  const { 
+    MediaId: ThisMediaId, 
+    MediaType: ThisMediaType, 
+    typeOfSave: ThisSaveType, 
+    timeOfSave: ThisSaveTime 
+  } = mediaEntryPoint ?? {};
+
   let ThisMediaTitle = mediaEntryPoint?.Title;
   let PosterImage = mediaEntryPoint?.posterUrl;
 
-  if (mediaEntryPoint?.posterUrl == null || mediaEntryPoint?.Title == null) {
+  if (!PosterImage || !ThisMediaTitle) {
     const mediaInfo = await getMediaInfo(ThisMediaId, ThisMediaType, apiKey);
-    PosterImage =  
-        mediaInfo?.["poster_path"] 
-        ? "https://image.tmdb.org/t/p/w500/"+mediaInfo["poster_path"] 
-        : "../../../assets/PosterNotFound.svg";
+    
+    PosterImage = mediaInfo?.poster_path 
+      ? normalizeRootUrl(`https://image.tmdb.org/t/p/w500${mediaInfo.poster_path}`)
+      : "../../../assets/PosterNotFound.svg";
 
-    PosterImage = normalizeRootUrl(PosterImage);
-    ThisMediaTitle =  mediaInfo?.["name"] ?? mediaInfo?.["title"];
-    const targetIdentification = {MediaId:ThisMediaId,MediaType:ThisMediaType};
-    updateLibraryElement(targetIdentification,{posterUrl:PosterImage, Title:ThisMediaTitle});
+    ThisMediaTitle = mediaInfo?.name ?? mediaInfo?.title ?? "Untitled";
+
+    const targetIdentification = { MediaId: ThisMediaId, MediaType: ThisMediaType };
+    updateLibraryElement(targetIdentification, { posterUrl: PosterImage, Title: ThisMediaTitle }).catch(console.error);
   }
 
   const imageLoadingAnimation = true;
-  const movieDomElement = creatingTheBaseOfNewMediaElement(ThisMediaTitle, PosterImage, ThisMediaId, ThisMediaType,imageLoadingAnimation);
-  const removeFromLibraryButton = createRemoveFromWatchingLaterButton(ThisMediaId,ThisMediaType,IsInHomePage)
+  const movieDomElement = creatingTheBaseOfNewMediaElement(
+    ThisMediaTitle, 
+    PosterImage, 
+    ThisMediaId, 
+    ThisMediaType, 
+    imageLoadingAnimation
+  );
 
-  movieDomElement.setAttribute("saveType",ThisSaveType);
-  movieDomElement.setAttribute("saveTime",ThisSaveTime);
-  movieDomElement.setAttribute("posterUrl",PosterImage);
+  const removeFromLibraryButton = createRemoveFromWatchingLaterButton(ThisMediaId, ThisMediaType, IsInHomePage);
+
+  if (ThisSaveType) movieDomElement.setAttribute("saveType", ThisSaveType);
+  if (ThisSaveTime) movieDomElement.setAttribute("saveTime", ThisSaveTime);
+  if (PosterImage) movieDomElement.setAttribute("posterUrl", PosterImage);
 
   movieDomElement.appendChild(removeFromLibraryButton);
 
-  if(ThisSaveType.includes("Currently Watching")){
+  if (ThisSaveType?.includes("Currently Watching")) {
     const continueVideoButton = createContinueWatchingBtn(mediaEntryPoint);
     movieDomElement.appendChild(continueVideoButton);
   }
@@ -887,31 +906,32 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
   return movieDomElement;
 }
 
-function fetchMediaDataFromLibrary (apiKey,wholeLibraryInformation,SavedMedia,RightmiddleDiv,IsInHomePage=false) {
-  return Promise.all (
-    wholeLibraryInformation.map(async (mediaEntryPoint) =>{
-      try {
-        const libElement = await createMediaElementForLibrary(mediaEntryPoint,apiKey,IsInHomePage);
-        SavedMedia.appendChild(libElement);
+async function fetchMediaDataFromLibrary(apiKey, wholeLibraryInformation, SavedMedia, RightmiddleDiv, IsInHomePage = false) {
+  try {
+    const elements = await Promise.all(
+      wholeLibraryInformation.map(mediaEntryPoint => 
+        createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePage)
+      )
+    );
+    const docFragment = document.createDocumentFragment();
+    elements.forEach(element => {
+      if (element) docFragment.appendChild(element);
+    });
+    SavedMedia.appendChild(docFragment);
 
-      } catch(err) {
-        console.error(err);
-        err.message = (err.message === "Failed to fetch")
-          ? "We're having trouble loading data</br>Please Check your connection and refresh!":err.message;
+  } catch (err) {
+    console.error(err);
+    
+    const errorMessage = (err.message === "Failed to fetch")
+      ? "We're having trouble loading data<br/>Please Check your connection and refresh!"
+      : err.message;
 
-        setTimeout(()=>{
-          RightmiddleDiv.innerHTML ="";
-          const WarningElement = DisplayWarningOrErrorForUser(err.message);
-          WarningElement.style.paddingBottom = "1000px;";
-          RightmiddleDiv.appendChild(WarningElement);
-          RightmiddleDiv.style.opacity = 1;
-        },800);
-
-      }
-    })
-  ).then(() => {
-    checkIfDivShouldHaveMoveToRightOrLeftButton([SavedMedia]);
-  });
+    RightmiddleDiv.replaceChildren();
+    
+    const warningElement = DisplayWarningOrErrorForUser(errorMessage);
+    RightmiddleDiv.appendChild(warningElement);
+    RightmiddleDiv.style.opacity = "1";
+  }
 }
 
 function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {

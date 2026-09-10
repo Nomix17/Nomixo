@@ -12,12 +12,11 @@ const typeOfSave = data.get("typeOfSave");
 
 async function loadDataFromLibrary(apiKey){
   const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
-  
-  if(wholeLibraryInformation == null || wholeLibraryInformation.length === 0){
+  if(wholeLibraryInformation == null || wholeLibraryInformation.length === 0) {
     addEmptyLibraryWarning(RightmiddleDiv);
-  }else{
-    await fetchMediaDataFromLibrary(apiKey,wholeLibraryInformation,SavedMedia,RightmiddleDiv);
+    return;
   }
+  await fetchMediaDataFromLibrary(apiKey, wholeLibraryInformation, SavedMedia, RightmiddleDiv);
 }
 
 const getCategorieFullName = (value) => {
@@ -183,7 +182,6 @@ async function initPage() {
   const sortType = cachedMediaInfo?.dropdown_sortType || "newest";
 
   changeDescriptionTitleValue();
-  dropDownInit();
   setDropdownValue(SelectMediaType, mediaType);
   setDropdownValue(SelectSaveType, saveType);
   setDropdownValue(SelectSortType, sortType);
@@ -207,6 +205,7 @@ function focusFunction(element) {
 }
 
 triggerLoadingGif();
+dropDownInit();
 initPage();
 setupKeyPressesForInputElement(searchInput);
 setupKeyPressesHandler();
