@@ -476,6 +476,7 @@ async function loadSettings() {
   applySelectedColor(ColorInputsWithAlphaValue)
 
   await renderPreparedThemeCards();
+  RightmiddleDiv.classList.add("activate");
 }
 
 async function loadExternalSubConfigs(){
@@ -1056,7 +1057,6 @@ document.querySelectorAll(".link-btn").forEach(btn => {
 });
 
 // calling functions
-RightmiddleDiv.classList.add("activate");
 loadCurrentTheme();
 loadExternalSubConfigs();
 loadApiKeys();
