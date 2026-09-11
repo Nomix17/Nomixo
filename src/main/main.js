@@ -250,9 +250,8 @@ ipcMain.handle("request-fullscreen", () => {
   return appManager.browserWindow.isFullScreen();
 });
 
-ipcMain.handle("get-fullscreen-status", (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  return win ? win.isFullScreen() : false;
+ipcMain.on("is-fullscreened", (event) => {
+  event.returnValue = appManager.browserWindow.isFullScreen();
 });
 
 ipcMain.handle("get-full-video-path", async (event, dirPath, fileName) => {

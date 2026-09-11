@@ -95,6 +95,8 @@ if (zoomFactor) {
 }
 
 const canGoBack = ipcRenderer.sendSync("can-go-back");
+const isFullscreened = ipcRenderer.sendSync("is-fullscreened");
 contextBridge.exposeInMainWorld("__initialNavState", {
   canGoBack: canGoBack,
+  isFullscreened: isFullscreened,
 });

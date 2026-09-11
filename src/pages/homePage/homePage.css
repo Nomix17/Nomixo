@@ -399,6 +399,11 @@ body, html {
   cursor:pointer;
 }
 
+#btn-fullscreen svg{
+  width: 90%;
+  fill: rgba(var(--top-bar-icons-color, 255, 255, 255), 0.8);
+}
+
 .btn-floatingNextMovie{
   display: block;
 }
@@ -660,6 +665,7 @@ input::selection {
 #btn-goBack svg{
   opacity:0.1;
   transform:scale(1.1);
+  stroke: rgba(var(--top-bar-icons-color, 255, 255, 255), 0.8);
 }
 #img-goBack {
   background-color:  rgba(0,0,0,0%);
