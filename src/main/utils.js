@@ -47,7 +47,7 @@ export function sanitizeUrl(urlString) {
   return u.toString();
 }
 
-export function sanitizeFileName(fileName) {
+export function sanitizeThemeFileName(fileName) {
   const name = fileName
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -65,6 +65,17 @@ export function sanitizeFileName(fileName) {
   }
 
   return name;
+}
+
+export function sanitizeFilename(filename, replacement = '-') {
+  return filename
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, replacement)
+    .replace(/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)/i, 
+      (_, name, rest) => `${replacement}${name}${rest}`
+    )
+    .trim()
+    .replace(/[. ]+$/, '')
+    || 'untitled';
 }
 
 export async function sendSystemNotification({

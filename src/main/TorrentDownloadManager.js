@@ -1,6 +1,6 @@
 import { QueuedWebTorrent } from './QueuedWebTorrent.js';
 import {
-  sanitizeFileName,
+  sanitizeFilename,
   generateUniqueId,
   normaliseFileName,
   sendSystemNotification,
@@ -365,7 +365,7 @@ class TorrentDownloadManager {
 
   sanitizeDirNameForOS(torrentEntry) {
     const { dirName, seasonNumber, episodeNumber, MagnetLink } = torrentEntry;
-    const cleaned = sanitizeFileName(dirName);
+    const cleaned = sanitizeFilename(dirName);
     const dirId = generateUniqueId(`${dirName}-${MagnetLink}`);
     return seasonNumber && episodeNumber
       ? `${cleaned.slice(0, 120)}-S${seasonNumber}E${episodeNumber}-${dirId}`

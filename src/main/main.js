@@ -12,7 +12,8 @@ import { SubDownloadManager } from "./SubDownloadManager.js";
 import languageDict from "./languageDict.js";
 import { Paths, FilesManager } from "./FilesManager.js";
 import {
-  sanitizeFileName,
+  sanitizeFilename,
+  sanitizeThemeFileName,
   pathExists,
   generateUniqueId,
   findFile,
@@ -155,7 +156,7 @@ ipcMain.handle("get-prepared-themes", async () => {
 
 ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj) => {
   try {
-    const fileName = sanitizeFileName(newThemeName.toLowerCase());
+    const fileName = sanitizeThemeFileName(newThemeName.toLowerCase());
     const themeFilePath = path.join(Paths.themesDirPath, `${fileName}.css`);
     if(await pathExists(themeFilePath))
       throw new Error(`Theme '${newThemeName}' Already Exists`);
@@ -175,7 +176,7 @@ ipcMain.handle("create-prepared-theme", async (event, newThemeName, newThemeObj)
 ipcMain.handle("edit-prepared-theme", async (event, themeInfo) => {
   const { oldThemeName, oldThemePath, newThemeName, newThemeObj } = themeInfo;
   try {
-    const fileName = sanitizeFileName(newThemeName.toLowerCase());
+    const fileName = sanitizeThemeFileName(newThemeName.toLowerCase());
     const themeFilePath = path.join(Paths.themesDirPath, `${fileName}.css`);
     const oldFileName = path.basename(oldThemePath, ".css");
     const isRename = fileName !== oldFileName;
@@ -379,7 +380,7 @@ ipcMain.handle("download-image", async (event, downloadPath, imageUrl) => {
 
 ipcMain.handle("download-backdrop", async (event, backgroundImageUrl, title) => {
   const ext = path.extname(backgroundImageUrl);
-  const fileName = `${title}${ext}`;
+  const fileName = `${sanitizeFilename(title)}${ext}`;
   const { canceled, filePath } = await dialog.showSaveDialog({
     defaultPath: path.join(app.getPath("home"), fileName),
     filters: [ { name: "Images", extensions: ["png", "jpg", "jpeg", "webp"] }, ],
