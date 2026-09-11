@@ -895,18 +895,19 @@ function updateDownloadUI() {
 
 function handleEmptyDownloadCategories() {
   const categories = document.querySelectorAll(".downloads-categorie");
-  
-  for(const downloadCategorieDiv of categories) {
+
+  for (const downloadCategorieDiv of categories) {
     const container = downloadCategorieDiv.querySelector('.movieContainer');
     const isEmpty = [...container.children].every(el => el.matches('p.empty-container-text'));
-    const emptyParagraph = downloadCategorieDiv.querySelector('.empty-container-text')
+    const emptyParagraph = downloadCategorieDiv.querySelector('.empty-container-text');
     const elementCategoryControllBtn = downloadCategorieDiv.querySelector("button");
-    if(emptyParagraph)
+    if (emptyParagraph)
       emptyParagraph.classList.toggle('hidden', !isEmpty);
-    if(elementCategoryControllBtn)
+
+    if (elementCategoryControllBtn)
       elementCategoryControllBtn.classList.toggle("disabled", isEmpty);
 
-    if(isEmpty && downloadCategorieDiv.id === "currently-downloading-div")
+    if (isEmpty && downloadCategorieDiv.id === "currently-downloading-div")
       removeDownloadBackgroundDiv();
 
     downloadCategorieDiv.classList.toggle("hide", isEmpty && (
