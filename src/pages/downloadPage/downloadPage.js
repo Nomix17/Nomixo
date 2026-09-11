@@ -927,6 +927,12 @@ function updateElementsCounterForEachContainer() {
   }
 }
 
+const toFileUrl = (winPath) => {
+  const normalized = winPath.replace(/\\/g, '/');
+  const encoded = normalized.split('/').map(encodeURIComponent).join('/');
+  return `file:///${encoded}`;
+};
+
 async function addBackgroundImageToDownloadingDiv(mediaElement, posterImage) {
   if (posterImage === currentbgImage) return;
   currentbgImage = posterImage;
@@ -936,8 +942,9 @@ async function addBackgroundImageToDownloadingDiv(mediaElement, posterImage) {
     let backgroundImageDiv = document.createElement("div");
     backgroundImageDiv.className = "currently-downloading-background-div";
     backgroundImageDiv.classList.remove("shown");   
-    await makeSureImageIsLoaded(posterImage);
-    backgroundImageDiv.style.backgroundImage = `url('${posterImage}')`;
+    const encodedPosterImg = toFileUrl(posterImage);
+    await makeSureImageIsLoaded(encodedPosterImg);
+    backgroundImageDiv.style.backgroundImage = `url('${encodedPosterImg}')`;
     currentlyDownloadingDiv.prepend(backgroundImageDiv);
     
     requestAnimationFrame(() => {
