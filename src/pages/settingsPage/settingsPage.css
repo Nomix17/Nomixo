@@ -1300,74 +1300,6 @@ input[type="range"]::-webkit-slider-thumb {
   height: 30px;
 }
 
-.rtp-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(var(--background-color), 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.rtp-box {
-  background: rgba(var(--dropdown-background-color));
-  border: 1px solid rgba(var(--accent-color));
-  border-radius: 8px;
-  padding: 24px;
-  width: 320px;
-  max-width: 90%;
-  box-shadow: 0 8px 24px rgba(var(--background-color), 0.4);
-  font-family: system-ui, sans-serif;
-  text-align: center;
-}
-
-.rtp-box p {
-  margin: 0 0 20px;
-  font-size: 15px;
-  color: rgb(var(--text-color));
-  line-height: 1.4;
-}
-
-.rtp-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-.rtp-btn {
-  flex: 1;
-  padding: 8px 16px;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  font-size: 14px;
-  cursor: pointer;
-  color: rgb(var(--text-color));
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.rtp-btn-cancel {
-  background: rgba(var(--button-surface-color));
-  border-color: rgba(var(--icon-muted-color), 0.6);
-}
-
-.rtp-btn-cancel:hover {
-  border-color: rgba(var(--hover-border-color), 0.6);
-  background: rgba(var(--icon-bright-color), 0.15);
-}
-
-.rtp-btn-confirm {
-  background: rgba(var(--button-surface-color));
-  border-color: rgba(var(--accent-color));
-}
-
-.rtp-btn-confirm:hover {
-  background: rgba(var(--accent-color));
-}
-
 #div-BackupRestore {
   display: flex;
   flex-direction: column;
@@ -1480,7 +1412,7 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   gap: 9.2px;
-  border: 1px solid rgba(var(--icon-muted-color), 0.15);
+  border: 1px solid rgba(255,255,255, 0.1);
   border-radius: 7.36px;
   padding: 11.04px 13.8px;
   font-size: 13.8px;

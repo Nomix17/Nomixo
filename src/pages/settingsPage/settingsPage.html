@@ -514,32 +514,6 @@
                 <output class="alphaValueFloatingDiv" for="SecondaryColorAlphaRange" onforminput="value = foo.valueasnumber;"></output>
               </div>
 
-              <h3 class="theme-section-title">Icons</h3>
-
-              <h2>Icon Color<span class="field-hint">Default tint for icons throughout the app</span></h2>
-              <input type="color" id="icon-muted-color"/>
-
-              <h2>Icon Hover Color<span class="field-hint">Icon tint on hover or active state</span></h2>
-              <div class="ElementsTopOfEachOther">
-                <input type="color" id="icon-bright-color"/>
-                <input name="HoveredIconsBgAlphaValueRange" id="HoveredIconsBgAlphaValueRange" class="alphaRangeValue" type="range"/>
-                <output class="alphaValueFloatingDiv" for="HoveredIconsBgAlphaValueRange" onforminput="value = foo.valueasnumber;"></output>
-              </div>
-
-              <h2>Secondary Icon Color<span class="field-hint">Small icons, like timestamps &amp; metadata</span></h2>
-              <div class="ElementsTopOfEachOther">
-                <input type="color" id="muted-icon-color"/>
-                <input name="smallIconsColorAlphaValueRange" id="smallIconsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
-                <output class="alphaValueFloatingDiv" for="smallIconsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-              </div>
-
-              <h2>Top Bar Icons<span class="field-hint">Back &amp; fullscreen icons in the top bar</span></h2>
-              <div class="ElementsTopOfEachOther">
-                <input type="color" id="top-bar-icons-color"/>
-                <input name="TopBarIconsAlphaValueRange" id="TopBarIconsAlphaValueRange" class="alphaRangeValue" type="range"/>
-                <output class="alphaValueFloatingDiv" for="TopBarIconsAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
-              </div>
-
               <h3 class="theme-section-title">Buttons &amp; Surfaces</h3>
 
               <h2>Button Surface<span class="field-hint">Background for buttons &amp; list items on hover</span></h2>
@@ -563,8 +537,27 @@
                 <output class="alphaValueFloatingDiv" for="DropDownAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
               </div>
 
+              <h2>Login Button<span class="field-hint">Background color of login button</span></h2>
+              <input type="color" id="login-btn-bg"/>
+
               <h2>Hover Border<span class="field-hint">Outline when you hover a poster</span></h2>
               <input type="color" id="hover-border-color"/>
+
+              <h3 class="theme-section-title">Icons</h3>
+
+              <h2>Icon Color<span class="field-hint">Small icons, like timestamps &amp; metadata</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input type="color" id="muted-icon-color"/>
+                <input name="smallIconsColorAlphaValueRange" id="smallIconsColorAlphaValueRange" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="smallIconsColorAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+              </div>
+
+              <h2>Top Bar Icons<span class="field-hint">Back &amp; fullscreen icons in the top bar</span></h2>
+              <div class="ElementsTopOfEachOther">
+                <input type="color" id="top-bar-icons-color"/>
+                <input name="TopBarIconsAlphaValueRange" id="TopBarIconsAlphaValueRange" class="alphaRangeValue" type="range"/>
+                <output class="alphaValueFloatingDiv" for="TopBarIconsAlphaValueRange" onforminput="value = foo.valueAsNumber;"></output>
+              </div>
 
               <h3 class="theme-section-title">Sidebar</h3>
 

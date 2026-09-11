@@ -12,10 +12,11 @@
   right:16px;
   width:43px;
 }
-#img-fullscreen{
-  background-color:  rgba(0,0,0,0%);
-  width:60%;
+#btn-fullscreen svg{
+  width: 68%;
+  fill: rgba(var(--top-bar-icons-color));
 }
+
 .card {
   width: 100%;
   max-width: 468px;
@@ -65,7 +66,7 @@
   width: 6.3px;
   height: 6.3px;
   border-radius: 50%;
-  background: rgba(var(--icon-muted-color));
+  background: rgba(var(--login-btn-bg));
   flex-shrink: 0;
 }
 
@@ -154,9 +155,9 @@
   flex: 1;
   min-height: 45px;
   margin-top: 21.6px;
-  border: 2px solid rgba(var(--icon-muted-color));
+  border: 2px solid rgba(var(--login-btn-bg));
   border-radius: 9px;
-  background: rgba(var(--icon-muted-color));
+  background: rgba(var(--login-btn-bg));
   color: rgba(255,255,255,1);
   font-family: inherit;
   font-size: 14.4px;
