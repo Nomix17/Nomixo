@@ -1,5 +1,5 @@
 html{
-  background-color:rgba(var(--primary-color));
+  background-color:rgba(var(--background-color));
 }
 
 :-webkit-scrollbar{
@@ -42,7 +42,7 @@ button{
   left: 50%;
   transform: translateX(-50%);
   border-radius: 20px;
-  background-color: rgba(var(--primary-color), 0.98);
+  background-color: rgba(var(--background-color), 0.98);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   bottom: 11%;
@@ -133,7 +133,7 @@ button{
   transform: translateY(-50%);
   width: 0;
   height: 0;
-  background: rgba(var(--secondary-color));
+  background: rgba(var(--accent-color));
   border-radius: 0 2px 2px 0;
   transition: all 0.2s ease;
 }

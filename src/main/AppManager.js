@@ -77,8 +77,8 @@ export class AppManager {
 
   #getBackgroundColor() {
     const content = fs.readFileSync(Paths.ThemeFilePath, "utf8");
-    const backgroundColorLine = content.split("\n").find(line => line.includes("--primary-color")) ?? "10,14,23";
-    return `rgb(${backgroundColorLine.trim().split(":")[1].split(";")[0] ?? backgroundColorLine})`;
+    const backgroundColorLine = content.split("\n").find(line => line.includes("--background-color")) ?? "10,14,23;";
+    return `rgb(${backgroundColorLine.trim()?.split(":")[1]?.split(";")[0] ?? backgroundColorLine})`;
   }
 
   async #createBrowserWindow() {

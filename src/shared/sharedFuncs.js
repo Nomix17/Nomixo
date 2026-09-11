@@ -1108,7 +1108,7 @@ async function getIMDB_ID(MediaType, MediaId, apiKeyPromise) {
 
 function addContrastForPlayIcon() {
   const root = document.documentElement;
-  const primaryColor = getComputedStyle(root).getPropertyValue('--primary-color').trim();
+  const primaryColor = getComputedStyle(root).getPropertyValue('--background-color').trim();
   const [r,g,b] = primaryColor.split(",").slice(0,3).map(Number);
   const avgColor = (r + g + b) / 3;
   const fillColor = avgColor > 100 ? "black" : "white";
@@ -1455,8 +1455,8 @@ async function handleSplashScreen() {
   }
 
   const themeColors = await window.electronAPI.loadTheme();
-  const colorObj = themeColors.theme.find(item => "primary-color" in item);
-  const useDarkIcon = colorObj ? isWhiteMode(colorObj["primary-color"]) : false;
+  const colorObj = themeColors.theme.find(item => "background-color" in item);
+  const useDarkIcon = colorObj ? isWhiteMode(colorObj["background-color"]) : false;
 
   const logImg = document.getElementById("img-splash-logo");
   logImg.src = "../../../assets/logo/" + (useDarkIcon ? "dark-icon.png" : "icon.png");

@@ -28,7 +28,7 @@ input, button, textarea, :focus {
 
 option{
   color: rgba(var(--text-color),0.6);
-  background-color:rgba(var(--primary-color));
+  background-color:rgba(var(--background-color));
 }
 
 body{
@@ -40,7 +40,7 @@ body{
   position:relative;
 }
 .fetchingFailed{
-  background-color: rgba(var(--primary-color),0.9);
+  background-color: rgba(var(--background-color),0.9);
 }
 
 h1,
@@ -131,8 +131,8 @@ p{
   display:flex;
   flex-direction:column;
   backdrop-filter: blur(20px);
-  background-color: rgba(var(--primary-color),0.8);
-  border:3px solid rgb(var(--primary-color));
+  background-color: rgba(var(--background-color),0.8);
+  border:3px solid rgb(var(--background-color));
   border-right:none;
   border-radius:20px 0 0 0 ;
   margin-right:-1px;
@@ -193,8 +193,8 @@ p{
 
 #div-torrentSidePanel {
   backdrop-filter: blur(20px);
-  background-color: rgba(var(--primary-color),0.8);
-  border:3px solid rgb(var(--primary-color));
+  background-color: rgba(var(--background-color),0.8);
+  border:3px solid rgb(var(--background-color));
   border-left:none;
   border-radius:20px 0 0 0;
   overflow:hidden;
@@ -284,7 +284,7 @@ p{
   cursor: pointer;
 }
 .div-TorrentMedia:active{
-  border: 2px solid rgba(var(--MovieElement-hover-BorderColor));
+  border: 2px solid rgba(var(--hover-border-color));
   background-color: rgba(255, 255, 255, 10%);
 }
 .div-episodes-Element{
@@ -569,7 +569,7 @@ h1{
 }
 .div-seedImage .seed,
 .div-storageImage .center{
-  fill:rgba(var(--small-icons-color));
+  fill:rgba(var(--muted-icon-color));
 }
 
 .div-storageImage .border{
@@ -617,7 +617,7 @@ h1{
 }
 
 .svg-notFound-bg{
-  fill: rgba(var(--secondary-color));
+  fill: rgba(var(--accent-color));
 }
 
 .svg-notFound-fg{
@@ -704,7 +704,7 @@ h1{
   display: inline-block;
   width: 160%;
   height: 160%;
-  fill: rgba(var(--icon-hover-color));
+  fill: rgba(var(--icon-bright-color));
   filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
   transition: transform 0.1s ease;
 }
@@ -722,7 +722,7 @@ h1{
   list-style: none;
   margin: 0;
   padding: 0;
-  background-color:rgb(var(--primary-color));
+  background-color:rgb(var(--background-color));
   border: 1px solid #ccc;
   border-radius:10px;
   width: 135px;
@@ -768,7 +768,7 @@ h1{
 }
 
 .download-container {
-  background-color: rgba(var(--primary-color));
+  background-color: rgba(var(--background-color));
   border: 2px solid rgba(255,255,255,0.2);
   border-radius: 20px;
   padding: 28.8px;
@@ -856,7 +856,7 @@ label {
   flex: 1;
   padding: 10.8px 14.4px;
   font-size: 12.6px;
-  background-color: rgba(var(--input-backgroundColor));
+  background-color: rgba(var(--input-background-color));
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 10px;
   color: rgb(var(--text-color));
@@ -889,7 +889,7 @@ label {
   width: 100%;
   padding: 10.8px 14.4px;
   font-size: 12.6px;
-  background-color: rgba(var(--input-backgroundColor));
+  background-color: rgba(var(--input-background-color));
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 10px;
   color: rgb(var(--text-color));
@@ -904,7 +904,7 @@ label {
 }
 
 .quality-select option {
-  background-color: rgba(var(--primary-color));
+  background-color: rgba(var(--background-color));
   color: rgb(var(--text-color));
 }
 
@@ -1066,7 +1066,7 @@ label {
 }
 
 .div-episodes-Element.pressed_episode{
-  border-color:rgba(var(--MovieElement-hover-BorderColor), 100%);
+  border-color:rgba(var(--hover-border-color), 100%);
   background-color:rgba(255, 255, 255, 0.1);
 }
 
@@ -1081,7 +1081,7 @@ label {
 
 :focus-visible {
   cursor:pointer;
-  border-color: rgba(var(--MovieElement-hover-BorderColor));
+  border-color: rgba(var(--hover-border-color));
 }
 
 .hovered_torrent {
@@ -1090,7 +1090,7 @@ label {
 
 .floatingDiv{
   position: absolute;
-  background: rgba(var(--drop-down-color));
+  background: rgba(var(--dropdown-background-color));
   color: rgb(var(--text-color));
   padding: 7.2px 10.8px;
   border-radius: 7px;
@@ -1318,7 +1318,7 @@ html.torrent-panel-open #div-movieMedias.visible-flex {
   width: 45px;
   height: 45px;
 
-  background-color: rgb(var(--icon-color));
+  background-color: rgb(var(--icon-muted-color));
   border: none;
   border-radius: 13px;
 

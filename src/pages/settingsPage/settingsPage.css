@@ -72,8 +72,8 @@ table {
   width: 26px;
   height: 26px;
   margin-top: 6px;
-  color: rgba(var(--secondary-color));
-  stroke: rgba(var(--secondary-color));
+  color: rgba(var(--accent-color));
+  stroke: rgba(var(--accent-color));
 }
 
 .section-header-text {
@@ -212,7 +212,7 @@ output {
   display:flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(var(--secondary-color));
+  background-color: rgba(var(--accent-color));
   font-size: 13.8px;
   padding: 7.36px 9.2px;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -285,7 +285,7 @@ output {
 }
 
 #input-ZoomFactor {
-  accent-color: rgba(var(--secondary-color));
+  accent-color: rgba(var(--accent-color));
   width: 200px;
   margin: 0;
 }
@@ -295,7 +295,7 @@ output {
   appearance: none;
   width: 18.4px;
   height: 18.4px;
-  background: rgba(var(--secondary-color));
+  background: rgba(var(--accent-color));
   border: 2px solid white;
   border-radius: 50%;
   cursor: pointer;
@@ -329,7 +329,7 @@ output {
   height: 41.4px;
   padding: 0 11.04px;
   border-radius: 7.36px;
-  background: rgba(var(--input-backgroundColor));
+  background: rgba(var(--input-background-color));
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   color: rgb(var(--text-color));
   font-size: 14.72px;
@@ -376,7 +376,7 @@ output {
   height: 41.4px;
   padding: 0 11.04px;
   border-radius: 7.36px;
-  background: rgba(var(--input-backgroundColor));
+  background: rgba(var(--input-background-color));
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   color: rgb(var(--text-color));
   font-size: 14.72px;
@@ -398,7 +398,7 @@ output {
   right: 0;
   max-height: 220px;
   overflow-y: auto;
-  background: rgba(var(--drop-down-color));
+  background: rgba(var(--dropdown-background-color));
   border: 0.5px solid rgba(255, 255, 255, 0.15);
   border-radius: 7.36px;
   z-index: 20;
@@ -423,7 +423,7 @@ output {
 }
 
 .subtitle-lang-dropdown .select-option.selected {
-  color: rgba(var(--secondary-color));
+  color: rgba(var(--accent-color));
 }
 
 .subtitle-lang-dropdown .select-option.hidden {
@@ -564,7 +564,7 @@ output {
   height: 41.4px;
   padding: 0 11.04px;
   border-radius: 7.36px;
-  background: rgba(var(--input-backgroundColor));
+  background: rgba(var(--input-background-color));
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   color: rgb(var(--text-color));
   font-size: 14.72px;
@@ -1235,7 +1235,7 @@ input[type="range"]::-webkit-slider-thumb {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(var(--primary-color), 0.5);
+  background: rgba(var(--background-color), 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1243,13 +1243,13 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .rtp-box {
-  background: rgba(var(--drop-down-color));
-  border: 1px solid rgba(var(--secondary-color));
+  background: rgba(var(--dropdown-background-color));
+  border: 1px solid rgba(var(--accent-color));
   border-radius: 8px;
   padding: 24px;
   width: 320px;
   max-width: 90%;
-  box-shadow: 0 8px 24px rgba(var(--primary-color), 0.4);
+  box-shadow: 0 8px 24px rgba(var(--background-color), 0.4);
   font-family: system-ui, sans-serif;
   text-align: center;
 }
@@ -1279,22 +1279,22 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .rtp-btn-cancel {
-  background: rgba(var(--main-buttons-color));
-  border-color: rgba(var(--icon-color), 0.6);
+  background: rgba(var(--button-surface-color));
+  border-color: rgba(var(--icon-muted-color), 0.6);
 }
 
 .rtp-btn-cancel:hover {
-  border-color: rgba(var(--MovieElement-hover-BorderColor), 0.6);
-  background: rgba(var(--icon-hover-color), 0.15);
+  border-color: rgba(var(--hover-border-color), 0.6);
+  background: rgba(var(--icon-bright-color), 0.15);
 }
 
 .rtp-btn-confirm {
-  background: rgba(var(--main-buttons-color));
-  border-color: rgba(var(--secondary-color));
+  background: rgba(var(--button-surface-color));
+  border-color: rgba(var(--accent-color));
 }
 
 .rtp-btn-confirm:hover {
-  background: rgba(var(--secondary-color));
+  background: rgba(var(--accent-color));
 }
 
 #div-BackupRestore {
@@ -1348,7 +1348,7 @@ input[type="range"]::-webkit-slider-thumb {
 .backup-card-icon {
   width: 18.4px;
   height: 18.4px;
-  stroke: rgba(var(--small-icons-color));
+  stroke: rgba(var(--muted-icon-color));
   transition: fill 0.3s ease;
 }
 
@@ -1409,27 +1409,27 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   gap: 9.2px;
-  border: 1px solid rgba(var(--icon-color), 0.15);
+  border: 1px solid rgba(var(--icon-muted-color), 0.15);
   border-radius: 7.36px;
   padding: 11.04px 13.8px;
   font-size: 13.8px;
-  background-color: rgba(var(--input-backgroundColor), 0.5);
+  background-color: rgba(var(--input-background-color), 0.5);
   color: var(--text-color);
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .import-mode-option:hover {
-  border-color: rgba(var(--secondary-color));
+  border-color: rgba(var(--accent-color));
 }
 
 .import-mode-option:has(input:checked) {
-  border-color: rgba(var(--secondary-color));
+  border-color: rgba(var(--accent-color));
   background-color: rgba(255,255,255,0.04);
 }
 
 .import-mode-option input[type="radio"] {
-  accent-color: rgba(var(--secondary-color));
+  accent-color: rgba(var(--accent-color));
   cursor: pointer;
 }
 
@@ -1438,12 +1438,12 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 #confirmImportBtn {
-  background-color: rgba(var(--secondary-color));
+  background-color: rgba(var(--accent-color));
   border:1px solid transparent;
 }
 #confirmImportBtn:hover {
   background-color: transparent;
-  border-color: rgba(var(--secondary-color));
+  border-color: rgba(var(--accent-color));
 }
 
 #cancelBtn {

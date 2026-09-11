@@ -352,7 +352,7 @@
 }
 
 .play-button {
-  background-color: rgba(var(--primary-color), 0.5);
+  background-color: rgba(var(--background-color), 0.5);
 }
 
 .play-button.just-finished {
@@ -365,7 +365,7 @@
 }
 
 .toggle-pause-button {
-  background-color: rgba(var(--primary-color), 0.6);
+  background-color: rgba(var(--background-color), 0.6);
 }
 
 .play-button:hover,
@@ -484,7 +484,7 @@
   z-index: 1000;
   display: none;
   min-width: 108px;
-  background: rgba(var(--drop-down-color));
+  background: rgba(var(--dropdown-background-color));
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);

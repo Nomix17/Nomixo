@@ -1,13 +1,19 @@
 :root{
   --background-gradient-value:0;
-  --primary-color:14,14,14;
-  --secondary-color:70,70,70,1;
-  --main-buttons-color:255,255,255,0.06;
-  --small-icons-color:90,90,90,1;
-  --MovieElement-hover-BorderColor:220,220,220;
-  --input-backgroundColor:0,0,0,0.5;
-  --drop-down-color:26,26,26,1;
-  --icon-color:60,60,60;
-  --icon-hover-color:230,230,230,1;
+  --background-color:14,14,14;
+  --accent-color:70,70,70,1;
+  --button-surface-color:255,255,255,0.06;
+  --muted-icon-color:90,90,90,1;
+  --hover-border-color:220,220,220;
+  --input-background-color:0,0,0,0.5;
+  --dropdown-background-color:26,26,26,1;
+  --icon-muted-color:60,60,60;
+  --icon-bright-color:230,230,230,1;
   --text-color:255,255,255;
+  --sidebar-icon-active-color:230,230,230,1;
+  --sidebar-icon-inactive-color:60,60,60;
+  --sidebar-button-active-color:255,255,255,0.06;
+  --sidebar-button-inactive-color:0,0,0,0;
+  --sidebar-button-border-color:255,255,255,0.25;
+  --top-bar-icons-color:255,255,255,0.8;
 }

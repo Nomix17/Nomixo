@@ -32,7 +32,7 @@
   transition: transform 0.3s;
 }
 .custom-toggle input:checked + .toggle-track {
-  background: rgba(var(--secondary-color));
+  background: rgba(var(--accent-color));
 }
 .custom-toggle input:checked + .toggle-track .toggle-thumb {
   transform: translateX(27.6px) translateY(-50%);

@@ -226,13 +226,13 @@ video{
   margin-bottom:9px;
 }
 #input-videoSlider{
-  accent-color:rgba(var(--secondary-color)); 
+  accent-color:rgba(var(--accent-color)); 
   width:100%;
   margin:0px 9px 0px 9px;
 }
 
 #input-volumeSlider{
-  accent-color:rgba(var(--secondary-color));
+  accent-color:rgba(var(--accent-color));
 }
 
 #p-videoPosition,
@@ -271,7 +271,7 @@ video{
   align-items: center;
   text-align:center;
   flex-direction:column;
-  background-color:rgba(var(--primary-color),1);
+  background-color:rgba(var(--background-color),1);
   color: rgba(var(--text-color),0.5);
   font-size:16.2px;
   font-weight:600;

@@ -3,18 +3,20 @@
 <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img">
 
 <style>
-  .bg-primary   { fill: rgb(var(--primary-color)); }
-  .bg-secondary { fill: rgb(var(--secondary-color)); }
-  .bg-button    { fill: rgba(var(--main-buttons-color)); }
-  .bg-input     { fill: rgba(var(--input-backgroundColor)); }
-  .bg-dropdown  { fill: rgba(var(--drop-down-color)); }
-  .stroke-secondary { stroke: rgb(var(--secondary-color)); }
-  .stroke-hover      { stroke: rgb(var(--MovieElement-hover-BorderColor)); }
-  .icon         { fill: rgb(var(--icon-color));}
-  .icon-hover   { fill: rgba(var(--main-buttons-color)); stroke: rgba(var(--icon-hover-color)); }
+  .bg-primary   { fill: rgb(var(--background-color)); }
+  .bg-secondary { fill: rgb(var(--accent-color)); }
+  .bg-button    { fill: rgba(var(--button-surface-color)); }
+  .bg-input     { fill: rgba(var(--input-background-color)); }
+  .bg-dropdown  { fill: rgba(var(--dropdown-background-color)); }
+  .stroke-secondary { stroke: rgb(var(--accent-color)); }
+  .stroke-hover      { stroke: rgb(var(--hover-border-color)); }
+  .icon         { fill: rgb(var(--icon-muted-color));}
+  .icon-hover   { fill: rgba(var(--button-surface-color)); stroke: rgba(var(--icon-bright-color)); }
   .text-main    { fill: rgb(var(--text-color)); font-family: sans-serif; }
   .text-muted   { fill: rgb(var(--text-color)); font-family: sans-serif; opacity: 0.55; }
   .btn-hover    { fill: rgba(255,255,255,0.1); }
+  .sidebar-icon-inactive { fill: rgb(var(--sidebar-icon-inactive-color)); }
+  .sidebar-btn-active    { fill: rgba(var(--sidebar-button-active-color)); stroke: rgba(var(--sidebar-button-border-color)); }
 </style>
 
 <!-- base -->
@@ -33,11 +35,11 @@
 <rect x="378" y="4" width="12" height="12" rx="3" class="bg-secondary"/>
 
 <!-- left icon rail: simple rounded-rect buttons -->
-<rect x="3" y="26" width="12" height="12" rx="3" class="bg-secondary"/>
-<rect x="3.2" y="48" width="11" height="11" rx="3" class="icon-hover"/>
-<rect x="3" y="70" width="12" height="12" rx="3" class="bg-secondary"/>
-<rect x="3" y="92" width="12" height="12" rx="3" class="bg-secondary"/>
-<rect x="3" y="114" width="12" height="12" rx="3" class="bg-secondary"/>
+<rect x="3" y="26" width="12" height="12" rx="3" class="sidebar-icon-inactive"/>
+<rect x="3.2" y="48" width="11" height="11" rx="3" class="sidebar-btn-active" stroke-width="0.9"/>
+<rect x="3" y="70" width="12" height="12" rx="3" class="sidebar-icon-inactive"/>
+<rect x="3" y="92" width="12" height="12" rx="3" class="sidebar-icon-inactive"/>
+<rect x="3" y="114" width="12" height="12" rx="3" class="sidebar-icon-inactive"/>
 
 <!-- Movies section -->
 <text x="26" y="35" font-size="10" font-weight="500" class="text-main">Movies - Popular</text>

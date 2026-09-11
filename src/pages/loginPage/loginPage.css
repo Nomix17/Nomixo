@@ -65,7 +65,7 @@
   width: 6.3px;
   height: 6.3px;
   border-radius: 50%;
-  background: rgba(var(--icon-color));
+  background: rgba(var(--icon-muted-color));
   flex-shrink: 0;
 }
 
@@ -111,8 +111,8 @@
 }
 .input::placeholder { color: rgba(255,255,255,0.2); }
 .input:focus {
-  border-color: rgba(var(--secondary-color, 255,255,255), 0.4);
-  box-shadow: 0 0 0 3px rgba(var(--secondary-color, 255,255,255), 0.07);
+  border-color: rgba(var(--accent-color, 255,255,255), 0.4);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color, 255,255,255), 0.07);
 }
 .input.is-err {
   border-color: rgba(220, 75, 75, 0.55);
@@ -154,9 +154,9 @@
   flex: 1;
   min-height: 45px;
   margin-top: 21.6px;
-  border: 2px solid rgba(var(--icon-color));
+  border: 2px solid rgba(var(--icon-muted-color));
   border-radius: 9px;
-  background: rgba(var(--icon-color));
+  background: rgba(var(--icon-muted-color));
   color: rgba(255,255,255,1);
   font-family: inherit;
   font-size: 14.4px;

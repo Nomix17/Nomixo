@@ -23,7 +23,7 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(var(--primary-color),0.98) 0%, rgba(var(--primary-color),0.62) 32%, rgba(var(--primary-color),0.10) 62%, rgba(var(--primary-color),0) 85%),
+    linear-gradient(to top, rgba(var(--background-color),0.98) 0%, rgba(var(--background-color),0.62) 32%, rgba(var(--background-color),0.10) 62%, rgba(var(--background-color),0) 85%),
     linear-gradient(to right, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0) 48%);
   }
 

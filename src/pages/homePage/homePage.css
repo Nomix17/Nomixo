@@ -22,11 +22,11 @@ h1{
   padding-left: 5px;
 }
 body::-webkit-scrollbar-track {
-  background:rgba(var(--primary-color));
+  background:rgba(var(--background-color));
 }
 
 option{
-  background-color:rgba(var(--primary-color));
+  background-color:rgba(var(--background-color));
   color:rgb(var(--text-color));
 }
 
@@ -88,7 +88,7 @@ body{
 }
 
 html{
-   background-color: rgba(var(--primary-color));
+   background-color: rgba(var(--background-color));
 }
 
 body, html {
@@ -163,13 +163,14 @@ body, html {
   border-radius:10px;
   text-align:center;
   border: 1px solid transparent;
+  background-color: rgba(var(--sidebar-button-inactive-color));
   width:50px;
   height:50px;
   cursor:pointer;
 }
 
 .icon{
-  fill: rgba(var(--icon-color),1);
+  fill: rgba(var(--sidebar-icon-inactive-color),1);
   background-color:transparent;
   width:97%;
   cursor:pointer;
@@ -182,16 +183,16 @@ body, html {
 
 .btn-middle-left.active .icon,
 .btn-middle-left:hover .icon {
-  fill: rgba(var(--icon-hover-color));
+  fill: rgba(var(--sidebar-icon-active-color));
 }
 
 .btn-middle-left.active,
 .btn-middle-left:hover {
-  background-color: rgba(var(--main-buttons-color));
+  background-color: rgba(var(--sidebar-button-active-color));
 }
 
 .btn-middle-left.active {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(var(--sidebar-button-border-color));
 }
 
 #div-middle-right{
@@ -271,7 +272,7 @@ body, html {
 }
 
 .svg-notFound-bg{
-  fill: rgba(var(--secondary-color));
+  fill: rgba(var(--accent-color));
 }
 
 .svg-notFound-fg{
@@ -291,7 +292,7 @@ body, html {
 
 .div-MovieElement:hover .img-MoviePoster{
   cursor:pointer;
-  border-color: rgba(var(--MovieElement-hover-BorderColor));
+  border-color: rgba(var(--hover-border-color));
 }
 .div-MovieElement:hover .parag-MovieTitle {
   text-align: center;
@@ -318,7 +319,7 @@ body, html {
   padding:10px 29px;
   min-width:410px;
   height:45px;
-  background-color: rgba(var(--input-backgroundColor));
+  background-color: rgba(var(--input-background-color));
   border:2px solid rgba(255,255,255,30%);
   border-radius:100px 0 0 100px;
   border-right:none;
@@ -343,7 +344,7 @@ body, html {
   align-items:center;
   width:45px;
   height:45px;
-  background-color: rgba(var(--input-backgroundColor));
+  background-color: rgba(var(--input-background-color));
   border:2px solid rgba(255,255,255,30%);
   border-radius:0 100px 100px 0;
   border-left:none;
@@ -392,7 +393,7 @@ body, html {
 #btn-goBack:hover,
 #btn-fullscreen:hover{
   cursor:pointer;
-  background-color:  rgba(var(--main-buttons-color));
+  background-color:  rgba(var(--button-surface-color));
   border-color: rgba(255, 255, 255, 0.15);
 }
 #btn-fullscreen:hover #img-fullscreen{
@@ -401,7 +402,7 @@ body, html {
 
 #btn-fullscreen svg{
   width: 90%;
-  fill: rgba(var(--top-bar-icons-color, 255, 255, 255), 0.8);
+  fill: rgba(var(--top-bar-icons-color));
 }
 
 .btn-floatingNextMovie{
@@ -424,13 +425,13 @@ body, html {
   height:100%;
 }
 #div-main-logo .transBackground{
-  fill:rgb(var(--primary-color));
+  fill:rgb(var(--background-color));
 }
 #div-main-logo .mainColor{
-  fill:rgb(var(--icon-color));
+  fill:rgb(var(--icon-muted-color));
 }
 #div-main-logo .secondColor{
-  fill:rgb(var(--icon-hover-color));
+  fill:rgb(var(--icon-bright-color));
 }
 
 #searchIcon{
@@ -528,7 +529,7 @@ input::selection {
 .btn-toggle-in-library[pressed=" "] {
   opacity: 1;
   transform: scale(1);
-  background-color: rgba(var(--primary-color), 0.5);
+  background-color: rgba(var(--background-color), 0.5);
   border-color: rgba(255,255,255,0.2);
 }
 
@@ -665,7 +666,7 @@ input::selection {
 #btn-goBack svg{
   opacity:0.1;
   transform:scale(1.1);
-  stroke: rgba(var(--top-bar-icons-color, 255, 255, 255), 0.8);
+  stroke: rgba(var(--top-bar-icons-color));
 }
 #img-goBack {
   background-color:  rgba(0,0,0,0%);
@@ -690,7 +691,7 @@ input::selection {
   min-width:150px;
   min-height:80px;
   padding: 20px 30px;
-  background-color:rgba(var(--primary-color));
+  background-color:rgba(var(--background-color));
   top:20px;
   right:-120%;
   z-index:2000;
@@ -784,7 +785,7 @@ input::selection {
 
 :focus-visible  .img-MoviePoster {
   cursor:pointer;
-  border-color: rgba(var(--MovieElement-hover-BorderColor));
+  border-color: rgba(var(--hover-border-color));
 }
 
 i[data-lucide="expand"] {
@@ -856,7 +857,7 @@ i[data-lucide="expand"] {
 
 .delete-container {
   position: relative;
-  background-color: rgba(var(--primary-color));
+  background-color: rgba(var(--background-color));
   border: 2px solid rgba(255,255,255,0.2);
   border-radius: 20px;
   padding: 28.8px;
@@ -957,8 +958,8 @@ i[data-lucide="expand"] {
   left: 50%;
   transform: translate(-50%, 0%);
   width: 99%;
-  background-color: rgba(var(--drop-down-color));
-  border: 1px solid rgba(var(--secondary-color));
+  background-color: rgba(var(--dropdown-background-color));
+  border: 1px solid rgba(var(--accent-color));
   border-top: none;
   border-radius: 11px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
@@ -967,7 +968,7 @@ i[data-lucide="expand"] {
   z-index: 1000;
   display: none;
   scrollbar-width: thin;
-  scrollbar-color: rgba(var(--secondary-color)) transparent;
+  scrollbar-color: rgba(var(--accent-color)) transparent;
 }
 
 .recent-searches-dropdown.visible {
@@ -983,12 +984,12 @@ i[data-lucide="expand"] {
 }
 
 .recent-searches-dropdown::-webkit-scrollbar-thumb {
-  background-color: rgba(var(--secondary-color));
+  background-color: rgba(var(--accent-color));
   border-radius: 3px;
 }
 
 .recent-searches-dropdown::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(var(--icon-hover-color));
+  background-color: rgba(var(--icon-bright-color));
 }
 
 .recent-search-item {
@@ -1004,7 +1005,7 @@ i[data-lucide="expand"] {
 }
 
 .recent-search-item:hover {
-  background-color: rgba(var(--main-buttons-color));
+  background-color: rgba(var(--button-surface-color));
 }
 .recent-search-item.hide {
   display:none;
@@ -1038,13 +1039,13 @@ i[data-lucide="expand"] {
 
 .recent-search-time {
   font-size: 12px;
-  color: rgba(var(--small-icons-color));
+  color: rgba(var(--muted-icon-color));
   margin-right:7%;
   flex-shrink: 0;
 }
 
 .recent-search-item.selected {
-  background-color: rgba(var(--main-buttons-color));
+  background-color: rgba(var(--button-surface-color));
 }
 
 #div-splash {
@@ -1054,7 +1055,7 @@ i[data-lucide="expand"] {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: rgba(var(--primary-color));
+  background-color: rgba(var(--background-color));
   z-index: 3000;
   opacity: 1;
   transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
