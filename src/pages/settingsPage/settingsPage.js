@@ -247,6 +247,7 @@ const saveNewTheme = async() => {
     const newCard = await createThemeCard(newThemeName, res.theme_file_path);
     container.insertBefore(newCard, addCustomThemeBtn);
     selectThemeCard(newCard);
+    CurrentTheme = newThemeName;
 
     document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
     displayMessage("new theme was saved.");
