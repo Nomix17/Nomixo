@@ -1,16 +1,16 @@
 :root{
---background-gradient-value:0;
---background-color:10,14,23;
---accent-color:55,65,81,1;
---button-surface-color:255,255,255,0.04;
+  --background-gradient-value:0;
+  --background-color:10,14,23;
+  --accent-color:55,65,81,1;
+  --button-surface-color:255,255,255,0.04;
   --muted-icon-color:148,163,184,1;
---hover-border-color:255,255,255;
---input-background-color:0,0,0,0.44;
---dropdown-background-color:26,35,50,1;
---icon-muted-color:55,65,81;
---icon-bright-color:148,163,184,1;
---text-color:255,255,255
-  ;  --sidebar-icon-active-color:148,163,184,1;
+  --hover-border-color:255,255,255;
+  --input-background-color:0,0,0,0.44;
+  --dropdown-background-color:26,35,50,1;
+  --icon-muted-color:55,65,81;
+  --icon-bright-color:148,163,184,1;
+  --text-color:255,255,255;
+  --sidebar-icon-active-color:148,163,184,1;
   --sidebar-icon-inactive-color:55,65,81;
   --sidebar-button-active-color:255,255,255,0.04;
   --sidebar-button-inactive-color:0,0,0,0;

@@ -65,7 +65,7 @@
   left: 0;
   width: max-content;
   min-width: 100%;
-  background: rgba(var(--drop-down-color));
+  background: rgba(var(--dropdown-background-color));
   border: 1px solid rgba(255, 255, 255, 10%);
   border-radius: 10px;
   max-height: 276px;
