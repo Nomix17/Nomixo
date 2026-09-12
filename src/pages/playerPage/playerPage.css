@@ -80,6 +80,7 @@ html::-webkit-scrollbar{
 #btn-goBack svg {
   width: 110%;
   transform:scale(1.1);
+  stroke: rgba(var(--top-bar-icons-color));
 }
 
 #img-PauseButton,
@@ -103,6 +104,9 @@ html::-webkit-scrollbar{
   border:none;
   border-radius:10px;
 }
+#btn-fullscreen svg{
+  width: 85%;
+  fill: rgba(var(--top-bar-icons-color));
 }
 
 #btn-fullscreen:hover,

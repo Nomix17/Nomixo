@@ -49,6 +49,7 @@ VideoElement.volume = DEFAULT_VOLUME;
 
 setBackgroundImage();
 loadSubSettings();
+handleFullScreenIcon();
 loadVideo();
 
 SubSizeDivInput.value = "+0%";
