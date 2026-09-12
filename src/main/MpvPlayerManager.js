@@ -181,7 +181,10 @@ class MpvPlayerManager {
 
     const closeWorker = () => {
       if (this.#worker && this.#worker.threadId !== -1) {
-        this.#worker.postMessage({ type: "shutdown" });
+        const worker = this.#worker;
+        worker.postMessage({ type: "shutdown" });
+        const forceKill = setTimeout(() => worker.terminate(), 3000);
+        worker.once("exit", () => clearTimeout(forceKill));
         this.#worker = null;
       }
       if (this.#browserWindow && !this.#browserWindow.isVisible())
