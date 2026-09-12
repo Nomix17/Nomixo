@@ -82,7 +82,6 @@ html::-webkit-scrollbar{
   transform:scale(1.1);
 }
 
-#img-fullscreen,
 #img-PauseButton,
 #img-OpenSubtitle,
 #img-OpenPIP,
@@ -104,8 +103,6 @@ html::-webkit-scrollbar{
   border:none;
   border-radius:10px;
 }
-#img-fullscreen {
-  width:80%;
 }
 
 #btn-fullscreen:hover,

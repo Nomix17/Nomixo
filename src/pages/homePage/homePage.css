@@ -385,10 +385,6 @@ body, html {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
-#img-fullscreen{
-  background-color:  rgba(0,0,0,0%);
-  width:80%;
-}
 
 #btn-goBack:hover,
 #btn-fullscreen:hover{
@@ -396,13 +392,11 @@ body, html {
   background-color:  rgba(var(--button-surface-color));
   border-color: rgba(255, 255, 255, 0.15);
 }
-#btn-fullscreen:hover #img-fullscreen{
-  cursor:pointer;
-}
 
 #btn-fullscreen svg{
   width: 90%;
   fill: rgba(var(--top-bar-icons-color));
+
 }
 
 .btn-floatingNextMovie{
