@@ -130,7 +130,7 @@ async function insertPersonFamousWorkIntoSuggestionDiv(credits, personJob, libra
   insertMediaElements(GeneraleWorkData, MediaSuggestions, undefined, libraryInfo);
 }
 
-async function loadCachedMediaData(cachedData) {
+function loadCachedMediaData(cachedData) {
   const containersData = cachedData?.containers_data;
   if(containersData){
     MediaSuggestions.innerHTML = "";

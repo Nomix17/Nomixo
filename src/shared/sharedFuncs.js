@@ -437,8 +437,11 @@ async function loadCachedRightMiddleDivScrollValue(){
 function loadCachedRightDivScrollValue(cachedData) {
   const RightmiddleDiv = document.getElementById("div-middle-right");
   const RightmiddleDivScrollTopValue = cachedData?.right_middle_div_top_scroll_value;
-  if(RightmiddleDivScrollTopValue)
-    RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
+  if (RightmiddleDiv && RightmiddleDivScrollTopValue) {
+    requestAnimationFrame(() => {
+      RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
+    });
+  }
 }
 
 function loadCachedSuggestionsDivScrollValue(cachedData) {
