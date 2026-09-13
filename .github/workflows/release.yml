@@ -38,6 +38,8 @@ jobs:
           path: |
             dist/*.exe
             dist/*.zip
+            dist/*.blockmap
+            dist/latest.yml
 
   build-linux:
     runs-on: ubuntu-latest
@@ -61,6 +63,8 @@ jobs:
             dist/*.rpm
             dist/*.tar.gz
             dist/*.AppImage
+            dist/*.blockmap
+            dist/latest-linux.yml
 
   build-mac:
     runs-on: macos-latest
@@ -79,7 +83,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mac-builds
-          path: dist/*.dmg
+          path: |
+            dist/*.dmg
+            dist/*.blockmap
+            dist/latest-mac.yml
 
   attach-to-release:
     needs: [build-windows, build-linux, build-mac]
