@@ -28,6 +28,11 @@
     "npmRebuild": false,
     "appId": "com.nomixo.app",
     "productName": "Nomixo",
+    "publish": {
+      "provider": "github",
+      "owner": "Nomix17",
+      "repo": "Nomixo"
+    },
     "directories": {
       "buildResources": "assets"
     },
