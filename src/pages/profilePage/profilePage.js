@@ -1,6 +1,7 @@
 const RightmiddleDiv = document.getElementById("div-middle-right");
 const data = new URLSearchParams(window.location.search);
 const personId = data.get("personId");
+let personIMDB_ID;
 const MediaSuggestions = document.getElementById("div-MediaSuggestions")
 const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
@@ -15,10 +16,10 @@ async function getPersonInfo(apiKey) {
     const ProfilePic = PersonInfo.profile_path
     const Department = PersonInfo.known_for_department;
     const Biography = PersonInfo.biography;
-    const ImdbId = PersonInfo.imdb_id; 
+    personIMDB_ID = PersonInfo.imdb_id; 
     document.title = Name +" - Discovery"; 
 
-    const personInformation = [Name, ProfilePic, Department, Biography, ImdbId];
+    const personInformation = [Name, ProfilePic, Department, Biography, personIMDB_ID];
 
     insertPersonInformation(personInformation);
 
@@ -65,12 +66,6 @@ function insertPersonInformation(personInformation) {
   personDepartmentElement.innerText = "Department : "+Department;
   personBioElement.innerText = Biography;
   personFullBioParagraphElement.innerText = Biography;
-
-  personNameElement.addEventListener("click",()=>{
-    const imdbLink = `https://www.imdb.com/name/${ImdbId}/`;
-    console.log(`Opening IMDB link: ${imdbLink}`);
-    window.electronAPI.openExternalLink(imdbLink);
-  });
 
   if(!Biography || Biography.trim() === "")
     hideBiography();
@@ -172,10 +167,11 @@ function loadCachedMediaData(cachedData) {
 }
 
 function loadCachedPersonInfo(cachedMediaInfo) {
-  const personCachedInformation = cachedMediaInfo.person_information;
-  const personInformationDomElement = document.getElementById("div-Person-description")
-  if(personCachedInformation && personInformationDomElement){
-    personInformationDomElement.innerHTML = personCachedInformation
+  const personInfo = cachedMediaInfo.person_information;
+  const personDescriptionEl = document.getElementById("div-Person-description")
+  if(personInfo && personDescriptionEl) {
+    personDescriptionEl.innerHTML = personInfo?.description;
+    personIMDB_ID = personInfo?.IMDB;
   }
 }
 
@@ -189,6 +185,17 @@ async function loadMedia(apiKey, cachedMediaInfo) {
     await getPersonInfo(apiKey)
   }
   addDescriptionButtonsEventListener();
+  addImdbPersonPageListener();
+}
+
+function addImdbPersonPageListener() {
+  const personNameElement = document.getElementById("para-personName");
+  personNameElement.addEventListener("click",()=>{
+    if(personIMDB_ID == null) return;
+    const imdbLink = `https://www.imdb.com/name/${personIMDB_ID}/`;
+    console.log(`Opening IMDB link: ${imdbLink}`);
+    window.electronAPI.openExternalLink(imdbLink);
+  })
 }
 
 async function initPage() {

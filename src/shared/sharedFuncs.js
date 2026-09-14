@@ -380,12 +380,15 @@ async function getDropDownCacheValue(dropDowns){
 async function getProfilePageCacheData(){
   const mediaSuggestionsContainer = document.getElementById("div-MediaSuggestions");
   const containersData = await getContainersHTML([mediaSuggestionsContainer]);
-  const personInformationElement = document.getElementById("div-Person-description");
-  const personInformationHTML = personInformationElement ? personInformationElement.innerHTML : null;
+  const personDescriptionEl = document.getElementById("div-Person-description");
+  const personDescriptionHTML = personDescriptionEl ? personDescriptionEl.innerHTML : null;
   const cacheData = {
     page:"profile",
     "containers_data": containersData,
-    "person_information": personInformationHTML,
+    "person_information": {
+      "description": personDescriptionHTML,
+      "IMDB": personIMDB_ID
+    },
     ...getRightMiddleDivScrollValue(),
   };
 
