@@ -1101,6 +1101,11 @@ function hideUpdateError() {
 }
 
 updateVersionBtn.addEventListener('click', () => {
+  if (updateVersionBtn.classList.contains('downloading')) {
+    window.electronAPI.cancelUpdateDownload();
+    return;
+  }
+
   if (!updateVersionBtn.classList.contains('active')) return;
 
   hideUpdateError();
@@ -1113,7 +1118,24 @@ updateVersionBtn.addEventListener('click', () => {
   window.electronAPI.downloadUpdate();
 });
 
+updateVersionBtn.addEventListener('mouseenter', () => {
+  if (updateVersionBtn.classList.contains('downloading')) {
+    updateVersionBtn.textContent = 'Cancel Download';
+  }
+});
+
+updateVersionBtn.addEventListener('mouseleave', () => {
+  if (updateVersionBtn.classList.contains('downloading')) {
+    updateVersionBtn.textContent = 'Downloading...';
+  }
+});
+
 function handleUpdateDownloadProgress(progressObj) {
+  if (progressObj?.status === "cancelled") {
+    setUpdateButton(updateInfo);
+    return;
+  }
+
   const percentage = progressObj?.percent?.toFixed(2);
   if (percentage !== undefined) {
     updateProgressBarFill.style.width = `${percentage}%`;
@@ -1130,8 +1152,49 @@ function handleUpdateDownloaded() {
   updateDescEl.textContent = 'Update downloaded. Restart to install.';
 }
 
+function getUpdateErrorMessage(error) {
+  const msg = error.message || '';
+  if (msg.includes('net::')) {
+    return 'Failed to download: network error';
+  }
+  if (error.code) {
+    switch (error.code) {
+      case 'ENOENT':
+        return 'Failed to download: required file or folder not found';
+
+      case 'EACCES':
+      case 'EPERM':
+        return 'Failed to download: permission denied, try running as administrator';
+
+      case 'ENOSPC':
+        return 'Failed to download: not enough disk space';
+
+      case 'EBUSY':
+        return 'Failed to download: file is in use by another process';
+
+      case 'EEXIST':
+        return 'Failed to download: file already exists';
+
+      case 'EROFS':
+        return 'Failed to download: destination is read-only';
+
+      default:
+        return `Failed to download: file system error (${error.code})`;
+    }
+  }
+
+  if (/HttpError|status(Code)?\s*:?\s*\d{3}/i.test(msg))
+    return 'Failed to download: server error';
+
+  if (/signature|checksum|sha512/i.test(msg))
+    return 'Failed to download: update verification failed';
+
+  return 'Failed to download: an unexpected error occurred';
+}
+
 function handleUpdateDownloadError(error) {
   console.error('Update download failed:', error);
+  const errorMsg = getUpdateErrorMessage(error);
 
   updateProgressRow.classList.remove('active');
   updateProgressBarFill.style.width = '0%';
@@ -1144,11 +1207,8 @@ function handleUpdateDownloadError(error) {
     ? `Retry Download ${updateInfo.version}`
     : 'Retry Download';
 
-  const message = typeof error === 'string'
-    ? error
-    : (error?.message || 'Something went wrong while downloading the update.');
   updateDescEl.textContent = 'Update failed. You can try downloading it again.';
-  updateErrorText.textContent = message;
+  updateErrorText.textContent = error;
   updateErrorRow.classList.add('active');
   updateErrorRow.classList.remove('error-shake');
   void updateErrorRow.offsetWidth;

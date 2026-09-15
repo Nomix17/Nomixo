@@ -1345,8 +1345,18 @@ input[type="range"]::-webkit-slider-thumb {
 
 .update-version-btn.downloading {
   opacity: 0.6;
-  cursor: default !important;
-  pointer-events: none !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+.update-version-btn.downloading:hover {
+  opacity: 1;
+  background-color: rgba(220, 53, 69, 0.85);
+  border-color: rgb(220, 53, 69);
+}
+
+.update-version-btn.downloading:active {
+  transform: scale(0.98);
 }
 
 .setting-control {

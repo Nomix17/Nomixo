@@ -89,12 +89,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendSystemNotification: (options) => ipcRenderer.send("send-system-notification", options),
 
   getAppVersion: () => ipcRenderer.invoke("get-app-version"),
+  downloadUpdate: () => ipcRenderer.send('download-update'),
+  cancelUpdateDownload: () => ipcRenderer.send('cancel-update-download'),
+  restartAndUpdate: () => ipcRenderer.send("restart-and-update"),
   onUpdateAvailable: (callback) => ipcRenderer.on('update_available', (event, data) => callback(data)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update_downloaded', callback),
   onUpdateDownloadProgress: (callback) => ipcRenderer.on('updates-download-progress', (event, data) => callback(data)),
-  onUpdateDownloadFailed: (callback) => ipcRenderer.on('update-download-error', (event, data) => callback(data)),
-  downloadUpdate: () => ipcRenderer.send('download-update'),
-  restartAndUpdate: () => ipcRenderer.send("restart-and-update")
+  onUpdateDownloadFailed: (callback) => ipcRenderer.on('update-download-error', (event, data) => callback(data))
 });
 
 const zoomFactor = ipcRenderer.sendSync('get-zoom-factor');
