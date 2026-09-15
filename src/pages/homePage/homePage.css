@@ -675,9 +675,11 @@ input::selection {
   transform: translateX(30px);
   transition: opacity 250ms ease, transform 250ms ease;
   z-index: 2000;
-  pointer-events: none;
 }
-
+.notification.activate_pointer,
+.notification.activate_pointer *{
+  cursor: pointer;
+}
 .notification.show {
   opacity: 1;
   transform: translateX(0);

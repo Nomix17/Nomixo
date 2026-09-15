@@ -1341,7 +1341,11 @@ function hideEmptyLibraryWarning(warningContainer){
   }
 }
 
-function displayMessage({ title = "", body = "", duration = 2500 } = {}) {
+function displayMessage({ title = "", body = "", onClick = null, duration = 2500 } = {}) {
+  const hideNotification = () => {
+    el.classList.remove("show");
+    el.addEventListener("transitionend", () => el.remove(), { once: true });
+  };
   const existing = document.querySelector(".notification");
   if (existing) existing.remove();
 
@@ -1363,10 +1367,19 @@ function displayMessage({ title = "", body = "", duration = 2500 } = {}) {
   document.body.appendChild(el);
 
   requestAnimationFrame(() => el.classList.add("show"));
-  setTimeout(() => {
-    el.classList.remove("show");
-    el.addEventListener("transitionend", () => el.remove(), { once: true });
+ 
+  const hidingTimeout = setTimeout(() => {
+    hideNotification();
   }, duration);
+
+  if(onClick) el.classList.add("activate_pointer");
+  el.addEventListener("click", () => {
+    if(onClick) onClick();
+    else {
+    }
+    hideNotification();
+    clearTimeout(hidingTimeout);
+  });
 }
 
 const floatingTooltipSelectors = new Set();
