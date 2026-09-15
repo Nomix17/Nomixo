@@ -1341,21 +1341,32 @@ function hideEmptyLibraryWarning(warningContainer){
   }
 }
 
-function displayMessage(messageContent="hello") {
-  const messageDiv = document.getElementById("messageDiv");
-  messageDiv.style.right = 20;
-  messageDiv.style.transition = "opacity 100ms";
-  messageDiv.style.opacity = 1;
+function displayMessage({ title = "", body = "", duration = 2500 } = {}) {
+  const existing = document.querySelector(".notification");
+  if (existing) existing.remove();
 
-  messageDiv.querySelector("p").innerHTML = messageContent;
-  setTimeout(()=>{
-    messageDiv.style.transition = "opacity 1000ms";
-    messageDiv.style.opacity = 0;
-  },2000);
-  
-  setTimeout(()=>{
-    messageDiv.style.right = "-120%";
-  },2500);
+  const el = document.createElement("div");
+  el.className = "notification";
+
+  if (title) {
+    const h4 = document.createElement("h4");
+    h4.innerHTML = title;
+    el.appendChild(h4);
+  }
+
+  if (body) {
+    const p = document.createElement("p");
+    p.innerHTML = body;
+    el.appendChild(p);
+  }
+
+  document.body.appendChild(el);
+
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => {
+    el.classList.remove("show");
+    el.addEventListener("transitionend", () => el.remove(), { once: true });
+  }, duration);
 }
 
 const floatingTooltipSelectors = new Set();
@@ -1915,3 +1926,14 @@ function validateThemeName(name) {
 
   return { valid: true, reason: null };
 }
+
+
+function monitorMsgFromMainProcess() {
+  window.electronAPI.getMsgFromMainProcess((msg) => {
+    if (msg.type === "request" && msg.request === "exit_video_player") {
+      window.electronAPI.goBack();
+    } else if(msg.type === "msg") {
+    }
+  });
+}
+monitorMsgFromMainProcess();

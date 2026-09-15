@@ -539,9 +539,9 @@ async function downloadBackdrop(event) {
   try {
     const filePath = await window.electronAPI.downloadBackdrop(backgroundImage, GlobalTitle);
     if (filePath)
-      displayMessage(`<div class="display-message"><p class="main-p">Backdrop Saved!</p><p class="secondary-p">${filePath}</p></div>`);
+      displayMessage({ title: "Backdrop Saved!", body: filePath });
   } catch (err) {
-      displayMessage(`<div class="display-message"><p class="main-p">Failed to save backdrop</p></div>`);
+    displayMessage({ title: "Failed to save backdrop" });
   }
 }
 

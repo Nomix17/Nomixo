@@ -220,7 +220,7 @@ const saveNewTheme = async() => {
 
     if(!res.success) {
       shakeNewThemeInput();
-      displayMessage(res.message);
+      displayMessage({ title: "Theme not saved", body: res.message });
       return;
     }
 
@@ -234,13 +234,13 @@ const saveNewTheme = async() => {
     }
     selectThemeCard(document.querySelector(`[card-file-name="${CurrentTheme}"]`) ?? updatedCard);
 
-    displayMessage("theme was updated.");
+    displayMessage({ title: "Theme updated", body: "The theme was updated." });
   } else {
     const res = await window.electronAPI.createPreparedTheme(newThemeName, newThemeObj);
 
     if(!res.success) {
       shakeNewThemeInput();
-      displayMessage(res.message);
+      displayMessage({ title: "Theme not saved", body: res.message });
       return;
     }
 
@@ -250,7 +250,7 @@ const saveNewTheme = async() => {
     CurrentTheme = newThemeName;
 
     document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
-    displayMessage("new theme was saved.");
+    displayMessage({ title: "Theme saved", body: "The new theme was saved." });
   }
 
   newThemeNameInput.removeEventListener("keydown", handleNewThemeNameInputKeyDown);
@@ -280,7 +280,7 @@ applyButton.addEventListener("click",()=> {
     window.electronAPI.applySettings(SettingsObj);
     window.electronAPI.applySubConfig(SubConfigObj);
     document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
-    displayMessage("new settings were saved.");
+    displayMessage({ title: "Settings saved", body: "The new settings were saved." });
     settingsChanged(false);
   }
   saveApiKeys();
@@ -875,7 +875,7 @@ const exportBtn = document.getElementById("btn-exportLibrary");
 exportBtn.addEventListener("click", async () => {
   const exported = await window.electronAPI.exportLibrary();
   if(exported)
-    displayMessage("Library was exported.");
+    displayMessage({ title: "Export complete", body: "Library was exported." });
 });
 
 const confirmImportBtn = document.getElementById("confirmImportBtn");
@@ -885,7 +885,7 @@ confirmImportBtn.addEventListener("click", async() => {
   if(!imported) return;
   const overlay = document.getElementById("import-confirm-overlay");
   overlay.classList.remove("active");
-  displayMessage("Library was imported.");
+  displayMessage({ title: "Import complete", body: "Library was imported." });
 });
 
 const closeOverlayBtn = document.querySelector("#import-confirm-overlay #cancelBtn");

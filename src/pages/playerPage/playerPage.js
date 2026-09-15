@@ -58,7 +58,6 @@ SubDelayDivInput.value = "+0ms";
 repositionSubDiv();
 
 monitoringErrorsCummingFromMainProcess();
-monitorMsgFromMainProcess();
 loadIconsDynamically();
 
 TopButtonsContainer.addEventListener("mouseenter", () => { mouseHoveringOnControlDiv = true; });
@@ -646,14 +645,6 @@ function monitoringErrorsCummingFromMainProcess() {
   window.electronAPI.getFetchingTorrentErrors((err) => {
     console.error(err);
     createWarningDiv(err);
-  });
-}
-
-function monitorMsgFromMainProcess() {
-  window.electronAPI.getMsgFromMainProcess((msg) => {
-    if (msg.type === "request" && msg.request === "exit_video_player") {
-      window.electronAPI.goBack();
-    }
   });
 }
 
