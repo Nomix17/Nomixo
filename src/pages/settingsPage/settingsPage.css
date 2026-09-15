@@ -820,11 +820,14 @@ input[type="color"] {
   padding: 0;
   background: none;
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: transform 0.2s ease !important;
 }
 
 input[type="color"]:hover {
   transform: scale(1.05);
+}
+input[type="color"]:active {
+  transform: scale(1);
 }
 
 input[type="color"]::-webkit-color-swatch-wrapper {
@@ -983,8 +986,8 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   flex-direction: column;
   position: relative;
-  width: min(460px, 92vw);
-  max-height: 75vh;
+  width:  90vw;
+  height: 80vh;
   padding: 42px 46px 32px 46px;
   border-radius: 12px;
   overflow: hidden;
