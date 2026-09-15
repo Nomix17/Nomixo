@@ -30,13 +30,12 @@ export class UpdateManager {
   }
 
   async _sendToRenderer(channel, localStorageKey, value) {
-    const bw = this.browserWindow;
-    if (!bw || bw.isDestroyed()) return;
+    if (!this.browserWindow || this.browserWindow.isDestroyed()) return;
 
-    await bw.webContents.executeJavaScript(
+    await this.browserWindow.webContents.executeJavaScript(
       `localStorage.setItem('${localStorageKey}', ${JSON.stringify(value)});`
     );
-    bw.webContents.send(channel, value);
+    this.browserWindow.webContents.send(channel, value);
   }
 
   _registerUpdaterListeners() {
@@ -47,16 +46,33 @@ export class UpdateManager {
   }
 
   async _onUpdateAvailable(info) {
+    const formattedDate = info.releaseDate.split("T")[0];
     console.log('New version found:', info.version);
-    console.log('Release date:', info.releaseDate);
+    console.log('Release date:', formattedDate);
     const pending = this.store.get('pendingUpdate');
 
     if (pending && pending.version === info.version) {
       await this._sendToRenderer('update_downloaded', 'update_downloaded', true);
+      this.browserWindow.webContents.send("msg-from-main-process", {
+        type: "update_available",
+        title: "Update Downloaded",
+        body: `
+          <span style="font-size:13px; color:rgba(255,255,255,0.75);">
+            <strong style="color:rgba(255,255,255,0.9);">v${info.version}</strong> is downloaded. Apply it from settings.
+          </span>`
+      });
       return;
     }
 
     await this._sendToRenderer('update_available', 'update_available', JSON.stringify(info));
+    this.browserWindow.webContents.send("msg-from-main-process", {
+      type: "update_available",
+      title:  "New Update Available",
+      body: `
+        <span style="font-size:13px; color:rgba(255,255,255,0.75);">
+          <strong style="color:rgba(255,255,255,0.9);">v${info.version}</strong> · ${formattedDate}
+        </span>`
+    });
   }
 
   async _onUpdateDownloaded(info) {
