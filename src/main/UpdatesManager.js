@@ -102,9 +102,11 @@ export class UpdateManager {
   }
 
   _restartAndUpdate() {
-    if (this.store.has('pendingUpdate'))
-      this.store.delete('pendingUpdate');
-    this.autoUpdater.quitAndInstall()
+    this.autoUpdater.downloadUpdate().then(() => {
+      if (this.store.has('pendingUpdate'))
+        this.store.delete('pendingUpdate');
+      this.autoUpdater.quitAndInstall();
+    });
   }
   checkForUpdates() {
     this.autoUpdater.checkForUpdates();
