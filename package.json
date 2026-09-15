@@ -63,7 +63,7 @@
       ],
       "artifactName": "Nomixo-v${version}-linux-${arch}.${ext}",
       "category": "AudioVideo",
-      "icon": "app-icon/icon",
+      "icon": "app-icon",
       "maintainer": "Nomix17"
     },
     "toolsets": {
