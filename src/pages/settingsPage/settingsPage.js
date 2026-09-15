@@ -1046,16 +1046,140 @@ toggleAllSubtitleLanguages.addEventListener("change",()=>{
   settingsChanged(true);
 });
 
-document.querySelectorAll(".link-btn").forEach(btn => {
-  btn.addEventListener("click",() => {
-    const URL = 
-      btn.id === "tmdb-get-key"
-        ? "https://developer.themoviedb.org/docs/getting-started"
-        : "https://sub.wyzie.io/redeem"
+const linkBtnUrls = {
+  "tmdb-get-key": "https://developer.themoviedb.org/docs/getting-started",
+  "wyzie-get-key": "https://sub.wyzie.io/redeem",
+  "about-github-link": "https://github.com/Nomix17/Nomixo",
+  "about-issues-link": "https://github.com/Nomix17/Nomixo/issues/new",
+};
 
-    window.electronAPI.openExternalLink(URL);
+document.querySelectorAll(".link-btn, .about-link-card").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const URL = linkBtnUrls[btn.id];
+    if (URL) window.electronAPI.openExternalLink(URL);
   });
 });
+
+function initCurrentVersion() {
+  const appVersionLabel = document.getElementById("p-currentVersion");
+  window.electronAPI.getAppVersion().then(version => {
+    appVersionLabel.textContent = `v${version}`;
+  });
+}
+
+const updateVersionBtn = document.getElementById('updateVersionBtn');
+const restartUpdateBtn = document.getElementById('restartUpdateBtn');
+const updateProgressRow = document.getElementById('div-UpdateProgress');
+const updateProgressBarFill = document.getElementById('div-UpdateProgressBarFill');
+const updateProgressText = document.getElementById('p-UpdateProgressText');
+const updateDescEl = document.getElementById('p-updateDesc');
+const updateErrorRow = document.getElementById('div-UpdateError');
+const updateErrorText = document.getElementById('p-UpdateErrorText');
+
+function setUpdateButton(updateInfo) {
+  if (updateInfo?.version) {
+    updateVersionBtn.textContent = `Download Update (v${updateInfo.version})`;
+    updateVersionBtn.classList.add('active');
+    updateVersionBtn.classList.remove('downloading');
+    updateVersionBtn.style.display = '';
+    updateDescEl.textContent = 'Download the latest version of the app.';
+  } else {
+    updateVersionBtn.textContent = "You're on the latest version";
+    updateVersionBtn.classList.remove('active', 'downloading');
+  }
+
+  restartUpdateBtn.classList.remove('active');
+  updateProgressRow.classList.remove('active');
+  updateProgressBarFill.style.width = '0%';
+  updateProgressText.textContent = '0%';
+  hideUpdateError();
+}
+
+function hideUpdateError() {
+  updateErrorRow.classList.remove('active');
+  updateErrorText.textContent = '';
+}
+
+updateVersionBtn.addEventListener('click', () => {
+  if (!updateVersionBtn.classList.contains('active')) return;
+
+  hideUpdateError();
+  updateVersionBtn.classList.remove('active');
+  updateVersionBtn.classList.add('downloading');
+  updateVersionBtn.textContent = 'Downloading...';
+  updateDescEl.textContent = 'Downloading update...';
+  updateProgressRow.classList.add('active');
+
+  window.electronAPI.downloadUpdate();
+});
+
+function handleUpdateDownloadProgress(progressObj) {
+  const percentage = progressObj?.percent?.toFixed(2);
+  if (percentage !== undefined) {
+    updateProgressBarFill.style.width = `${percentage}%`;
+    updateProgressText.textContent = `${percentage}%`;
+  }
+}
+
+function handleUpdateDownloaded() {
+  if(updateErrorRow.classList.contains("active")) return;
+  updateProgressRow.classList.remove('active');
+  updateVersionBtn.classList.remove('active', 'downloading');
+  updateVersionBtn.style.display = 'none';
+  restartUpdateBtn.classList.add('active');
+  updateDescEl.textContent = 'Update downloaded. Restart to install.';
+}
+
+function handleUpdateDownloadError(error) {
+  console.error('Update download failed:', error);
+
+  updateProgressRow.classList.remove('active');
+  updateProgressBarFill.style.width = '0%';
+  updateProgressText.textContent = '0%';
+
+  updateVersionBtn.classList.remove('downloading');
+  updateVersionBtn.classList.add('active');
+  updateVersionBtn.style.display = '';
+  updateVersionBtn.textContent = updateInfo?.version
+    ? `Retry Download ${updateInfo.version}`
+    : 'Retry Download';
+
+  const message = typeof error === 'string'
+    ? error
+    : (error?.message || 'Something went wrong while downloading the update.');
+  updateDescEl.textContent = 'Update failed. You can try downloading it again.';
+  updateErrorText.textContent = message;
+  updateErrorRow.classList.add('active');
+  updateErrorRow.classList.remove('error-shake');
+  void updateErrorRow.offsetWidth;
+  updateErrorRow.classList.add('error-shake');
+  restartUpdateBtn.classList.remove("active");
+}
+
+function initUpdateRelatedUI() {
+  const progress = localStorage.getItem("updates-download-progress");
+  const update_downloaded = localStorage.getItem("update_downloaded") === "true";
+  if(update_downloaded) {
+    handleUpdateDownloaded();
+  } else if(progress !== null) {
+    updateProgressRow.classList.remove("active");
+    handleUpdateDownloadProgress(JSON.parse(progress));
+  }
+}
+
+restartUpdateBtn.addEventListener('click', () => {
+  window.electronAPI.restartAndUpdate();
+});
+
+window.electronAPI.onUpdateAvailable?.((info) => setUpdateButton(JSON.parse(info)));
+window.electronAPI.onUpdateDownloadProgress?.(handleUpdateDownloadProgress);
+window.electronAPI.onUpdateDownloaded?.(handleUpdateDownloaded);
+window.electronAPI.onUpdateDownloadFailed?.((error) => handleUpdateDownloadError(error));
+
+const raw = localStorage.getItem('update_available');
+const updateInfo = raw ? JSON.parse(raw) : null;
+setUpdateButton(updateInfo);
+initUpdateRelatedUI();
 
 // calling functions
 loadCurrentTheme();
@@ -1067,5 +1191,6 @@ loadIconsDynamically();
 handlingMiddleRightDivResizing();
 dropDownInit();
 initBackupSection();
+initCurrentVersion();
 loadSettings();
 initLanguageDropdown();

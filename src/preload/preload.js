@@ -59,16 +59,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   addTorrentToDownloadQueue: (torrentId) => ipcRenderer.invoke("add-torrent-to-download-queue", torrentId),
   removeTorrentFromDownloadQueue: (torrentId) => ipcRenderer.invoke("remove-torrent-from-download-queue", torrentId),
   shiftDownloadQueueElement: (torrentId, offset) => ipcRenderer.invoke("shift-download-queue-element", torrentId, offset),
-  updateDownloadCategorie:(fn) => ipcRenderer.on("update-download-categorie",(event,data) => fn(data)),
+  updateDownloadCategorie:(callback) => ipcRenderer.on("update-download-categorie",(event,data) => callback(data)),
   getDownloadQueueList: () => ipcRenderer.invoke("get-download-queue-list"),
 
-  getMsgFromMainProcess: (fn)=> ipcRenderer.on("msg-from-main-process",(event,data)=>fn(data)),
-  getFetchingTorrentErrors: (fn)=> ipcRenderer.on("torrent-fetching-error",(event,data)=>fn(data)),
-  getDownloadErrorsReports: (fn)=> ipcRenderer.on("report-download-errors",(event,data)=>fn(data)),
-  getDownloadProgress:(fn) => ipcRenderer.on("download-progress-stream",(event,data) => fn(data)),
-  getSubtitlesDownloadProgress:(fn) => ipcRenderer.on("subtitles-download-progress",(event,data) => fn(data)),
-  getTorrentStreamingReport:(fn) => ipcRenderer.on("torrent-streaming-report",(event,data) => fn(data)),
-  updateDownloadStatus:(fn) => ipcRenderer.on("update-download-status",(event,data) => fn(data)),
+  getMsgFromMainProcess: (callback)=> ipcRenderer.on("msg-from-main-process",(event,data)=>callback(data)),
+  getFetchingTorrentErrors: (callback)=> ipcRenderer.on("torrent-fetching-error",(event,data)=>callback(data)),
+  getDownloadErrorsReports: (callback)=> ipcRenderer.on("report-download-errors",(event,data)=>callback(data)),
+  getDownloadProgress:(callback) => ipcRenderer.on("download-progress-stream",(event,data) => callback(data)),
+  getSubtitlesDownloadProgress:(callback) => ipcRenderer.on("subtitles-download-progress",(event,data) => callback(data)),
+  getTorrentStreamingReport:(callback) => ipcRenderer.on("torrent-streaming-report",(event,data) => callback(data)),
+  updateDownloadStatus:(callback) => ipcRenderer.on("update-download-status",(event,data) => callback(data)),
 
   downloadImage: (downloadPath, imageUrl) => ipcRenderer.invoke("download-image",downloadPath, imageUrl),
   downloadBackdrop: (backgroundImageUrl, title) => ipcRenderer.invoke("download-backdrop", backgroundImageUrl, title),
@@ -86,7 +86,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveApiKey: (apiKey) => ipcRenderer.invoke("save-api-key",apiKey),
 
   openExternalLink: (url) => ipcRenderer.invoke("open-external-link",url),
-  sendSystemNotification: (options) => ipcRenderer.send("send-system-notification", options)
+  sendSystemNotification: (options) => ipcRenderer.send("send-system-notification", options),
+
+  getAppVersion: () => ipcRenderer.invoke("get-app-version"),
+  onUpdateAvailable: (callback) => ipcRenderer.on('update_available', (event, data) => callback(data)),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update_downloaded', callback),
+  onUpdateDownloadProgress: (callback) => ipcRenderer.on('updates-download-progress', (event, data) => callback(data)),
+  onUpdateDownloadFailed: (callback) => ipcRenderer.on('update-download-error', (event, data) => callback(data)),
+  downloadUpdate: () => ipcRenderer.send('download-update'),
+  restartAndUpdate: () => ipcRenderer.send("restart-and-update")
 });
 
 const zoomFactor = ipcRenderer.sendSync('get-zoom-factor');

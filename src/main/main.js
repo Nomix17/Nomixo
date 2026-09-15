@@ -2,6 +2,7 @@ import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
 import path from "path";
 import { copyFile, writeFile, readFile, unlink, rm, access, readdir, stat } from 'fs/promises';
 
+import { UpdateManager } from "./UpdatesManager.js";
 import { log } from "./debugging.js";
 import dotenv from "dotenv";
 import { config } from "./config.js";
@@ -796,6 +797,9 @@ async function validateWyzieApiKey(apiKey) {
     return { type: "verify-api-key", response: "no-internet-connection" };
   }
 }
+// ======================= UPDATER =======================
+const updateManager = new UpdateManager(appManager);
+updateManager.checkForUpdates();
 
 // ======================= PROCESS =======================
 
