@@ -124,6 +124,10 @@ async function createDownloadElement(mediaLibEntryPoint) {
 }
 
 async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement) {
+  if(libraryEntryPoint?.posterPath == null) {
+    PosterDiv.classList.add("flashing-Div")
+    return;
+  }
   let posterPathExist = await imagePathIsValid(libraryEntryPoint?.posterPath);
 
   if (posterPathExist) {
@@ -153,6 +157,7 @@ async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement)
 }
 
 async function makeSureBgImageIsDownloaded(libraryEntryPoint) {
+  if(libraryEntryPoint?.bgImagePath == null) return;
   let bgImageIsDownloaded = await imagePathIsValid(libraryEntryPoint.bgImagePath);
 
   if(!bgImageIsDownloaded){
