@@ -132,7 +132,7 @@ p{
   flex-direction:column;
   backdrop-filter: blur(20px);
   background-color: rgba(var(--background-color),0.8);
-  border:3px solid rgb(var(--background-color));
+  border:3px solid rgb(255,255,255, 0.01);
   border-right:none;
   border-radius:20px 0 0 0 ;
   margin-right:-1px;
@@ -194,8 +194,7 @@ p{
 #div-torrentSidePanel {
   backdrop-filter: blur(20px);
   background-color: rgba(var(--background-color),0.8);
-  border:3px solid rgb(var(--background-color));
-  border-left:none;
+  border:3px solid rgb(255,255,255, 0.01);
   border-radius:20px 0 0 0;
   overflow:hidden;
   position: relative;
@@ -1198,6 +1197,10 @@ html.torrent-panel-open #div-torrentSidePanel,
 html.torrent-panel-open #div-movieMedias {
   display: block !important;
   border-radius: 0px !important;
+}
+
+html.torrent-panel-open #div-torrentSidePanel {
+  border-left-color: transparent;
 }
 
 html.torrent-panel-open #div-movieMedias {
