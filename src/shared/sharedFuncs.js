@@ -1480,7 +1480,8 @@ async function handleSplashScreen() {
   const isFirstLaunch = localStorage.getItem("isFirstLaunch") === null;
   if (!isFirstLaunch) {
     splashDiv.remove();
-    keyboardPressesHandling();
+    if (typeof keyboardPressesHandling === "function")
+      keyboardPressesHandling();
     return;
   }
 
@@ -1500,7 +1501,8 @@ async function handleSplashScreen() {
     splashDiv.classList.add("hide-splash");
     splashDiv.addEventListener("transitionend", () => {
       splashDiv.remove();
-      keyboardPressesHandling();
+      if (typeof keyboardPressesHandling === "function")
+        keyboardPressesHandling();
     } , { once: true });
   }, MIN_SPLASH_DURATION);
 }
