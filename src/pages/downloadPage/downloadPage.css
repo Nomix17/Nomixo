@@ -371,6 +371,12 @@
   will-change: transform;
   backface-visibility: hidden;
 }
+.play-button *,
+.delete-button *,
+.toggle-pause-button *,
+.cancel-button * {
+  cursor: pointer;
+}
 
 .play-button,
 .delete-button {

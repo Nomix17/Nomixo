@@ -17,6 +17,10 @@
     user-select: none;
     cursor: default;
 }
+button svg,
+button svg * {
+  cursor: inherit !important;
+}
 input, button, textarea, :focus {
     outline: none;
 }
