@@ -1948,7 +1948,8 @@ function monitorMsgFromMainProcess() {
     if (msg.type === "request" && msg.request === "exit_video_player") {
       window.electronAPI.goBack();
     } else if(msg.type === "update_available") {
-      displayMessage({ title: msg?.title ?? "", body: msg?.body ?? "", onClick: OpenSettingsPage});
+      if(!window.location.href.includes("loginPage.html"))
+        displayMessage({ title: msg?.title ?? "", body: msg?.body ?? "", onClick: OpenSettingsPage});
     } else  if(msg.type === "msg") {
       console.log(`Unknown Msg was Sent:${msg}`)
     }
