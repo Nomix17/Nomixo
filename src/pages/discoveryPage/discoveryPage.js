@@ -5,7 +5,7 @@ const SortBase = data.get("SortBase") === "Default" ? "popularity.desc" : data.g
 
 const RightmiddleDiv = document.getElementById("div-middle-right");
 const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
-const loadingGif = document.getElementById("lds-dual-ring-container");
+const bottomPageLoadingRing = document.getElementById("lds-dual-ring-container");
 const searchInput = document.getElementById("input-searchForMovie");
 const MediaSuggestions = document.getElementById("div-MediaSuggestions");
 
@@ -36,7 +36,7 @@ async function fetchData(apiKey, genreId, ThisMediaType, page) {
     const [GenreData] = await Promise.all([fetch(requestUrl).then(res => res.json())]);
     if (GenreData?.total_results) {
       insertMediaElements(GenreData.results, MediaSuggestions, ThisMediaType, LibraryInformation);
-      loadingGif.style.display = "none";
+      bottomPageLoadingRing.classList.remove("show");
     } else {
       throw new Error("No results found for this genre<br> try a different category");
     }
@@ -92,7 +92,7 @@ async function loadGenres(apiKey) {
 async function checkAndFillScreen(apiKey) {
   const middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
   if(RightmiddleDiv.scrollHeight <= middleRightDivHeight + 30 && allowToFetchData) {
-    loadingGif.style.display = "flex";
+    bottomPageLoadingRing.classList.add("show");
     numberOfLoadedPages += 2;
     await fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages);
     await fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages + 1);
@@ -106,7 +106,7 @@ async function loadMediaFromAPI(apiKey){
     fetchData(apiKey, genreId, MediaType, 1),
     fetchData(apiKey, genreId, MediaType, 2),
   ]);
-  await checkAndFillScreen(apiKey);
+  checkAndFillScreen(apiKey);
 }
 
 function changeDescriptionTitleValue(titleValue){
@@ -131,7 +131,7 @@ function detectWhenScrollsArriveAtTheEndOfAPage(apiKey){
   RightmiddleDiv.addEventListener('scroll', async () => {
     const middleRightDivHeight = window.innerHeight - RightmiddleDiv.getBoundingClientRect().top;
     if (RightmiddleDiv.scrollTop + middleRightDivHeight + 30 >= RightmiddleDiv.scrollHeight) {
-      loadingGif.style.display = "flex";
+      bottomPageLoadingRing.classList.add("show");
       if(!allowToFetchData) return;
       numberOfLoadedPages += 2;
       fetchData(apiKey, getDropdownValue(SelectGenre), MediaType, numberOfLoadedPages);
@@ -202,23 +202,23 @@ async function loadMedia(apiKey){
     await loadCachedSuggestionsDivScrollValue(cachedMediaInfo);
     await loadCachedDropDownValue(cachedMediaInfo);
   }else{
-    loadMediaFromAPI(apiKey);
+    await loadMediaFromAPI(apiKey);
   }
 }
 
 async function initPage(){
   const apiKey = await window.electronAPI.getTMDBAPIKEY();
-  await loadMedia(apiKey);
+
   await loadGenres(apiKey);
+  RightmiddleDiv.classList.add("activate");
 
   dropDownInit();
   setDropdownValue(SelectMediaType, MediaType);
   setDropdownValue(SelectSortBase, SortBase);
   addDropDownsEventListener();
 
+  await loadMedia(apiKey);
   globalLoadingGif.remove();
-  RightmiddleDiv.classList.add("activate");
-
   detectWhenScrollsArriveAtTheEndOfAPage(apiKey);
 }
 

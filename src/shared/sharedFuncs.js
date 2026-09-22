@@ -1905,11 +1905,11 @@ function formatRelativeTime(timestamp) {
   return new Date(timestamp).toLocaleDateString();
 }
 
-function triggerLoadingGif() {
+function triggerLoadingGif(timeToTrigger = 30) {
   setTimeout(() => {
     try { globalLoadingGif.style.opacity = "1" }
     catch (err) { console.log(err) } 
-  }, 30);
+  }, timeToTrigger);
 }
 
 const RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i;
