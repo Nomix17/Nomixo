@@ -193,8 +193,8 @@ function runMpvProcess(
   const isValid = (val) => val !== undefined && val !== null && val !== "undefined";
   const videoTitle = [
     metaData.Title,
-    isValid(metaData.episodeNumber) ? `E${metaData.episodeNumber}` : null,
     isValid(metaData.seasonNumber) ? `S${metaData.seasonNumber}` : null,
+    isValid(metaData.episodeNumber) ? `E${metaData.episodeNumber}` : null,
   ].filter(Boolean).join(" ");
 
   const childProcessArguments = [
