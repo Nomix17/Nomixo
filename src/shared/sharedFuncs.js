@@ -1298,36 +1298,33 @@ async function getPosterPath(imdbId, apiKey) {
 
 // ################################### UI COMPONENTS & FEEDBACK ###################################
 
-function DisplayWarningOrErrorForUser(warningMessage,addRefreshButton = true) {
-  const WarningDiv = document.createElement("div");
-  const WarningMessage = document.createElement("span");
-  const RefreshButton = document.createElement("button");
+function DisplayWarningOrErrorForUser(warningMessage, addRefreshButton = true) {
+  const warningDiv = document.createElement("div");
+  warningDiv.className = "div-WarningMessage";
 
-  WarningDiv.className = "div-WarningMessage";
-  WarningMessage.className = "span-WarningMessage";
-  RefreshButton.className = "btn-refreshAfterWarningMessage";
-
-  WarningMessage.innerHTML = warningMessage;
-  RefreshButton.innerHTML = reloadIcon;
+  const warningText = document.createElement("span");
+  warningText.className = "span-WarningMessage";
+  warningText.innerHTML = warningMessage;
+  warningDiv.appendChild(warningText);
 
   const leftDiv = document.getElementById("div-middle-left");
-  const leftDivWidth = leftDiv? leftDiv.offsetWidth : 0;
+  warningDiv.style.marginRight = `${leftDiv?.offsetWidth ?? 0}px`;
 
-  WarningDiv.style.marginRight = `${leftDivWidth}px`;
+  if (addRefreshButton) {
+    const refreshButton = document.createElement("button");
+    refreshButton.className = "btn-refreshAfterWarningMessage";
+    refreshButton.innerHTML = reloadIcon;
+    refreshButton.addEventListener("click", () => window.location.reload());
+    warningDiv.appendChild(refreshButton);
+  }
 
-  RefreshButton.addEventListener("click",()=>{window.location.reload()});
-
-  WarningDiv.appendChild(WarningMessage);
-  if(addRefreshButton)
-    WarningDiv.appendChild(RefreshButton);
-
-  return WarningDiv;
+  return warningDiv;
 }
 
 function addEmptyLibraryWarning(warningContainer){
   const existingWarning = warningContainer.querySelector(".div-WarningMessage");
   if(!existingWarning){
-    const WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty",false);
+    const WarningElement = DisplayWarningOrErrorForUser("Your Library is Empty", false);
     warningContainer.appendChild(WarningElement);
   }else{
     existingWarning.style.display = "flex";

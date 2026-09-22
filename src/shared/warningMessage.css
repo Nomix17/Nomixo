@@ -23,7 +23,10 @@
   margin-top:10px;
 }
 
-.btn-refreshAfterWarningMessage{
+.btn-refreshAfterWarningMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width:40px;
   height:40px;
   background-color:transparent;
@@ -31,6 +34,9 @@
   border:none;
   margin-top:2%;
   cursor:pointer;
+  transform-origin: center;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 #refreshButtonIcon{
@@ -52,6 +58,6 @@
 }
 
 .btn-refreshAfterWarningMessage:active{
-  transform:scale(0.9);
+  transform:scale(0.93);
 }
 

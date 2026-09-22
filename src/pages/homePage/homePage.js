@@ -33,12 +33,12 @@ async function loadMovies() {
       ? "We’re having trouble loading data.</br>Please Check your connection and refresh!"
       : err.message;
 
-    setTimeout(()=>{
+    setTimeout(() => {
       RightmiddleDiv.innerHTML ="";
       const WarningElement = DisplayWarningOrErrorForUser(err.message);
       RightmiddleDiv.appendChild(WarningElement);
       globalLoadingGif.remove();
-      RightmiddleDiv.style.opacity = 1;
+      RightmiddleDiv.classList.add("activate");
     },800);
 
     console.error(err);
