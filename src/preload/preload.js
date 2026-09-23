@@ -98,11 +98,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateDownloadFailed: (callback) => ipcRenderer.on('update-download-error', (event, data) => callback(data))
 });
 
-const zoomFactor = ipcRenderer.sendSync('get-zoom-factor');
-if (zoomFactor) {
-  webFrame.setZoomFactor(zoomFactor);
-}
-
 const canGoBack = ipcRenderer.sendSync("can-go-back");
 const isFullscreened = ipcRenderer.sendSync("is-fullscreened");
 contextBridge.exposeInMainWorld("__initialNavState", {

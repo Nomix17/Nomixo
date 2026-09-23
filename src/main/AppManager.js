@@ -100,7 +100,8 @@ export class AppManager {
         preload: path.join(Paths.__dirname, "../preload/preload.js"),
         contextIsolation: true,
         nodeIntegration: false,
-        zoomFactor: this.mainZoomFactor
+        zoomFactor: this.mainZoomFactor,
+        zoomMode: 'isolated',
       },
     });
     window.setMenuBarVisibility(false);
@@ -154,5 +155,10 @@ export class AppManager {
     }else{
       return null;
     }
+  }
+
+  applyZoomFactor(newZF) {
+    this.browserWindow.webContents.setZoomFactor(newZF);
+    this.mainZoomFactor = newZF;
   }
 }

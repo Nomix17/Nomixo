@@ -46,10 +46,6 @@ initTorrentTrackers();
 
 // ================ SETTINGS & THEME ================
 
-ipcMain.on("get-zoom-factor", (event) => {
-  event.returnValue = appManager.mainZoomFactor || 1.0;
-});
-
 ipcMain.handle("load-settings", async () => {
   try {
     return await loadSettings();
@@ -77,8 +73,7 @@ ipcMain.handle("apply-settings", async (event, SettingsObj) => {
 
   const webContents = event.sender;
   FullSettings.PageZoomFactor = Math.max(0.1, FullSettings.PageZoomFactor);
-  webContents.setZoomFactor(FullSettings.PageZoomFactor);
-  appManager.mainZoomFactor = FullSettings.PageZoomFactor;
+  appManager.applyZoomFactor(FullSettings.PageZoomFactor);
   try {
     await writeFile(Paths.SettingsFilePath, JSON.stringify(FullSettings, null, 2));
   } catch (err) {
@@ -235,12 +230,6 @@ ipcMain.on("change-page", (event, newPageURL, currentPageURL, cacheData) => {
     };
     webContents.once("did-finish-load", clearOnLoad);
   }
-
-  const setZoomAfterLoad = () => {
-    webContents.setZoomFactor(appManager.mainZoomFactor);
-    webContents.removeListener("did-finish-load", setZoomAfterLoad);
-  };
-  webContents.once("did-finish-load", setZoomAfterLoad);
 
   appManager.browserWindow.loadURL(url);
   appManager.positionWasChangedViaGoBackButton = false;
