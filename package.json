@@ -22,8 +22,8 @@
     "webtorrent": "^3.0.21"
   },
   "devDependencies": {
-    "electron": "^43.3.0",
-    "electron-builder": "^26.15.3"
+    "electron": "^44.4.4",
+    "electron-builder": "^26.16.1"
   },
   "build": {
     "npmRebuild": false,
