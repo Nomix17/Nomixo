@@ -16,6 +16,7 @@ export class AppManager {
   browserWindow = null;
   defaultSettingsPromise = null;
   positionWasChangedViaGoBackButton = false;
+  shouldBeMaximized = false;
 
   torrentDownloadManager = null;
   mpvPlayerManager = null;
@@ -91,10 +92,11 @@ export class AppManager {
       isMaximized: false,
     };
 
+    this.shouldBeMaximized = isMaximized;
     this.mainZoomFactor = await this.#getZoomFactorFromSettings();
     const window = new BrowserWindow({
       width, height, x, y,
-      show: true,
+      show: false,
       backgroundColor: bgColor,
       webPreferences: {
         preload: path.join(Paths.__dirname, "../preload/preload.js"),
@@ -105,7 +107,6 @@ export class AppManager {
       },
     });
     window.setMenuBarVisibility(false);
-    if(isMaximized) window.maximize()
     return window;
   }
 
@@ -124,6 +125,12 @@ export class AppManager {
           : this.browserWindow.getBounds()),
         isMaximized: this.browserWindow.isMaximized(),
       });
+    });
+
+    this.browserWindow.once("ready-to-show", () => {
+      if (this.shouldBeMaximized)
+        this.browserWindow.maximize();
+      this.browserWindow.show();
     });
   }
 
