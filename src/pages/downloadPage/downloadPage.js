@@ -810,7 +810,14 @@ function openChangeDownloadPathOverlay(MediaInfo) {
       return;
     }
     closeChangePathOverlay();
-    if (res?.success == true) displayMessage({ title: "Done", body: "Download path updated successfully." });
+    if (res?.success == true) {
+      const updatedLibrary = await window.electronAPI.loadDownloadLibraryInfo();
+      const updatedEntry = updatedLibrary?.downloads?.find(entry => entry.torrentId === MediaInfo.torrentId);
+      if (updatedEntry)
+        Object.assign(MediaInfo, updatedEntry);
+
+      displayMessage({ title: "Done", body: "Download path updated successfully." });
+    }
   });
 
   if (changePathEscapeHandler) {
