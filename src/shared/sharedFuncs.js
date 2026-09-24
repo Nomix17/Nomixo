@@ -1962,6 +1962,8 @@ function formatDownloadPathError(rawError) {
 
   if (rawError.startsWith("Destination path is not a directory"))
     return "That's a file, not a folder. Please select a folder instead.";
+  if (rawError.startsWith("Same Paths"))
+    return "This is already your download location.";
 
   if (rawError.includes("EACCES") || rawError.includes("EPERM"))
     return "You don't have permission to access that folder. Try choosing a different location.";

@@ -593,6 +593,14 @@ ipcMain.handle("change-download-path", async (event, mediaInfo, destinationPath)
 
   try {
     const newDownloadPath = path.join(safeDestinationPath, path.basename(mediaInfo.downloadPath));
+
+    if (path.resolve(newDownloadPath) === path.resolve(mediaInfo.downloadPath)) {
+      return {
+        success: false,
+        error: `Same Paths`
+      };
+    }
+
     await rename(mediaInfo.downloadPath, newDownloadPath);
 
     mediaInfo.userDownloadPath = safeDestinationPath;
