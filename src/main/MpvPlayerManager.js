@@ -9,7 +9,7 @@ import os from "os";
 
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
-import { normaliseFileName, generateUniqueId } from "./utils.js";
+import { normaliseFileName } from "./utils.js";
 import { getLibraryEntry, loadLibraryStorage, overwriteStorageFile } from "./storageManagement.js";
 
 class MpvPlayerManager {

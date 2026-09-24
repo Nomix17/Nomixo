@@ -2,7 +2,6 @@ import { SubDownloadManager } from './SubDownloadManager.js';
 import { getTorrentTrackers } from './torrentTracker.js';
 import { config } from "./config.js";
 import {
-  generateUniqueId,
   findFile,
   normaliseFileName
 } from './utils.js';
@@ -101,11 +100,7 @@ function StreamTorrent(
           const url = `http://localhost:${port}/video`;
           log.info(`Streaming URL: ${url}`);
 
-          const subsId = generateUniqueId(
-            `${metaData.IMDB_ID}-${metaData.episodeNumber ?? "undefined"}-${metaData.seasonNumber ?? "undefined"}`
-          );
-
-          const tmpSubDir = path.join(subDirectory, `SUB_${subsId}`);
+          const tmpSubDir = path.join(subDirectory, `SUBS_${metaData.torrentId}`);
           log.info("Downloading subtitles to:", tmpSubDir);
           const downloadResponse = await SubDownloadManager.downloadSubsForMedia(metaData, metaData.torrentId, tmpSubDir, subtitleSettings);
           log.info("Finished downloading subtitles");

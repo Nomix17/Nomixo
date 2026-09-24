@@ -49,7 +49,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   downloadSubtitles: (mediaInfo, subsObjects) => ipcRenderer.invoke("download-subtitles", mediaInfo, subsObjects),
   fetchSubtitles: (mediaInfo) => ipcRenderer.invoke("fetch-subtitles", mediaInfo),
-  loadLocalSubs: (videoPath,identifyingElements) => ipcRenderer.invoke("load-local-subs",videoPath,identifyingElements),
+  loadLocalSubs: (videoPath,identifyingElements) => ipcRenderer.invoke("load-local-subs",videoPath, identifyingElements),
   readSubFile: (filePath) => ipcRenderer.invoke("read-sub-file",filePath),
   getLanguageDict: () => ipcRenderer.invoke("get-language-dict"),
 

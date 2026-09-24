@@ -344,12 +344,7 @@ ipcMain.handle("play-torrent-over-mpv", async (event, metaData) => {
 });
 
 ipcMain.handle("play-video-over-mpv", async (event, metaData) => {
-  const localSubs = await loadSubsFromSubDir({
-    IMDB_ID: metaData.IMDB_ID,
-    episodeNumber: metaData.episodeNumber,
-    seasonNumber: metaData.seasonNumber,
-    DownloadDir: metaData.downloadPath,
-  });
+  const localSubs = await loadSubsFromSubDir(metaData);
   const subsPaths = localSubs.map((sub) => sub.url);
 
   const settings = await loadSettings();
@@ -646,9 +641,9 @@ ipcMain.handle("fetch-subtitles", async(event, mediaInfo) => {
   return await SubDownloadManager.fetchSubtitlesInfo(mediaInfo);
 });
 
-ipcMain.handle("load-local-subs", async (event, videoPath, identifyingElements) => {
+ipcMain.handle("load-local-subs", async (event, videoPath, mediaInfo) => {
   const localBuiltInSubs = await loadSubsFromVideoDirectory(videoPath);
-  const localDownloadedSubs = await loadSubsFromSubDir(identifyingElements);
+  const localDownloadedSubs = await loadSubsFromSubDir(mediaInfo);
   return [...localBuiltInSubs, ...localDownloadedSubs];
 });
 
@@ -717,11 +712,17 @@ function navigateToPreviousPage() {
 
 // ======================= SUBTITLE HELPERS =======================
 
-async function loadSubsFromSubDir(identifyingElements) {
-  const torrentId = generateUniqueId(
-    `${identifyingElements.IMDB_ID}-${identifyingElements.episodeNumber ?? "undefined"}-${identifyingElements.seasonNumber ?? "undefined"}-${identifyingElements.DownloadDir}`
+async function loadSubsFromSubDir(mediaInfo) {
+  const torrentId = mediaInfo?.torrentId ?? generateUniqueId(
+    `${mediaInfo.IMDB_ID}` +
+    `-${mediaInfo.episodeNumber ?? "undefined"}` + 
+    `-${mediaInfo.seasonNumber ?? "undefined"}`+ 
+    `-${mediaInfo.fileName}`+ 
+    `-${mediaInfo.MagnetLink}`
   );
-  const subsDirectory = path.join(identifyingElements.DownloadDir, `SUBS_${torrentId}`);
+
+  const subsDirectory = path.join(mediaInfo.downloadPath, `SUBS_${torrentId}`);
+
   try {
     if (!(await pathExists(subsDirectory)))
       throw new Error(`Subtitles aren't downloaded in: ${subsDirectory}`);

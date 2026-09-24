@@ -38,11 +38,16 @@ class TorrentDownloadManager {
     const results = [];
     for (const torrentEntry of torrentsEntries) {
       try {
-        const torrentDownloadPath = await this.getTorrentDownloadPath(torrentEntry);
         const torrentId = generateUniqueId(
-          `${torrentEntry.IMDB_ID}-${torrentEntry.episodeNumber ?? "undefined"}-${torrentEntry.seasonNumber ?? "undefined"}-${torrentDownloadPath}`
+          `${torrentEntry.IMDB_ID}` +
+          `-${torrentEntry.episodeNumber ?? "undefined"}` + 
+          `-${torrentEntry.seasonNumber ?? "undefined"}`+ 
+          `-${torrentEntry.fileName}`+ 
+          `-${torrentEntry.MagnetLink}`
         );
+
         torrentEntry.torrentId = torrentId;
+        const torrentDownloadPath = await this.getTorrentDownloadPath(torrentEntry);
         torrentEntry.downloadPath = torrentDownloadPath;
         torrentEntry.downloadSubtitles = downloadSubtitles;
 
@@ -364,12 +369,11 @@ class TorrentDownloadManager {
   }
 
   sanitizeDirNameForOS(torrentEntry) {
-    const { dirName, seasonNumber, episodeNumber, MagnetLink } = torrentEntry;
+    const {torrentId, dirName, seasonNumber, episodeNumber} = torrentEntry;
     const cleaned = sanitizeFilename(dirName);
-    const dirId = generateUniqueId(`${dirName}-${MagnetLink}`);
     return seasonNumber && episodeNumber
-      ? `${cleaned.slice(0, 120)}-S${seasonNumber}E${episodeNumber}-${dirId}`
-      : `${cleaned.slice(0, 120)}-${dirId}`;
+      ? `${cleaned.slice(0, 120)}-S${seasonNumber}E${episodeNumber}-${torrentId}`
+      : `${cleaned.slice(0, 120)}-${torrentId}`;
   }
 }
 
