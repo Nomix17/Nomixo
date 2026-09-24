@@ -1955,21 +1955,22 @@ function monitorMsgFromMainProcess() {
 monitorMsgFromMainProcess();
 
 function formatDownloadPathError(rawError) {
-  if (!rawError) return "Something went wrong while changing the download path.";
+  if (!rawError) return "Something went wrong. Please try again.";
 
   if (rawError.startsWith("Destination path does not exist"))
-    return "That folder doesn't exist anymore. Please choose a different location.";
+    return "This folder can't be found. It may have been moved or deleted.";
 
   if (rawError.startsWith("Destination path is not a directory"))
-    return "That's a file, not a folder. Please select a folder instead.";
+    return "Please select a folder, not a file.";
+
   if (rawError.startsWith("Same Paths"))
     return "This is already your download location.";
 
   if (rawError.includes("EACCES") || rawError.includes("EPERM"))
-    return "You don't have permission to access that folder. Try choosing a different location.";
+    return "You don't have permission to save files here. Please choose a different location.";
 
   if (rawError.includes("ENOENT"))
-    return "That folder couldn't be found. It may have been moved or deleted.";
+    return "This folder can't be found. It may have been moved or deleted.";
 
-  return `Couldn't change the download path: ${rawError}`;
+  return rawError;
 }
