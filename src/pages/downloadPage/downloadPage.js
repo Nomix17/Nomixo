@@ -792,13 +792,16 @@ function openChangeDownloadPathOverlay(MediaInfo) {
     btn.addEventListener("click", closeChangePathOverlay);
   });
 
-  toPathInput.addEventListener("keydown", () => {
+  toPathInput.addEventListener("keydown", (event) => {
     pathErrorMsg.classList.add("hidden");
+    if(event.key == "Enter")
+      confirmBtn.click();
   });
   browseBtn.addEventListener("click", async () => {
     const oldValue = toPathInput.value
     const targetDir = await window.electronAPI.openDirectory_FileSystemBrowser();
     toPathInput.value = targetDir ?? oldValue;
+    pathErrorMsg.classList.add("hidden");
   });
 
   confirmBtn.addEventListener("click", async () => {
