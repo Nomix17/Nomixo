@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getFullscreenState: () => ipcRenderer.invoke("get-fullscreen-status"),
   openDirectory_FileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-directory-filesystem-browser",currentPath),
   openFile_FileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-file-filesystem-browser",currentPath),
+  importExternalSubs: (mediaInfo) => ipcRenderer.invoke("import-external-subs", mediaInfo),
   getTMDBAPIKEY: () => ipcRenderer.invoke("get-tmdb-api-key"),
   getWyzieAPIKey : () => ipcRenderer.invoke("get-wyzie-api-key"),
 

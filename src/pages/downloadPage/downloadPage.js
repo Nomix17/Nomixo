@@ -503,15 +503,13 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
   playWithInternalPlayerOption.textContent = "Play Using Built-in Player";
   playWithInternalPlayerOption.classList.add("select-option");
 
+  const importExternalSubs = document.createElement("div");
+  importExternalSubs.textContent = "Import External Subtitles";
+  importExternalSubs.classList.add("select-option");
+
   const changeDownloadPath = document.createElement("div");
   changeDownloadPath.textContent = "Change Download Path";
   changeDownloadPath.classList.add("select-option");
-
-  changeDownloadPath.addEventListener("click", (event) => {
-    event.stopPropagation();
-    hideContextMenu(menuDiv);
-    openChangeDownloadPathOverlay(MediaInfo);
-  });
 
   const updatePosterOption = document.createElement("div");
   updatePosterOption.textContent = "Update Poster Image";
@@ -533,6 +531,25 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
         playerType: (index === 0) ? "external" : "internal"
       });
     });
+  });
+
+  importExternalSubs.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    hideContextMenu(menuDiv);
+    const res = await window.electronAPI.importExternalSubs(MediaInfo);
+    if (res?.success === "canceled") return;
+
+    if (res?.success === false) {
+      displayMessage({ title: "Import failed", body: `Could not import the subtitle file(s): ${res.error}` });
+    } else {
+      displayMessage({ title: "Subtitles imported", body: "The subtitle file(s) were imported successfully." });
+    }
+  });
+
+  changeDownloadPath.addEventListener("click", (event) => {
+    event.stopPropagation();
+    hideContextMenu(menuDiv);
+    openChangeDownloadPathOverlay(MediaInfo);
   });
 
   updatePosterOption.addEventListener("click", async (e) => {
@@ -574,8 +591,9 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
     window.electronAPI.downloadSubtitles(MediaInfo);
   });
 
-  menuDiv.appendChild(playWithExternalPlayerOption);
-  menuDiv.appendChild(playWithInternalPlayerOption);
+  // menuDiv.appendChild(playWithExternalPlayerOption);
+  // menuDiv.appendChild(playWithInternalPlayerOption);
+  menuDiv.appendChild(importExternalSubs);
   menuDiv.appendChild(changeDownloadPath);
   menuDiv.appendChild(updatePosterOption);
   menuDiv.appendChild(updateSubtitlesOption);

@@ -264,10 +264,46 @@ ipcMain.handle("open-directory-filesystem-browser", async (event, currentPath) =
 ipcMain.handle("open-file-filesystem-browser", async (event, currentPath) => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ["openFile"],
-    defaultPath: currentPath,
+    defaultPath: currentPath || lastOpenedDir || app.getPath("home"),
   });
+  lastOpenedDir = path.dirname(filePaths[0]);
   return canceled ? null : filePaths[0];
 });
+
+ipcMain.handle("import-external-subs", async (event, mediaInfo) => {
+  const filters = [{
+    name: `srt, vtt Files`,
+    extensions: ["srt", "vtt"],
+  }];
+
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ["openFile", "multiSelections"],
+    defaultPath: lastOpenedDir || app.getPath("home"),
+    filters,
+  });
+
+  if (canceled || !filePaths.length) return { success: "canceled" };
+  lastOpenedDir = path.dirname(filePaths[0]);
+
+  try {
+    if (!mediaInfo?.downloadPath || !mediaInfo?.torrentId)
+       return { success: false, error: "Missing media info" };
+    const destinationPath = path.join(mediaInfo.downloadPath, `SUBS_${mediaInfo.torrentId}`);
+    await mkdir(destinationPath, { recursive: true });
+    await Promise.all(
+      filePaths.map((filePath) => {
+        const fileName = path.basename(filePath);
+        const destFilePath = path.join(destinationPath, fileName);
+        return copyFile(filePath, destFilePath);
+      })
+    );
+    return { success: true };
+
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 
 ipcMain.handle("open-external-link", (event, url) => {
   shell.openExternal(url);
@@ -683,7 +719,7 @@ async function loadSubsFromSubDir(identifyingElements) {
       throw new Error(`Subtitles aren't downloaded in: ${subsDirectory}`);
     const subFileNames = await readdir(subsDirectory);
     return subFileNames.map((subFileName) => {
-      const displayName = subFileName.split("-")[0];
+      const displayName = subFileName.split("-")?.[0] ?? subFileName;
       return {
         url: path.join(subsDirectory, subFileName),
         display: displayName,
