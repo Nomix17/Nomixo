@@ -1487,10 +1487,24 @@ async function handleSplashScreen() {
   const useDarkIcon = colorObj ? isWhiteMode(colorObj["background-color"]) : false;
 
   const logImg = document.getElementById("img-splash-logo");
-  logImg.src = "../../../assets/logo/" + (useDarkIcon ? "dark-icon.png" : "icon.png");
+  const logoSrc = "../../../assets/logo/" + (useDarkIcon ? "dark-icon.png" : "icon.png");
+
+  await new Promise(resolve => {
+    logImg.onload = resolve;
+    logImg.onerror = resolve;
+    logImg.src = logoSrc;
+    if (logImg.complete) resolve();
+  });
 
   localStorage.setItem("isFirstLaunch", "false");
-  splashDiv.classList.add("show-splash");
+
+  void splashDiv.offsetHeight;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      splashDiv.classList.add("show-splash");
+    });
+  });
 
   const MIN_SPLASH_DURATION = 1000;
   setTimeout(() => {
@@ -1500,7 +1514,7 @@ async function handleSplashScreen() {
       splashDiv.remove();
       if (typeof keyboardPressesHandling === "function")
         keyboardPressesHandling();
-    } , { once: true });
+    }, { once: true });
   }, MIN_SPLASH_DURATION);
 }
 
