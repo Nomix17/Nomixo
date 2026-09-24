@@ -1,6 +1,6 @@
 import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
 import path from "path";
-import { copyFile, writeFile, readFile, unlink, rm, access, readdir, stat } from 'fs/promises';
+import { mkdir, copyFile, writeFile, readFile, unlink, rm, access, readdir, stat, rename } from 'fs/promises';
 
 import { UpdateManager } from "./UpdatesManager.js";
 import { log } from "./debugging.js";
@@ -15,6 +15,7 @@ import { Paths, FilesManager } from "./FilesManager.js";
 import {
   sanitizeFilename,
   sanitizeThemeFileName,
+  sanitizeDestinationPath,
   pathExists,
   generateUniqueId,
   findFile,
@@ -25,6 +26,7 @@ import {
   loadSettings,
   loadDownloadStorage,
   loadLibraryStorage,
+  changeDownloadEntryInfo,
   editDownloadStorageEntry,
   getLibraryEntry,
   overwriteStorageFile,
@@ -249,11 +251,13 @@ ipcMain.handle("get-full-video-path", async (event, dirPath, fileName) => {
   return await findFile(dirPath, fileName);
 });
 
+let lastOpenedDir = null;
 ipcMain.handle("open-directory-filesystem-browser", async (event, currentPath) => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ["openDirectory"],
-    defaultPath: currentPath,
+    defaultPath: currentPath || lastOpenedDir || app.getPath("home"),
   });
+  if (!canceled) lastOpenedDir = filePaths[0];
   return canceled ? null : filePaths[0];
 });
 
@@ -525,6 +529,53 @@ ipcMain.handle("edit-download-lib", async (event, torrentId, key, value) => {
 ipcMain.handle("load-from-download-lib", async () => {
   return await loadDownloadStorage();
 });
+
+ipcMain.handle("change-download-path", async (event, mediaInfo, destinationPath) => {
+  let safeDestinationPath;
+  try {
+    safeDestinationPath = sanitizeDestinationPath(destinationPath);
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+
+  if (!pathExists(safeDestinationPath)) {
+    return {
+      success: false,
+      error: `Destination path does not exist: ${safeDestinationPath}`
+    };
+  }
+
+  let stats;
+  try {
+    stats = await stat(safeDestinationPath);
+  } catch (err) {
+    return { success: false, error: `Unable to access destination path: ${err.message}` };
+  }
+
+  if (!stats.isDirectory())
+    return { success: false, error: `Destination path is not a directory: ${safeDestinationPath}` };
+
+  try {
+    const newDownloadPath = path.join(safeDestinationPath, path.basename(mediaInfo.downloadPath));
+    await rename(mediaInfo.downloadPath, newDownloadPath);
+
+    mediaInfo.userDownloadPath = safeDestinationPath;
+    mediaInfo.downloadPath = newDownloadPath;
+
+    const posterDir = path.join(mediaInfo.downloadPath, "POSTERS");
+    mediaInfo.posterPath = path.join(posterDir, path.basename(mediaInfo.posterPath));
+    mediaInfo.bgImagePath = path.join(posterDir, path.basename(mediaInfo.bgImagePath));
+
+    await changeDownloadEntryInfo(mediaInfo.torrentId, mediaInfo);
+
+  } catch (err) {
+    log.error(err);
+    return { success: false, error: err.message };
+  }
+
+  return { success: true };
+});
+
 
 // ======================= SUBTITLES MANAGEMENT =======================
 

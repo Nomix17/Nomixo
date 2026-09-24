@@ -178,5 +178,49 @@
       </div>
     </div>
 
+    <div class="overlay" id="changeDownloadPathOverlay">
+      <div class="delete-container change-path-container">
+        <button class="floating-x-remove-btn" id="closePathBtn" aria-label="Close">×</button>
+
+        <h2 class="delete-title">Change Download Location</h2>
+        <p class="change-path-media-title" id="changePathMediaTitle"></p>
+
+        <div class="path-transfer">
+          <div class="path-field-group">
+            <label for="fromPathInput">From</label>
+            <div class="path-input-row">
+              <input type="text" id="fromPathInput" class="path-input" readonly disabled>
+            </div>
+          </div>
+
+          <div class="path-direction-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M12 19l-6-6M12 19l6-6"/>
+            </svg>
+          </div>
+
+          <div class="path-field-group">
+            <label for="toPathInput">To</label>
+            <div class="path-input-row">
+              <input type="text" id="toPathInput" class="path-input" placeholder="Choose a new location...">
+              <button id="browsePathBtn" class="browse-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+                </svg>
+                Browse
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p class="path-error hidden" id="pathErrorMsg"></p>
+
+        <div class="button-group">
+          <button id="cancelPathBtn" class="secondary-btn">Cancel</button>
+          <button id="confirmPathBtn" class="primary-btn">Move</button>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>

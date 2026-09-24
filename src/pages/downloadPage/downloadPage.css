@@ -747,3 +747,171 @@
 .hide {
   display: none;
 }
+
+.change-path-container {
+  width: 420px;
+  max-width: 90vw;
+}
+
+.change-path-media-title {
+  margin: -7.2px 0 21.6px;
+  font-size: 14.4px;
+  font-weight: 500;
+  color: rgba(var(--text-color), 0.6);
+  text-align: center;
+  word-break: break-word;
+}
+
+.path-transfer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.path-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7.2px;
+}
+
+.path-field-group label {
+  font-size: 10.8px;
+  line-height: 1;
+  font-weight: 600;
+  color: rgba(var(--text-color), 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.path-input-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.path-input {
+  flex: 1;
+  min-width: 0;
+  height: 39.56px;
+  padding: 0 12.88px;
+  border-radius: 7.36px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgb(var(--text-color));
+  font-size: 12.6px;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.path-input:disabled {
+  color: rgba(var(--text-color), 0.5);
+  cursor: not-allowed;
+}
+
+.path-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.path-input::placeholder {
+  color: rgba(var(--text-color), 0.4);
+}
+
+.path-input.input-error {
+  border-color: rgba(252, 165, 165, 0.7);
+}
+
+.path-direction-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  position: relative;
+  top: 9px; /* half of the "To" label's height + its gap, so the arrow centers on the two inputs, not the two label+input groups */
+  width: 27px;
+  height: 27px;
+  opacity: 0.5;
+}
+
+.path-direction-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: rgb(var(--text-color));
+}
+
+.path-error {
+  margin: 0 0 14.4px;
+  font-size: 12.6px;
+  font-weight: 500;
+  color: #fca5a5;
+  animation: slideDown 0.3s ease;
+}
+
+.path-error.hidden {
+  display: none;
+}
+
+#confirmPathBtn:disabled,
+#confirmPathBtn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.browse-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12.88px;
+  border-radius: 7.36px;
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  font-size: 11.96px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s, transform 0.1s;
+  height: 39.56px;
+  width: 92px;
+  color: rgb(var(--text-color));
+  gap: 4px;
+  transform-origin: center;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.browse-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.browse-btn {
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.browse-btn:hover {
+  background: transparent;
+}
+
+.browse-btn:active{
+  transform: scale(0.98);
+}
+
+#cancelPathBtn {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+#cancelPathBtn:hover {
+  background-color: rgba(0, 0, 0, 0.0);
+}
+
+#confirmPathBtn{
+  background-color: rgb(var(--login-btn-bg));
+}
+
+#confirmPathBtn:hover{
+  background-color: rgba(var(--login-btn-bg), 0.1);
+}

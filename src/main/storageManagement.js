@@ -120,6 +120,30 @@ export async function insertNewDownloadEntry(torrentEntry, Status = "LOADING") {
   return wasInserted;
 }
 
+export async function changeDownloadEntryInfo(torrentId, newMediaInfo) {
+  await withFileLock(Paths.downloadLibraryFilePath, async () => {
+    const downloadLibraryInfo = await loadDownloadStorage();
+    if (!downloadLibraryInfo?.downloads) return;
+
+    const targetIndex = downloadLibraryInfo.downloads.findIndex(entry =>
+      entry.torrentId === torrentId
+    );
+
+    if (targetIndex === -1) throw new Error(`No download entry found for torrentId: ${torrentId}`);
+
+    if (Object.hasOwn(newMediaInfo, "Status")) {
+      newMediaInfo.StatusUpdateTime = Date.now();
+    }
+
+    downloadLibraryInfo.downloads[targetIndex] = {
+      ...downloadLibraryInfo.downloads[targetIndex],
+      ...newMediaInfo
+    };
+
+    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLibraryInfo);
+  });
+}
+
 export async function saveDownloadProgress(torrentEntry, downloadedBytes, totalSize) {
   await withFileLock(Paths.downloadLibraryFilePath, async () => {
     const downloadLib = await loadDownloadStorage();

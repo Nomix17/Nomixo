@@ -442,16 +442,26 @@ async function createPausedDownloadsContextMenu(torrentId) {
   const menuDiv = document.createElement("div");
   menuDiv.classList.add("select-dropdown");
 
+  const library = await window.electronAPI.loadDownloadLibraryInfo();
+  const targetLibInfo = library?.downloads.find(element => element.torrentId === torrentId);
+
   const addToQueue = document.createElement("div");
   addToQueue.textContent = "Add to download queue";
   addToQueue.classList.add("select-option");
-  
+ 
+  const changeDownloadPath = document.createElement("div");
+  changeDownloadPath.textContent = "Change Download Path";
+  changeDownloadPath.classList.add("select-option");
+
+  changeDownloadPath.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    hideContextMenu(menuDiv);
+    openChangeDownloadPathOverlay(targetLibInfo);
+  });
+
   const cancelDownload = document.createElement("div");
   cancelDownload.textContent = "Cancel the download";
   cancelDownload.classList.add("select-option");
-
-  const library = await window.electronAPI.loadDownloadLibraryInfo();
-  const targetLibInfo = library?.downloads.find(element => element.torrentId === torrentId);
 
   addToQueue.addEventListener("click", async (e) => {
     e.stopPropagation();
@@ -467,8 +477,8 @@ async function createPausedDownloadsContextMenu(torrentId) {
     hideContextMenu(menuDiv);
   });
 
-
   menuDiv.appendChild(addToQueue);
+  menuDiv.appendChild(changeDownloadPath);
   menuDiv.appendChild(cancelDownload);
 
   return menuDiv;
@@ -492,6 +502,16 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
   const playWithInternalPlayerOption = document.createElement("div");
   playWithInternalPlayerOption.textContent = "Play Using Built-in Player";
   playWithInternalPlayerOption.classList.add("select-option");
+
+  const changeDownloadPath = document.createElement("div");
+  changeDownloadPath.textContent = "Change Download Path";
+  changeDownloadPath.classList.add("select-option");
+
+  changeDownloadPath.addEventListener("click", (event) => {
+    event.stopPropagation();
+    hideContextMenu(menuDiv);
+    openChangeDownloadPathOverlay(MediaInfo);
+  });
 
   const updatePosterOption = document.createElement("div");
   updatePosterOption.textContent = "Update Poster Image";
@@ -556,6 +576,7 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
 
   menuDiv.appendChild(playWithExternalPlayerOption);
   menuDiv.appendChild(playWithInternalPlayerOption);
+  menuDiv.appendChild(changeDownloadPath);
   menuDiv.appendChild(updatePosterOption);
   menuDiv.appendChild(updateSubtitlesOption);
 
@@ -699,6 +720,92 @@ function fillingDeleteOverlay(MediaInfo) {
   mediaYear.innerHTML = MediaInfo.Year;
   if(MediaInfo.seasonNumber && MediaInfo.episodeNumber)
     seasonEpisode.innerText = `S${MediaInfo.seasonNumber}-E${MediaInfo.episodeNumber}`;
+}
+
+
+let changePathEscapeHandler = null;
+function openChangeDownloadPathOverlay(MediaInfo) {
+  const changePathOverlay = document.getElementById("changeDownloadPathOverlay");
+
+  const fromPathInput = changePathOverlay.querySelector("#fromPathInput");
+  const toPathInput = changePathOverlay.querySelector("#toPathInput");
+  const pathErrorMsg = changePathOverlay.querySelector("#pathErrorMsg");
+  const changePathMediaTitle = changePathOverlay.querySelector("#changePathMediaTitle");
+
+  let browseBtn = changePathOverlay.querySelector("#browsePathBtn");
+  let closeBtn = changePathOverlay.querySelector("#closePathBtn");
+  let cancelBtn = changePathOverlay.querySelector("#cancelPathBtn");
+  let confirmBtn = changePathOverlay.querySelector("#confirmPathBtn");
+
+  changePathMediaTitle.textContent = 
+    (MediaInfo?.seasonNumber && MediaInfo?.episodeNumber) 
+    ? `${MediaInfo.Title} S${MediaInfo.seasonNumber} E${MediaInfo.episodeNumber}`
+    : MediaInfo?.Title ?? "";
+
+  fromPathInput.value = MediaInfo.userDownloadPath ?? "";
+  toPathInput.value = "";
+  toPathInput.classList.remove("input-error");
+
+  const browseBtnNew = browseBtn.cloneNode(true);
+  browseBtn.parentNode.replaceChild(browseBtnNew, browseBtn);
+
+  const closeBtnNew = closeBtn.cloneNode(true);
+  closeBtn.parentNode.replaceChild(closeBtnNew, closeBtn);
+
+  const cancelBtnNew = cancelBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(cancelBtnNew, cancelBtn);
+
+  const confirmBtnNew = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(confirmBtnNew, confirmBtn);
+
+  browseBtn = browseBtnNew;
+  closeBtn = closeBtnNew;
+  cancelBtn = cancelBtnNew;
+  confirmBtn = confirmBtnNew;
+
+  dontGoBack = true;
+  changePathOverlay.classList.add("active");
+
+  const closeChangePathOverlay = () => {
+    changePathOverlay.classList.remove("active");
+  };
+
+  [closeBtn, cancelBtn].forEach(btn => {
+    btn.addEventListener("click", closeChangePathOverlay);
+  });
+
+  toPathInput.addEventListener("keydown", () => {
+    pathErrorMsg.classList.add("hidden");
+  });
+  browseBtn.addEventListener("click", async () => {
+    const oldValue = toPathInput.value
+    const targetDir = await window.electronAPI.openDirectory_FileSystemBrowser();
+    toPathInput.value = targetDir ?? oldValue;
+  });
+
+  confirmBtn.addEventListener("click", async () => {
+    const destinationPath = toPathInput.value.trim();
+    const res = await window.electronAPI.changeDownloadPath(MediaInfo, destinationPath);
+    if(res?.success === false && res?.error != null) {
+      pathErrorMsg.textContent = formatDownloadPathError(res.error);
+      pathErrorMsg.classList.remove("hidden");
+      return;
+    }
+    closeChangePathOverlay();
+    if (res?.success == true) displayMessage({ title: "Done", body: "Download path updated successfully." });
+  });
+
+  if (changePathEscapeHandler) {
+    document.removeEventListener("keydown", changePathEscapeHandler);
+  }
+
+  changePathEscapeHandler = (event) => {
+    if (event.key === "Escape") {
+      closeChangePathOverlay();
+    }
+  };
+
+  document.addEventListener("keydown", changePathEscapeHandler);
 }
 
 async function MarkDownloadElementAsIdle(MediaDownloadElement) {

@@ -78,6 +78,19 @@ export function sanitizeFilename(filename, replacement = '-') {
     || 'untitled';
 }
 
+export function sanitizeDestinationPath(rawPath) {
+  if (typeof rawPath !== "string" || rawPath.trim().length === 0)
+    throw new Error("Destination path must be a non-empty string");
+
+  if (rawPath.includes("\0"))
+    throw new Error("Destination path contains invalid characters");
+
+  const normalized = path.normalize(rawPath);
+  const resolved = path.resolve(normalized);
+  return resolved;
+}
+
+
 export async function sendSystemNotification({
   title = "Notification", body = "",
   icon = null, onClick = null,
