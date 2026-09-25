@@ -27,6 +27,7 @@ import {
   loadDownloadStorage,
   loadLibraryStorage,
   changeDownloadEntryInfo,
+  changeLibraryEntryInfo,
   editDownloadStorageEntry,
   getLibraryEntry,
   overwriteStorageFile,
@@ -604,14 +605,20 @@ ipcMain.handle("change-download-path", async (event, mediaInfo, destinationPath)
 
     await rename(mediaInfo.downloadPath, newDownloadPath);
 
-    mediaInfo.userDownloadPath = safeDestinationPath;
-    mediaInfo.downloadPath = newDownloadPath;
+    const posterDir = path.join(newDownloadPath, "POSTERS");
+    const updatedPaths = {
+      userDownloadPath: safeDestinationPath,
+      downloadPath: newDownloadPath,
+      posterPath: path.join(posterDir, path.basename(mediaInfo.posterPath)),
+      bgImagePath: path.join(posterDir, path.basename(mediaInfo.bgImagePath))
+    };
 
-    const posterDir = path.join(mediaInfo.downloadPath, "POSTERS");
-    mediaInfo.posterPath = path.join(posterDir, path.basename(mediaInfo.posterPath));
-    mediaInfo.bgImagePath = path.join(posterDir, path.basename(mediaInfo.bgImagePath));
-
-    await changeDownloadEntryInfo(mediaInfo.torrentId, mediaInfo);
+    await changeDownloadEntryInfo(mediaInfo.torrentId, updatedPaths);
+    try {
+      await changeLibraryEntryInfo(mediaInfo.torrentId, updatedPaths);
+    } catch (err) {
+      log.warn(`No library entry for ${mediaInfo.torrentId}, skipping: ${err.message}`);
+    }
 
   } catch (err) {
     log.error(err);
