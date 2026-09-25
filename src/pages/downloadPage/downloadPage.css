@@ -136,7 +136,6 @@
   align-items: center;
   gap: 7.2px;
   font-style: normal;
-  animation: slideDown 0.3s ease;
 }
 
 .empty-container-text.hidden {
