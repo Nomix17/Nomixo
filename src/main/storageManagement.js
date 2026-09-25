@@ -125,23 +125,38 @@ export async function changeDownloadEntryInfo(torrentId, newMediaInfo) {
     const downloadLibraryInfo = await loadDownloadStorage();
     if (!downloadLibraryInfo?.downloads) return;
 
-    const targetIndex = downloadLibraryInfo.downloads.findIndex(entry =>
-      entry.torrentId === torrentId
-    );
-
-    if (targetIndex === -1) throw new Error(`No download entry found for torrentId: ${torrentId}`);
-
-    if (Object.hasOwn(newMediaInfo, "Status")) {
-      newMediaInfo.StatusUpdateTime = Date.now();
-    }
-
-    downloadLibraryInfo.downloads[targetIndex] = {
-      ...downloadLibraryInfo.downloads[targetIndex],
-      ...newMediaInfo
-    };
-
-    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLibraryInfo);
+    const updatedDownloadEntries = editEntryInfo(torrentId, newMediaInfo, downloadLibraryInfo?.downloads);
+    await overwriteStorageFile(Paths.downloadLibraryFilePath, { "downloads" : updatedDownloadEntries });
   });
+}
+
+export async function changeLibraryEntryInfo(torrentId, newMediaInfo) {
+  await withFileLock(Paths.libraryFilePath, async () => {
+    const libraryInfo = await loadLibraryStorage();
+    if (!libraryInfo?.media) return;
+
+    const updatedLibraryEntries = editEntryInfo(torrentId, newMediaInfo, libraryInfo?.media);
+    await overwriteStorageFile(Paths.libraryFilePath, { "media" : updatedLibraryEntries });
+  });
+}
+
+function editEntryInfo(torrentId, newMediaInfo, libraryDump) {
+  const targetIndex = libraryDump.findIndex(entry =>
+    entry.torrentId === torrentId && entry.torrentId != null
+  );
+
+  if (targetIndex === -1) throw new Error(`No Entry found for torrentId: ${torrentId}`);
+
+  if (Object.hasOwn(newMediaInfo, "Status")) {
+    newMediaInfo.StatusUpdateTime = Date.now();
+  }
+
+  libraryDump[targetIndex] = {
+    ...libraryDump[targetIndex],
+    ...newMediaInfo
+  };
+
+  return libraryDump;
 }
 
 export async function saveDownloadProgress(torrentEntry, downloadedBytes, totalSize) {
