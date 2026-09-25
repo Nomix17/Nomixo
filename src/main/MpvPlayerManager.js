@@ -145,7 +145,7 @@ class MpvPlayerManager {
     if (this.#streamClient) this.#streamClient.destroy();
     if (this.#mpv) this.#mpv.kill();
     if (this.#browserWindow && !this.#browserWindow.isVisible())
-      this.#browserWindow.show();
+      this.showAndFocusWindow();
     if (this.#worker && this.#worker.threadId !== -1) {
       this.#worker.postMessage({ type: "shutdown" });
       this.#worker = null;
@@ -188,7 +188,7 @@ class MpvPlayerManager {
         this.#worker = null;
       }
       if (this.#browserWindow && !this.#browserWindow.isVisible())
-        this.#browserWindow.show();
+        this.showAndFocusWindow();
     };
 
     const handleError = (errorMsg) => {
@@ -318,6 +318,14 @@ class MpvPlayerManager {
     }
 
     await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
+  }
+
+  showAndFocusWindow() {
+    if (this.#browserWindow.isMinimized()) {
+      this.#browserWindow.restore();
+    }
+    this.#browserWindow.show();
+    this.#browserWindow.focus();
   }
 
   async #getLatestPlaybackPosition(metaData) {
