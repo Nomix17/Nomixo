@@ -271,10 +271,16 @@ ipcMain.handle("open-file-filesystem-browser", async (event, currentPath) => {
 });
 
 ipcMain.handle("import-external-subs", async (event, mediaInfo) => {
-  const filters = [{
-    name: `srt, vtt Files`,
-    extensions: ["srt", "vtt"],
-  }];
+  const filters = [
+    {
+      name: "Subtitle Files",
+      extensions: ["srt", "ass", "vtt", "sub", "ssa"],
+    },
+    {
+      name: "All Files",
+      extensions: ["*"],
+    },
+  ];
 
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ["openFile", "multiSelections"],
