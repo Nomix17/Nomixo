@@ -427,11 +427,11 @@ function getSearchPageCacheData(){
   return "##################### Coming Soon #####################";
 }
 
-async function loadCachedRightMiddleDivScrollValue(){
+async function loadCachedRightMiddleDivScrollValue() {
   const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
-  if(cachedData){
+  const RightmiddleDivScrollTopValue = cachedData?.right_middle_div_top_scroll_value;
+  if (RightmiddleDivScrollTopValue != null) {
     console.log("Loading Cached Information");
-    const RightmiddleDivScrollTopValue = cachedData.right_middle_div_top_scroll_value;
     const RightmiddleDiv = document.getElementById("div-middle-right");
     RightmiddleDiv.scrollTop = RightmiddleDivScrollTopValue;
   }

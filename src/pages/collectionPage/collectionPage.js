@@ -34,6 +34,7 @@ async function loadCollection() {
     renderCollectionMeta(CollectionData);
 
     globalLoadingGif.remove();
+    await loadCachedRightMiddleDivScrollValue();
     RightmiddleDiv.classList.add("activate");
 
   } catch(err) {
