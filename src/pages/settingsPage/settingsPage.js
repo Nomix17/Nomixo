@@ -1246,7 +1246,6 @@ loadCurrentTheme();
 loadExternalSubConfigs();
 loadApiKeys();
 setupKeyPressesHandler();
-setLeftButtonStyle("btn-settings");
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
 dropDownInit();

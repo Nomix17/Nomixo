@@ -77,7 +77,6 @@ function keyboardPressesHandling() {
 handleSplashScreen();
 triggerLoadingGif();
 loadMovies();
-setLeftButtonStyle("btn-home");
 resizeMoviesPostersContainers([popularMoviesDiv,popularSeriesDiv, continueWatchingDiv]);
 loadIconsDynamically();
 handlingMiddleRightDivResizing();

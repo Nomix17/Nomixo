@@ -210,7 +210,6 @@ initPage();
 setupKeyPressesForInputElement(searchInput);
 setupKeyPressesHandler();
 handleNavigationButtonsHandler(focusFunction);
-setLeftButtonStyle("btn-library");
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
 createSearchHistoryDropDown();

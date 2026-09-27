@@ -1459,11 +1459,6 @@ function putTextIntoDiv(Div,textContent){
   Div.append(textDiv);
 }
 
-function setLeftButtonStyle(buttonId) {
-  const buttonIcon = document.querySelector(`#${buttonId}`);
-  buttonIcon.classList.add("active");
-}
-
 function isWhiteMode(rgb) {
   const [r, g, b] = rgb.split(',').map(val => parseInt(val.trim(), 10));
   const luminance = 0.299 * r + 0.587 * g + 0.114 * b;

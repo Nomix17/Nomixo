@@ -1300,5 +1300,4 @@ loadDownloadMediaFromLib();
 setupCategoryBtn();
 handleDownloadCategoryUpdateFromMain();
 monitorSubtitlesDownloadReport();
-setLeftButtonStyle("btn-download");
 loadIconsDynamically();
