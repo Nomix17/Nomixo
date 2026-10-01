@@ -141,3 +141,19 @@ export async function pathExists(targetPath) {
     return false;
   }
 }
+
+const toIntOrRaw = (target) => {
+  const number = Number.parseInt(target, 10);
+  return Number.isNaN(number) ? target : number;
+};
+export function parseTorrentioStream(streamData) {
+  const fullTitle = streamData.title.replace(/\n+/g, "");
+  const torrentTitle = fullTitle.split("👤")[0].split("\n")[0].replace(/\n+/g, "");
+  const Quality = streamData.name.split("Torrentio")[1].replace(/\n+/g, "");
+  const hash = streamData.infoHash;
+  const SeedersNumber = fullTitle.split("👤")[1].split("💾")[0].replace(/\n+/g, "");
+  const Size = fullTitle.split("💾")[1].split("⚙️")[0].replace(/\n+/g, "");
+  const fileName = streamData?.behaviorHints?.filename || "";
+  const MagnetLink = `magnet:?xt=urn:btih:${hash}`
+  return { rawStreamTitle: fullTitle, torrentTitle, Quality, hash, SeedersNumber: toIntOrRaw(SeedersNumber), Size, fileName, MagnetLink };
+}

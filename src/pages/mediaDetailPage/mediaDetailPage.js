@@ -704,7 +704,7 @@ async function renderMediaTorrent(data, MediaLibraryInfo, episodeInfo = {}) {
 
   const docFragment = document.createDocumentFragment();
   data.streams.forEach(streamData => {
-    const parsedTorrentInfo = parseTorrentInfo(streamData);
+    const parsedTorrentInfo = parseTorrentioStream(streamData);
     if (parsedTorrentInfo.fileName.trim() !== "") {
       const torrentInfo = {
         MediaId: MediaId,
@@ -831,7 +831,8 @@ function buildDownloadTargetInfo(torrentInfo) {
     MediaId: torrentInfo.MediaId,
     MediaType: torrentInfo.MediaType,
     seasonNumber: torrentInfo.seasonNumber,
-    episodeNumber: torrentInfo.episodeNumber
+    episodeNumber: torrentInfo.episodeNumber,
+    rawStreamTitle: torrentInfo.rawStreamTitle
   };
 }
 
@@ -842,7 +843,11 @@ function addTorrentElementEventListener(TorrentElement, torrentInfo) {
   });
 }
 
-function parseTorrentInfo(streamData) {
+const toIntOrRaw = (target) => {
+  const number = Number.parseInt(target, 10);
+  return Number.isNaN(number) ? target : number;
+};
+function parseTorrentioStream(streamData) {
   const fullTitle = streamData.title.replace(/\n+/g, "");
   const torrentTitle = fullTitle.split("👤")[0].split("\n")[0].replace(/\n+/g, "");
   const Quality = streamData.name.split("Torrentio")[1].replace(/\n+/g, "");
@@ -851,7 +856,7 @@ function parseTorrentInfo(streamData) {
   const Size = fullTitle.split("💾")[1].split("⚙️")[0].replace(/\n+/g, "");
   const fileName = streamData?.behaviorHints?.filename || "";
   const MagnetLink = `magnet:?xt=urn:btih:${hash}`
-  return { torrentTitle, Quality, hash, SeedersNumber, Size, fileName, MagnetLink };
+  return { rawStreamTitle: fullTitle, torrentTitle, Quality, hash, SeedersNumber: toIntOrRaw(SeedersNumber), Size, fileName, MagnetLink };
 }
 
 function displaySeason(seasonIndex) {

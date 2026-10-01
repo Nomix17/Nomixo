@@ -44,6 +44,11 @@ local colors = {
   -- Thumbnails (with thumbfast)
   thumbnail_border_color = "#111111",        -- color of the border for thumbnails
   thumbnail_border_outline = "#404040",      -- color of the border outline for thumbnails
+
+  -- "Play Next Episode" button (only shown with --script-opts=haveNextEp=true)
+  next_ep_color = "#FFFFFF",                 -- fill color of the button
+  next_ep_text_color = "#111111",            -- text/icon color of the button
+  next_ep_hover_color = "#FFFFFF",           -- fill color of the button on hover (it also gets more transparent)
 }
 
 -- Parameters
@@ -180,6 +185,14 @@ local user_opts = {
     hover_effect_color = colors.hover_effect_color,            -- color of a hovered button when hover_effect includes "color"
     thumbnail_border_color = colors.thumbnail_border_color,    -- color of the border for thumbnails (with thumbfast)
     thumbnail_border_outline = colors.thumbnail_border_outline, -- color of the border outline for thumbnails
+    next_ep_color = colors.next_ep_color,                      -- fill color of the "Play Next Episode" button
+    next_ep_text_color = colors.next_ep_text_color,            -- text/icon color of the "Play Next Episode" button
+    next_ep_hover_color = colors.next_ep_hover_color,          -- fill color of the "Play Next Episode" button on hover
+
+    -- "Play Next Episode" button
+    -- only shown when mpv is started with --script-opts=haveNextEp=true
+    next_ep_time = 15,                     -- show the button during the last N seconds of the video
+    next_ep_font_size = 15,                -- font size of the button text
 
     fade_alpha = 130,                      -- alpha of the OSC background (0 to disable)
     fade_blur_strength = 100,              -- blur strength for the OSC alpha fade. caution: high values can take a lot of CPU time to render
@@ -244,7 +257,7 @@ local user_opts = {
     -- customize the button function based on mouse action
 
     -- title above seekbar mouse actions
-    title_mbtn_left_command = "script-binding stats/display-page-5",
+    title_mbtn_left_command = "ignore",
     title_mbtn_mid_command = "show-text ${path}",
     title_mbtn_right_command = "script-binding select/select-watch-history; script-message-to modernz osc-hide",
 
@@ -572,6 +585,13 @@ local function set_osc_styles()
         control_2 = "{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.middle_buttons_color) .. "&\\3c&HFFFFFF&\\fs" .. midbuttons_size .. "\\fn" .. iconfont .. "}",
         control_2_flip = "{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.middle_buttons_color) .. "&\\3c&HFFFFFF&\\fs" .. midbuttons_size .. "\\fn" .. iconfont .. "\\fry180}",
         control_3 = "{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.side_buttons_color) .. "&\\3c&HFFFFFF&\\fs" .. sidebuttons_size .. "\\fn" .. iconfont .. "}",
+        next_ep_shadow = "{\\blur12\\bord0\\1c&H000000&}",
+        next_ep_bg = "{\\blur0\\bord1.5\\1c&H" .. osc_color_convert(user_opts.next_ep_color) .. "&\\3c&H" .. osc_color_convert(user_opts.next_ep_color) .. "&}",
+        next_ep_bg_hover = "{\\1c&H" .. osc_color_convert(user_opts.next_ep_hover_color) .. "&\\3c&H" .. osc_color_convert(user_opts.next_ep_hover_color) .. "&}",
+        next_ep_badge = "{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.next_ep_text_color) .. "&}",
+        next_ep_text = "{\\blur0\\bord0\\shad0\\b1\\fsp0.3\\1c&H" .. osc_color_convert(user_opts.next_ep_text_color) .. "&\\fs" .. user_opts.next_ep_font_size .. "\\fn" .. user_opts.font .. "}",
+        next_ep_text_hover = "{\\1c&H" .. osc_color_convert(user_opts.next_ep_text_color) .. "&}",
+        next_ep_icon = "{\\blur0\\bord0\\shad0\\1c&H" .. osc_color_convert(user_opts.next_ep_color) .. "&\\fs" .. math.floor(user_opts.next_ep_font_size * 0.95) .. "\\fn" .. iconfont .. "}",
         element_down = "{\\1c&H" .. osc_color_convert(user_opts.held_element_color) .. "&}",
         element_hover = "{" .. (contains(user_opts.hover_effect, "color") and "\\1c&H" .. osc_color_convert(user_opts.hover_effect_color) .. "&" or "") .."\\2c&HFFFFFF&" .. (contains(user_opts.hover_effect, "size") and string.format("\\fscx%s\\fscy%s", user_opts.hover_button_size, user_opts.hover_button_size) or "") .. "}",
     }
@@ -633,7 +653,28 @@ local state = {
     is_URL = false,
     is_image = false,
     url_path = "",                           -- used for yt-dlp downloading
+    next_ep_input = false,                   -- is the "next-episode" mouse section currently enabled?
 }
+
+-- "Play Next Episode" button
+-- Only available when mpv is started with --script-opts=haveNextEp=true
+-- and only shown during the last `next_ep_time` seconds of the video.
+local function have_next_episode()
+    local v = mp.get_opt("haveNextEp")
+    if not v then return false end
+    v = tostring(v):gsub("[\"'%s]", ""):lower() -- tolerate haveNextEp="true" / 'true'
+    return v == "true" or v == "yes" or v == "1"
+end
+
+local next_ep_enabled = have_next_episode()
+
+local function next_ep_active()
+    if not next_ep_enabled or state.is_image then return false end
+    local remaining = mp.get_property_number("time-remaining")
+    local duration = mp.get_property_number("duration")
+    return remaining ~= nil and duration ~= nil and duration > 0
+        and remaining >= 0 and remaining <= user_opts.next_ep_time
+end
 
 local logo_lines = {
     -- White border
@@ -1274,6 +1315,11 @@ local function draw_seekbar_progress(element, elem_ass)
     end
 end
 
+-- smooth "pressed" animation of the Play Next Episode button (0 = released, 1 = fully pressed)
+local next_ep_press = {value = 0, time = nil}
+local NEXT_EP_PRESS_SHRINK = 0.06   -- how much the button shrinks while pressed (6%)
+local NEXT_EP_PRESS_SPEED = 22      -- higher = snappier animation
+
 local function render_elements(master_ass)
     -- when the slider is dragged or hovered and we have a target chapter name
     -- then we use it instead of the normal title. we calculate it before the
@@ -1297,10 +1343,40 @@ local function render_elements(master_ass)
 
     state.touchingprogressbar = false
 
+    -- advance the press animation of the Play Next Episode button
+    local ae = elements[state.active_element]
+    local next_ep_pressed = ae ~= nil and ae.name == "next_ep"
+        and state.mouse_down_counter > 0 and mouse_hit(ae)
+    local now = mp.get_time()
+    local dt = next_ep_press.time and math.min(now - next_ep_press.time, 0.05) or 0
+    next_ep_press.time = now
+    local target = next_ep_pressed and 1 or 0
+    local diff = target - next_ep_press.value
+    if math.abs(diff) > 0.002 then
+        next_ep_press.value = next_ep_press.value + diff * (1 - math.exp(-dt * NEXT_EP_PRESS_SPEED))
+        request_tick() -- keep rendering until the animation has settled
+    else
+        next_ep_press.value = target
+    end
+    local press_scale = 1 - NEXT_EP_PRESS_SHRINK * next_ep_press.value
+
     for n=1, #elements do
         local element = elements[n]
         local style_ass = assdraw.ass_new()
-        style_ass:merge(element.style_ass)
+        if element.press_anchor and press_scale < 1 then
+            -- shrink around the center of the whole button: scale the element itself and
+            -- move its anchor point towards the button center by the same factor
+            local geo = element.layout.geometry
+            local a = element.press_anchor
+            style_ass:append("{}") -- hack to troll new_event into inserting a \n
+            style_ass:new_event()
+            style_ass:pos(a.cx + (geo.x - a.cx) * press_scale, a.cy + (geo.y - a.cy) * press_scale)
+            style_ass:an(geo.an)
+            style_ass:append(element.layout.style)
+            style_ass:append(string.format("{\\fscx%.2f\\fscy%.2f}", press_scale * 100, press_scale * 100))
+        else
+            style_ass:merge(element.style_ass)
+        end
         ass_append_alpha(style_ass, element.layout.alpha, 0)
 
         if element.eventresponder and (state.active_element == n) then
@@ -1326,6 +1402,14 @@ local function render_elements(master_ass)
         elem_ass:merge(style_ass)
 
         if element.type ~= "button" then
+            -- optional hover color for boxes (e.g. the "Play Next Episode" pill)
+            if element.hoverstyle and mouse_hit(element) and (state.mouse_down_counter == 0 or next_ep_pressed) then
+                elem_ass:append(element.hoverstyle)
+                if element.hoveralpha then
+                    -- goes through ass_append_alpha so the OSC fade animation still applies
+                    ass_append_alpha(elem_ass, element.hoveralpha, 0)
+                end
+            end
             elem_ass:merge(element.static_ass)
         end
 
@@ -1506,7 +1590,7 @@ local function render_elements(master_ass)
             )
             local hovered = mouse_hit(element) and is_clickable and element.enabled and state.mouse_down_counter == 0
             local hoverstyle = button_lo.hoverstyle
-            if hovered and (contains(user_opts.hover_effect, "size") or contains(user_opts.hover_effect, "color")) then
+            if hovered and (element.force_hover or contains(user_opts.hover_effect, "size") or contains(user_opts.hover_effect, "color")) then
                 -- remove font scale tags for these elements, it looks out of place
                 if element.name == "title" or element.name == "time_codes" or element.name == "chapter_title" or element.name == "cache_info" then
                     hoverstyle = hoverstyle:gsub("\\fscx%d+\\fscy%d+", "")
@@ -1562,7 +1646,10 @@ local function render_elements(master_ass)
             end
         end
 
-        master_ass:merge(elem_ass)
+        -- elements can hide themselves at draw time (e.g. the "Play Next Episode" button)
+        if element.showF == nil or element.showF() then
+            master_ass:merge(elem_ass)
+        end
     end
 end
 
@@ -2038,6 +2125,85 @@ layouts["modern"] = function ()
         lo.geometry = {x = end_x, y = refY - 35, an = 5, w = 24, h = 24}
         lo.style = osc_styles.control_3
         end_x = end_x - 45
+    end
+
+    -- Play Next Episode button (floats above the OSC, bottom right)
+    -- layout: [ label text ....... (icon badge) ]
+    if next_ep_enabled and osc_w >= 420 then
+        -- everything below is in OSC canvas units, exactly like the other buttons, so the
+        -- button scales with the window at the same ratio as the rest of the UI (k = 1)
+        local k = 1
+        local fs = user_opts.next_ep_font_size
+        local nx_h = math.floor(fs * 2.3)            -- pill height
+        local pad_l = math.floor(nx_h * 0.42)        -- left padding before the label
+        local badge_m = math.max(4, math.floor(6 * k))  -- gap between badge and pill edge
+        local badge_d = nx_h - badge_m * 2           -- diameter of the icon badge
+        local gap = math.floor(fs * 0.4)             -- gap between label and badge
+        local text_w = math.ceil(17 * fs * 0.5)      -- approx. width of "Play Next Episode"
+        local nx_w = pad_l + text_w + gap + badge_d + badge_m
+        local margin_r = math.floor(25 * k)          -- distance to the right edge (matches the OSC side padding)
+        local margin_b = math.floor(16 * k)          -- distance above the OSC
+
+        local nx_x = osc_w - margin_r - nx_w               -- left edge of the pill
+        local nx_cx = nx_x + nx_w / 2
+        local nx_cy = refY - osc_geo.h - margin_b - nx_h / 2
+
+        -- soft drop shadow
+        new_element("next_ep_shadow", "box")
+        lo = add_layout("next_ep_shadow")
+        lo.geometry = {x = nx_cx, y = nx_cy + 4 * k, an = 5, w = nx_w + 10 * k, h = nx_h + 10 * k}
+        lo.style = osc_styles.next_ep_shadow .. string.format("{\\blur%d}", math.max(4, math.floor(12 * k)))
+        lo.layer = 55
+        lo.alpha[1] = 165
+        lo.box.radius = (nx_h + 10 * k) / 2
+        elements.next_ep_shadow.showF = next_ep_active
+
+        -- pill background
+        new_element("next_ep_bg", "box")
+        lo = add_layout("next_ep_bg")
+        lo.geometry = {x = nx_cx, y = nx_cy, an = 5, w = nx_w, h = nx_h}
+        lo.style = osc_styles.next_ep_bg .. string.format("{\\bord%.2f}", 1.5 * k)
+        lo.layer = 56
+        lo.alpha[1] = 45   -- fill transparency (0 = opaque, 255 = invisible)
+        lo.alpha[3] = 255  -- no border: it would double-blend with the translucent fill
+        lo.box.radius = nx_h / 2
+        elements.next_ep_bg.showF = next_ep_active
+        elements.next_ep_bg.hoverstyle = osc_styles.next_ep_bg_hover
+        -- on hover the pill becomes more see-through (0 = opaque, 255 = invisible)
+        elements.next_ep_bg.hoveralpha = {[1] = 105, [2] = 255, [3] = 255, [4] = 255}
+        -- circular badge behind the icon
+        local badge_cx = nx_x + nx_w - badge_m - badge_d / 2
+        new_element("next_ep_badge", "box")
+        lo = add_layout("next_ep_badge")
+        lo.geometry = {x = badge_cx, y = nx_cy, an = 5, w = badge_d, h = badge_d}
+        lo.style = osc_styles.next_ep_badge
+        lo.layer = 57
+        lo.box.radius = badge_d / 2
+        elements.next_ep_badge.showF = next_ep_active
+
+        -- label: left aligned (an=4) and vertically centered on the pill.
+        -- text and icon are separate elements so the two fonts never share a baseline.
+        lo = add_layout("next_ep")
+        lo.geometry = {x = nx_x + pad_l, y = nx_cy - 1, an = 4, w = nx_w - pad_l, h = nx_h}
+        lo.style = osc_styles.next_ep_text .. string.format("{\\fs%d}", fs)
+        lo.layer = 58
+        lo.button.hoverstyle = osc_styles.next_ep_text_hover
+
+        -- icon: centered (an=5) on the badge
+        lo = add_layout("next_ep_icon")
+        lo.geometry = {x = badge_cx, y = nx_cy, an = 5, w = badge_d, h = badge_d}
+        lo.style = osc_styles.next_ep_icon .. string.format("{\\fs%d}", math.floor(fs * 0.72))
+        lo.layer = 59
+
+        -- all parts of the button shrink towards the pill center when pressed
+        for _, name in ipairs({"next_ep_shadow", "next_ep_bg", "next_ep_badge", "next_ep", "next_ep_icon"}) do
+            if elements[name] then
+                elements[name].press_anchor = {cx = nx_cx, cy = nx_cy}
+            end
+        end
+
+        -- extra mouse section so the button is clickable outside the OSC bar
+        add_area("next-episode", get_hitbox_coords(nx_cx, nx_cy, 5, nx_w, nx_h))
     end
 
 end
@@ -2606,6 +2772,27 @@ local function osc_init()
     ne.tooltipF = (user_opts.tooltip_hints and cache_enabled()) and locale.cache or ""
     ne.eventresponder["mbtn_left_up"] = function() mp.command("script-binding stats/display-page-3") end
 
+    -- play next episode
+    -- only exists with --script-opts=haveNextEp=true, and is only drawn/clickable in the last next_ep_time seconds
+    ne = new_element("next_ep", "button")
+    ne.visible = next_ep_enabled and not state.is_image and osc_param.playresx >= 420
+    ne.showF = next_ep_active
+    ne.force_hover = true
+    ne.styledown = false -- keep the text color while pressed (the pill shrinks instead)
+    ne.content = "Play Next Episode"
+    ne.eventresponder["mbtn_left_up"] = function ()
+        if next_ep_active() then
+            print("PLAY_NEXT_EPISODE")
+        end
+    end
+
+    -- icon shown inside the badge (purely decorative: clicks are handled by the "next_ep" button)
+    ne = new_element("next_ep_icon", "button")
+    ne.visible = next_ep_enabled and not state.is_image and osc_param.playresx >= 420
+    ne.showF = next_ep_active
+    ne.styledown = false
+    ne.content = icons.next
+
     --seekbar
     ne = new_element("seekbar", "slider")
     ne.enabled = mp.get_property("percent-pos") ~= nil
@@ -3065,6 +3252,10 @@ local function enable_osc(enable)
             mp.disable_key_bindings("showhide_wc")
         end
         state.showhide_enabled = false
+        if state.next_ep_input then
+            mp.disable_key_bindings("next-episode")
+            state.next_ep_input = false
+        end
     end
 end
 
@@ -3193,6 +3384,29 @@ local function render()
                 mouse_over_osc = true
             end
         end
+    end
+
+    -- "Play Next Episode" button: its own mouse section, only active while the OSC
+    -- is visible and we are inside the last next_ep_time seconds
+    local next_ep_wanted = false
+    if osc_param.areas["next-episode"] then
+        next_ep_wanted = state.osc_visible and next_ep_active()
+        for _,cords in ipairs(osc_param.areas["next-episode"]) do
+            if next_ep_wanted then
+                set_virt_mouse_area(cords.x1, cords.y1, cords.x2, cords.y2, "next-episode")
+                if mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) then
+                    mouse_over_osc = true
+                end
+            end
+        end
+    end
+    if next_ep_wanted ~= state.next_ep_input then
+        if next_ep_wanted then
+            mp.enable_key_bindings("next-episode")
+        else
+            mp.disable_key_bindings("next-episode")
+        end
+        state.next_ep_input = next_ep_wanted
     end
 
     if osc_param.areas["window-controls-title"] then
@@ -3504,6 +3718,26 @@ mp.set_key_bindings({
 }, "window-controls-right", "force")
 mp.enable_key_bindings("window-controls-right")
 
+-- "Play Next Episode" button (enabled from render() when it should be clickable)
+-- every mouse event over the button is consumed here, so nothing leaks through to the
+-- window (double click = fullscreen, click/right click = pause, etc.)
+mp.set_key_bindings({
+    {"mbtn_left",           function() process_event("mbtn_left", "up") end,
+                            function() process_event("mbtn_left", "down") end},
+    {"shift+mbtn_left",     "ignore"},
+    {"mbtn_right",          "ignore"},
+    {"shift+mbtn_right",    "ignore"},
+    {"mbtn_mid",            "ignore"},
+    {"mbtn_left_dbl",       "ignore"},
+    {"shift+mbtn_left_dbl", "ignore"},
+    {"mbtn_right_dbl",      "ignore"},
+    {"mbtn_mid_dbl",        "ignore"},
+    {"wheel_up",            "ignore"},
+    {"wheel_down",          "ignore"},
+    {"wheel_left",          "ignore"},
+    {"wheel_right",         "ignore"},
+}, "next-episode", "force")
+
 local function always_on(val)
     if state.enabled then
         if val then
@@ -3683,6 +3917,7 @@ local function validate_user_opts()
         user_opts.chapter_title_color, user_opts.seekbar_cache_color, user_opts.hover_effect_color,
         user_opts.windowcontrols_close_hover, user_opts.windowcontrols_max_hover, user_opts.windowcontrols_min_hover,
         user_opts.cache_info_color, user_opts.thumbnail_border_outline,
+        user_opts.next_ep_color, user_opts.next_ep_text_color, user_opts.next_ep_hover_color,
     }
 
     for _, color in pairs(color_list) do
@@ -3729,3 +3964,4 @@ set_virt_mouse_area(0, 0, 0, 0, "input")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls-right")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls-title")
+set_virt_mouse_area(0, 0, 0, 0, "next-episode")

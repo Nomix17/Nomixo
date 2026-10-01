@@ -236,6 +236,7 @@ ipcMain.on("change-page", (event, newPageURL, currentPageURL, cacheData) => {
 
   appManager.browserWindow.loadURL(url);
   appManager.positionWasChangedViaGoBackButton = false;
+  appManager.mpvPlayerManager.inVideoPlayerPage = url.includes("videoPlayer");
 });
 
 ipcMain.handle("request-fullscreen", () => {

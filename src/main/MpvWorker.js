@@ -29,6 +29,7 @@ SubDownloadManager.sendProgressCallBack = (progressInfo) => {
 function StreamTorrent(
   MpvExecPath,
   metaData,
+  haveNextEpisode,
   startFromTime,
   videoCachePath,
   subDirectory,
@@ -39,8 +40,8 @@ function StreamTorrent(
   return new Promise(async (resolve, reject) => {
     const trackers = await getTorrentTrackers()
     log.info("Loading Torrent:", metaData?.fileName);
-
-    webTorrentClient = new WebTorrent();
+    webTorrentClient = new WebTorrent({ lsd: false, utp: false });
+    // webTorrentClient = new WebTorrent();
     const torrent = webTorrentClient.add(metaData.MagnetLink, {
       path: videoCachePath,
       announce: trackers 
@@ -111,8 +112,8 @@ function StreamTorrent(
           runMpvProcess(
             MpvExecPath, url,
             mpvConfigDirectory, metaData,
-            startFromTime, subsPaths,
-            mpvWindowConfigs
+            haveNextEpisode, startFromTime,
+            subsPaths, mpvWindowConfigs
           );
 
         } catch (error) {
@@ -146,6 +147,7 @@ function StreamTorrent(
 async function PlayLocalVideo(
   MpvExecPath,
   metaData,
+  haveNextEpisode,
   startFromTime,
   subsPaths,
   mpvConfigDirectory,
@@ -158,8 +160,9 @@ async function PlayLocalVideo(
         runMpvProcess(
           MpvExecPath, videoFullPath,
           mpvConfigDirectory, metaData,
-          startFromTime, subsPaths,
-          mpvWindowConfigs, resolve, reject
+          haveNextEpisode, startFromTime,
+          subsPaths, mpvWindowConfigs,
+          resolve, reject
         );
       else
         throw new Error(`Cannot Find File Named:<br> ${metaData.fileName}`);
@@ -175,13 +178,14 @@ function runMpvProcess(
   videoFullPath,
   mpvConfigDirectory,
   metaData,
+  haveNextEpisode,
   startFromTime,
   subsPaths,
   mpvWindowConfigs,
   onClose,
   onError
 ) {
-  const subsArgument = subsPaths.map(path => `--sub-file=${path}`);
+  const subsArgument = subsPaths != null ? subsPaths.map(path => `--sub-file=${path}`) : [];
   const isWindows = os.platform() === 'win32';
   const mpvExecutable = (MpvExecPath ?? (isWindows ? 'mpv.exe' : 'mpv')).trim().replace(/\/$/, '');
 
@@ -201,6 +205,8 @@ function runMpvProcess(
     `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}`,
     `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`,
     `--force-media-title=${videoTitle}`,
+    `--script-opts=haveNextEp=${haveNextEpisode}`,
+    `--mute=yes`,
     ...subsArgument
   ];
 
@@ -288,10 +294,11 @@ async function cleanup() {
   }
 
   if (webTorrentClient) {
+    const client = webTorrentClient;
+    webTorrentClient = null;
     try {
-      webTorrentClient.destroy();
-      log.info('WebTorrent client destroy initiated');
-      webTorrentClient = null;
+      await destroyClient(client);
+      log.info('WebTorrent client destroyed');
     } catch (err) {
       log.error('Failed to destroy torrent client:', err);
     }
@@ -300,10 +307,18 @@ async function cleanup() {
   log.info('Worker cleanup complete');
 }
 
+function destroyClient(client) {
+  return Promise.race([
+    new Promise((resolve) => client.destroy(() => resolve())),
+    new Promise((resolve) => setTimeout(resolve, 2000)),
+  ]);
+}
+
 parentPort.on('message', async (msg) => {
   if (msg.type === 'shutdown') {
-    log.info("Worker received shutdown signal");
     await cleanup();
+    parentPort.removeAllListeners('message');
+    parentPort.close();
   }
 });
 
@@ -311,6 +326,7 @@ if (workerData.typeOfPlay === "StreamTorrent") {
   StreamTorrent(
     workerData.MpvExecPath,
     workerData.metaData,
+    workerData.haveNextEpisode,
     workerData.startFromTime,
     workerData.videoCachePath,
     workerData.subDirectory,
@@ -331,6 +347,7 @@ if (workerData.typeOfPlay === "StreamTorrent") {
   PlayLocalVideo(
     workerData.MpvExecPath,
     workerData.metaData,
+    workerData.haveNextEpisode,
     workerData.startFromTime,
     workerData.subsPaths,
     workerData.mpvConfigDirectory,

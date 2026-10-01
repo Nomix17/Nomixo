@@ -1952,7 +1952,8 @@ function validateThemeName(name) {
 function monitorMsgFromMainProcess() {
   window.electronAPI.getMsgFromMainProcess((msg) => {
     if (msg.type === "request" && msg.request === "exit_video_player") {
-      window.electronAPI.goBack();
+      if(window.location.href.includes("playerPage.html"))
+        window.electronAPI.goBack();
     } else if(msg.type === "update_available") {
       if(!window.location.href.includes("loginPage.html"))
         displayMessage({ title: msg?.title ?? "", body: msg?.body ?? "", onClick: OpenSettingsPage});
