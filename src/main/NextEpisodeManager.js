@@ -20,23 +20,31 @@ class NextEpisodeManager {
   }
 
   async resolveNext(metaData) {
+    const { MediaType, seasonNumber, episodeNumber } = metaData ?? {};
+
+    const isResolvable =
+      MediaType != null &&
+      MediaType !== "movie" &&
+      seasonNumber != null &&
+      episodeNumber != null;
+
+    if (!isResolvable) {
+      this.nextEpisodeInfo = null;
+      return null;
+    }
+
     try {
       this.nextEpisodeInfo = await this.#computeNextEpisodeInfo(metaData);
     } catch (err) {
       log.error("Failed to resolve next episode info:", err);
       this.nextEpisodeInfo = null;
     }
-    log.info("Next Episode:", this.nextEpisodeInfo.MagnetLink);
+
+    log.info("Next Episode:", this.nextEpisodeInfo?.MagnetLink);
     return this.nextEpisodeInfo;
   }
 
   async #computeNextEpisodeInfo(metaData) {
-    if(
-      metaData?.MediaType === "movie" ||
-      metaData?.seasonNumber == null ||
-      metaData?.episodeNumber == null
-    ) return null;
-
     const nextEpisode = await this.#getNextEpisodeNumber(
       metaData.MediaId,
       metaData.seasonNumber,

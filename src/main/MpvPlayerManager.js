@@ -317,7 +317,15 @@ class MpvPlayerManager {
 
   async #playNextEpisode() {
     const nextEpisode = this.#nextEpisodeManager.nextEpisodeInfo;
-    if (!nextEpisode || !this.#settings) return;
+    if (!nextEpisode || !this.#settings) {
+      this.#browserWindow.webContents.send(
+        "torrent-fetching-error",
+        nextEpisode == null
+          ? "Failed to load next episode information"
+          : "Something went wrong"
+      );
+      return;
+    }
 
     this.#lastSecondBeforeQuit = 0;
 
