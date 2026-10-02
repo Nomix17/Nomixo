@@ -852,9 +852,6 @@ async function MarkDownloadElementAsIdle(MediaDownloadElement) {
 }
 
 async function MarkDownloadElementAsPaused(MediaDownloadElement) {
-  const elementId = MediaDownloadElement.id;
-  SaveDownloadStatus(elementId, "PAUSED");
-
   MarkDownloadElementAsIdle(MediaDownloadElement);
   const oldContextMenuButton = MediaDownloadElement.querySelector(".context-menu-button");
 
@@ -862,7 +859,7 @@ async function MarkDownloadElementAsPaused(MediaDownloadElement) {
     const contextMenuButton = document.createElement("button");
     contextMenuButton.classList.add("context-menu-button");
     contextMenuButton.innerHTML = menuThreePoints;
-    const contextMenuDiv = await createPausedDownloadsContextMenu(elementId);
+    const contextMenuDiv = await createPausedDownloadsContextMenu(MediaDownloadElement.id);
     contextMenuButton.appendChild(contextMenuDiv);
     setupContextMenuHandler(contextMenuButton, contextMenuDiv);
     MediaDownloadElement.appendChild(contextMenuButton);
@@ -873,9 +870,6 @@ async function MarkDownloadElementAsPaused(MediaDownloadElement) {
 }
 
 async function MarkDownloadElementAsQueued(MediaDownloadElement) {
-  const elementId = MediaDownloadElement.id;
-  SaveDownloadStatus(elementId, "QUEUED");
-
   MarkDownloadElementAsIdle(MediaDownloadElement);
   removePausedDownloadsContextMenu(MediaDownloadElement);
 
@@ -889,7 +883,7 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
     downArrow.classList.add("btn-arrow", "down-arrow");
     upArrow.innerHTML = upArrowIcon;
     downArrow.innerHTML = downArrowIcon;
-
+    const elementId = MediaDownloadElement.id;
     [upArrow,downArrow].forEach((el, elIndex) => {
       el.addEventListener("click", async () => {
         const newOrder = 
@@ -1000,8 +994,10 @@ function disableBorderArrowBtnsForQueuedEls() {
 
 function monitorErrors() {
   window.electronAPI.getDownloadErrorsReports(async (errorReport) => {
-    let MediaDownloadElement = document.getElementById(errorReport.torrentId);
-    MarkDownloadElementAsPaused(MediaDownloadElement)
+    const MediaDownloadElement = document.getElementById(errorReport.torrentId);
+    if (!MediaDownloadElement) return;
+    MarkDownloadElementAsPaused(MediaDownloadElement);
+    SaveDownloadStatus(errorReport.torrentId, "PAUSED");
     console.error(`${errorReport?.type} Error: ${errorReport.torrentId}\n${errorReport.err_msg}`);
   });
 }
@@ -1137,11 +1133,11 @@ function handleDownloadCategoryUpdateFromMain() {
 
 async function handleDownloadCategorieChanging(categorieChangedTorrents) {
   const DOWNLOAD_CATEGORIES = {
-    "PAUSED": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused},
-    "QUEUED": {categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued},
-    "LOADING": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading},
-    "SUBS_DOWNLOAD": {categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs},
-    "FAILED": {categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused}
+    "PAUSED": { categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: "PAUSED" },
+    "QUEUED": { categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued, saveStatus: "QUEUED" },
+    "FAILED": { categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: "PAUSED" },
+    "LOADING": { categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading },
+    "SUBS_DOWNLOAD": { categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs },
   };
 
   for(const res of categorieChangedTorrents) {
@@ -1170,21 +1166,21 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
     category.applyUIState(targetElement);
     targetElement.dataset.downloadStatus = res.status;
 
-    if(res?.status === "FAILED") {
+    const targetElementContainer = category?.categoryDiv?.querySelector(".movieContainer");
+    targetElementContainer.appendChild(targetElement);
+
+    if(res?.status === "FAILED")
       console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
-    }
 
     if(category.saveStatus)
       await SaveDownloadStatus(res.torrentId, category.saveStatus);
-    const targetElementContainer = category?.categoryDiv?.querySelector(".movieContainer");
-    targetElementContainer.appendChild(targetElement);
   }
   updateDownloadUI();
 }
 
 function setupCategoryBtn() {
-  const queueAllDownloadBtn = pausedDownloadsDiv.querySelector("button");
-  const pauseAllDownloadBtn = queuedDownloadsDiv.querySelector("button");
+  const queueAllDownloadBtn = pausedDownloadsDiv.querySelector(".categorie-controll");
+  const pauseAllDownloadBtn = queuedDownloadsDiv.querySelector(".categorie-controll");
 
   queueAllDownloadBtn.addEventListener("click", async() => {
     const libraryInfo = await window.electronAPI.loadDownloadLibraryInfo()
