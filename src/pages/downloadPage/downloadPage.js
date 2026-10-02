@@ -954,27 +954,87 @@ function reorderDownloadQueue(newOrder, animateTransition=true) {
   updateDownloadUI();
 }
 
+const REORDER_ANIM_ID = "reorder-flip";
+const ANIM_DURATION = 300;
+const ANIM_EASING = "ease-in-out";
+
+function getAnimatableEls() {
+  return Array.from(document.querySelectorAll(".downloads-categorie, .download-media"));
+}
+
+function releaseFloating(card) {
+  if(card.getAnimations().some(a => a.id === REORDER_ANIM_ID)) return;
+  card.classList.remove("reorder-floating");
+  const category = card.closest(".downloads-categorie");
+  if(category && !category.querySelector(".download-media.reorder-floating"))
+    category.classList.remove("reorder-floating");
+}
+
+function snapshotRects(elements) {
+  return new Map(elements.map(el => [el, el.getBoundingClientRect()]));
+}
+
 function animateReorder(elements, beforePositions) {
   elements.forEach(el => {
+    el.getAnimations().forEach(a => {
+      if (a.id === REORDER_ANIM_ID) a.cancel();
+    });
+  });
+
+  const afterPositions = new Map(elements.map(el => [el, el.getBoundingClientRect()]));
+
+  const deltas = new Map();
+  const fadeIn = [];
+  for (const el of elements) {
     const before = beforePositions.get(el);
-    const after = el.getBoundingClientRect();
+    const after = afterPositions.get(el);
+    if (!before || !after) continue;
 
-    const delta = {
-      x: before.left - after.left,
-      y: before.top  - after.top,
-    };
+    const isCategory = el.classList.contains("downloads-categorie");
 
-    const hasMoved = delta.x !== 0 || delta.y !== 0;
-    if (!hasMoved) return;
+    if (after.height === 0) continue;
+    if (before.height === 0) {
+      if (isCategory) fadeIn.push(el);
+      continue;
+    }
 
-    el.animate(
+    deltas.set(el, { x: before.left - after.left, y: before.top - after.top });
+  }
+
+  for (const [el, delta] of deltas) {
+    if (el.classList.contains("downloads-categorie")) continue;
+    const parentDelta = deltas.get(el.closest(".downloads-categorie"));
+    if (parentDelta) {
+      delta.x -= parentDelta.x;
+      delta.y -= parentDelta.y;
+    }
+  }
+
+  for (const [el, delta] of deltas) {
+    if (delta.x === 0 && delta.y === 0) continue;
+    const anim = el.animate(
       [
         { transform: `translate(${delta.x}px, ${delta.y}px)` },
         { transform: "translate(0, 0)" },
       ],
-      { duration: 300, easing: "ease-in-out" }
+      { duration: ANIM_DURATION, easing: ANIM_EASING }
     );
-  });
+    anim.id = REORDER_ANIM_ID;
+
+    if (!el.classList.contains("downloads-categorie")) {
+      el.classList.add("reorder-floating");
+      el.closest(".downloads-categorie")?.classList.add("reorder-floating");
+      anim.finished.then(() => releaseFloating(el), () => releaseFloating(el));
+    }
+  }
+
+  for (const el of fadeIn) {
+    const anim = el.animate(
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: ANIM_DURATION, easing: ANIM_EASING }
+    );
+    anim.id = REORDER_ANIM_ID;
+  }
 }
 
 function disableBorderArrowBtnsForQueuedEls() {
@@ -1072,24 +1132,32 @@ const toFileUrl = (winPath) => {
 
 async function addBackgroundImageToDownloadingDiv(mediaElement, posterImage) {
   if (posterImage === currentbgImage) return;
-  currentbgImage = posterImage;
-  removeDownloadBackgroundDiv();
 
-  if(mediaElement && posterImage && posterImage.trim() !== "") {
-    let backgroundImageDiv = document.createElement("div");
-    backgroundImageDiv.className = "currently-downloading-background-div";
-    backgroundImageDiv.classList.remove("shown");   
-    const encodedPosterImg = toFileUrl(posterImage);
-    await makeSureImageIsLoaded(encodedPosterImg);
-    backgroundImageDiv.style.backgroundImage = `url('${encodedPosterImg}')`;
-    currentlyDownloadingDiv.prepend(backgroundImageDiv);
-    
+  if(!(mediaElement && posterImage && posterImage.trim() !== "")) {
+    removeDownloadBackgroundDiv();
+    return;
+  }
+
+  currentbgImage = posterImage;
+  const encodedPosterImg = toFileUrl(posterImage);
+  await makeSureImageIsLoaded(encodedPosterImg);
+  if (currentbgImage !== posterImage) return;
+
+  const previousDivs = currentlyDownloadingDiv.querySelectorAll(".currently-downloading-background-div");
+  const backgroundImageDiv = document.createElement("div");
+  backgroundImageDiv.className = "currently-downloading-background-div";
+  backgroundImageDiv.style.backgroundImage = `url('${encodedPosterImg}')`;
+  currentlyDownloadingDiv.prepend(backgroundImageDiv);
+
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        backgroundImageDiv.classList.add("shown");
+      backgroundImageDiv.classList.add("shown");
+      previousDivs.forEach(el => {
+        el.classList.remove("shown");
+        setTimeout(() => el.remove(), 600);
       });
     });
-  }
+  });
 }
 
 function removeDownloadBackgroundDiv() {
@@ -1150,13 +1218,22 @@ async function processCategorieChanges(categorieChangedTorrents) {
     "SUBS_DOWNLOAD": { categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs },
   };
 
+  for(const res of categorieChangedTorrents) {
+    if(res?.status === "NEW_DOWNLOAD")
+      await createDownloadElementFromId(res?.torrentId);
+  }
+
+  const animateMove = bulkMove == null || categorieChangedTorrents.some(
+    res => res?.status !== "NEW_DOWNLOAD" && res?.status !== bulkMove.status
+  );
+  const animatedEls = animateMove ? getAnimatableEls() : [];
+  const positionsBefore = snapshotRects(animatedEls);
+
   const lastInsertedInBatch = new Map();
+  const pendingSaves = [];
 
   for(const res of categorieChangedTorrents) {
-    if(res?.status === "NEW_DOWNLOAD") {
-      await createDownloadElementFromId(res?.torrentId);
-      continue;
-    }
+    if(res?.status === "NEW_DOWNLOAD") continue;
 
     let targetElement = document.getElementById(res?.torrentId);
     if(!targetElement) {
@@ -1196,8 +1273,16 @@ async function processCategorieChanges(categorieChangedTorrents) {
       console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
 
     if(category.saveStatus)
-      await SaveDownloadStatus(res.torrentId, category.saveStatus);
+      pendingSaves.push([res.torrentId, category.saveStatus]);
   }
+
+  updateDownloadUI();
+  if(animateMove)
+    animateReorder(animatedEls, positionsBefore);
+
+  for(const [torrentId, status] of pendingSaves)
+    await SaveDownloadStatus(torrentId, status);
+
   updateDownloadUI();
 }
 
@@ -1239,10 +1324,8 @@ async function runBulkCategoryMove({ finalOrder, apiCall, targetStatus, targetDi
       .map(id => document.getElementById(id))
       .filter(el => el && el.dataset.downloadStatus === targetStatus);
 
-    const affected = Array.from(document.querySelectorAll(
-      "#download-queue-div .download-media, #download-paused-div .download-media"
-    ));
-    const before = new Map(affected.map(el => [el, el.getBoundingClientRect()]));
+    const affected = getAnimatableEls();
+    const before = snapshotRects(affected);
 
     const container = targetDiv.querySelector(".movieContainer");
     if(placeAtTop) {
@@ -1256,10 +1339,7 @@ async function runBulkCategoryMove({ finalOrder, apiCall, targetStatus, targetDi
     }
 
     updateDownloadUI();
-    animateReorder(
-      affected.filter(el => el.isConnected && before.get(el).height > 0),
-      before
-    );
+    animateReorder(affected.filter(el => el.isConnected), before);
   } finally {
     bulkMove = null;
     updateDownloadUI();
