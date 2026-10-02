@@ -1131,7 +1131,17 @@ function handleDownloadCategoryUpdateFromMain() {
   });
 }
 
+let pendingCategoryChanges = 0;
 async function handleDownloadCategorieChanging(categorieChangedTorrents) {
+  pendingCategoryChanges++;
+  try {
+    await processCategorieChanges(categorieChangedTorrents);
+  } finally {
+    pendingCategoryChanges--;
+  }
+}
+
+async function processCategorieChanges(categorieChangedTorrents) {
   const DOWNLOAD_CATEGORIES = {
     "PAUSED": { categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: "PAUSED" },
     "QUEUED": { categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued, saveStatus: "QUEUED" },
@@ -1169,7 +1179,9 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
     targetElement.dataset.downloadStatus = res.status;
 
     const targetElementContainer = category?.categoryDiv?.querySelector(".movieContainer");
-    if(category.categoryDiv === pausedDownloadsDiv) {
+    if(bulkMove?.status === res.status) {
+      bulkMove.movedIds.add(res.torrentId);
+    } else if(category.categoryDiv === pausedDownloadsDiv) {
       insertAtTopOfContainer(
         targetElementContainer,
         targetElement,
@@ -1207,31 +1219,77 @@ function getCategoryElementIds(categoryDiv) {
   ).map(el => el.id);
 }
 
+let bulkMove = null;
+
+async function runBulkCategoryMove({ finalOrder, apiCall, targetStatus, targetDiv, placeAtTop }) {
+  if(bulkMove || !finalOrder.length) return;
+  bulkMove = { status: targetStatus, movedIds: new Set() };
+
+  try {
+    const callOrder = placeAtTop ? [...finalOrder].reverse() : finalOrder;
+    for(const torrentId of callOrder)
+      await apiCall(torrentId);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+    while(pendingCategoryChanges > 0)
+      await new Promise(resolve => setTimeout(resolve, 20));
+
+    const elements = finalOrder
+      .filter(id => bulkMove.movedIds.has(id))
+      .map(id => document.getElementById(id))
+      .filter(el => el && el.dataset.downloadStatus === targetStatus);
+
+    const affected = Array.from(document.querySelectorAll(
+      "#download-queue-div .download-media, #download-paused-div .download-media"
+    ));
+    const before = new Map(affected.map(el => [el, el.getBoundingClientRect()]));
+
+    const container = targetDiv.querySelector(".movieContainer");
+    if(placeAtTop) {
+      let anchor = null;
+      for(const el of elements) {
+        insertAtTopOfContainer(container, el, anchor);
+        anchor = el;
+      }
+    } else {
+      container.append(...elements);
+    }
+
+    updateDownloadUI();
+    animateReorder(
+      affected.filter(el => el.isConnected && before.get(el).height > 0),
+      before
+    );
+  } finally {
+    bulkMove = null;
+    updateDownloadUI();
+  }
+}
+
 function setupCategoryBtn() {
   const queueAllDownloadBtn = pausedDownloadsDiv.querySelector(".categorie-controll");
   const pauseAllDownloadBtn = queuedDownloadsDiv.querySelector(".categorie-controll");
 
-  queueAllDownloadBtn.addEventListener("click", async() => {
+  queueAllDownloadBtn.addEventListener("click", () => {
     const pausedIds = getCategoryElementIds(pausedDownloadsDiv)
       .filter(id => document.getElementById(id)?.dataset.downloadStatus !== "FAILED");
-    for(const torrentId of pausedIds) {
-      if(torrentId != null) {
-        await window.electronAPI.addTorrentToDownloadQueue(torrentId);
-      } else {
-        console.log("Failed to load torrent id");
-      }
-    }
+    runBulkCategoryMove({
+      finalOrder: pausedIds,
+      apiCall: id => window.electronAPI.addTorrentToDownloadQueue(id),
+      targetStatus: "QUEUED",
+      targetDiv: queuedDownloadsDiv,
+      placeAtTop: false
+    });
   });
 
-  pauseAllDownloadBtn.addEventListener("click", async() => {
-    const queuedIds = getCategoryElementIds(queuedDownloadsDiv).reverse();
-    for(const torrentId of queuedIds) {
-      if(torrentId != null) {
-        await window.electronAPI.removeTorrentFromDownloadQueue(torrentId);
-      } else {
-        console.log("Failed to load torrent id");
-      }
-    }
+  pauseAllDownloadBtn.addEventListener("click", () => {
+    runBulkCategoryMove({
+      finalOrder: getCategoryElementIds(queuedDownloadsDiv),
+      apiCall: id => window.electronAPI.removeTorrentFromDownloadQueue(id),
+      targetStatus: "PAUSED",
+      targetDiv: pausedDownloadsDiv,
+      placeAtTop: true
+    });
   });
 }
 
