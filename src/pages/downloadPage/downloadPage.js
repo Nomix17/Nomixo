@@ -1140,6 +1140,8 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
     "SUBS_DOWNLOAD": { categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs },
   };
 
+  const lastInsertedInBatch = new Map();
+
   for(const res of categorieChangedTorrents) {
     if(res?.status === "NEW_DOWNLOAD") {
       await createDownloadElementFromId(res?.torrentId);
@@ -1167,7 +1169,16 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
     targetElement.dataset.downloadStatus = res.status;
 
     const targetElementContainer = category?.categoryDiv?.querySelector(".movieContainer");
-    targetElementContainer.appendChild(targetElement);
+    if(category.categoryDiv === pausedDownloadsDiv) {
+      insertAtTopOfContainer(
+        targetElementContainer,
+        targetElement,
+        lastInsertedInBatch.get(targetElementContainer)
+      );
+      lastInsertedInBatch.set(targetElementContainer, targetElement);
+    } else {
+      targetElementContainer.appendChild(targetElement);
+    }
 
     if(res?.status === "FAILED")
       console.log(`Failed to start: ${res.torrentId}: ${res.error}`);
@@ -1178,19 +1189,34 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
   updateDownloadUI();
 }
 
+function insertAtTopOfContainer(container, element, afterElement = null) {
+  if(afterElement && afterElement.parentElement === container && afterElement !== element) {
+    afterElement.after(element);
+    return;
+  }
+  const firstDownloadEl = container.querySelector(":scope > .download-media");
+  if(firstDownloadEl && firstDownloadEl !== element)
+    container.insertBefore(element, firstDownloadEl);
+  else if(!firstDownloadEl)
+    container.appendChild(element);
+}
+
+function getCategoryElementIds(categoryDiv) {
+  return Array.from(
+    categoryDiv.querySelectorAll(".movieContainer .download-media")
+  ).map(el => el.id);
+}
+
 function setupCategoryBtn() {
   const queueAllDownloadBtn = pausedDownloadsDiv.querySelector(".categorie-controll");
   const pauseAllDownloadBtn = queuedDownloadsDiv.querySelector(".categorie-controll");
 
   queueAllDownloadBtn.addEventListener("click", async() => {
-    const libraryInfo = await window.electronAPI.loadDownloadLibraryInfo()
-    const pausedEntries = libraryInfo?.downloads
-      ?.filter(entry =>
-        entry.Status === "PAUSED"
-      );
-    for(const entry of pausedEntries) {
-      if(entry?.torrentId != null) {
-        await window.electronAPI.addTorrentToDownloadQueue(entry?.torrentId);
+    const pausedIds = getCategoryElementIds(pausedDownloadsDiv)
+      .filter(id => document.getElementById(id)?.dataset.downloadStatus !== "FAILED");
+    for(const torrentId of pausedIds) {
+      if(torrentId != null) {
+        await window.electronAPI.addTorrentToDownloadQueue(torrentId);
       } else {
         console.log("Failed to load torrent id");
       }
@@ -1198,14 +1224,10 @@ function setupCategoryBtn() {
   });
 
   pauseAllDownloadBtn.addEventListener("click", async() => {
-    const libraryInfo = await window.electronAPI.loadDownloadLibraryInfo()
-    const queuedEntries = libraryInfo?.downloads
-      ?.filter(entry =>
-        entry.Status === "QUEUED"
-      );
-    for(const entry of queuedEntries) {
-      if(entry?.torrentId != null) {
-        await window.electronAPI.removeTorrentFromDownloadQueue(entry.torrentId);
+    const queuedIds = getCategoryElementIds(queuedDownloadsDiv).reverse();
+    for(const torrentId of queuedIds) {
+      if(torrentId != null) {
+        await window.electronAPI.removeTorrentFromDownloadQueue(torrentId);
       } else {
         console.log("Failed to load torrent id");
       }
