@@ -814,15 +814,10 @@ async function loadSubConfigs() {
       !line.includes("osd-bar") &&
       !line.includes("target-colorspace-hint")
     ) {
-      if (line.includes("no-sub")) {
-        JsonConfig["no-sub"] = true;
-      } else if (line.includes("=")) {
-        const [key, val] = line.split("=");
-        JsonConfig[key] = val === "yes" ? true : val === "no" ? false : val;
-      }
+      const [key, val] = line.split("=");
+      JsonConfig[key] = val === "yes" ? true : val === "no" ? false : val;
     }
   });
-  JsonConfig["no-sub"] ??= false;
   return JsonConfig;
 }
 
@@ -835,15 +830,10 @@ async function applySubConfigs(newJsonConf) {
 async function updateMpvConf(newJsonConf) {
   const oldConf = await getJsonifiedMpvConfigs();
   for (const [key, val] of Object.entries(newJsonConf)) {
-    if (key === "no-sub") {
-      if (val !== true) delete oldConf["no-sub"];
-      else oldConf[key] = "yes";
-    } else {
-      const value =
-        val === true && key !== "sub-font-size" ? "yes" :
-        val === false && key !== "sub-font-size" ? "no" : val;
-      oldConf[key] = value;
-    }
+    const value =
+      val === true && key !== "sub-font-size" ? "yes" :
+      val === false && key !== "sub-font-size" ? "no" : val;
+    oldConf[key] = value;
   }
   return oldConf;
 }

@@ -483,7 +483,7 @@ async function loadSettings() {
 async function loadExternalSubConfigs(){
   subConfigObj = await window.electronAPI.loadSubConfig();
 
-  SubtitlesOnByDefaultExternal = !subConfigObj["no-sub"] ;
+  SubtitlesOnByDefaultExternal = subConfigObj["sid"] ;
   FontSizeExternal = parseInt(subConfigObj["sub-font-size"]);
   FontFamily = subConfigObj["sub-font"].replaceAll('"',"");
   TextColor = subConfigObj["sub-color"].replaceAll('"',"");;
@@ -533,7 +533,7 @@ function getSettings(){
 
 function getSubConfig(){
   return {
-    "no-sub": !SubtitlesOnByDefaultExternal,
+    "sid": SubtitlesOnByDefaultExternal,
     "sub-font-size": FontSizeExternal,
     "sub-font": '"'+FontFamilyExternal+'"',
     "sub-color": '"'+TextColorExternal+'"',
