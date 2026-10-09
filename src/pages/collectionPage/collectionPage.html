@@ -21,6 +21,10 @@
 
   <body>
     <div id="div-main">
+      <div id="div-collection-tint" aria-hidden="true">
+        <div class="tint-image"></div>
+      </div>
+
       <div id="div-globlaLoadingGif" class="loader">
         <div class="dot dot1"></div>
         <div class="dot dot2"></div>
@@ -79,21 +83,41 @@
         <!-- right div -->
         <div id="div-middle-right">
 
-          <div id="div-collection-hero">
-            <div id="div-collection-hero-overlay"></div>
-            <div id="div-collection-hero-content">
-              <p id="collection-eyebrow" class="collection-eyebrow">Collection</p>
-              <img id="collection-title-logo" alt="" style="display:none">
-              <h1 id="collection-title"></h1>
-              <p id="collection-overview"></p>
-              <p id="collection-meta" class="collection-meta"></p>
-            </div>
-          </div>
+          <div id="div-collection-page">
+            <header id="div-collection-header">
+              <div id="collection-poster-card">
+                <img id="collection-poster" alt="" style="display:none">
+              </div>
 
-          <div id="div-collection-grid-divider">
-            <h2 id="collection-grid-title">Movies</h2>
+              <div id="div-collection-info">
+                <img id="collection-title-logo" alt="" style="display:none">
+                <h1 id="collection-title"></h1>
+                <div id="collection-meta" class="collection-meta"></div>
+                <p id="collection-overview"></p>
+
+                <div id="collection-actions" hidden>
+                  <button id="btn-collection-addAll" type="button">
+                    <svg class="icon-add" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    <svg class="icon-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M5 12.5l4.5 4.5L19 7.5"/>
+                    </svg>
+                    <span id="collection-addAll-label">Add all to library</span>
+                  </button>
+                  <span id="collection-library-status"></span>
+                </div>
+              </div>
+            </header>
+
+            <section id="div-collection-body">
+              <div id="div-collection-grid-divider">
+                <h2 id="collection-grid-title">Movies</h2>
+                <span id="collection-grid-count"></span>
+              </div>
+              <div id="div-collection-grid" class="div-collectionGrid"></div>
+            </section>
           </div>
-          <div id="div-collection-grid" class="div-collectionGrid"></div>
 
         </div>
       </div>
