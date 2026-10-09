@@ -69,20 +69,39 @@ function StreamTorrent(
 
       const app = express();
       app.get('/video', (req, res) => {
+        const total = file.length;
         const range = req.headers.range;
-        if (!range) return res.status(416).send('Requires Range header');
+        let start = 0;
+        let end = total - 1;
+        let status = 200;
 
-        const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(startStr, 10);
-        const end = endStr ? parseInt(endStr, 10) : file.length - 1;
-        const chunkSize = end - start + 1;
+        if (range) {
+          const match = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+          if (!match || (match[1] === '' && match[2] === '')) {
+            return res.status(416).set('Content-Range', `bytes */${total}`).end();
+          }
+          if (match[1] === '') {
+            start = Math.max(total - parseInt(match[2], 10), 0);
+          } else {
+            start = parseInt(match[1], 10);
+            if (match[2] !== '') end = Math.min(parseInt(match[2], 10), total - 1);
+          }
+          if (start >= total || start > end) {
+            return res.status(416).set('Content-Range', `bytes */${total}`).end();
+          }
+          status = 206;
+        }
 
-        res.writeHead(206, {
-          'Content-Range': `bytes ${start}-${end}/${file.length}`,
+        const headers = {
           'Accept-Ranges': 'bytes',
-          'Content-Length': chunkSize,
-          'Content-Type': mime.getType(file.name)
-        });
+          'Content-Length': end - start + 1,
+          'Content-Type': mime.getType(file.name) || 'application/octet-stream'
+        };
+        if (status === 206) headers['Content-Range'] = `bytes ${start}-${end}/${total}`;
+
+        res.writeHead(status, headers);
+        res.flushHeaders();
+        if (req.method === 'HEAD') return res.end();
 
         const stream = file.createReadStream({ start, end });
         stream.on('error', (err) => {
