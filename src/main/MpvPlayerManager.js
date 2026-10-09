@@ -227,7 +227,7 @@ class MpvPlayerManager {
 
       if (msg.type === "progress") {
         this.#browserWindow.webContents.send("torrent-streaming-report", {
-          type: msg.type,
+          type: "progress",
           stage: msg.stage,
           data: msg.data
         });

@@ -25,13 +25,41 @@
       <button id="btn-fullscreen" onclick="fullscreenClicked()"></button>
     </div>
 
-    <div id="div-SomethingWentWrong"></div>
-    <div id="LoadingGif" class="loader">
-      <div class="dot dot1"></div>
-      <div class="dot dot2"></div>
-      <div class="dot dot3"></div>
-      <div class="dot dot4"></div>
+    <main id="div-nowLoading">
+      <img id="img-poster" alt="" hidden>
+
+      <div id="div-info">
+        <h1 id="h-title"></h1>
+        <p id="p-meta"></p>
+        <p id="p-overview"></p>
+
+        <div id="LoadingGif" role="progressbar" aria-label="Loading">
+          <div id="div-progressTrack"><div id="div-progressBar"></div></div>
+          <span id="span-status">Starting playback</span>
+        </div>
+      </div>
+    </main>
+
+    <div id="div-SomethingWentWrong" role="alert">
+      <div id="div-errorText">
+        <div id="div-errorHeading">
+          <svg id="svg-errorIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 11v5.5"/>
+            <path d="M12 7.5h.01"/>
+          </svg>
+          <h2 id="h-errorTitle"></h2>
+        </div>
+        <p id="p-errorMessage"></p>
+      </div>
+      <button id="btn-errorBack" onclick="goBack()" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5"/>
+          <path d="M11 6l-6 6 6 6"/>
+        </svg>
+      </button>
     </div>
+
   </body>
 
 </html>

@@ -17,7 +17,54 @@ import os from 'os';
 let mpvProcess = null;
 let expressServer = null;
 let webTorrentClient = null;
+let activeTorrent = null;
+let activeFile = null;
+let bufferingTimer = null;
+let playbackStarted = false;
+let sawStreamTimeout = false;
+let loadFailureReported = false;
 config.init();
+
+const MPV_PLAYING_REGEX = /(?:AV|V|A):\s+\d+:\d+:\d+/;
+
+function sendProgress(stage, data) {
+  parentPort.postMessage({ type: 'progress', stage, ...(data !== undefined && { data }) });
+}
+
+function startBufferingReports() {
+  stopBufferingReports();
+  let stalledFor = 0;
+  const report = () => {
+    if (!activeTorrent) return;
+    stalledFor = activeTorrent.downloadSpeed > 0 ? 0 : stalledFor + 1;
+    sendProgress('buffering', {
+      stalledFor,
+      speed: activeTorrent.downloadSpeed,
+      peers: activeTorrent.numPeers,
+      downloaded: activeFile?.downloaded ?? 0,
+      progress: activeFile?.progress ?? 0
+    });
+  };
+  report();
+  bufferingTimer = setInterval(report, 1000);
+}
+
+function stopBufferingReports() {
+  clearInterval(bufferingTimer);
+  bufferingTimer = null;
+}
+
+function detectLoadFailure(text) {
+  if (/timed out/i.test(text)) sawStreamTimeout = true;
+  if (!/Failed to open|Errors when loading file/i.test(text)) return;
+  loadFailureReported = true;
+  stopBufferingReports();
+  sendProgress('load-failed', {
+    reason: sawStreamTimeout ? 'timeout' : 'unknown',
+    peers: activeTorrent?.numPeers ?? 0,
+    downloaded: activeFile?.downloaded ?? 0
+  });
+}
 
 SubDownloadManager.sendProgressCallBack = (progressInfo) => {
   parentPort.postMessage({
@@ -38,6 +85,7 @@ function StreamTorrent(
   subtitleSettings
 ) {
   return new Promise(async (resolve, reject) => {
+    sendProgress('trackers');
     const trackers = await getTorrentTrackers()
     log.info("Loading Torrent:", metaData?.fileName);
     webTorrentClient = new WebTorrent({ lsd: false, utp: false });
@@ -46,6 +94,10 @@ function StreamTorrent(
       path: videoCachePath,
       announce: trackers 
     });
+    activeTorrent = torrent;
+    let metadataReceived = false;
+    let lastPeersReport = 0;
+    sendProgress('connecting');
 
     torrent.on("ready", async () => {
       console.log("\nTorrent Files:-----------------------------------------------------");
@@ -66,6 +118,8 @@ function StreamTorrent(
         await cleanup();
         return reject(new Error(errorMsg));
       }
+
+      activeFile = file;
 
       const app = express();
       app.get('/video', (req, res) => {
@@ -120,6 +174,7 @@ function StreamTorrent(
           const url = `http://localhost:${port}/video`;
           log.info(`Streaming URL: ${url}`);
 
+          sendProgress('subtitles');
           const tmpSubDir = path.join(subDirectory, `SUBS_${metaData.torrentId}`);
           log.info("Downloading subtitles to:", tmpSubDir);
           const downloadResponse = await SubDownloadManager.downloadSubsForMedia(metaData, metaData.torrentId, tmpSubDir, subtitleSettings);
@@ -143,12 +198,16 @@ function StreamTorrent(
     });
 
     torrent.on('wire', () => {
-      parentPort.postMessage({ type: 'progress', stage: 'metadata-peers', data: { peers : torrent.numPeers }});
+      const now = Date.now();
+      if (metadataReceived || now - lastPeersReport < 1000) return;
+      lastPeersReport = now;
+      sendProgress('peers', { peers: torrent.numPeers });
     });
 
     torrent.on('metadata', () => {
       log.info("Metadata Loaded");
-      parentPort.postMessage({ type: 'progress', stage: 'metadata-received'});
+      metadataReceived = true;
+      sendProgress('metadata');
     });
 
     torrent.on("warning", (warn) => log.warn("Torrent warning:", warn.message));
@@ -204,6 +263,7 @@ function runMpvProcess(
   onClose,
   onError
 ) {
+  sendProgress('launching');
   const subsArgument = subsPaths != null ? subsPaths.map(path => `--sub-file=${path}`) : [];
   const isWindows = os.platform() === 'win32';
   const mpvExecutable = (MpvExecPath ?? (isWindows ? 'mpv.exe' : 'mpv')).trim().replace(/\/$/, '');
@@ -226,12 +286,18 @@ function runMpvProcess(
     `--force-media-title=${videoTitle}`,
     `--script-opts=haveNextEp=${haveNextEpisode}`,
     `--mute=yes`,
+    `--ytdl=no`,
+    `--network-timeout=300`,
     ...subsArgument
   ];
 
   let errorOccurred = false;
 
   mpvProcess = spawn(mpvExecutable, childProcessArguments);
+  playbackStarted = false;
+  sawStreamTimeout = false;
+  loadFailureReported = false;
+  if (activeTorrent) startBufferingReports();
   log.info("Launching mpv with options:\n" +
     `--keep-open=yes\n` +
     `--config-dir=${mpvConfigDirectory}\n` +
@@ -273,6 +339,13 @@ function runMpvProcess(
 
   [mpvProcess.stdout, mpvProcess.stderr].forEach(dataPipe => {
     dataPipe.on('data', (data) => {
+      const text = data.toString();
+      if (!playbackStarted && MPV_PLAYING_REGEX.test(text) && !text.includes('(Paused)')) {
+        playbackStarted = true;
+        stopBufferingReports();
+        sendProgress('playing');
+      }
+      if (!playbackStarted && !loadFailureReported) detectLoadFailure(text);
       parentPort.postMessage({
         type: "status",
         message: "mpv_output_data",
@@ -284,6 +357,9 @@ function runMpvProcess(
 
 async function cleanup() {
   log.info('Starting cleanup...');
+  stopBufferingReports();
+  activeTorrent = null;
+  activeFile = null;
 
   if (mpvProcess) {
     try {
