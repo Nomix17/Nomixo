@@ -35,7 +35,7 @@ torrentSidePanel.classList.add("preloadingTorrent");
 if(MediaType === "movie") torrentSidePanel.classList.add("visible-block");
 
 const MAX_NUMBER_OF_DIRECTORS = 5;
-const MAX_NUMBER_OF_CAST_MEMBERS = 5;
+const MAX_NUMBER_OF_CAST_MEMBERS = null; //12;
 
 const seasonsDivArray = [];
 
@@ -628,6 +628,67 @@ function addBackgroundImageToBody(backgroundImage) {
   }
 }
 
+function createPeopleRow() {
+  const row = document.createElement("div");
+  row.classList.add("people-row");
+  return row;
+}
+
+const PROFILE_NOT_FOUND_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-83 73 640 640" class="person-placeholder" aria-hidden="true">
+  <rect x="-200" y="-200" width="874" height="1196" class="svg-notFound-bg"/>
+  <circle cx="237" cy="313" r="80" class="svg-notFound-fg"/>
+  <path d="M 93 553 A 144 144 0 0 1 381 553 Z" class="svg-notFound-fg"/>
+</svg>`;
+
+function createPersonItem(person, subtitle = "") {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.classList.add("person-item");
+  item.dataset.personId = person.id;
+  item.onclick = () => { openProfilePage(person.id) };
+
+  const avatar = document.createElement("div");
+  avatar.classList.add("person-avatar");
+
+  const showPlaceholder = () => {
+    avatar.innerHTML = PROFILE_NOT_FOUND_SVG;
+    avatar.classList.remove("loading");
+  };
+
+  if(person.profile_path) {
+    avatar.classList.add("loading");
+    const img = document.createElement("img");
+    img.alt = person.name;
+    img.loading = "lazy";
+    img.onload = () => {
+      avatar.classList.remove("loading");
+      img.classList.add("loaded");
+    };
+    img.onerror = showPlaceholder;
+    img.src = `https://image.tmdb.org/t/p/w185${person.profile_path}`;
+    avatar.append(img);
+  } else {
+    showPlaceholder();
+  }
+
+  const nameEl = document.createElement("p");
+  nameEl.classList.add("person-name");
+  nameEl.textContent = person.name;
+  const textBox = document.createElement("div");
+  textBox.classList.add("person-text");
+  textBox.append(nameEl);
+  item.append(avatar, textBox);
+
+  if(subtitle) {
+    const roleEl = document.createElement("p");
+    roleEl.classList.add("person-role");
+    roleEl.textContent = subtitle;
+    textBox.append(roleEl);
+  }
+  return item;
+}
+
 function renderCastInfomation(data) {
   if(data.success === false)
     throw new Error("No Information about the Crew Founded.");
@@ -657,36 +718,30 @@ function renderCastInfomation(data) {
   
   DirectorsObjects = DirectorsObjects.sort((a, b) => b.popularity - a.popularity);
 
+  const directorsRow = createPeopleRow();
   const loadedDirectors = [];
   for(const directorObject of DirectorsObjects) {
     if(!loadedDirectors.includes(directorObject.id)) {
-      const newDirectorElement = document.createElement("button");
-      newDirectorElement.onclick = ()=>{openProfilePage(directorObject.id)};
-      newDirectorElement.id = directorObject.id;
-      newDirectorElement.classList.add("btn-MovieDetailsButtons");
-      newDirectorElement.innerText = directorObject.name;
-      divDirectoryElement.append(newDirectorElement);
+      directorsRow.append(createPersonItem(directorObject, directorObject.job || "Director"));
       loadedDirectors.push(directorObject.id);
-      if(loadedDirectors.length >= MAX_NUMBER_OF_DIRECTORS) break;
+      if(MAX_NUMBER_OF_DIRECTORS != null && loadedDirectors.length >= MAX_NUMBER_OF_DIRECTORS) break;
     }
   }
+  if(loadedDirectors.length) divDirectoryElement.append(directorsRow);
 
+  const castRow = createPeopleRow();
   const loadedCast = [];
   for(const castObject of MainCastObjects) {
     if(
       !loadedCast.includes(castObject.id) &&
       castObject.name.trim() !== ""
     ) {
-      const newCastElement = document.createElement("button");
-      newCastElement.onclick = ()=>{openProfilePage(castObject.id)};
-      newCastElement.id = castObject.id;
-      newCastElement.classList.add("btn-MovieDetailsButtons");
-      newCastElement.innerText = castObject.name;
-      divCastElement.append(newCastElement);
+      castRow.append(createPersonItem(castObject, castObject.character));
       loadedCast.push(castObject.id);
-      if(loadedCast.length >= MAX_NUMBER_OF_CAST_MEMBERS) break;
+      if(MAX_NUMBER_OF_CAST_MEMBERS != null && loadedCast.length >= MAX_NUMBER_OF_CAST_MEMBERS) break;
     }
   }
+  if(loadedCast.length) divCastElement.append(castRow);
 
   if(!MainCastObjects.length){
     noCastInfoFounded();
