@@ -16,26 +16,37 @@ let allowToFetchData = true;
 
 async function fetchData(apiKey, genreId, ThisMediaType, page) {
   allowToFetchData = false;
-  const resolvedSortBy = 
-    MediaType === "tv"
-      ? SortBase.replace("primary_release_date", "first_air_date")
-      : SortBase;
+  const isTrending = SortBase === "trending";
 
-  const params = new URLSearchParams({
-    api_key: apiKey,
-    page:page,
-    sort_by: resolvedSortBy,
-    include_adult:false,
-    "vote_count.gte": 2,
-    ...( genreId.toLowerCase() !== "all" && {with_genres: genreId}),
-  });
-  const requestUrl = `https://api.themoviedb.org/3/discover/${ThisMediaType}?${params}`;
+  let requestUrl;
+  if (isTrending) {
+    const params = new URLSearchParams({ api_key: apiKey, page: page });
+    requestUrl = `https://api.themoviedb.org/3/trending/${ThisMediaType.toLowerCase()}/day?${params}`;
+  } else {
+    const resolvedSortBy =
+      MediaType === "tv"
+        ? SortBase.replace("primary_release_date", "first_air_date")
+        : SortBase;
+
+    const params = new URLSearchParams({
+      api_key: apiKey,
+      page: page,
+      sort_by: resolvedSortBy,
+      include_adult: false,
+      "vote_count.gte": 2,
+      ...(genreId.toLowerCase() !== "all" && { with_genres: genreId }),
+    });
+    requestUrl = `https://api.themoviedb.org/3/discover/${ThisMediaType}?${params}`;
+  }
 
   const LibraryInformation = await loadLibraryInfo();
   try {
     const [GenreData] = await Promise.all([fetch(requestUrl).then(res => res.json())]);
     if (GenreData?.total_results) {
-      insertMediaElements(GenreData.results, MediaSuggestions, ThisMediaType, LibraryInformation);
+      const results = isTrending
+        ? GenreData.results.filter(item => item.media_type !== "person")
+        : GenreData.results;
+      insertMediaElements(results, MediaSuggestions, ThisMediaType, LibraryInformation);
       bottomPageLoadingRing.classList.remove("show");
     } else {
       throw new Error("No results found for this genre<br> try a different category");
