@@ -268,7 +268,7 @@ body, html {
   border: 3px solid rgba(255,255,255,0%);
   position: static; 
   object-fit: cover;
-  transition: border-color 0.4s ease !important;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease !important;
 }
 
 .svg-notFoundImage{
@@ -294,7 +294,10 @@ body, html {
   cursor:pointer;
 }
 
-.div-MovieElement:hover .img-MoviePoster{
+.div-MovieElement.active .img-MoviePoster,
+.div-MovieElement:hover .img-MoviePoster,
+.div-MovieElement.roulette-active .img-MoviePoster,
+:focus-visible  .img-MoviePoster {
   cursor:pointer;
   border-color: rgba(var(--hover-border-color));
 }
@@ -778,11 +781,6 @@ input::selection {
   );
   background-size: 200% 100%;
   animation: skeleton 1.5s ease-in-out infinite;
-}
-
-:focus-visible  .img-MoviePoster {
-  cursor:pointer;
-  border-color: rgba(var(--hover-border-color));
 }
 
 i[data-lucide="expand"] {

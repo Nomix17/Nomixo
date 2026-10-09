@@ -88,43 +88,61 @@
     
         <!-- right div -->
         <div id="div-middle-right">
-          <div id="div-OptionsContainer">
- 
-            <div class="custom-select" id="custon-mediaType-dropdown">
-              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                All
-              </button>
-              <div class="select-dropdown" role="listbox" id="select-type">
-                <div class="select-option" role="option" value="all">All</div>
-                <div class="select-option" role="option" value="movie">Movies</div>
-                <div class="select-option" role="option" value="tv">Tv Shows</div>
+          <div class="top-container">
+            <div id="div-OptionsContainer">
+              <div class="custom-select" id="custon-mediaType-dropdown">
+                <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  All
+                </button>
+                <div class="select-dropdown" role="listbox" id="select-type">
+                  <div class="select-option" role="option" value="all">All</div>
+                  <div class="select-option" role="option" value="movie">Movies</div>
+                  <div class="select-option" role="option" value="tv">Tv Shows</div>
+                </div>
+              </div>
+
+              <div class="custom-select" id="custon-saveType-dropdown">
+                <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  All
+                </button>
+                <div class="select-dropdown" role="listbox" id="select-save">
+                  <div class="select-option" role="option" value="All">All</div>
+                  <div class="select-option" role="option" value="Watch Later">Watch Later</div>
+                  <div class="select-option" role="option" value="Currently Watching">Currently Watching</div>
+                  <div class="select-option" role="option" value="Watched">Watched</div>
+                </div>
+              </div>
+
+
+              <div class="custom-select" id="custom-sortType-dropdown">
+                <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                  Sort items by
+                </button>
+                <div class="select-dropdown" role="listbox" id="select-sort">
+                  <div class="select-option" role="option" value="alphabetical">A – Z</div>
+                  <div class="select-option" role="option" value="newest">Newest First</div>
+                  <div class="select-option" role="option" value="oldest">Oldest First</div>
+                </div>
               </div>
             </div>
-
-            <div class="custom-select" id="custon-saveType-dropdown">
-              <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                All
-              </button>
-              <div class="select-dropdown" role="listbox" id="select-save">
-                <div class="select-option" role="option" value="All">All</div>
-                <div class="select-option" role="option" value="Watch Later">Watch Later</div>
-                <div class="select-option" role="option" value="Currently Watching">Currently Watching</div>
-                <div class="select-option" role="option" value="Watched">Watched</div>
-              </div>
-            </div>
-
-
-        <div class="custom-select" id="custom-sortType-dropdown">
-          <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">
-            Sort items by
-          </button>
-          <div class="select-dropdown" role="listbox" id="select-sort">
-            <div class="select-option" role="option" value="alphabetical">A – Z</div>
-            <div class="select-option" role="option" value="newest">Newest First</div>
-            <div class="select-option" role="option" value="oldest">Oldest First</div>
+            <button id="choose-random-media" class="choose-random hidden" type="button" aria-label="Pick a random item to watch" title="Surprise me">
+             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-hidden="true">
+               <path d="M141.4 2.3C103-8 63.5 14.8 53.3 53.2L2.5 242.7C-7.8 281.1 15 320.6 53.4 330.9l189.5 50.8c38.4 10.3 77.9-12.5 88.2-50.9l50.8-189.5c10.3-38.4-12.5-77.9-50.9-88.2L141.4 2.3zm23 205.7a32 32 0 1 1 55.4-32 32 32 0 1 1 -55.4 32zM79.2 220.3a32 32 0 1 1 32 55.4 32 32 0 1 1 -32-55.4zm185 96.4a32 32 0 1 1 -32-55.4 32 32 0 1 1 32 55.4zm9-208.4a32 32 0 1 1 32 55.4 32 32 0 1 1 -32-55.4zm-121 14.4a32 32 0 1 1 -32-55.4 32 32 0 1 1 32 55.4zM418 192L377.4 343.2c-17.2 64-83 102-147 84.9l-38.3-10.3 0 30.2c0 35.3 28.7 64 64 64l192 0c35.3 0 64-28.7 64-64l0-192c0-35.3-28.7-64-64-64L418 192z"/>
+             </svg>
+            </button>
+            <button id="random-mute-toggle" class="choose-random hidden" type="button" aria-label="Mute random picker sound" aria-pressed="false" title="Toggle sound">
+              <svg id="random-mute-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                <g class="sound-waves" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+                  <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+                  <path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+                </g>
+                <line class="mute-slash" x1="16" y1="9" x2="22" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <line class="mute-slash" x1="22" y1="9" x2="16" y2="15" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
           </div>
-        </div>
-
+          <div id="random-result-live" class="sr-only" aria-live="polite"></div>
 
         <div class="div-categories-description">
           <h1></h1>
