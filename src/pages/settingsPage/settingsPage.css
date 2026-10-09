@@ -178,7 +178,7 @@ table {
 }
 
 .exec-path-container {
-  padding-right: 45px;
+  padding-right: 54px;
 }
 .exec-path-container .input-wrapper {
   flex: 1 1 auto;
@@ -229,8 +229,7 @@ output {
 }
 
 #ThemeOptionContainer,
-#div-PlayerSubtitlesInternal,
-#div-ExternalPlayerSettings {
+#div-VideoPlayerSettings {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -316,9 +315,7 @@ output {
   margin: 0;
 }
 
-#p-fontSizeInternal,
-#p-fontSizeExternal,
-#p-OpacityInternal {
+#p-fontSize {
   text-align: center;
   border-radius: 5px;
   border:none;
@@ -364,7 +361,7 @@ output {
 }
 
 .subtitle-lang-search-wrapper {
-  padding-right: 60px;
+  padding-right: 54px;
   display: flex;
   gap: 11.04px;
   align-items: flex-start;
@@ -448,8 +445,10 @@ output {
 
 .subtitle-lang-add-btn {
   flex-shrink: 0;
+  box-sizing: border-box;
+  width: 92px;
   height: 41.4px;
-  padding: 0 20.24px;
+  padding: 0;
   border-radius: 7.36px;
   border: 0.5px solid rgba(255, 255, 255, 0.2);
   background-color: rgba(255, 255, 255, 0.05);
@@ -908,27 +907,23 @@ input[type="range"]::-webkit-slider-thumb {
   to { transform: rotate(360deg); }
 }
 
-#div-PlayerSubtitlesInternal .select-trigger,
-#div-ExternalPlayerSettings .select-trigger {
+#div-VideoPlayerSettings .select-trigger {
   font-size: 15px;
   text-align: center;
   padding-left: 36.8px;
 }
 
-#div-PlayerSubtitlesInternal .select-option,
-#div-ExternalPlayerSettings .select-option {
+#div-VideoPlayerSettings .select-option {
   font-size: 13px;
   text-align: center;
   padding-right: 1rem;
 }
 
-#div-PlayerSubtitlesInternal .select-option:last-child,
-#div-ExternalPlayerSettings .select-option:last-child {
+#div-VideoPlayerSettings .select-option:last-child {
   border-bottom: none;
 }
 
-#div-PlayerSubtitlesInternal .select-option.selected,
-#div-ExternalPlayerSettings .select-option.selected {
+#div-VideoPlayerSettings .select-option.selected {
   background: rgba(255, 255, 255, 0.12);
 }
 #div-SavedMedia{

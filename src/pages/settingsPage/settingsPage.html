@@ -119,15 +119,15 @@
               </div>
             </div>
 
-            <div class="settings-card" id="div-PlayerSubtitlesInternal">
+            <div class="settings-card" id="div-VideoPlayerSettings">
               <div class="section-header">
                 <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="2" y="3" width="20" height="14" rx="2"/>
                   <path d="M8 21h8M12 17v4"/>
                 </svg>
                 <div class="section-header-text">
-                  <h1>Internal Player</h1>
-                  <p class="section-desc">Settings for videos played inside the app's built-in player.</p>
+                  <h1>Video Player</h1>
+                  <p class="section-desc">Settings for videos played in the MPV video player.</p>
                 </div>
               </div>
 
@@ -138,7 +138,7 @@
                 </div>
                 <div class="setting-control">
                   <label class="custom-toggle">
-                    <input id="toggleDefaultSubtitlesInternal" type="checkbox" />
+                    <input id="toggleDefaultSubtitles" type="checkbox" />
                     <span class="toggle-track">
                       <span class="toggle-thumb"></span>
                     </span>
@@ -153,107 +153,9 @@
                 </div>
                 <div class="setting-control">
                   <div class="sub-font-increase-decrease">
-                    <button class="btn-changeNum" id="btn-decreaseFontSizeInternal">-</button>
-                    <input id="p-fontSizeInternal"/>
-                    <button class="btn-changeNum" id="btn-increaseFontSizeInternal">+</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="setting-row">
-                <div class="setting-text">
-                  <p class="setting-label">Font Family</p>
-                  <p class="setting-desc">The typeface used for subtitle text.</p>
-                </div>
-                <div class="setting-control">
-                  <div class="custom-select">
-                    <button class="select-trigger" aria-expanded="false">monospace</button>
-                    <div id="dropDownMenu-Font-Internal" class="select-dropdown">
-                      <div class="select-option" value="Arial" style="font-family: 'Arial'">Arial</div>
-                      <div class="select-option" value="Montserrat" style="font-family: 'Montserrat'">Montserrat</div>
-                      <div class="select-option" value="monospace" style="font-family: 'monospace'">monospace</div>
-                      <div class="select-option" value="Times New Roman" style="font-family: 'Times New Roman'">Times New Roman</div>
-                      <div class="select-option" value="Courier New" style="font-family: 'Courier New'">Courier New</div>
-                      <div class="select-option" value="Georgia" style="font-family: 'Georgia'">Georgia</div>
-                      <div class="select-option" value="Comic Sans MS" style="font-family: 'Comic Sans MS'">Comic Sans MS</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="setting-row">
-                <div class="setting-text">
-                  <p class="setting-label">Text Color</p>
-                  <p class="setting-desc">The color of the subtitle text itself.</p>
-                </div>
-                <div class="setting-control">
-                  <input id="input-TextColorInternal" type="color">
-                </div>
-              </div>
-
-              <div class="setting-row">
-                <div class="setting-text">
-                  <p class="setting-label">Background Color</p>
-                  <p class="setting-desc">The color of the box drawn behind subtitle text.</p>
-                </div>
-                <div class="setting-control">
-                  <input id="input-BackgroundColorInternal" type="color"/>
-                </div>
-              </div>
-
-              <div class="setting-row">
-                <div class="setting-text">
-                  <p class="setting-label">Background Opacity</p>
-                  <p class="setting-desc">How see-through the subtitle background is.</p>
-                </div>
-                <div class="setting-control">
-                  <div class="sub-font-increase-decrease">
-                    <button class="btn-changeNum" id="btn-decreaseOpacityInternal">-</button>
-                    <input id="p-OpacityInternal"/>
-                    <button class="btn-changeNum" id="btn-increaseOpacityInternal">+</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-card" id="div-ExternalPlayerSettings">
-              <div class="section-header">
-                <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                  <path d="M15 3h6v6"/>
-                  <path d="M10 14 21 3"/>
-                </svg>
-                <div class="section-header-text">
-                  <h1>External Player</h1>
-                  <p class="section-desc">Settings for videos played inside the MPV external player.</p>
-                </div>
-              </div>
-
-            <div class="setting-row">
-                <div class="setting-text">
-                  <p class="setting-label">Enable Subtitles by Default</p>
-                  <p class="setting-desc">Turn subtitles on automatically whenever you start a video.</p>
-                </div>
-                <div class="setting-control">
-                  <label class="custom-toggle">
-                    <input id="toggleDefaultSubtitlesExternal" type="checkbox" />
-                    <span class="toggle-track">
-                      <span class="toggle-thumb"></span>
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="setting-row">
-                <div class="setting-text">
-                  <p class="setting-label">Font Size</p>
-                  <p class="setting-desc">How large subtitle text appears on screen.</p>
-                </div>
-                <div class="setting-control">
-                  <div class="sub-font-increase-decrease">
-                    <button class="btn-changeNum" id="btn-decreaseFontSizeExternal">-</button>
-                    <input id="p-fontSizeExternal"/>
-                    <button class="btn-changeNum" id="btn-increaseFontSizeExternal">+</button>
+                    <button class="btn-changeNum" id="btn-decreaseFontSize">-</button>
+                    <input id="p-fontSize"/>
+                    <button class="btn-changeNum" id="btn-increaseFontSize">+</button>
                   </div>
                 </div>
               </div>
@@ -285,7 +187,7 @@
                   <p class="setting-desc">The color of the subtitle text itself.</p>
                 </div>
                 <div class="setting-control">
-                  <input id="input-TextColorExternal" type="color"/>
+                  <input id="input-TextColor" type="color"/>
                 </div>
               </div>
 

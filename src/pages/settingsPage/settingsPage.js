@@ -5,25 +5,13 @@ const applyButtonDiv = document.getElementById('div-ApplyButton');
 const applyButton = document.getElementById("btn-applySettings");
 const addCustomThemeBtn = document.getElementById("btn-addCustomTheme");
 
-// Internal Player
-const toggleButtonInternal = document.getElementById("toggleDefaultSubtitlesInternal");
-const increaseFontSizeInternalButton = document.getElementById("btn-increaseFontSizeInternal"); 
-const FontSizeInternalInput = document.getElementById("p-fontSizeInternal");
-const decreaseFontSizeInternalButton = document.getElementById("btn-decreaseFontSizeInternal"); 
-const increaseBackgroundOpacityInternalButton = document.getElementById("btn-increaseOpacityInternal"); 
-const backgroundOpacityInternalInput = document.getElementById("p-OpacityInternal");
-const decreaseBackgroundOpacityInternalButton = document.getElementById("btn-decreaseOpacityInternal"); 
-const DropDownFontMenuInternal = document.getElementById("dropDownMenu-Font-Internal");
-const inputTextColorInternal = document.getElementById("input-TextColorInternal");
-const inputBackgroundColorInternal = document.getElementById("input-BackgroundColorInternal");
-
-//External Player
-const toggleButtonExternal = document.getElementById("toggleDefaultSubtitlesExternal");
-const increaseFontSizeExternalButton = document.getElementById("btn-increaseFontSizeExternal"); 
-const FontSizeExternalInput = document.getElementById("p-fontSizeExternal");
-const decreaseFontSizeExternalButton = document.getElementById("btn-decreaseFontSizeExternal"); 
-const DropDownFontMenuExternal = document.getElementById("dropDownMenu-Font");
-const inputTextColorExternal = document.getElementById("input-TextColorExternal");
+// Video Player
+const toggleButton = document.getElementById("toggleDefaultSubtitles");
+const increaseFontSizeButton = document.getElementById("btn-increaseFontSize"); 
+const FontSizeInput = document.getElementById("p-fontSize");
+const decreaseFontSizeButton = document.getElementById("btn-decreaseFontSize"); 
+const DropDownFontMenu = document.getElementById("dropDownMenu-Font");
+const inputTextColor = document.getElementById("input-TextColor");
 const inputMpvExecPath = document.getElementById("input-mpv-exec-path");
 
 // Subtitle Languages
@@ -40,18 +28,12 @@ let ZoomFactorValue=1;
 let somethingChanged = false;
 let supressInputEventListener = false;
 
-let SubtitlesOnByDefaultInternal = false;
-let FontSizeInternal = 100;
-let FontFamilyInternal = "monospace";
-let TextColorInternal = "white";
-let BackgroundColorInternal ="black";
-let OpacityInternal = 0;
 let CurrentTheme;
 
-let SubtitlesOnByDefaultExternal = false;
-let FontSizeExternalExternal = 24;
-let FontFamilyExternal = "monospace";
-let TextColorExternal = "white";
+let SubtitlesOnByDefault = false;
+let FontSize = 24;
+let FontFamily = "monospace";
+let TextColor = "white";
 let MpvExecPath = "";
 
 let SubtitlesLanguagesAll = false;
@@ -294,86 +276,31 @@ applyButton.addEventListener("click",()=> {
   });
 })();
 
-// Internal Player Elements Listener
+// Video Player Elements Listener
 
-toggleButtonInternal.addEventListener("change",()=>{
-  SubtitlesOnByDefaultInternal = toggleButtonInternal.checked;
+toggleButton.addEventListener("change",()=>{
+  SubtitlesOnByDefault = toggleButton.checked;
 });
 
-increaseFontSizeInternalButton.addEventListener("click",()=>{
-  if(FontSizeInternal < 100) FontSizeInternal += 1;
-  FontSizeInternalInput.value = FontSizeInternal+"px";
+increaseFontSizeButton.addEventListener("click",()=>{
+  if(FontSize < 100) FontSize += 1;
+  FontSizeInput.value = FontSize+"px";
   settingsChanged(true);
 });
 
-decreaseFontSizeInternalButton.addEventListener("click",()=>{
-  if(FontSizeInternal > 0) FontSizeInternal -= 1;
-  FontSizeInternalInput.value = FontSizeInternal+"px";
+decreaseFontSizeButton.addEventListener("click",()=>{
+  if(FontSize > 0) FontSize -= 1;
+  FontSizeInput.value = FontSize+"px";
   settingsChanged(true);
 });
 
-increaseBackgroundOpacityInternalButton.addEventListener("click",()=>{
-  if(OpacityInternal < 100) OpacityInternal += 5;
-  backgroundOpacityInternalInput.value = OpacityInternal+"%";
+DropDownFontMenu.addEventListener("dropdownChange",(event)=>{
+  FontFamily = event.detail.value;
   settingsChanged(true);
 });
 
-decreaseBackgroundOpacityInternalButton.addEventListener("click",()=>{
-  if(OpacityInternal > 0) OpacityInternal -= 5;
-  backgroundOpacityInternalInput.value = OpacityInternal+"%";
-  settingsChanged(true);
-});
-
-DropDownFontMenuInternal.addEventListener("dropdownChange",(event)=>{
-  FontFamilyInternal = event.detail.value;
-  settingsChanged(true);
-});
-
-inputTextColorInternal.addEventListener("input",(event)=>{
-  TextColorInternal = inputTextColorInternal.value;
-});
-
-inputBackgroundColorInternal.addEventListener("input",(event)=>{
-  BackgroundColorInternal = inputBackgroundColorInternal.value;
-});
-
-FontSizeInternalInput.addEventListener("blur",(event) => {commitFontSizeInternal()});
-FontSizeInternalInput.addEventListener("keypress",(event) => {
-  if(event.key === "Enter")
-    commitFontSizeInternal()
-});
-
-backgroundOpacityInternalInput.addEventListener("blur",(event) => {commitBgOpacityInternal()});
-backgroundOpacityInternalInput.addEventListener("keypress",(event) => {
-  if(event.key === "Enter")
-    commitBgOpacityInternal()
-});
-
-// External Player Elements Listener
-
-toggleButtonExternal.addEventListener("change",()=>{
-  SubtitlesOnByDefaultExternal = toggleButtonExternal.checked;
-});
-
-increaseFontSizeExternalButton.addEventListener("click",()=>{
-  if(FontSizeExternal < 100) FontSizeExternal += 1;
-  FontSizeExternalInput.value = FontSizeExternal+"px";
-  settingsChanged(true);
-});
-
-decreaseFontSizeExternalButton.addEventListener("click",()=>{
-  if(FontSizeExternal > 0) FontSizeExternal -= 1;
-  FontSizeExternalInput.value = FontSizeExternal+"px";
-  settingsChanged(true);
-});
-
-DropDownFontMenuExternal.addEventListener("dropdownChange",(event)=>{
-  FontFamilyExternal = event.detail.value;
-  settingsChanged(true);
-});
-
-inputTextColorExternal.addEventListener("input",(event)=>{
-  TextColorExternal = inputTextColorExternal.value;
+inputTextColor.addEventListener("input",(event)=>{
+  TextColor = inputTextColor.value;
   settingsChanged(true);
 });
 
@@ -382,10 +309,10 @@ inputMpvExecPath.addEventListener("input", (event) => {
   settingsChanged(true);
 });
 
-FontSizeExternalInput.addEventListener("blur",(event) => {commitFontSizeExternal()});
-FontSizeExternalInput.addEventListener("keypress",(event) => {
+FontSizeInput.addEventListener("blur",(event) => {commitFontSize()});
+FontSizeInput.addEventListener("keypress",(event) => {
   if(event.key === "Enter")
-    commitFontSizeExternal()
+    commitFontSize()
 });
 
 // global Functions 
@@ -446,14 +373,7 @@ async function loadSettings() {
   ZoomFactorInput.value = ZoomFactorValue*50;
   setFloatingZoomFactorDiv(ZoomFactorValue);
 
-  // load Internal player sub settings
   CurrentTheme = SettingsObj.CurrentTheme;
-  SubtitlesOnByDefaultInternal = SettingsObj.TurnOnSubsByDefaultInternal ;
-  FontSizeInternal = SettingsObj.SubFontSizeInternal;
-  FontFamilyInternal = SettingsObj.SubFontFamilyInternal;
-  TextColorInternal = SettingsObj.SubColorInternal;
-  BackgroundColorInternal = SettingsObj.SubBackgroundColorInternal;
-  OpacityInternal = SettingsObj.SubBackgroundOpacityLevelInternal;
 
   MpvExecPath = SettingsObj?.MpvExecPath ?? "";
 
@@ -463,16 +383,6 @@ async function loadSettings() {
   createLanguagesTags(SubtitlesLanguagesSelected);
   setSubtitleLangSearchDisabled(SubtitlesLanguagesAll);
 
-  supressInputEventListener = true;
-  if(SubtitlesOnByDefaultInternal) toggleButtonInternal.click();
-  supressInputEventListener = false;
-
-  FontSizeInternalInput.value = FontSizeInternal+"px";
-  backgroundOpacityInternalInput.value = OpacityInternal+"%";
-  setDropdownValue(DropDownFontMenuInternal, FontFamilyInternal);
-  inputTextColorInternal.value = TextColorInternal;
-  inputBackgroundColorInternal.value = BackgroundColorInternal;
-
   inputMpvExecPath.value = MpvExecPath;
   applySelectedColor(ColorInputsWithAlphaValue)
 
@@ -480,21 +390,21 @@ async function loadSettings() {
   RightmiddleDiv.classList.add("activate");
 }
 
-async function loadExternalSubConfigs(){
+async function loadSubConfig(){
   subConfigObj = await window.electronAPI.loadSubConfig();
 
-  SubtitlesOnByDefaultExternal = subConfigObj["sid"] ;
-  FontSizeExternal = parseInt(subConfigObj["sub-font-size"]);
+  SubtitlesOnByDefault = subConfigObj["sid"] ;
+  FontSize = parseInt(subConfigObj["sub-font-size"]);
   FontFamily = subConfigObj["sub-font"].replaceAll('"',"");
-  TextColor = subConfigObj["sub-color"].replaceAll('"',"");;
+  TextColor = subConfigObj["sub-color"].replaceAll('"',"");
 
   supressInputEventListener = true;
-  if(SubtitlesOnByDefaultExternal) toggleButtonExternal.click();
+  if(SubtitlesOnByDefault) toggleButton.click();
   supressInputEventListener = false;
 
-  FontSizeExternalInput.value = FontSizeExternal+"px";
-  setDropdownValue(DropDownFontMenuExternal, FontFamily);
-  inputTextColorExternal.value = TextColor;
+  FontSizeInput.value = FontSize+"px";
+  setDropdownValue(DropDownFontMenu, FontFamily);
+  inputTextColor.value = TextColor;
   applySelectedColor(ColorInputsWithAlphaValue)
 }
 
@@ -519,12 +429,6 @@ function getSettings(){
   return{
     PageZoomFactor: ZoomFactorValue,
     CurrentTheme: CurrentTheme,
-    TurnOnSubsByDefaultInternal: SubtitlesOnByDefaultInternal,
-    SubFontSizeInternal: FontSizeInternal,
-    SubFontFamilyInternal: FontFamilyInternal,
-    SubColorInternal: TextColorInternal,
-    SubBackgroundColorInternal: BackgroundColorInternal,
-    SubBackgroundOpacityLevelInternal: OpacityInternal,
     MpvExecPath: MpvExecPath,
     DownloadAllSubtitles: SubtitlesLanguagesAll,
     LanguagesToDownload: SubtitlesLanguagesSelected
@@ -533,10 +437,10 @@ function getSettings(){
 
 function getSubConfig(){
   return {
-    "sid": SubtitlesOnByDefaultExternal,
-    "sub-font-size": FontSizeExternal,
-    "sub-font": '"'+FontFamilyExternal+'"',
-    "sub-color": '"'+TextColorExternal+'"',
+    "sid": SubtitlesOnByDefault,
+    "sub-font-size": FontSize,
+    "sub-font": '"'+FontFamily+'"',
+    "sub-color": '"'+TextColor+'"',
   }
 }
 
@@ -599,37 +503,15 @@ function applySelectedColor(inputElements){
   });
 })();
 
-// Internal Player related functions
+// Video Player related functions
 
-function commitFontSizeInternal(){
-  let formatedValue = Number(FontSizeInternalInput.value.toString().replaceAll("px",""));
+function commitFontSize(){
+  let formatedValue = Number(FontSizeInput.value.toString().replaceAll("px",""));
   if(!isNaN(formatedValue)){
-    FontSizeInternal = Math.max(0,Math.min(formatedValue,100)); 
+    FontSize = Math.max(0,Math.min(formatedValue,100)); 
   }
-  FontSizeInternalInput.value = FontSizeInternal+"px";
-  FontSizeInternalInput.blur();
-  settingsChanged(true);
-}
-
-function commitBgOpacityInternal(){
-  let formatedValue = Number(backgroundOpacityInternalInput.value.toString().replaceAll("%",""));
-  if(!isNaN(formatedValue)){
-    OpacityInternal = Math.max(0,Math.min(formatedValue,100)); 
-  }
-  backgroundOpacityInternalInput.value = OpacityInternal+"%";
-  backgroundOpacityInternalInput.blur();
-  settingsChanged(true);
-}
-
-// External Player related functions
-
-function commitFontSizeExternal(){
-  let formatedValue = Number(FontSizeExternalInput.value.toString().replaceAll("px",""));
-  if(!isNaN(formatedValue)){
-    FontSizeExternal = Math.max(0,Math.min(formatedValue,100)); 
-  }
-  FontSizeExternalInput.value = FontSizeExternal+"px";
-  FontSizeExternalInput.blur();
+  FontSizeInput.value = FontSize+"px";
+  FontSizeInput.blur();
   settingsChanged(true);
 }
 
@@ -1243,7 +1125,7 @@ initUpdateRelatedUI();
 
 // calling functions
 loadCurrentTheme();
-loadExternalSubConfigs();
+loadSubConfig();
 loadApiKeys();
 setupKeyPressesHandler();
 loadIconsDynamically();
