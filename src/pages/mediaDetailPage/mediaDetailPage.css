@@ -99,12 +99,22 @@ p{
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-#div-movieDetails {
+#div-detailsColumn {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+#div-movieDetails {
+  flex: 1;
+  min-height: 0;
   background-color: rgba(0,0,0,0%);
   overflow-y: auto;
   box-sizing: border-box;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+          mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
 }
 .torrent-loader {
   display: none;
@@ -333,7 +343,7 @@ p{
   max-width: 630px;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  margin-bottom:72px;
+  margin-bottom:24px;
 }
 #p-movieDuration,
 #p-movieYearOfRelease,
@@ -673,12 +683,12 @@ h1{
   justify-content:flex-start;
   align-items:center;
   flex-direction:row;
-  padding-top:9px;
-  position:absolute;
-  bottom:0px;
-  width:100%;
-  padding:10px 0;
-  gap:5px;
+  flex-wrap:wrap;
+  flex:none;
+  max-width:630px;
+  padding:10px 0 14px;
+  gap:10px;
+  border-top:1px solid rgba(255,255,255,0.1);
 }
 
 .toggleButtonIcon{
@@ -1112,12 +1122,16 @@ label {
   backdrop-filter: blur(3px);
   position: relative;
   padding: 2.7px 2.7px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
   transition: background-color 0.3s ease, border 0.3s ease;
 }
 
-#movie-trailer-div:hover .button-wrapper,
-.split-save-btn:hover {
+#movie-trailer-div:hover .button-wrapper {
   background-color: rgba(255, 255, 255, 0.15);
+}
+.split-save-btn:hover {
+  background-color: rgba(255, 255, 255, 0.28);
 }
 
 #movie-trailer-div:active,
@@ -1252,6 +1266,7 @@ html.torrent-panel-open #div-movieMedias.visible-flex {
   backdrop-filter: blur(3px);
   position: relative;
   padding: 3px;
+  background-color: transparent;
   transition: background-color 0.3s ease, border 0.3s ease;
 }
 
