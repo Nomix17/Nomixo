@@ -943,6 +943,36 @@ async function createMediaElementForLibrary(mediaEntryPoint, apiKey, IsInHomePag
   return movieDomElement;
 }
 
+function createCollectionCard(collection) {
+  const card = document.createElement("div");
+  card.className = "collection-card";
+  card.setAttribute("tabindex", 0);
+
+  const image = document.createElement("img");
+  image.className = "collection-image";
+  loadImageWithAnimation(card, image, `https://image.tmdb.org/t/p/w780${collection.backdrop_path ?? collection.poster_path}`);
+
+  const shade = document.createElement("div");
+  shade.className = "collection-shade";
+
+  const info = document.createElement("div");
+  info.className = "collection-info";
+
+  const name = document.createElement("h3");
+  name.className = "collection-name";
+  name.textContent = collection.name.replace(/\s*-?\s*Collection$/i, "");
+
+  const count = document.createElement("span");
+  count.className = "collection-count";
+  const films = collection.parts?.length ?? 0;
+  count.textContent = films ? `${films} ${films === 1 ? "film" : "films"}` : "Collection";
+
+  info.append(name, count);
+  card.append(image, shade, info);
+  card.addEventListener("click", () => openCollectionPage(collection.id));
+  return card;
+}
+
 async function fetchMediaDataFromLibrary(apiKey, wholeLibraryInformation, SavedMedia, RightmiddleDiv, IsInHomePage = false) {
   try {
     const elements = await Promise.all(
