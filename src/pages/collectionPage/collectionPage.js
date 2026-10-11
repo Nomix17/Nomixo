@@ -11,7 +11,6 @@ const addAllLabelEl = document.getElementById("collection-addAll-label");
 const libraryStatusEl = document.getElementById("collection-library-status");
 const collectionGridCountEl = document.getElementById("collection-grid-count");
 const collectionTitleEl = document.getElementById("collection-title");
-const collectionTitleLogoEl = document.getElementById("collection-title-logo");
 const collectionOverviewEl = document.getElementById("collection-overview");
 
 const gridDiv = document.getElementById("div-collection-grid");
@@ -28,16 +27,15 @@ async function loadCollection() {
   try {
     if(!collectionId) throw new Error("No collection was specified.");
 
-    const [CollectionData, CollectionImagesData, LibraryInformation] = await Promise.all([
+    const [CollectionData, LibraryInformation] = await Promise.all([
       fetch(`https://api.themoviedb.org/3/collection/${collectionId}?api_key=${apiKey}`).then(res=>res.json()),
-      fetch(`https://api.themoviedb.org/3/collection/${collectionId}/images?api_key=${apiKey}`).then(res=>res.json()).catch(()=>null),
       loadLibraryInfo()
     ]);
 
     if(parseInt(CollectionData.status_code) === 34 || parseInt(CollectionData.status_code) === 7)
-      throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valide!");
+      throw new Error("We’re having trouble loading data.</br>Please make sure your Authentication Key is valid!");
 
-    renderCollectionHero(CollectionData, CollectionImagesData);
+    renderCollectionHero(CollectionData);
     renderCollectionParts(CollectionData, LibraryInformation);
     renderCollectionMeta(CollectionData);
 
@@ -64,24 +62,11 @@ async function loadCollection() {
   };
 }
 
-function pickBestLogo(logos) {
-  if(!Array.isArray(logos) || !logos.length) return null;
-
-  const byPreference = (a,b) => {
-    const langScore = logo => logo?.["iso_639_1"] === "en" ? 2 : (logo?.["iso_639_1"] == null ? 1 : 0);
-    const langDiff = langScore(b) - langScore(a);
-    if(langDiff !== 0) return langDiff;
-    return (b?.["vote_average"] ?? 0) - (a?.["vote_average"] ?? 0);
-  };
-
-  return [...logos].sort(byPreference)[0] ?? null;
-}
-
 function tmdbImage(size, path) {
   return normalizeRootUrl(("https://image.tmdb.org/t/p/"+size+"/"+path).replace(/([^:]\/)\/+/g, '$1'));
 }
 
-function renderCollectionHero(CollectionData, CollectionImagesData) {
+function renderCollectionHero(CollectionData) {
   const backdropPath = CollectionData?.["backdrop_path"];
   const posterPath = CollectionData?.["poster_path"];
 
@@ -105,25 +90,10 @@ function renderCollectionHero(CollectionData, CollectionImagesData) {
   else
     tintEl.style.display = "none";
 
-  const bestLogo = pickBestLogo(CollectionImagesData?.["logos"]);
   const rawCollectionName = CollectionData?.["name"] ?? "Collection";
   const collectionName = rawCollectionName.replace(/\s*collection\s*$/i, "").trim() || rawCollectionName;
-
-  if(bestLogo?.["file_path"]) {
-    collectionTitleLogoEl.src = tmdbImage("w500", bestLogo["file_path"]);
-    collectionTitleLogoEl.alt = collectionName;
-    collectionTitleLogoEl.style.display = "block";
-    collectionTitleLogoEl.onerror = () => {
-      collectionTitleLogoEl.style.display = "none";
-      collectionTitleEl.style.display = "block";
-    };
-    collectionTitleEl.style.display = "none";
-  } else {
-    collectionTitleLogoEl.style.display = "none";
-    collectionTitleEl.style.display = "block";
-  }
-
   collectionTitleEl.textContent = collectionName;
+
   collectionOverviewEl.textContent = CollectionData?.["overview"] ?? "";
   if(!CollectionData?.["overview"]) collectionOverviewEl.style.display = "none";
 
