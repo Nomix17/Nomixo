@@ -658,7 +658,8 @@ function handleNavigationButtonsHandler(focusFunction) {
     if(arrowKeys.includes(event.key)) {
       event.preventDefault();
 
-      const focusable = [...document.querySelectorAll("[tabindex='0']")];
+      const focusable = [...document.querySelectorAll("[tabindex='0']")]
+        .filter(el => getComputedStyle(el).display !== "none");
       let index = focusable.indexOf(document.activeElement);
 
       if (index < 0) {
