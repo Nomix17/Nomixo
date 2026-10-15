@@ -161,9 +161,9 @@ function renderEpisodes(data,title,libraryInfo) {
 
   const episodes = data.episodes;
   episodes.forEach(episode =>{
-    let episodeImageUrl = "../../../assets/noEpisodeImageFound.svg";
-    if(episode.still_path)
-      episodeImageUrl = `https://image.tmdb.org/t/p/w342/${episode.still_path}`;
+    const episodeImageUrl = episode.still_path 
+      ? `https://image.tmdb.org/t/p/w342/${episode.still_path}` 
+      : notFoundSvgPaths["EpisodeNotFound"];
 
     SeasonDiv.setAttribute("season_number",episode.season_number);
     const EpisodeElement = createEpisodeElement(episode, episodeImageUrl);
@@ -204,7 +204,7 @@ function createEpisodeElement(episodeInfo, episodeImgUrl) {
     episodeImgElementContainer,
     episodeImgElement,
     episodeImgUrl,
-    "../../../assets/noEpisodeImageFound.svg"
+    "EpisodeNotFound"
   );
   return EpisodeElement;
 }

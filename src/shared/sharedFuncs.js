@@ -135,9 +135,10 @@ const unFullscreenBtn = `
 // ################################### NOT-FOUND SVG MODULES ###################################
 
 const notFoundSvgPaths = {
-  ProfileNotFound: "../../../assets/ProfileNotFound.svg",
-  PosterNotFound: "../../../assets/PosterNotFound.svg",
-  EpisodeNotFound: "../../../assets/noEpisodeImageFound.svg"
+  ProfileNotFound: "../../../assets/not_found_svg/ProfileNotFound.svg",
+  PosterNotFound: "../../../assets/not_found_svg/PosterNotFound.svg",
+  EpisodeNotFound: "../../../assets/not_found_svg/noEpisodeImageFound.svg",
+  CollectionNotFound: "../../../assets/not_found_svg/CollectionNotFound.svg"
 };
 
 const notFoundSvgStyleClass = {
@@ -953,7 +954,7 @@ function createCollectionCard(collection) {
 
   const image = document.createElement("img");
   image.className = "collection-image";
-  loadImageWithAnimation(card, image, `https://image.tmdb.org/t/p/w780${collection.backdrop_path ?? collection.poster_path}`);
+  loadImageWithAnimation(card, image, `https://image.tmdb.org/t/p/w780${collection.backdrop_path ?? collection.poster_path}`, "CollectionNotFound");
 
   const shade = document.createElement("div");
   shade.className = "collection-shade";
