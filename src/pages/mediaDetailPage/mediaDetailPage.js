@@ -46,27 +46,31 @@ async function pageInit() {
   ]);
 
   if (results[0].status === "rejected") {
-    let middleDiv = document.getElementById("div-middle");
     document.documentElement.classList.add("fetchingFailed");
-    middleDiv.innerHTML = "";
-    middleDiv.classList.add("activate");
-    setTimeout(() => {
-      const WarningElement = DisplayWarningOrErrorForUser(
-        "We're having trouble loading data.</br>Please Check your connection and retry!"
-      );
-      middleDiv.appendChild(WarningElement);
-      globalLoadingGif.remove();
-      middleDiv.classList.add("activate");
-    }, 800);
+    handleFetchingError(results[0].reason);
   }
+}
+
+async function fetchTMDBJson(url) {
+  const res = await fetch(url);
+  let json = null;
+  try { json = await res.json(); } catch {}
+
+  if (json?.status_code === 7 || res.status === 401)
+    throw new Error("We're having trouble loading data.</br>Please make sure TMDB Key is valide!");
+  if (res.status === 404 || json?.status_code === 34)
+    throw new Error("We couldn't find this title.<br>It may have been removed, try a different one");
+  if (!res.ok || !json)
+    throw new Error(`We're having trouble loading data.</br>TMDB responded with an error (${res.status}), please retry!`);
+
+  return json;
 }
 
 async function loadMovieInformation() {
   try {
     const apiKey = await apiKeyPromise;
     const url = `https://api.themoviedb.org/3/${MediaType}/${MediaId}?api_key=${apiKey}`;
-    const res = await fetch(url);
-    const mediaInfo = await res.json();
+    const mediaInfo = await fetchTMDBJson(url);
     await renderMediaPage(mediaInfo);
     if(MediaType === "movie") {
       await fetchMediaTorrent(); 
@@ -81,8 +85,7 @@ async function loadCastInformation() {
   try {
     const apiKey = await apiKeyPromise;
     const url = `https://api.themoviedb.org/3/${MediaType}/${MediaId}/credits?api_key=${apiKey}`;
-    const res = await fetch(url);
-    const castData = await res.json();
+    const castData = await fetchTMDBJson(url);
     renderCastInfomation(castData);
   } catch(err) {
     noInfoFounded();
@@ -115,8 +118,7 @@ async function loadAllEpisodesOfSeason(season_number,title) {
     const apiKey = await apiKeyPromise;
     const libraryInfo = await loadMediaEntryPointLibraryInfo();
     const url = `https://api.themoviedb.org/3/tv/${MediaId}/season/${season_number}?api_key=${apiKey}`;
-    const res = await fetch(url);
-    const episodesData = await res.json();
+    const episodesData = await fetchTMDBJson(url);
     await renderEpisodes(episodesData,title,libraryInfo?.[0]);
 
   } catch(err) {
@@ -277,16 +279,16 @@ async function fetchMediaTorrent(episodeInfo={}) {
 }
 
 async function getMediaTrailer() {
-  const apiKey = await apiKeyPromise;
-  const res = await fetch(`https://api.themoviedb.org/3/${MediaType}/${MediaId}/videos?api_key=${apiKey}`);
-  if(!res.ok) return;
-
-  const data = await res.json();
-  const trailers = data.results.filter(
-    video => video.type === "Trailer" && video.site === "YouTube" && video.official
-  );
-
   try {
+    const apiKey = await apiKeyPromise;
+    const res = await fetch(`https://api.themoviedb.org/3/${MediaType}/${MediaId}/videos?api_key=${apiKey}`);
+    if(!res.ok) return null;
+
+    const data = await res.json();
+    const trailers = (data.results ?? []).filter(
+      video => video.type === "Trailer" && video.site === "YouTube" && video.official
+    );
+
     return await Promise.any(
       trailers.map(async trailer => {
         const videoUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
@@ -1159,18 +1161,23 @@ async function DownloadTorrent(DownloadTargetInfo, hasToDownloadSubs) {
 }
 
 async function loadLogoImage(movieLanguage) {
-  const apiKey = await apiKeyPromise;
-  const res = await fetch(
-    `https://api.themoviedb.org/3/${MediaType}/${MediaId}/images?api_key=${apiKey}`
-  );
-  const data = await res.json();
-  const originalLanguageLogos = data?.logos.filter(imageObj => imageObj?.iso_639_1 === movieLanguage) ;
-  const englishLogos = data?.logos.filter(imageObj => imageObj?.iso_639_1 === "en");
-  return (
-    englishLogos?.[0]?.file_path ??
-    originalLanguageLogos?.[0]?.file_path ??
-    null
-  );
+  try {
+    const apiKey = await apiKeyPromise;
+    const data = await fetchTMDBJson(
+      `https://api.themoviedb.org/3/${MediaType}/${MediaId}/images?api_key=${apiKey}`
+    );
+    const logos = data?.logos ?? [];
+    const originalLanguageLogos = logos.filter(imageObj => imageObj?.iso_639_1 === movieLanguage);
+    const englishLogos = logos.filter(imageObj => imageObj?.iso_639_1 === "en");
+    return (
+      englishLogos?.[0]?.file_path ??
+      originalLanguageLogos?.[0]?.file_path ??
+      null
+    );
+  } catch(err) {
+    console.error(err);
+    return null;
+  }
 }
 
 async function loadDownloadSettings() {

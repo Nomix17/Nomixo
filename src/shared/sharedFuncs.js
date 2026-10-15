@@ -363,6 +363,7 @@ async function getLibraryPageCacheData(){
 
 async function getContainersHTML(containersList){
   const containersData = Array.from(containersList)
+    .filter(el => el != null)
     .map(container=> 
       ({"id":container.id,"HTMLContent":container.innerHTML})
     );
@@ -371,6 +372,7 @@ async function getContainersHTML(containersList){
 
 async function getDropDownCacheValue(dropDowns){
   const dropDownsData = Array.from(dropDowns)
+    .filter(el => el != null)
     .map(dropDown => 
       ({"id":dropDown.id,"cachedValue":getDropdownValue(dropDown)})
     );
@@ -1310,7 +1312,7 @@ async function getMediaInfo(MediaId, MediaType, apiKey) {
   const res = await fetch(searchQuery);
   const mediaData = await res.json();
   if(mediaData.status_code === 7)
-    throw new Error("We're having trouble loading data</br>Please make sure your Authentication Key is valide!");
+    throw new Error("We're having trouble loading data</br>Please make sure TMDB Key is valide!");
 
   return mediaData;
 }
@@ -2014,4 +2016,24 @@ function formatDownloadPathError(rawError) {
     return "This folder can't be found. It may have been moved or deleted.";
 
   return rawError;
+}
+
+function handleFetchingError(err) {
+  const RightmiddleDiv = 
+    document.getElementById("div-middle-right") ||
+    document.getElementById("div-middle");
+
+  setTimeout(() => {
+    const msg = (err.message === "Failed to fetch") 
+      ? "We're having trouble loading data.</br>Please Check your internet connection and retry!"
+      // ? "We're having trouble loading data.</br>Please Check your internet connection!" 
+      : err.message;
+
+    RightmiddleDiv.innerHTML = "";
+    const WarningElement = DisplayWarningOrErrorForUser(msg);
+    RightmiddleDiv.appendChild(WarningElement);
+    globalLoadingGif.remove();
+    RightmiddleDiv.classList.add("activate");
+    console.error(err);
+  }, 800);
 }

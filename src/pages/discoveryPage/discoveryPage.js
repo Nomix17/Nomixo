@@ -40,22 +40,15 @@ async function fetchData(apiKey, genreId, ThisMediaType, page) {
   }
 
   const LibraryInformation = await loadLibraryInfo();
-  try {
-    const [GenreData] = await Promise.all([fetch(requestUrl).then(res => res.json())]);
-    if (GenreData?.total_results) {
-      const results = isTrending
-        ? GenreData.results.filter(item => item.media_type !== "person")
-        : GenreData.results;
-      insertMediaElements(results, MediaSuggestions, ThisMediaType, LibraryInformation);
-      bottomPageLoadingRing.classList.remove("show");
-    } else {
-      throw new Error("No results found for this genre<br> try a different category");
-    }
-  } catch (err) {
-    const WarningElement = DisplayWarningOrErrorForUser(err.message, false);
-    RightmiddleDiv.appendChild(WarningElement);
-    globalLoadingGif.remove();
-    RightmiddleDiv.classList.add("activate");
+  const [GenreData] = await Promise.all([fetch(requestUrl).then(res => res.json())]);
+  if (GenreData?.total_results) {
+    const results = isTrending
+      ? GenreData.results.filter(item => item.media_type !== "person")
+      : GenreData.results;
+    insertMediaElements(results, MediaSuggestions, ThisMediaType, LibraryInformation);
+    bottomPageLoadingRing.classList.remove("show");
+  } else {
+    throw new Error("No results found for this genre<br> try a different category");
   }
   allowToFetchData = true;
 }
@@ -63,41 +56,25 @@ async function fetchData(apiKey, genreId, ThisMediaType, page) {
 async function loadGenres(apiKey) {
   SelectGenre.innerHTML = '<div class="select-option" role="option" value="All">All</div>';
   const requestUrl = `https://api.themoviedb.org/3/genre/${MediaType}/list?api_key=${apiKey}`;
-  try {
-    const [data] = await Promise.all([fetch(requestUrl).then(res => res.json())]);
+  const [data] = await Promise.all([fetch(requestUrl).then(res => res.json())]);
 
-    if (parseInt(data.status_code) === 7)
-      throw new Error("We're having trouble loading data.</br>Please make sure your Authentication Key is valide!");
+  if (parseInt(data.status_code) === 7)
+    throw new Error("We're having trouble loading data.</br>Please make sure TMDB Key is valide!");
 
-    const GenresData = data.genres;
-    GenresData.forEach(GenreObj => {
-      let optionElement = document.createElement("div");
-      optionElement.className = "select-option";
-      optionElement.setAttribute('role', 'option');
-      optionElement.setAttribute('value', GenreObj.id);
-      optionElement.textContent = GenreObj.name;
-      SelectGenre.appendChild(optionElement);
-    });
-    
-    setDropdownValue(SelectGenre, genreId);
+  const GenresData = data.genres;
+  GenresData.forEach(GenreObj => {
+    let optionElement = document.createElement("div");
+    optionElement.className = "select-option";
+    optionElement.setAttribute('role', 'option');
+    optionElement.setAttribute('value', GenreObj.id);
+    optionElement.textContent = GenreObj.name;
+    SelectGenre.appendChild(optionElement);
+  });
+  
+  setDropdownValue(SelectGenre, genreId);
 
-    const currentGenre = GenresData.find(GObj => Number(GObj.id) === Number(genreId));
-    if(currentGenre) changeDescriptionTitleValue(currentGenre.name);
-
-  } catch(err) {
-    setTimeout(() => {
-      err.message = (err.message === "Failed to fetch") 
-        ? "We're having trouble loading data.</br>Please Check your connection and refresh!" 
-        : err.message;
-
-      RightmiddleDiv.innerHTML = "";
-      const WarningElement = DisplayWarningOrErrorForUser(err.message);
-      RightmiddleDiv.appendChild(WarningElement);
-      globalLoadingGif.remove();
-      RightmiddleDiv.classList.add("activate");
-    }, 800);
-    console.error(err);
-  };
+  const currentGenre = GenresData.find(GObj => Number(GObj.id) === Number(genreId));
+  if(currentGenre) changeDescriptionTitleValue(currentGenre.name);
 }
 
 async function checkAndFillScreen(apiKey) {
@@ -217,20 +194,24 @@ async function loadMedia(apiKey){
   }
 }
 
-async function initPage(){
-  const apiKey = await window.electronAPI.getTMDBAPIKEY();
+async function initPage() {
+  try {
+    const apiKey = await window.electronAPI.getTMDBAPIKEY();
 
-  await loadGenres(apiKey);
-  RightmiddleDiv.classList.add("activate");
+    await loadGenres(apiKey);
+    RightmiddleDiv.classList.add("activate");
 
-  dropDownInit();
-  setDropdownValue(SelectMediaType, MediaType);
-  setDropdownValue(SelectSortBase, SortBase);
-  addDropDownsEventListener();
+    dropDownInit();
+    setDropdownValue(SelectMediaType, MediaType);
+    setDropdownValue(SelectSortBase, SortBase);
+    addDropDownsEventListener();
 
-  await loadMedia(apiKey);
-  globalLoadingGif.remove();
-  detectWhenScrollsArriveAtTheEndOfAPage(apiKey);
+    await loadMedia(apiKey);
+    globalLoadingGif.remove();
+    detectWhenScrollsArriveAtTheEndOfAPage(apiKey);
+  } catch(err) {
+    handleFetchingError(err);
+  }
 }
 
 function focusFunction(element) {
