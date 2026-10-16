@@ -2000,7 +2000,10 @@ function monitorMsgFromMainProcess() {
       if(window.location.href.includes("playerPage.html"))
         window.electronAPI.goBack();
     } else if(msg.type === "update_available") {
-      if(window.location.href.includes("loginPage.html")) return;
+      if(
+        window.location.href.includes("loginPage.html") ||
+        window.location.href.includes("playerPage.html")
+      ) return;
       sessionStorage.setItem("update_info", JSON.stringify({ title: msg?.title ?? "", body: msg?.body ?? ""}));
       displayMessage({ title: msg?.title ?? "", body: msg?.body ?? "", onClick: openUpdateSection });
     } else  if(msg.type === "msg") {
