@@ -1990,8 +1990,15 @@ function validateThemeName(name) {
 }
 
 function openUpdateSection() {
-  sessionStorage.setItem("scroll_to_update_section", true);
-  OpenSettingsPage();
+  if(window.location.href.includes("settingsPage.html")) {
+    RightmiddleDiv?.scrollTo({
+      top: RightmiddleDiv?.scrollHeight,
+      behavior: "smooth",
+    });
+  } else {
+    sessionStorage.setItem("scroll_to_update_section", true);
+    OpenSettingsPage();
+  }
 }
 
 function monitorMsgFromMainProcess() {
