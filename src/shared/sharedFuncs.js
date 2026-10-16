@@ -1990,6 +1990,7 @@ function validateThemeName(name) {
 }
 
 function openUpdateSection() {
+  sessionStorage.setItem("scroll_to_update_section", true);
   OpenSettingsPage();
 }
 

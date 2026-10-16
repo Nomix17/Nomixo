@@ -387,6 +387,7 @@ async function loadSettings() {
   applySelectedColor(ColorInputsWithAlphaValue)
 
   await renderPreparedThemeCards();
+  scrollToUpdateSection();
   RightmiddleDiv.classList.add("activate");
 }
 
@@ -1096,6 +1097,18 @@ function handleUpdateDownloadError(error) {
   void updateErrorRow.offsetWidth;
   updateErrorRow.classList.add('error-shake');
   restartUpdateBtn.classList.remove("active");
+}
+
+function scrollToUpdateSection() {
+  if (!sessionStorage.getItem("scroll_to_update_section")) return;
+  sessionStorage.removeItem("scroll_to_update_section");
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    RightmiddleDiv.scrollTo({
+      top: RightmiddleDiv.scrollHeight,
+      behavior: "smooth",
+    });
+  }));
 }
 
 function initUpdateRelatedUI() {
