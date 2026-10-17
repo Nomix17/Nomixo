@@ -438,10 +438,10 @@ function getSettings(){
 
 function getSubConfig(){
   return {
-    "sid": SubtitlesOnByDefault,
+    "sid": SubtitlesOnByDefault ? 1 : "no",
     "sub-font-size": FontSize,
     "sub-font": '"'+FontFamily+'"',
-    "sub-color": '"'+TextColor+'"',
+    "sub-color": '"'+TextColor.replace("white", "#ffffff")+'"',
   }
 }
 

@@ -67,7 +67,7 @@ ipcMain.handle("load-theme", async () => {
 
 ipcMain.handle("load-sub", async() => {
   try { return await loadSubConfigs(); }
-  catch { throw new Error("Failed to load sub configs"); }
+  catch(err) { throw new Error(`Failed to load sub configs: ${err}`); }
 });
 
 ipcMain.handle("apply-settings", async (event, SettingsObj) => {
@@ -822,20 +822,9 @@ async function loadSubConfigs() {
 }
 
 async function applySubConfigs(newJsonConf) {
-  const updatedConf = await updateMpvConf(newJsonConf);
-  const fileContent = exportJsonToMpvConfigs(updatedConf);
-  await writeFile(Paths.SubConfigFile, fileContent);
-}
-
-async function updateMpvConf(newJsonConf) {
   const oldConf = await getJsonifiedMpvConfigs();
-  for (const [key, val] of Object.entries(newJsonConf)) {
-    const value =
-      val === true && key !== "sub-font-size" ? "yes" :
-      val === false && key !== "sub-font-size" ? "no" : val;
-    oldConf[key] = value;
-  }
-  return oldConf;
+  const fileContent = exportJsonToMpvConfigs({...oldConf, ...newJsonConf});
+  await writeFile(Paths.SubConfigFile, fileContent);
 }
 
 async function getJsonifiedMpvConfigs() {
