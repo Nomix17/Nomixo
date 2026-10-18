@@ -686,7 +686,7 @@ h1{
   flex-wrap:wrap;
   flex:none;
   max-width:630px;
-  padding:10px 0 14px;
+  padding:10px 0 12px;
   gap:10px;
   border-top:1px solid rgba(255,255,255,0.1);
 }
