@@ -249,6 +249,6 @@ addAllBtn.addEventListener("click", async () => {
 triggerLoadingGif();
 loadCollection();
 setupKeyPressesHandler();
-handleNavigationButtonsHandler(focusFunction);
+handleNavigationWithArrowKeys(focusFunction);
 loadIconsDynamically();
 handlingMiddleRightDivResizing();

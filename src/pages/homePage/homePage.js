@@ -147,7 +147,7 @@ function focusFunction(element) {
 
 function keyboardPressesHandling() {
   setupKeyPressesHandler();
-  handleNavigationButtonsHandler(focusFunction);
+  handleNavigationWithArrowKeys(focusFunction);
   setupKeyPressesForInputElement(searchInput); 
 }
 

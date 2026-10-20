@@ -436,7 +436,7 @@ dropDownInit();
 initPage();
 setupKeyPressesForInputElement(searchInput);
 setupKeyPressesHandler();
-handleNavigationButtonsHandler(focusFunction);
+handleNavigationWithArrowKeys(focusFunction);
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
 createSearchHistoryDropDown();

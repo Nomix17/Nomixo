@@ -650,8 +650,32 @@ function filterDropdown(typedValue) {
   dropdown.classList.toggle('visible', shouldBeVisible);
 }
 
-function handleNavigationButtonsHandler(focusFunction) {
+const getCurrentHoveredElement = (focusable) => {
+  let index = focusable.indexOf(document.activeElement);
+  if (index >= 0) return index;
 
+  const currentlyHovered = document.querySelector("[tabindex='0']:hover");
+  return focusable.indexOf(currentlyHovered) ?? -1;
+}
+
+const getTargetIndex = (key, focusable) => {
+  const currentIndex = getCurrentHoveredElement(focusable);
+  if(currentIndex < 0) return 0;
+
+  if (key === "ArrowRight")
+    return getNextRightEl(currentIndex, focusable)
+
+  if (key === "ArrowLeft")
+    return getNextLeftEl(currentIndex, focusable)
+
+  if (key === "ArrowUp")
+    return getNextUpEl(currentIndex, focusable);
+  
+  if (key === "ArrowDown")
+    return getNextDownEl(currentIndex, focusable);
+}
+
+function handleNavigationWithArrowKeys(focusFunction) {
   document.addEventListener("keydown", (event) => {
     const tag = event.target;
     if (tag.tagName === "INPUT" || tag.tagName === "TEXTAREA" || tag.isContentEditable)  
@@ -663,96 +687,95 @@ function handleNavigationButtonsHandler(focusFunction) {
 
       const focusable = [...document.querySelectorAll("[tabindex='0']")]
         .filter(el => getComputedStyle(el).display !== "none");
-      let index = focusable.indexOf(document.activeElement);
 
-      if (index < 0) {
-        const currentlyHovered = document.querySelector("[tabindex='0']:hover");
-        const hoveredElementIndex = focusable.indexOf(currentlyHovered);
-        if(hoveredElementIndex)
-          index = hoveredElementIndex;
-        else 
-          return;
-      }
-      
-      let offset = 0;
-      if (event.key === "ArrowRight")  offset = 1;
-
-      if (event.key === "ArrowLeft") offset = -1;
-
-      if (event.key === "ArrowUp")
-        offset = -1 * getElementOnTopOffset(index, focusable);
-      
-
-      if (event.key === "ArrowDown")
-        offset = getElementOnBottomOffset(index, focusable);
-
-      const nextHover = focusable[index + offset];
-      if (nextHover) {
+      const targetIndex = getTargetIndex(event.key, focusable);
+      const nextHover = focusable[targetIndex];
+      if(nextHover)
         focusFunction(nextHover);
-      }
 
-    } else {
-      if (event.key === "Enter") {
-        document.activeElement.click();
-      }
+    } else if(event.key === "Enter") {
+      document.activeElement.click();
     }
   });
 }
 
-function getElementOnTopOffset(currentElementIndex, focusableElements) {
-  const currentElement = focusableElements?.[currentElementIndex];
-  let topOffset = 1;
-  
-  if (currentElement) {
-    const currentElementXPos = currentElement.getBoundingClientRect().right;
-    for(let i = 1 ;; i++) {
-      const elementPrevElement = focusableElements?.[currentElementIndex - i];
-
-      if (elementPrevElement) {
-        const xPosition = elementPrevElement.getBoundingClientRect().right;
-
-        if (xPosition  !== currentElementXPos) {
-          topOffset ++;
-          
-        } else {
-          return topOffset
-        }
-
-      } else {
-        return currentElementIndex;
-      }
-    }
-  }
-
-  return -1 * topOffset; 
+function doesHorizontalPosMatch(el1, el2) {
+  if(el1 == null || el2 == null) return false
+  const el1R = el1.getBoundingClientRect().right;
+  const el1L = el1.getBoundingClientRect().left;
+  const el2R = el2.getBoundingClientRect().right;
+  const el2L = el2.getBoundingClientRect().left;
+  return !(el1L > el2R) && !(el1R < el2L)
 }
 
-function getElementOnBottomOffset(currentElementIndex, focusableElements) {
-  const currentElement = focusableElements?.[currentElementIndex];
-  let bottomOffset = 1;
-  
-  if (currentElement) {
-    const currentElementXPos = currentElement.getBoundingClientRect().right;
-    for(let i = 1 ;; i++) {
-      const elementNextElement = focusableElements?.[currentElementIndex + i];
+function doesVerticalPosMatch(el1, el2) {
+  if(el1 == null || el2 == null) return false
+  const el1B = el1.getBoundingClientRect().bottom;
+  const el1T = el1.getBoundingClientRect().top;
+  const el2B = el2.getBoundingClientRect().bottom;
+  const el2T = el2.getBoundingClientRect().top;
+  return !(el1T < el1B) && !(el1B > el2T);
+}
 
-      if (elementNextElement) {
-        let xPosition = elementNextElement.getBoundingClientRect().right;
+function getCenterDistance(el1, el2) {
+  const el1_CenterPos = {
+    x: el1.getBoundingClientRect().left + el1.offsetWidth / 2,
+    y: el1.getBoundingClientRect().top + el1.offsetHeight / 2,
+  }
+  const el2_CenterPos = {
+    x: el2.getBoundingClientRect().left + el2.offsetWidth / 2,
+    y: el2.getBoundingClientRect().top + el2.offsetHeight / 2,
+  }
+  return Math.sqrt(Math.pow(el1_CenterPos.x - el2_CenterPos.x, 2) + Math.pow(el1_CenterPos.y - el2_CenterPos.y, 2));
+}
 
-        if (xPosition  !== currentElementXPos) {
-          bottomOffset ++;
-          
-        } else {
-          return bottomOffset;
-        }
+function getNextUpEl(index, focusable) {
+  return getNextElement(index, focusable, -1, doesHorizontalPosMatch) ?? 0;
+}
 
-      } else {
-        return focusableElements.length-1 - currentElementIndex;
+function getNextDownEl(index, focusable) {
+  return getNextElement(index, focusable, 1, doesHorizontalPosMatch) ?? focusable.length - 1;
+}
+
+function getNextLeftEl(index, focusable) {
+  return getNextElement(index, focusable, -1, doesVerticalPosMatch) ?? index - 1;
+}
+
+function getNextRightEl(index, focusable) {
+  return getNextElement(index, focusable, 1, doesVerticalPosMatch) ?? index + 1;
+}
+
+
+function getNextElement(currentElementIndex, focusableElements, direction, elPosMatchingCallback) {
+  const currentEl = focusableElements?.[currentElementIndex];
+  if (!currentEl)
+    return currentElementIndex; 
+
+  for(let i = currentElementIndex + direction ;; i += direction) {
+    const targetEl = focusableElements?.[i];
+
+    if (!targetEl)
+      return null;
+
+    if (elPosMatchingCallback(currentEl, targetEl)) {
+      const distances = [{
+        index: i,
+        distance: getCenterDistance(currentEl, targetEl)
+      }]
+
+      for(let j = i + direction ;; j += direction) {
+        const nextTarget = focusableElements?.[j];
+        if(nextTarget == null || !elPosMatchingCallback(currentEl, nextTarget))
+          break;
+
+        distances.push({
+          index: j,
+          distance: getCenterDistance(currentEl, nextTarget)
+        });
       }
+      return distances.reduce((prev, curr) => prev.distance < curr.distance ? prev : curr)?.index;
     }
   }
- 
-  return bottomOffset;
 }
 
 function setupNavigationBtnHandler() {

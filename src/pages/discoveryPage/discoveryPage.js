@@ -221,7 +221,7 @@ function focusFunction(element) {
 triggerLoadingGif();
 initPage();
 setupKeyPressesForInputElement(searchInput);
-handleNavigationButtonsHandler(focusFunction);
+handleNavigationWithArrowKeys(focusFunction);
 setupKeyPressesHandler();
 loadIconsDynamically();
 handlingMiddleRightDivResizing();

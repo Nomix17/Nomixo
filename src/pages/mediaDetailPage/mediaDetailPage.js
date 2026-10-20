@@ -1306,4 +1306,4 @@ pageInit();
 handleDivsResize();
 handleFullScreenIcon();
 loadIconsDynamically();
-handleNavigationButtonsHandler(focusFunction);
+handleNavigationWithArrowKeys(focusFunction);
