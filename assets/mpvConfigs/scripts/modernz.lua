@@ -657,7 +657,7 @@ local state = {
 }
 
 -- "Play Next Episode" button
--- Only available when mpv is started with --script-opts=haveNextEp=true
+-- Enabled by --script-opts=haveNextEp=true or the "have-next-episode" script message,
 -- and only shown during the last `next_ep_time` seconds of the video.
 local function have_next_episode()
     local v = mp.get_opt("haveNextEp")
@@ -3847,6 +3847,12 @@ mp.observe_property("pause", "bool", function(name, enabled)
     end
 end)
 
+mp.register_script_message("have-next-episode", function(v)
+    local enabled = tostring(v):lower() == "yes"
+    if enabled == next_ep_enabled then return end
+    next_ep_enabled = enabled
+    request_init()
+end)
 mp.register_script_message("osc-visibility", visibility_mode)
 mp.register_script_message("osc-show", show_osc)
 mp.register_script_message("osc-hide", function()

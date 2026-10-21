@@ -7,7 +7,8 @@ import {
 } from './utils.js';
 import { log } from './debugging.js';
 import { spawn } from 'child_process';
-import { parentPort, workerData } from 'worker_threads';
+import { parentPort, workerData, threadId } from 'worker_threads';
+import net from 'net';
 import WebTorrent from 'webtorrent';
 import express from 'express';
 import mime from 'mime';
@@ -23,6 +24,8 @@ let bufferingTimer = null;
 let playbackStarted = false;
 let sawStreamTimeout = false;
 let loadFailureReported = false;
+let ipcPath = null;
+let nextEpisodeFlag = null;
 config.init();
 
 const MPV_PLAYING_REGEX = /(?:AV|V|A):\s+\d+:\d+:\d+/;
@@ -73,10 +76,31 @@ SubDownloadManager.sendProgressCallBack = (progressInfo) => {
   });
 }
 
+function makeIpcPath() {
+  const id = `${process.pid}-${threadId}-${Date.now()}`;
+  return os.platform() === 'win32'
+    ? `\\\\.\\pipe\\mpv-${id}`
+    : path.join(os.tmpdir(), `mpv-${id}.sock`);
+}
+
+function sendToMpv(command) {
+  if (!mpvProcess || !ipcPath) return;
+  const sock = net.connect(ipcPath);
+  sock.once('connect', () => sock.end(JSON.stringify({ command }) + '\n'));
+  sock.once('error', (e) => {
+    sock.destroy();
+    log.error('mpv IPC failed:', e.code);
+  });
+}
+
+function pushNextEpisodeFlag() {
+  if (nextEpisodeFlag === null || !playbackStarted) return;
+  sendToMpv(['script-message', 'have-next-episode', nextEpisodeFlag ? 'yes' : 'no']);
+}
+
 function StreamTorrent(
   MpvExecPath,
   metaData,
-  haveNextEpisode,
   startFromTime,
   videoCachePath,
   subDirectory,
@@ -186,7 +210,7 @@ function StreamTorrent(
           runMpvProcess(
             MpvExecPath, url,
             mpvConfigDirectory, metaData,
-            haveNextEpisode, startFromTime,
+            startFromTime,
             subsPaths, mpvWindowConfigs
           );
 
@@ -225,7 +249,6 @@ function StreamTorrent(
 async function PlayLocalVideo(
   MpvExecPath,
   metaData,
-  haveNextEpisode,
   startFromTime,
   subsPaths,
   mpvConfigDirectory,
@@ -238,7 +261,7 @@ async function PlayLocalVideo(
         runMpvProcess(
           MpvExecPath, videoFullPath,
           mpvConfigDirectory, metaData,
-          haveNextEpisode, startFromTime,
+          startFromTime,
           subsPaths, mpvWindowConfigs,
           resolve, reject
         );
@@ -256,7 +279,6 @@ function runMpvProcess(
   videoFullPath,
   mpvConfigDirectory,
   metaData,
-  haveNextEpisode,
   startFromTime,
   subsPaths,
   mpvWindowConfigs,
@@ -275,6 +297,8 @@ function runMpvProcess(
     isValid(metaData.episodeNumber) ? `E${metaData.episodeNumber}` : null,
   ].filter(Boolean).join(" ");
 
+  ipcPath = makeIpcPath();
+
   const childProcessArguments = [
     videoFullPath,
     "--keep-open=yes",
@@ -284,7 +308,7 @@ function runMpvProcess(
     `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}`,
     `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`,
     `--force-media-title=${videoTitle}`,
-    `--script-opts=haveNextEp=${haveNextEpisode}`,
+    `--input-ipc-server=${ipcPath}`,
     `--mute=yes`,
     `--ytdl=no`,
     `--network-timeout=300`,
@@ -344,6 +368,7 @@ function runMpvProcess(
         playbackStarted = true;
         stopBufferingReports();
         sendProgress('playing');
+        pushNextEpisodeFlag();
       }
       if (!playbackStarted && !loadFailureReported) detectLoadFailure(text);
       parentPort.postMessage({
@@ -360,6 +385,7 @@ async function cleanup() {
   stopBufferingReports();
   activeTorrent = null;
   activeFile = null;
+  ipcPath = null;
 
   if (mpvProcess) {
     try {
@@ -410,6 +436,11 @@ function destroyClient(client) {
 }
 
 parentPort.on('message', async (msg) => {
+  if (msg.type === 'next_episode_ready') {
+    nextEpisodeFlag = Boolean(msg.value);
+    pushNextEpisodeFlag();
+    return;
+  }
   if (msg.type === 'shutdown') {
     await cleanup();
     parentPort.removeAllListeners('message');
@@ -421,7 +452,6 @@ if (workerData.typeOfPlay === "StreamTorrent") {
   StreamTorrent(
     workerData.MpvExecPath,
     workerData.metaData,
-    workerData.haveNextEpisode,
     workerData.startFromTime,
     workerData.videoCachePath,
     workerData.subDirectory,
@@ -442,7 +472,6 @@ if (workerData.typeOfPlay === "StreamTorrent") {
   PlayLocalVideo(
     workerData.MpvExecPath,
     workerData.metaData,
-    workerData.haveNextEpisode,
     workerData.startFromTime,
     workerData.subsPaths,
     workerData.mpvConfigDirectory,

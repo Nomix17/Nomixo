@@ -107,7 +107,7 @@ class MpvPlayerManager {
 
   async playTorrentOverMpv(metaData, settings) {
     this.#settings = settings;
-    await this.#nextEpisodeManager.resolveNext(metaData);
+    const nextPromise = this.#nextEpisodeManager.resolveNext(metaData);
     const startFromTime = await this.#getLatestPlaybackPosition(metaData);
     const { MpvExecPath, LanguagesToDownload, DownloadAllSubtitles } = settings;
 
@@ -115,7 +115,7 @@ class MpvPlayerManager {
       workerData: {
         MpvExecPath,
         typeOfPlay: "StreamTorrent",
-        metaData, haveNextEpisode: this.#nextEpisodeManager.hasNext(),
+        metaData,
         startFromTime,
         videoCachePath: Paths.videoCachePath,
         subDirectory: Paths.subDirectory,
@@ -127,13 +127,14 @@ class MpvPlayerManager {
     });
 
     this.#handleWorker(metaData);
+    this.#notifyWhenNextReady(nextPromise, this.#worker);
     this.inVideoPlayerPage = true;
   }
 
   async playVideoOverMpv(metaData, subsPaths, settings) {
     log.info(`Playing ${metaData.fileName} over Mpv`);
     this.#settings = settings;
-    await this.#nextEpisodeManager.resolveNext(metaData);
+    const nextPromise = this.#nextEpisodeManager.resolveNext(metaData);
     const startFromTime = await this.#getLatestPlaybackPosition(metaData);
     const { MpvExecPath } = settings;
 
@@ -141,7 +142,7 @@ class MpvPlayerManager {
       workerData: {
         MpvExecPath,
         typeOfPlay: "LocalFile",
-        metaData, haveNextEpisode: this.#nextEpisodeManager.hasNext(),
+        metaData,
         startFromTime,
         subsPaths,
         mpvConfigDirectory: Paths.mpvConfigDirectory,
@@ -151,7 +152,18 @@ class MpvPlayerManager {
     });
 
     this.#handleWorker(metaData);
+    this.#notifyWhenNextReady(nextPromise, this.#worker);
     this.inVideoPlayerPage = true;
+  }
+
+  #notifyWhenNextReady(nextPromise, worker) {
+    nextPromise.then(() => {
+      if (this.#worker !== worker) return;
+      worker.postMessage({
+        type: "next_episode_ready",
+        value: this.#nextEpisodeManager.hasNext(),
+      });
+    });
   }
 
   cleanup() {
