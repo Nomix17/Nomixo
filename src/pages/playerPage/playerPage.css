@@ -168,6 +168,18 @@ body::before{
   overflow-wrap: anywhere;
 }
 
+#p-episode{
+  margin: 10px 0 0;
+  font-size: clamp(16px, 1.8vw, 24px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(255,255,255,0.85);
+}
+
+#p-episode:empty{
+  display: none;
+}
+
 #p-meta{
   margin: 14px 0 0;
   font-size: clamp(14px, 1.2vw, 17px);

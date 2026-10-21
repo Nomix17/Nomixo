@@ -96,6 +96,11 @@ async function renderMediaInfo() {
 
   document.getElementById("h-title").textContent = title;
 
+  const seasonNum = metaData.seasonNumber;
+  const episodeNum = metaData.episodeNumber;
+  document.getElementById("p-episode").textContent =
+    seasonNum != null && episodeNum != null ? `S${seasonNum} E${episodeNum}` : "";
+
   const date = data?.release_date || data?.first_air_date || "";
   const year = metaData.year || date.slice(0, 4);
   const season = metaData.season ?? metaData.Season;
