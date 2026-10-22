@@ -650,6 +650,7 @@ function filterDropdown(typedValue) {
   dropdown.classList.toggle('visible', shouldBeVisible);
 }
 
+// Arrow keys Navigation
 const getCurrentHoveredElement = (focusable) => {
   let index = focusable.indexOf(document.activeElement);
   if (index >= 0) return index;
@@ -675,30 +676,6 @@ const getTargetIndex = (key, focusable) => {
     return getNextDownEl(currentIndex, focusable);
 }
 
-function handleNavigationWithArrowKeys(focusFunction) {
-  document.addEventListener("keydown", (event) => {
-    const tag = event.target;
-    if (tag.tagName === "INPUT" || tag.tagName === "TEXTAREA" || tag.isContentEditable)  
-      return;
-
-    const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
-    if(arrowKeys.includes(event.key)) {
-      event.preventDefault();
-
-      const focusable = [...document.querySelectorAll("[tabindex='0']")]
-        .filter(el => getComputedStyle(el).display !== "none");
-
-      const targetIndex = getTargetIndex(event.key, focusable);
-      const nextHover = focusable[targetIndex];
-      if(nextHover)
-        focusFunction(nextHover);
-
-    } else if(event.key === "Enter") {
-      document.activeElement.click();
-    }
-  });
-}
-
 function doesHorizontalPosMatch(el1, el2) {
   if(el1 == null || el2 == null) return false
   const el1R = el1.getBoundingClientRect().right;
@@ -714,7 +691,7 @@ function doesVerticalPosMatch(el1, el2) {
   const el1T = el1.getBoundingClientRect().top;
   const el2B = el2.getBoundingClientRect().bottom;
   const el2T = el2.getBoundingClientRect().top;
-  return !(el1T < el1B) && !(el1B > el2T);
+  return !(el1T > el2B) && !(el1B < el2T);
 }
 
 function getCenterDistance(el1, el2) {
@@ -728,23 +705,6 @@ function getCenterDistance(el1, el2) {
   }
   return Math.sqrt(Math.pow(el1_CenterPos.x - el2_CenterPos.x, 2) + Math.pow(el1_CenterPos.y - el2_CenterPos.y, 2));
 }
-
-function getNextUpEl(index, focusable) {
-  return getNextElement(index, focusable, -1, doesHorizontalPosMatch) ?? 0;
-}
-
-function getNextDownEl(index, focusable) {
-  return getNextElement(index, focusable, 1, doesHorizontalPosMatch) ?? focusable.length - 1;
-}
-
-function getNextLeftEl(index, focusable) {
-  return getNextElement(index, focusable, -1, doesVerticalPosMatch) ?? index - 1;
-}
-
-function getNextRightEl(index, focusable) {
-  return getNextElement(index, focusable, 1, doesVerticalPosMatch) ?? index + 1;
-}
-
 
 function getNextElement(currentElementIndex, focusableElements, direction, elPosMatchingCallback) {
   const currentEl = focusableElements?.[currentElementIndex];
@@ -776,6 +736,46 @@ function getNextElement(currentElementIndex, focusableElements, direction, elPos
       return distances.reduce((prev, curr) => prev.distance < curr.distance ? prev : curr)?.index;
     }
   }
+}
+
+function getNextUpEl(index, focusable) {
+  return getNextElement(index, focusable, -1, doesHorizontalPosMatch) ?? 0;
+}
+
+function getNextDownEl(index, focusable) {
+  return getNextElement(index, focusable, 1, doesHorizontalPosMatch) ?? focusable.length - 1;
+}
+
+function getNextLeftEl(index, focusable) {
+  return getNextElement(index, focusable, -1, doesVerticalPosMatch) ?? index - 1;
+}
+
+function getNextRightEl(index, focusable) {
+  return getNextElement(index, focusable, 1, doesVerticalPosMatch) ?? index + 1;
+}
+
+function handleNavigationWithArrowKeys(focusFunction) {
+  document.addEventListener("keydown", (event) => {
+    const tag = event.target;
+    if (tag.tagName === "INPUT" || tag.tagName === "TEXTAREA" || tag.isContentEditable)  
+      return;
+
+    const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
+    if(arrowKeys.includes(event.key)) {
+      event.preventDefault();
+
+      const focusable = [...document.querySelectorAll("[tabindex='0']")]
+        .filter(el => getComputedStyle(el).display !== "none");
+
+      const targetIndex = getTargetIndex(event.key, focusable);
+      const nextHover = focusable[targetIndex];
+      if(nextHover)
+        focusFunction(nextHover);
+
+    } else if(event.key === "Enter") {
+      document.activeElement.click();
+    }
+  });
 }
 
 function setupNavigationBtnHandler() {
