@@ -1457,3 +1457,4 @@ setupCategoryBtn();
 handleDownloadCategoryUpdateFromMain();
 monitorSubtitlesDownloadReport();
 loadIconsDynamically();
+handleNavigationWithArrowKeys((element) => element.focus);

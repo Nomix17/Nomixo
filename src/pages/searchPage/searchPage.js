@@ -91,3 +91,4 @@ setupKeyPressesForInputElement(searchInput);
 loadIconsDynamically();
 handlingMiddleRightDivResizing();
 createSearchHistoryDropDown();
+handleNavigationWithArrowKeys((element) => element.focus());

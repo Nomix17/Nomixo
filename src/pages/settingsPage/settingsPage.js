@@ -1148,3 +1148,4 @@ initBackupSection();
 initCurrentVersion();
 loadSettings();
 initLanguageDropdown();
+handleNavigationWithArrowKeys((element) => element.focus);

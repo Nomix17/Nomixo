@@ -666,8 +666,10 @@ const getTargetIndex = (key, focusable) => {
   if (key === "ArrowRight")
     return getNextRightEl(currentIndex, focusable)
 
-  if (key === "ArrowLeft")
+  if (key === "ArrowLeft") {
+    if(currentIndex == -1) return -1;
     return getNextLeftEl(currentIndex, focusable)
+  }
 
   if (key === "ArrowUp")
     return getNextUpEl(currentIndex, focusable);
@@ -747,35 +749,148 @@ function getNextDownEl(index, focusable) {
 }
 
 function getNextLeftEl(index, focusable) {
-  return getNextElement(index, focusable, -1, doesVerticalPosMatch) ?? index - 1;
+  return getNextElement(index, focusable, -1, doesVerticalPosMatch) ?? -1;
 }
 
 function getNextRightEl(index, focusable) {
   return getNextElement(index, focusable, 1, doesVerticalPosMatch) ?? index + 1;
 }
 
+// ################################### SIDEBAR + ARROW KEYS NAVIGATION ###################################
+let posterFocusFunction = (el) => el.focus();
+let elementFocusedBeforeSidebar = null;
+
+const getSidebar = () => document.getElementById("div-middle-left");
+const isSidebarOpen = () => getSidebar()?.classList.contains("active") ?? false;
+const getSidebarButtons = () =>
+  [...document.querySelectorAll("#div-middle-left .btn-middle-left")].filter(btn => btn.offsetParent !== null);
+
 function handleNavigationWithArrowKeys(focusFunction) {
+  posterFocusFunction = focusFunction ?? posterFocusFunction;
+
   document.addEventListener("keydown", (event) => {
-    const tag = event.target;
-    if (tag.tagName === "INPUT" || tag.tagName === "TEXTAREA" || tag.isContentEditable)  
+    const target = event.target;
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
       return;
 
-    const arrowKeys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
-    if(arrowKeys.includes(event.key)) {
+    if (event.key === "Escape" && isSidebarOpen()) {
+      dontGoBack = true;
+      closeSidebar();
+      return;
+    }
+
+    if (["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"].includes(event.key)) {
       event.preventDefault();
+      if (isSidebarOpen())
+        handleLeftDivBtnsNavigation(event.key);
+      else
+        handlePosterElsNavigation(event.key);
 
-      const focusable = [...document.querySelectorAll("[tabindex='0']")]
-        .filter(el => getComputedStyle(el).display !== "none");
-
-      const targetIndex = getTargetIndex(event.key, focusable);
-      const nextHover = focusable[targetIndex];
-      if(nextHover)
-        focusFunction(nextHover);
-
-    } else if(event.key === "Enter") {
-      document.activeElement.click();
+    } else if (event.key === "Enter") {
+      const focused = document.activeElement;
+      if (isSidebarOpen() && focused?.classList.contains("btn-middle-left") && focused.classList.contains("active")) {
+        closeSidebar();
+        return;
+      }
+      focused?.click();
     }
   });
+
+  document.addEventListener("mousemove", () => {
+    getSidebar()?.classList.remove("keyboard-nav");
+  }, { passive: true });
+
+  document.addEventListener("mousedown", (event) => {
+    if (isSidebarOpen() && !getSidebar().contains(event.target))
+      closeSidebar({ restoreFocus: false });
+  });
+}
+
+function setSidebarSelection(btn) {
+  getSidebarButtons().forEach(b => b.classList.toggle("kb-selected", b === btn));
+  btn?.focus({ preventScroll: true });
+}
+
+function openSidebar(returnTo = null) {
+  const sidebar = getSidebar();
+  if (!sidebar) return;
+
+  const focused = document.activeElement;
+  elementFocusedBeforeSidebar = returnTo
+    ?? (focused && focused !== document.body && !sidebar.contains(focused) ? focused : null);
+
+  const buttons = getSidebarButtons();
+  const current = buttons.find(b => b.classList.contains("active")) ?? buttons[0];
+
+  sidebar.classList.add("active", "keyboard-nav");
+  setSidebarSelection(current);
+}
+
+function closeSidebar({ restoreFocus = true } = {}) {
+  const sidebar = getSidebar();
+  if (!sidebar) return;
+
+  sidebar.classList.remove("active", "keyboard-nav");
+  getSidebarButtons().forEach(b => b.classList.remove("kb-selected"));
+  if (sidebar.contains(document.activeElement))
+    document.activeElement.blur();
+
+  if (!restoreFocus) return;
+
+  const focusable = [...document.querySelectorAll("[tabindex='0']")]
+    .filter(el => el.checkVisibility());
+
+  let target = elementFocusedBeforeSidebar;
+  if (!target || !target.isConnected || !target.checkVisibility()) {
+    target = focusable.find(el => {
+      const r = el.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
+    }) ?? focusable[0];
+  }
+  elementFocusedBeforeSidebar = null;
+  if (target) posterFocusFunction(target);
+}
+
+function handleLeftDivBtnsNavigation(key) {
+  const sidebar = getSidebar();
+  const buttons = getSidebarButtons();
+  if (!buttons.length) return;
+
+  if (key === "ArrowRight") {
+    closeSidebar();
+    return;
+  }
+  if (key === "ArrowLeft") return;
+
+  sidebar.classList.add("keyboard-nav");
+
+  let index = buttons.findIndex(b => b.classList.contains("kb-selected"));
+  if (index < 0) index = buttons.indexOf(document.activeElement);
+  if (index < 0) index = Math.max(0, buttons.findIndex(b => b.classList.contains("active")));
+
+  const step = key === "ArrowUp" ? -1 : 1;
+  const next = (index + step + buttons.length) % buttons.length;
+  setSidebarSelection(buttons[next]);
+}
+
+function handlePosterElsNavigation(key) {
+  const focusable = [...document.querySelectorAll("[tabindex='0']")]
+    .filter(el => getComputedStyle(el).display !== "none");
+
+  const currentIndex = getCurrentHoveredElement(focusable);
+  if (key === "ArrowLeft" && currentIndex < 0) {
+    openSidebar();
+    return;
+  }
+
+  const targetIndex = getTargetIndex(key, focusable);
+  if (targetIndex === -1) {
+    openSidebar(focusable[currentIndex] ?? null);
+    return;
+  }
+  const nextHover = focusable[targetIndex];
+  if (nextHover)
+    posterFocusFunction(nextHover);
 }
 
 function setupNavigationBtnHandler() {

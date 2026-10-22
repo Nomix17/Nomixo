@@ -160,7 +160,161 @@ body, html {
   box-sizing: border-box;
   padding: 20px 13.8px 18.4px 18.4px;
   gap:8vh;
-  z-index:5;
+  z-index:200;
+  position: relative;
+}
+
+#div-middle-left::before {
+  content: "";
+  position: absolute;
+  top: -73.6px;
+  left: 0;
+  bottom: 0;
+  width: 73px;
+  background: rgba(var(--background-color), 0);
+  border-right: 1px solid rgba(255,255,255,0);
+  box-shadow: none;
+  transition:
+    width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.3s ease,
+    box-shadow 0.4s ease,
+    border-color 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+#div-middle-left.active::before {
+  width: 240px;
+  background-color: rgba(var(--background-color), 0.95);
+  background-image:
+    radial-gradient(120% 45% at 0% 0%, rgba(var(--accent-color), 0.14) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0) 50%);
+  border-right-color: rgba(255,255,255,0.06);
+  box-shadow: 24px 0 48px rgba(0,0,0,0.28);
+  pointer-events: auto;
+  cursor: default;
+}
+
+#div-middle-left::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.5);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -2;
+}
+
+#div-middle-left.active::after {
+  opacity: 1;
+}
+
+.btn-middle-left::before {
+  content: attr(aria-label);
+  position: absolute;
+  /* the pill grows outward around the 50x50 button (8px left, 5px top/bottom),
+     so the icon gets breathing room but layout and button spacing don't change */
+  left: -8px;
+  top: -5px;
+  box-sizing: border-box;
+  width: 210px;            /* right edge unchanged */
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding-left: 75px;      /* label text stays where it was */
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background-color: transparent;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  color: rgba(var(--text-color), 0.8);
+  opacity: 0;
+  transform: translateX(-14px);
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+#div-middle-left.active .btn-middle-left::before {
+  opacity: 0.7;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+#div-middle-left.active .btn-middle-left::before { transition-delay: 0.20s, 0.20s, 0s, 0s, 0s; }
+
+.btn-middle-left .icon {
+  position: relative;
+  z-index: 1;
+}
+
+#div-middle-left.active .btn-middle-left.active::before {
+  opacity: 0.95;
+  background-color: rgba(var(--sidebar-button-active-color), 0.55);
+}
+
+#div-middle-left.active .btn-middle-left:hover,
+#div-middle-left.active .btn-middle-left:focus-visible,
+#div-middle-left.active .btn-middle-left:focus {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+#div-middle-left.active .btn-middle-left.active {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+#div-middle-left.active .btn-middle-left:hover::before {
+  opacity: 1;
+  background-color: rgba(var(--sidebar-button-active-color), 0.7);
+}
+
+#div-middle-left.active .btn-middle-left:focus-visible::before,
+#div-middle-left.active .btn-middle-left:focus::before {
+  opacity: 1;
+  background-color: rgba(var(--sidebar-button-active-color));
+  border-color: rgba(var(--sidebar-button-border-color));
+  box-shadow:
+    0 0 0 3px rgba(var(--accent-color), 0.30),
+    0 8px 22px rgba(0,0,0,0.35);
+}
+
+#div-middle-left.active .btn-middle-left:hover .icon,
+#div-middle-left.active .btn-middle-left:focus-visible .icon,
+#div-middle-left.active .btn-middle-left:focus .icon {
+  fill: rgba(var(--sidebar-icon-active-color));
+}
+
+.btn-middle-left { position: relative; }
+.btn-middle-left::after {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  width: 5px;
+  height: 0;
+  border-radius: 5px;
+  background: rgb(var(--accent-color));
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+#div-middle-left.active .btn-middle-left.active::after {
+  height: 15px;
+  opacity: 0.8;
+}
+#div-middle-left.active .btn-middle-left:focus-visible::after,
+#div-middle-left.active .btn-middle-left:focus::after {
+  height: 25px;
+  opacity: 1;
 }
 
 .btn-middle-left{
@@ -195,9 +349,10 @@ body, html {
   background-color: rgba(var(--sidebar-button-active-color));
 }
 
-.btn-middle-left.active {
+#div-middle-left:not(.active) .btn-middle-left.active {
   border-color: rgba(var(--sidebar-button-border-color));
 }
+
 
 #div-middle-right{
   flex: 1;
@@ -621,7 +776,7 @@ input::selection {
   transform:translateY(30%);
   cursor:pointer;
   margin:0;
-  z-index:1000;
+  z-index:100;
   transform-origin:center;
   transition:transform 0.3s ease, opacity 0.3s ease;
 }
