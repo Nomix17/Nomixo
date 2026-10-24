@@ -1002,9 +1002,9 @@ function insertMediaElements(MediaSearchResults, MediaContainer, MediaType, Libr
     } else if (obj?.["profile_path"]) {
       posterImage = ("https://image.tmdb.org/t/p/w500/" + obj["profile_path"]).replace(/([^:]\/)\/+/g, '$1');
     } else if (thisMediaType === "person") {
-      posterImage = notFoundSvgPaths["ProfileNotFound.svg"];
+      posterImage = notFoundSvgPaths["ProfileNotFound"];
     } else {
-      posterImage = notFoundSvgPaths["PosterNotFound.svg"];
+      posterImage = notFoundSvgPaths["PosterNotFound"];
     }
 
     const mediaDomElement = creatingTheBaseOfNewMediaElement(mediaTitle, posterImage, mediaId, thisMediaType);

@@ -24,7 +24,7 @@ async function getPersonInfo(apiKey) {
     insertPersonInformation(personInformation);
 
     const libraryInfo = await LibraryInformationPromise;
-    insertPersonFamousWorkIntoSuggestionDiv(PersonInfo.combined_credits, Department, libraryInfo);
+    insertPersonFamousWorkIntoSuggestionDiv(PersonInfo.combined_credits, libraryInfo);
     loadCachedRightMiddleDivScrollValue();
 
   }).catch((err) => {
@@ -72,7 +72,7 @@ function insertPersonInformation(personInformation) {
   else
     document.getElementById("biography-placeholder").style.display = "none"
 
-  loadImageWithAnimation(personProfileElementContainer, personProfileElement, imagePath);
+  loadImageWithAnimation(personProfileElementContainer, personProfileElement, imagePath, "ProfileNotFound");
   personProfileFullBioElement.src = normalizeRootUrl(imagePath);
 }
 
@@ -116,11 +116,10 @@ function addDescriptionButtonsEventListener() {
   });
 }
 
-async function insertPersonFamousWorkIntoSuggestionDiv(credits, personJob, libraryInfo) {
+async function insertPersonFamousWorkIntoSuggestionDiv(credits, libraryInfo) {
   const GeneraleWorkData = 
-    (personJob === "Acting") 
-      ? [...credits.cast,...credits.crew] 
-      : [...credits.crew,...credits.cast];
+    [...credits.cast,...credits.crew]
+    .sort((a, b) => (b?.vote_count ?? 0) * (b?.vote_average ?? 0) - (a?.vote_count ?? 0) * (a?.vote_average ?? 0))
 
   insertMediaElements(GeneraleWorkData, MediaSuggestions, undefined, libraryInfo);
 }
