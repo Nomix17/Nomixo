@@ -73,7 +73,7 @@ function insertPersonInformation(personInformation) {
     document.getElementById("biography-placeholder").style.display = "none"
 
   loadImageWithAnimation(personProfileElementContainer, personProfileElement, imagePath);
-  personProfileFullBioElement.src = imagePath;
+  personProfileFullBioElement.src = normalizeRootUrl(imagePath);
 }
 
 function hideBiography() {
