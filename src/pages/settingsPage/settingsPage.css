@@ -946,6 +946,7 @@ input[type="range"]::-webkit-slider-thumb {
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
 }
 
+.prepared-themes-div .card:focus-visible,
 .prepared-themes-div .card:hover {
   background-color: rgba(255, 255, 255, 0.08);
 }
@@ -954,6 +955,7 @@ input[type="range"]::-webkit-slider-thumb {
   background-color: rgba(255, 255, 255, 0.09);
 }
 
+.prepared-themes-div .card:focus-visible,
 .prepared-themes-div .card.selected {
   border-color: rgba(255, 255, 255, 0.6);
 }

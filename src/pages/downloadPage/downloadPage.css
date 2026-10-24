@@ -349,7 +349,7 @@
   align-items: center;
   width: 36px;
   height: 36px;
-  border: none;
+  border: 2px solid transparent;
   border-radius: 50%;
   color: rgb(var(--text-color));
   font-size: 1rem;
@@ -359,6 +359,7 @@
   transform-origin: center;
   will-change: transform;
   backface-visibility: hidden;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease !important;
 }
 .play-button *,
 .delete-button *,
@@ -376,6 +377,14 @@
   border-radius: 15px;
   pointer-events: auto;
   gap:5px;
+}
+
+.play-button:focus-visible,
+.delete-button:focus-visible,
+.toggle-pause-button:focus-visible,
+.cancel-button:focus-visible {
+  border-color: rgba(var(--hover-border-color));
+  transform: translate(0, -5px);
 }
 
 .play-button {
