@@ -630,7 +630,9 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   const playMediaButton = document.createElement("button");
   const deleteMediaButton = document.createElement("button");
   playMediaButton.classList.add("play-button");
+  playMediaButton.setAttribute("tabindex", "0");
   deleteMediaButton.classList.add("delete-button");
+  deleteMediaButton.setAttribute("tabindex", "0");
 
   playMediaButton.classList.add("completed", "just-finished");
   deleteMediaButton.classList.add("completed", "just-finished");
@@ -1457,4 +1459,4 @@ setupCategoryBtn();
 handleDownloadCategoryUpdateFromMain();
 monitorSubtitlesDownloadReport();
 loadIconsDynamically();
-handleNavigationWithArrowKeys((element) => element.focus);
+handleNavigationWithArrowKeys((element) => element.focus());

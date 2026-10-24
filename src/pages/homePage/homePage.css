@@ -423,7 +423,8 @@ body, html {
   cursor:pointer;
 }
 
-.img-MoviePoster {
+.img-MoviePoster,
+.flashing-Div {
   width: 192.2px;
   height: 295px;
   border-radius: 15px;
@@ -459,7 +460,12 @@ body, html {
 .div-MovieElement.active .img-MoviePoster,
 .div-MovieElement:hover .img-MoviePoster,
 .div-MovieElement.roulette-active .img-MoviePoster,
-:focus-visible  .img-MoviePoster {
+:focus-visible .img-MoviePoster,
+
+.div-MovieElement.active .flashing-Div,
+.div-MovieElement:hover .flashing-Div,
+.div-MovieElement.roulette-active .flashing-Div,
+:focus-visible .flashing-Div {
   cursor:pointer;
   border-color: rgba(var(--hover-border-color));
   transform: translate(0, -5px);

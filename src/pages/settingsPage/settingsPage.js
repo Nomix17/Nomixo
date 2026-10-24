@@ -552,6 +552,7 @@ async function createThemeCard(themeName, themePath, isDefault = false) {
   cardTitle.innerText = label.charAt(0).toUpperCase() + label.slice(1);
   card.classList.add("card");
   card.setAttribute("card-file-name", themeName);
+  card.setAttribute("tabindex", "0");
   card.appendChild(cardTitle);
   card.insertAdjacentHTML("beforeend", svgMarkup);
 
@@ -1148,4 +1149,4 @@ initBackupSection();
 initCurrentVersion();
 loadSettings();
 initLanguageDropdown();
-handleNavigationWithArrowKeys((element) => element.focus);
+handleNavigationWithArrowKeys((element) => element.focus());

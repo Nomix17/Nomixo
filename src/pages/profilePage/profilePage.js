@@ -216,3 +216,4 @@ const searchInput = document.getElementById("input-searchForMovie");
 searchInput.addEventListener("keypress",(event)=>{
   if(event.key === "Enter") openSearchPage();
 });
+handleNavigationWithArrowKeys((element) => element.focus());

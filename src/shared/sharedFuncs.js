@@ -1210,6 +1210,7 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
 
   const togglePauseBtn = document.createElement("button");
   togglePauseBtn.className = "toggle-pause-button";
+  togglePauseBtn.setAttribute("tabindex", "0");
   togglePauseBtn.innerHTML =
     downloadStatus === "Downloading" || downloadStatus === "Loading"
       ? pauseIcon
@@ -1217,6 +1218,7 @@ function createMediaDownloadElement(mediaLibEntryPoint, formatedDownloadInfo) {
 
   const cancelBtn = document.createElement("button");
   cancelBtn.className = "cancel-button";
+  cancelBtn.setAttribute("tabindex", "0");
   cancelBtn.innerHTML = xRemoveIcon;
 
   const speedP = document.createElement("p");
