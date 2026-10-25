@@ -410,26 +410,32 @@ body, html {
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  flex-shrink: 0;
+  box-sizing: border-box;
   margin-right:17px;
   pointer-events: auto;
   height: 371.68px;
-  width: 185.84px;
+  width: 192.2px;
 }
 
-.img-MoviePosterContainer{
+.img-MoviePosterContainer {
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
   width: 192.2px;
   height: 295px;
   border-radius: 15px;
   cursor:pointer;
 }
 
-.img-MoviePoster,
-.flashing-Div {
-  width: 192.2px;
-  height: 295px;
+.img-MoviePoster {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
   border-radius: 15px;
   border: 3px solid rgba(255,255,255,0%);
-  position: static; 
+  position: static;
   object-fit: cover;
   transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease !important;
 }
@@ -462,10 +468,10 @@ body, html {
 .div-MovieElement.roulette-active .img-MoviePoster,
 :focus-visible .img-MoviePoster,
 
-.div-MovieElement.active .flashing-Div,
-.div-MovieElement:hover .flashing-Div,
-.div-MovieElement.roulette-active .flashing-Div,
-:focus-visible .flashing-Div {
+.div-MovieElement.active .flashing-Div::before,
+.div-MovieElement:hover .flashing-Div::before,
+.div-MovieElement.roulette-active .flashing-Div::before,
+:focus-visible .flashing-Div::before {
   cursor:pointer;
   border-color: rgba(var(--hover-border-color));
   transform: translate(0, -5px);
@@ -938,15 +944,24 @@ input::selection {
   transition:  opacity 0.3s ease;
 }
 
-.flashing-Div {
+.flashing-Div::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 3px solid rgba(255,255,255,0%);
+  border-radius: 15px;
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.00) 0%,
     rgba(255, 255, 255, 0.05) 50%,
     rgba(255, 255, 255, 0.00) 100%
   );
+  background-clip: padding-box;
   background-size: 200% 100%;
   animation: skeleton 1.5s ease-in-out infinite;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
 }
 
 @keyframes skeleton {
@@ -956,17 +971,6 @@ input::selection {
   100% {
     background-position: -200% 0;
   }
-}
-
-.flashing-Div.dark {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.00) 0%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0.00) 100%
-  );
-  background-size: 200% 100%;
-  animation: skeleton 1.5s ease-in-out infinite;
 }
 
 i[data-lucide="expand"] {
