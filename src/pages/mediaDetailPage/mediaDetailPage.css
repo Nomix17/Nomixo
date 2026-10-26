@@ -537,11 +537,14 @@ h1{
   width: auto;
   max-width: 360px;
   max-height:180px;
-  height: 100%;
+  height: auto;
   object-fit: contain;
   display: block;
   pointer-events: auto;
   cursor: pointer;
+}
+#img-MovieLogoTitle.is-svg {
+  width: 360px;
 }
 
 #h1-MovieTitle:hover,

@@ -428,6 +428,7 @@ function insertLogoTitleInformation(logoFileName,Title){
 
   if(logoFileName){
     let logoImage = `https://image.tmdb.org/t/p/w500/${logoFileName}`;
+    logoTitleElement.classList.toggle("is-svg", logoFileName.toLowerCase().endsWith(".svg"));
     logoTitleElement.src = logoImage;
     textTitleElement.classList.add("hidden");
     addInspectBackdropImage(logoTitleContainer);
