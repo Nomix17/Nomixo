@@ -333,7 +333,7 @@ async function renderMediaPage(data) {
   ] = await extractMediaInfoFromApiResponse(data);
 
   GlobalTitle = Title;
-  document.title = Title;
+  document.title = `${Title} - Nomixo`;
   addBackgroundImageToBody(backgroundImage);
   addImdbRatingEventListener();
   addTrailerEventListener();

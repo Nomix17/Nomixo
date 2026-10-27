@@ -94,6 +94,7 @@ async function renderMediaInfo() {
   const title = metaData.title || metaData.MediaTitle || metaData.Title || data?.title || data?.name;
   if (!title) return nowLoading.classList.add("ready");
 
+  document.title = `${title} - Nomixo`;
   document.getElementById("h-title").textContent = title;
 
   const seasonNum = metaData.seasonNumber;

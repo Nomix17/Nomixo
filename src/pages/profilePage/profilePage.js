@@ -17,7 +17,7 @@ async function getPersonInfo(apiKey) {
     const Department = PersonInfo.known_for_department;
     const Biography = PersonInfo.biography;
     personIMDB_ID = PersonInfo.imdb_id; 
-    document.title = Name +" - Discovery"; 
+    document.title = Name +" - Nomixo"; 
 
     const personInformation = [Name, ProfilePic, Department, Biography, personIMDB_ID];
 

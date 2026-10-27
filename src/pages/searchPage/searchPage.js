@@ -9,7 +9,7 @@ let searchInput = document.getElementById("input-searchForMovie");
 const params = new URLSearchParams(window.location.search);
 let searchKeyword = params.get("search");
 
-document.title = searchKeyword +" - Nomixo";
+document.title = `${searchKeyword?.trim()} - Nomixo`;
 searchInput.value = searchKeyword;
 let searchQuery = searchKeyword.replaceAll(" ","%20");
 let LibraryInformation;
