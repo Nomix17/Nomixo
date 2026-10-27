@@ -45,7 +45,7 @@ function loadSearchInformation(apiKey) {
         ...(imdbData.tv_episode_results || []),
         ...(imdbData.tv_season_results || []),
         ...(queryData.results || [])
-      ];
+      ].sort((a, b) => b?.popularity - a?.popularity);
 
       MoviesRecommandationDiv.innerHTML = "";
       SeriesRecommandationDiv.innerHTML = "";
