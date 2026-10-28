@@ -26,16 +26,16 @@ Nomixo is an Electron app that lets you search, browse, and stream movies and TV
 ## Screenshots
 
 <div align="center">
-  <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/docs/Screenshots/home.png" alt="Home" width="90%"/>
+  <img src="./docs/Screenshots/home.png" alt="Home" width="90%"/>
   <hr style="border: 0; border-top: 2px solid rgba(255,255,255,0.2); margin: 30px auto; width: 80%;">
 
-  <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/docs/Screenshots/media_details.png" alt="Media Detail" width="90%"/>
+  <img src="./docs/Screenshots/media_details.png" alt="Media Detail" width="90%"/>
   <hr style="border: 0; border-top: 2px solid rgba(255,255,255,0.2); margin: 30px auto; width: 80%;">
 
-  <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/docs/Screenshots/download_page.png" alt="Download Manager" width="90%"/>
+  <img src="./docs/Screenshots/download_page.png" alt="Download Manager" width="90%"/>
   <hr style="border: 0; border-top: 2px solid rgba(255,255,255,0.2); margin: 30px auto; width: 80%;">
 
-  <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/docs/Screenshots/videoplayer.png" alt="Video Player" width="90%"/>
+  <img src="./docs/Screenshots/videoplayer.png" alt="Video Player" width="90%"/>
 </div>
 
 
