@@ -161,45 +161,64 @@
     </ul>
 
     <div class="overlay" id="downloadOverlay">
-      <div class="download-container">
+      <div class="download-container single-container" id="singleContainer" role="dialog" aria-modal="true" aria-labelledby="mediaTitle">
         <button class="floating-x-remove-btn" id="closeBtn" aria-label="Close">×</button>
-        
-        <div class="media-info">
-          <div class="media-poster" id="mediaPoster">
-            <img alt="Movie Poster" id="mediaPosterImg">
+
+        <!-- Hero: blurred backdrop, poster, title and file info -->
+        <header class="single-hero">
+          <div class="single-hero-image" id="singleHeroImage"></div>
+          <div class="single-hero-shade"></div>
+
+          <div class="media-info">
+            <div class="media-poster" id="mediaPoster">
+              <img alt="Movie Poster" id="mediaPosterImg">
+            </div>
+            <div class="media-details">
+              <h2 id="mediaTitle"></h2>
+              <p id="season-episode"></p>
+              <p class="media-year" id="mediaYear"></p>
+              <p class="media-size" id="mediaSize"></p>
+            </div>
           </div>
-          <div class="media-details">
-            <h2 id="mediaTitle"></h2>
-            <p id="season-episode"></p>
-            <p class="media-year" id="mediaYear"></p>
-            <p class="media-size" id="mediaSize"></p>
+        </header>
+
+        <div class="single-body">
+          <div class="message" id="message"></div>
+
+          <section class="single-section">
+            <span class="single-section-title">Save to</span>
+            <div class="single-path">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              </svg>
+              <input type="text" id="downloadPath" value="/home/pcuser/Downloads/Videos/" aria-label="Download location" spellcheck="false">
+              <button id="browseBtn" type="button">Browse</button>
+              <input id="browseInput" type="file" style="display:none">
+            </div>
+          </section>
+
+          <div class="single-options">
+            <label class="bulk-switch">
+              <span class="custom-toggle">
+                <input type="checkbox" id="addSubtitles" checked>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </span>
+              <span class="bulk-switch-label">Download subtitles</span>
+            </label>
+            <label class="bulk-switch">
+              <span class="custom-toggle">
+                <input type="checkbox" id="rememberPath">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </span>
+              <span class="bulk-switch-label">Remember this location</span>
+            </label>
           </div>
         </div>
 
-        <div class="message" id="message"></div>
-        
-        <label for="downloadPath">Download location:</label>
-        <div class="path-input-group">
-          <input type="text" id="downloadPath" value="/home/pcuser/Downloads/Videos/">
-          <button id="browseBtn">Browse</button>
-          <input id="browseInput" type="file" style="display:none">
-        </div>
-        
-        <div class="checkbox-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="rememberPath">
-            Remember this location
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" id="addSubtitles" checked>
-            Download subtitles
-          </label>
-        </div>
-        
-        <div class="button-group">
-          <button id="cancelBtn" class="secondary-btn">Cancel</button>
-          <button id="downloadBtn" class="primary-btn">Download</button>
-        </div>
+        <footer class="single-footer">
+          <button id="cancelBtn" class="bulk-btn bulk-btn-ghost" type="button">Cancel</button>
+          <button id="downloadBtn" class="bulk-btn bulk-btn-primary" type="button">Download</button>
+        </footer>
       </div>
     </div>
 

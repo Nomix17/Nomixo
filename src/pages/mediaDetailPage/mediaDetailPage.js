@@ -1134,8 +1134,11 @@ async function showDownloadInfoInputDiv(DownloadTargetInfo) {
 
 
   MediaTitleElement.innerText = DownloadTargetInfo.Title;
-  if(DownloadTargetInfo.seasonNumber && DownloadTargetInfo.episodeNumber)
-    SeasonEpisodeElement.innerText = `S${DownloadTargetInfo.seasonNumber}-E${DownloadTargetInfo.episodeNumber}`;
+  SeasonEpisodeElement.innerText =
+    (DownloadTargetInfo.seasonNumber && DownloadTargetInfo.episodeNumber)
+      ? `S${DownloadTargetInfo.seasonNumber}-E${DownloadTargetInfo.episodeNumber}`
+      : "";
+  applySingleDownloadHero();
   MediaYearTextElement.innerText = DownloadTargetInfo.Year;
   MediaSizeAResolutionTextElement.innerText = DownloadTargetInfo.Size +" • "+DownloadTargetInfo.Quality;
   downloadPathInput.value = defaultPath;
@@ -1147,6 +1150,15 @@ async function showDownloadInfoInputDiv(DownloadTargetInfo) {
   dontGoBack = true;
   const posterPath = await getPosterPath(DownloadTargetInfo.IMDB_ID, apiKey);
   loadImageWithAnimation(MediaPosterContainer, MediaPosterElement, `https://image.tmdb.org/t/p/w185${posterPath}`);
+}
+
+function applySingleDownloadHero() {
+  const hasBackdrop = typeof backgroundImage === "string"
+    && backgroundImage.startsWith("http")
+    && !backgroundImage.endsWith("/null");
+  const heroImage = document.getElementById("singleHeroImage");
+  heroImage.classList.toggle("no-backdrop", !hasBackdrop);
+  heroImage.style.backgroundImage = hasBackdrop ? `url("${backgroundImage}")` : "";
 }
 
 function freshClone(El) {
@@ -1447,7 +1459,6 @@ function applyBulkHero() {
 
   bulkContainer.classList.toggle("no-backdrop", !hasBackdrop);
   bulkHeroImage.style.backgroundImage = hasBackdrop ? `url("${backgroundImage}")` : "";
-  bulkOverlay.style.setProperty("--bulk-bg", hasBackdrop ? `url("${backgroundImage}")` : "none");
 
   // Reuse the title logo already loaded on the page; fall back to the text title.
   const pageLogo = document.getElementById("img-MovieLogoTitle");
