@@ -31,6 +31,31 @@ const DownloadOverlay = document.getElementById('downloadOverlay');
 
 const globalLoadingGif = document.getElementById("div-globlaLoadingGif");
 
+const bulkOverlay = document.getElementById("bulkDownloadOverlay");
+const bulkContainer = document.getElementById("bulkContainer");
+const bulkCloseBtn = document.getElementById("bulkCloseBtn");
+const bulkSubtitle = document.getElementById("bulkSubtitle");
+const bulkQualitySelect = document.getElementById("bulkQuality");
+const bulkSelectAllBtn = document.getElementById("bulkSelectAll");
+const bulkClearAllBtn = document.getElementById("bulkClearAll");
+const bulkSeasonList = document.getElementById("bulkSeasonList");
+const bulkPathInput = document.getElementById("bulkDownloadPath");
+const bulkBrowseBtn = document.getElementById("bulkBrowseBtn");
+const bulkRememberCheckbox = document.getElementById("bulkRememberPath");
+const bulkSubtitlesCheckbox = document.getElementById("bulkAddSubtitles");
+const bulkSummary = document.getElementById("bulkSummary");
+const bulkMessage = document.getElementById("bulkMessage");
+const bulkCancelBtn = document.getElementById("bulkCancelBtn");
+const bulkDownloadBtn = document.getElementById("bulkDownloadBtn");
+const bulkEpisodeList = document.getElementById("bulkEpisodeList");
+const bulkPanelTitle = document.getElementById("bulkPanelTitle");
+const bulkPanelMeta = document.getElementById("bulkPanelMeta");
+const bulkSeasonToggle = document.getElementById("bulkSeasonToggle");
+const bulkProgress = document.getElementById("bulkProgress");
+const bulkProgressBar = document.getElementById("bulkProgressBar");
+const bulkHeroImage = document.getElementById("bulkHeroImage");
+const bulkHeroLogo = document.getElementById("bulkHeroLogo");
+
 torrentSidePanel.classList.add("preloadingTorrent");
 if(MediaType === "movie") torrentSidePanel.classList.add("visible-block");
 
@@ -38,6 +63,8 @@ const MAX_NUMBER_OF_DIRECTORS = 5;
 const MAX_NUMBER_OF_CAST_MEMBERS = null; //12;
 
 const seasonsDivArray = [];
+const seasonsEpisodesData = {};
+const seasonNames = {};
 
 async function pageInit() {
   const results = await Promise.allSettled([
@@ -160,6 +187,16 @@ function renderEpisodes(data,title,libraryInfo) {
   SeasonDiv.id = "main-SeasonDiv";
 
   const episodes = data.episodes;
+
+  const bulkSeasonKey = data.season_number ?? episodes?.[0]?.season_number;
+  if(bulkSeasonKey != null) {
+    seasonsEpisodesData[bulkSeasonKey] = episodes.map(episode => ({
+      season_number: episode.season_number,
+      episode_number: episode.episode_number,
+      name: episode.name,
+      air_date: episode.air_date
+    }));
+  }
   episodes.forEach(episode =>{
     const episodeImageUrl = episode.still_path 
       ? `https://image.tmdb.org/t/p/w342/${episode.still_path}` 
@@ -349,6 +386,7 @@ async function renderMediaPage(data) {
 
   if(Seasons) {
     episodeSidePanel.classList.add("visible-flex");
+    document.getElementById("bulk-download-div").style.display = "";
     const seasonsNumbers = Seasons.map(season => {
       const [newOption,seasonNumber] = createSeasonOptionElement(season);
       selectSeason.appendChild(newOption);
@@ -590,6 +628,7 @@ function insertCollectionOfMedia(Collection){
 function createSeasonOptionElement(season){
   const name = season.name;
   const seasonNumber = season.season_number;
+  seasonNames[seasonNumber] = name;
   const newOption = document.createElement("div");
   newOption.classList.add("select-option");
   newOption.setAttribute("role","option");
@@ -627,6 +666,7 @@ function addBackgroundImageToBody(backgroundImage) {
     applyBackground(document.documentElement.style, 0.6);
     applyBackground(document.querySelector('.split-save-btn').style, 0.8);
     applyBackground(document.querySelector('#movie-trailer-div').style, 0.8);
+    applyBackground(document.querySelector('#bulk-download-div').style, 0.8);
     // applyBackground(document.querySelector('#bottomButtonsDiv').style, 0.6);
   }
 }
@@ -857,7 +897,6 @@ function createTorrentDownloadButton(torrentInfo) {
   downloadBtn.classList.add("btn-downloadTorrent");
   downloadBtn.setAttribute("type", "button");
   downloadBtn.setAttribute("aria-label", "Download torrent");
-  downloadBtn.title = "Download";
 
   downloadBtn.innerHTML = downloadIcon;
 
@@ -1161,6 +1200,554 @@ async function DownloadTorrent(DownloadTargetInfo, hasToDownloadSubs) {
   window.electronAPI.downloadTorrent([DownloadTargetInfo], hasToDownloadSubs);
 }
 
+const BULK_QUALITY_ORDER = ["4K", "1080p", "720p", "480p"];
+const BULK_CONCURRENCY = 3;
+
+let bulkBusy = false;
+let bulkRunId = 0;
+
+const bulkPad = (n) => String(n).padStart(2, "0");
+const bulkEpisodeLabel = (s, e) => `S${bulkPad(s)}E${bulkPad(e)}`;
+
+function getBulkSeasonNumbers() {
+  return Object.keys(seasonsEpisodesData)
+    .map(Number)
+    .sort((a, b) => (a === 0) - (b === 0) || a - b);
+}
+
+function isBulkEpisodeAired(episode) {
+  if (!episode.air_date) return true;
+  const airDate = new Date(episode.air_date);
+  return Number.isNaN(airDate.getTime()) || airDate <= new Date();
+}
+
+function setBulkMessage(text, type = "success") {
+  bulkMessage.textContent = text || "";
+  bulkMessage.classList.toggle("show", Boolean(text));
+  bulkMessage.classList.toggle("success", type === "success");
+  bulkMessage.classList.toggle("error", type === "error");
+}
+
+let bulkActiveSeason = null;
+
+function getBulkSeasonName(seasonNumber) {
+  return seasonNames[seasonNumber] ?? (seasonNumber === 0 ? "Specials" : `Season ${seasonNumber}`);
+}
+
+function getBulkQuality() {
+  return bulkQualitySelect.querySelector('input[name="bulkQuality"]:checked')?.value ?? "1080p";
+}
+
+function getBulkPanel(seasonNumber) {
+  return bulkEpisodeList.querySelector(`.bulk-episodes[data-season="${seasonNumber}"]`);
+}
+
+function setBulkBusy(busy, label = "", fraction = 0) {
+  bulkBusy = busy;
+  bulkContainer.classList.toggle("bulk-busy", busy);
+  bulkDownloadBtn.classList.toggle("loading", busy);
+  bulkProgress.classList.toggle("show", busy);
+
+  if (busy) {
+    bulkProgressBar.style.width = `${Math.round(fraction * 100)}%`;
+    bulkSummary.textContent = label;
+    if (!bulkDownloadBtn.querySelector(".bulk-spinner")) {
+      bulkDownloadBtn.innerHTML = `<span class="bulk-spinner"></span>`;
+      bulkDownloadBtn.append(document.createTextNode("Finding torrents"));
+    }
+  } else {
+    bulkProgressBar.style.width = "0%";
+    refreshBulkSelection();
+  }
+}
+
+function buildBulkSeasonList(seasonNumbers, preselectSeason) {
+  bulkSeasonList.innerHTML = "";
+  bulkEpisodeList.innerHTML = "";
+  const railFragment = document.createDocumentFragment();
+  const panelFragment = document.createDocumentFragment();
+
+  seasonNumbers.forEach(seasonNumber => {
+    const episodes = seasonsEpisodesData[seasonNumber] ?? [];
+    const seasonName = getBulkSeasonName(seasonNumber);
+
+    // --- left rail item
+    const seasonEl = document.createElement("div");
+    seasonEl.className = "bulk-season";
+    seasonEl.dataset.season = seasonNumber;
+    seasonEl.tabIndex = 0;
+    seasonEl.setAttribute("role", "button");
+
+    const seasonCheckbox = document.createElement("input");
+    seasonCheckbox.type = "checkbox";
+    seasonCheckbox.className = "bulk-check bulk-season-checkbox";
+    seasonCheckbox.setAttribute("aria-label", `Select every episode of ${seasonName}`);
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "bulk-season-name";
+    nameEl.textContent = seasonName;
+
+    const countEl = document.createElement("span");
+    countEl.className = "bulk-season-count";
+
+    seasonEl.append(seasonCheckbox, nameEl, countEl);
+    railFragment.append(seasonEl);
+
+    // --- right panel for this season
+    const episodesEl = document.createElement("div");
+    episodesEl.className = "bulk-episodes";
+    episodesEl.dataset.season = seasonNumber;
+
+    if (!episodes.length) {
+      const empty = document.createElement("p");
+      empty.className = "bulk-empty";
+      empty.textContent = "No episodes available for this season.";
+      episodesEl.append(empty);
+    }
+
+    episodes.forEach(episode => {
+      const aired = isBulkEpisodeAired(episode);
+
+      const row = document.createElement("label");
+      row.className = "bulk-episode" + (aired ? "" : " is-disabled");
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "bulk-check bulk-episode-checkbox";
+      checkbox.dataset.season = episode.season_number;
+      checkbox.dataset.episode = episode.episode_number;
+      checkbox.disabled = !aired;
+
+      const numberEl = document.createElement("span");
+      numberEl.className = "bulk-episode-number";
+      numberEl.textContent = bulkPad(episode.episode_number);
+
+      const episodeNameEl = document.createElement("span");
+      episodeNameEl.className = "bulk-episode-name";
+      episodeNameEl.textContent = episode.name || `Episode ${episode.episode_number}`;
+
+      const dateEl = document.createElement("span");
+      dateEl.className = "bulk-episode-date";
+      dateEl.textContent = aired ? (episode.air_date ?? "") : "Not aired yet";
+
+      row.append(checkbox, numberEl, episodeNameEl, dateEl);
+      episodesEl.append(row);
+    });
+
+    if (seasonNumber === preselectSeason) {
+      episodesEl.querySelectorAll(".bulk-episode-checkbox:not(:disabled)")
+        .forEach(cb => { cb.checked = true; });
+    }
+
+    panelFragment.append(episodesEl);
+  });
+
+  bulkSeasonList.append(railFragment);
+  bulkEpisodeList.append(panelFragment);
+}
+
+function setActiveBulkSeason(seasonNumber) {
+  bulkActiveSeason = Number(seasonNumber);
+
+  bulkSeasonList.querySelectorAll(".bulk-season").forEach(el => {
+    const isActive = Number(el.dataset.season) === bulkActiveSeason;
+    el.classList.toggle("active", isActive);
+    if (isActive) {
+      el.setAttribute("aria-current", "true");
+      el.scrollIntoView({ block: "nearest" });
+    } else {
+      el.removeAttribute("aria-current");
+    }
+  });
+
+  bulkEpisodeList.querySelectorAll(".bulk-episodes").forEach(el => {
+    el.classList.toggle("active", Number(el.dataset.season) === bulkActiveSeason);
+  });
+  bulkEpisodeList.scrollTop = 0;
+
+  updateBulkPanelHeader();
+}
+
+function updateBulkPanelHeader() {
+  if (bulkActiveSeason == null) return;
+  const panel = getBulkPanel(bulkActiveSeason);
+  if (!panel) return;
+
+  const all = [...panel.querySelectorAll(".bulk-episode-checkbox")];
+  const enabled = all.filter(cb => !cb.disabled);
+  const checked = enabled.filter(cb => cb.checked).length;
+  const upcoming = all.length - enabled.length;
+
+  bulkPanelTitle.textContent = getBulkSeasonName(bulkActiveSeason);
+  bulkPanelMeta.textContent =
+    `${all.length} episode${all.length === 1 ? "" : "s"}` +
+    (upcoming ? `, ${upcoming} not aired yet` : "");
+
+  bulkSeasonToggle.hidden = enabled.length === 0;
+  bulkSeasonToggle.textContent =
+    checked === enabled.length ? "Deselect season" : "Select season";
+}
+
+function refreshBulkSelection() {
+  let total = 0;
+  let seasonsUsed = 0;
+
+  bulkSeasonList.querySelectorAll(".bulk-season").forEach(seasonEl => {
+    const panel = getBulkPanel(seasonEl.dataset.season);
+    const enabled = [...panel.querySelectorAll(".bulk-episode-checkbox:not(:disabled)")];
+    const checkedCount = enabled.filter(cb => cb.checked).length;
+    const seasonCheckbox = seasonEl.querySelector(".bulk-season-checkbox");
+
+    seasonCheckbox.disabled = enabled.length === 0;
+    seasonCheckbox.checked = enabled.length > 0 && checkedCount === enabled.length;
+    seasonCheckbox.indeterminate = checkedCount > 0 && checkedCount < enabled.length;
+    seasonEl.querySelector(".bulk-season-count").textContent = `${checkedCount}/${enabled.length}`;
+    seasonEl.classList.toggle("has-selection", checkedCount > 0);
+
+    total += checkedCount;
+    if (checkedCount > 0) seasonsUsed++;
+  });
+
+  updateBulkPanelHeader();
+  bulkDownloadBtn.disabled = total === 0;
+
+  if (bulkBusy) return;
+
+  bulkSummary.textContent = total === 0
+    ? "Select the episodes you want"
+    : `${total} episode${total === 1 ? "" : "s"} from ${seasonsUsed} season${seasonsUsed === 1 ? "" : "s"}`;
+  bulkDownloadBtn.textContent = total === 0
+    ? "Download"
+    : `Download ${total} episode${total === 1 ? "" : "s"}`;
+}
+
+function setAllBulkChecked(checked) {
+  bulkEpisodeList.querySelectorAll(".bulk-episode-checkbox:not(:disabled)")
+    .forEach(cb => { cb.checked = checked; });
+  refreshBulkSelection();
+}
+
+function setBulkSeasonChecked(seasonNumber, checked) {
+  getBulkPanel(seasonNumber)
+    ?.querySelectorAll(".bulk-episode-checkbox:not(:disabled)")
+    .forEach(cb => { cb.checked = checked; });
+  refreshBulkSelection();
+}
+
+function getBulkSelectedEpisodes() {
+  return [...bulkEpisodeList.querySelectorAll(".bulk-episode-checkbox:checked")]
+    .map(cb => ({ season: Number(cb.dataset.season), episode: Number(cb.dataset.episode) }))
+    .sort((a, b) => a.season - b.season || a.episode - b.episode);
+}
+
+function applyBulkHero() {
+  const hasBackdrop = typeof backgroundImage === "string"
+    && backgroundImage.startsWith("http")
+    && !backgroundImage.endsWith("/null");
+
+  bulkContainer.classList.toggle("no-backdrop", !hasBackdrop);
+  bulkHeroImage.style.backgroundImage = hasBackdrop ? `url("${backgroundImage}")` : "";
+  bulkOverlay.style.setProperty("--bulk-bg", hasBackdrop ? `url("${backgroundImage}")` : "none");
+
+  // Reuse the title logo already loaded on the page; fall back to the text title.
+  const pageLogo = document.getElementById("img-MovieLogoTitle");
+  const logoContainer = document.getElementById("div-MovieLogoTitleContainer");
+  const hasLogo = Boolean(pageLogo?.getAttribute("src")) && !logoContainer?.classList.contains("hidden");
+
+  bulkHeroLogo.hidden = !hasLogo;
+  bulkSubtitle.hidden = hasLogo;
+  if (hasLogo) {
+    bulkHeroLogo.src = pageLogo.src;
+    bulkHeroLogo.alt = GlobalTitle ?? "";
+    bulkHeroLogo.classList.toggle("is-svg", pageLogo.classList.contains("is-svg"));
+  }
+
+  // restart the one-time reveal each time the dialog opens
+  bulkContainer.classList.remove("bulk-reveal");
+  void bulkContainer.offsetWidth;
+  bulkContainer.classList.add("bulk-reveal");
+}
+
+async function openBulkDownload() {
+  if (MediaType !== "tv") return;
+
+  const seasonNumbers = getBulkSeasonNumbers();
+  if (!seasonNumbers.length) {
+    displayMessage({ title: "Episodes are still loading", body: "Please try again in a moment." });
+    return;
+  }
+
+  setBulkMessage("");
+  bulkSubtitle.textContent = GlobalTitle ?? "";
+  applyBulkHero();
+
+  const currentSeason = parseInt(getDropdownValue(selectSeason), 10);
+  const startSeason = seasonNumbers.includes(currentSeason) ? currentSeason : seasonNumbers[0];
+  buildBulkSeasonList(seasonNumbers, startSeason);
+  setActiveBulkSeason(startSeason);
+  refreshBulkSelection();
+
+  bulkOverlay.classList.add("active");
+  dontGoBack = true;
+
+  const [defaultPath, rememberLocation, downloadSubtitles] = await loadDownloadSettings();
+  bulkPathInput.value = defaultPath ?? "";
+  bulkRememberCheckbox.checked = Boolean(rememberLocation);
+  bulkSubtitlesCheckbox.checked = downloadSubtitles ?? true;
+}
+
+function closeBulkDownload() {
+  if (!bulkOverlay.classList.contains("active")) return;
+  bulkRunId++;
+  setBulkBusy(false);
+  bulkOverlay.classList.remove("active");
+}
+
+function getBulkQualityTier(rawQuality) {
+  const quality = String(rawQuality ?? "").toLowerCase();
+  if (/2160|4k|uhd/.test(quality)) return 0;
+  if (/1080/.test(quality)) return 1;
+  if (/720/.test(quality)) return 2;
+  if (/480|576|360/.test(quality)) return 3;
+  return BULK_QUALITY_ORDER.length;
+}
+
+async function fetchBulkEpisodeStreams(imdb_id, seasonNumber, episodeNumber) {
+  const url = `https://torrentio.strem.fun/stream/series/${imdb_id}:${seasonNumber}:${episodeNumber}.json`;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Torrentio responded with ${res.status}`);
+      const json = await res.json();
+      return json?.streams ?? [];
+    } catch (err) {
+      if (attempt === 1) throw err;
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+  }
+}
+
+function parseBulkStreams(streams) {
+  const parsed = [];
+  streams.forEach(stream => {
+    try {
+      const info = parseTorrentioStream(stream);
+      if (info.fileName.trim() === "") return;
+      parsed.push({
+        ...info,
+        tier: getBulkQualityTier(info.Quality),
+        seeders: Number(info.SeedersNumber) || 0
+      });
+    } catch {}
+  });
+  return parsed;
+}
+
+function pickBulkStream(parsedStreams, wantedQuality) {
+  if (!parsedStreams.length) return null;
+
+  const known = parsedStreams.filter(s => s.tier < BULK_QUALITY_ORDER.length);
+  const pool = known.length ? known : parsedStreams;
+  const bySeeders = (a, b) => b.seeders - a.seeders;
+
+  if (wantedQuality === "best") {
+    const bestTier = Math.min(...pool.map(s => s.tier));
+    return { stream: pool.filter(s => s.tier === bestTier).sort(bySeeders)[0], usedFallback: false };
+  }
+
+  const targetTier = BULK_QUALITY_ORDER.indexOf(wantedQuality);
+  const exact = pool.filter(s => s.tier === targetTier).sort(bySeeders);
+  if (exact.length) return { stream: exact[0], usedFallback: false };
+
+  const closest = [...pool].sort((a, b) =>
+    Math.abs(a.tier - targetTier) - Math.abs(b.tier - targetTier) ||
+    a.tier - b.tier ||
+    bySeeders(a, b)
+  )[0];
+  return { stream: closest, usedFallback: true };
+}
+
+async function runBulkWithConcurrency(items, limit, worker, isStale) {
+  let nextIndex = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (nextIndex < items.length && !isStale()) {
+      const index = nextIndex++;
+      await worker(items[index], index);
+    }
+  });
+  await Promise.all(runners);
+}
+
+async function resolveBulkTargets(selected, wantedQuality, imdb_id, onProgress, isStale) {
+  const results = new Array(selected.length).fill(null);
+  let done = 0;
+
+  await runBulkWithConcurrency(selected, BULK_CONCURRENCY, async ({ season, episode }, index) => {
+    try {
+      const streams = await fetchBulkEpisodeStreams(imdb_id, season, episode);
+      const choice = pickBulkStream(parseBulkStreams(streams), wantedQuality);
+      if (choice) {
+        const torrentInfo = {
+          MediaId: MediaId,
+          MediaType: MediaType,
+          IMDB_ID: imdb_id,
+          Title: GlobalTitle,
+          ...choice.stream,
+          seasonNumber: bulkPad(season),
+          episodeNumber: bulkPad(episode)
+        };
+        results[index] = { target: buildDownloadTargetInfo(torrentInfo), usedFallback: choice.usedFallback };
+      }
+    } catch (err) {
+      console.error(`Bulk: failed to fetch ${bulkEpisodeLabel(season, episode)}`, err);
+    }
+    done++;
+    if (!isStale()) onProgress(done, selected.length);
+  }, isStale);
+
+  const targets = [];
+  const missing = [];
+  let fallbackCount = 0;
+  results.forEach((result, index) => {
+    if (result) {
+      targets.push(result.target);
+      if (result.usedFallback) fallbackCount++;
+    } else {
+      missing.push(bulkEpisodeLabel(selected[index].season, selected[index].episode));
+    }
+  });
+  return { targets, missing, fallbackCount };
+}
+
+async function startBulkDownload() {
+  if (bulkBusy) return;
+
+  const selected = getBulkSelectedEpisodes();
+  if (!selected.length) return;
+
+  const downloadPath = bulkPathInput.value.trim();
+  if (!downloadPath) {
+    setBulkMessage("Choose a folder to save the episodes in.", "error");
+    return;
+  }
+
+  const wantedQuality = getBulkQuality();
+  const withSubtitles = bulkSubtitlesCheckbox.checked;
+  const runId = ++bulkRunId;
+  const isStale = () => runId !== bulkRunId;
+
+  setBulkMessage("");
+  setBulkBusy(true, `Looking for torrents: 0 of ${selected.length}`, 0);
+
+  try {
+    const imdb_id = await IMDB_IDPromise;
+    if (!imdb_id) throw new Error("This title has no IMDb ID, so torrents can't be searched.");
+
+    const { targets, missing, fallbackCount } = await resolveBulkTargets(
+      selected,
+      wantedQuality,
+      imdb_id,
+      (done, total) => setBulkBusy(true, `Looking for torrents: ${done} of ${total}`, done / total),
+      isStale
+    );
+    if (isStale()) return;
+
+    if (!targets.length) {
+      setBulkMessage("No torrents found for these episodes. Try a different quality or pick other episodes.", "error");
+      return;
+    }
+
+    const apiKey = await apiKeyPromise;
+    let posterUrl = null;
+    try {
+      const posterPath = await getPosterPath(imdb_id, apiKey);
+      if (posterPath) posterUrl = `https://image.tmdb.org/t/p/w500${posterPath}`;
+    } catch (err) {
+      console.error(err);
+    }
+    targets.forEach(target => {
+      target.posterUrl = posterUrl;
+      target.bgImageUrl = backgroundImage;
+      target.userDownloadPath = downloadPath;
+    });
+
+    window.electronAPI.downloadTorrent(targets, withSubtitles);
+    await saveDownloadSettings(downloadPath, withSubtitles, bulkRememberCheckbox.checked);
+    closeBulkDownload();
+
+    const notes = [];
+    if (fallbackCount)
+      notes.push(`${fallbackCount} used the closest available quality.`);
+    if (missing.length) {
+      const shown = missing.slice(0, 5).join(", ");
+      const extra = missing.length > 5 ? ` +${missing.length - 5} more` : "";
+      notes.push(`No torrents found for ${shown}${extra}.`);
+    }
+    displayMessage({
+      title: `Downloading ${targets.length} episode${targets.length === 1 ? "" : "s"}`,
+      body: notes.join(" ")
+    });
+  } catch (err) {
+    console.error(err);
+    if (!isStale()) setBulkMessage(err?.message || "Something went wrong while preparing the downloads.", "error");
+  } finally {
+    if (!isStale()) setBulkBusy(false);
+  }
+}
+
+function setupBulkDownloadEvents() {
+  [bulkCloseBtn, bulkCancelBtn].forEach(btn => btn.addEventListener("click", closeBulkDownload));
+  bulkDownloadBtn.addEventListener("click", startBulkDownload);
+
+  // Click outside the dialog to dismiss (not while work is in progress)
+  bulkOverlay.addEventListener("mousedown", (event) => {
+    if (event.target === bulkOverlay && !bulkBusy) closeBulkDownload();
+  });
+
+  bulkBrowseBtn.addEventListener("click", async () => {
+    const dirPath = await window.electronAPI.openDirectory_FileSystemBrowser(bulkPathInput.value);
+    if (dirPath) bulkPathInput.value = dirPath;
+  });
+
+  bulkSelectAllBtn.addEventListener("click", () => setAllBulkChecked(true));
+  bulkClearAllBtn.addEventListener("click", () => setAllBulkChecked(false));
+
+  bulkSeasonToggle.addEventListener("click", () => {
+    const enabled = [...getBulkPanel(bulkActiveSeason).querySelectorAll(".bulk-episode-checkbox:not(:disabled)")];
+    setBulkSeasonChecked(bulkActiveSeason, !enabled.every(cb => cb.checked));
+  });
+
+  // Left rail: checkbox toggles the whole season, anywhere else opens it
+  bulkSeasonList.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!target.classList.contains("bulk-season-checkbox")) return;
+    setBulkSeasonChecked(target.closest(".bulk-season").dataset.season, target.checked);
+  });
+
+  bulkSeasonList.addEventListener("click", (event) => {
+    if (event.target.closest(".bulk-season-checkbox")) return;
+    const seasonEl = event.target.closest(".bulk-season");
+    if (seasonEl) setActiveBulkSeason(seasonEl.dataset.season);
+  });
+
+  bulkSeasonList.addEventListener("keydown", (event) => {
+    const seasonEl = event.target.closest(".bulk-season");
+    if (!seasonEl || event.target.closest(".bulk-season-checkbox")) return;
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setActiveBulkSeason(seasonEl.dataset.season);
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+      const sibling = event.key === "ArrowDown" ? seasonEl.nextElementSibling : seasonEl.previousElementSibling;
+      if (sibling) { sibling.focus(); setActiveBulkSeason(sibling.dataset.season); }
+    }
+  });
+
+  bulkEpisodeList.addEventListener("change", refreshBulkSelection);
+}
+
 async function loadLogoImage(movieLanguage) {
   try {
     const apiKey = await apiKeyPromise;
@@ -1283,6 +1870,7 @@ window.addEventListener("keydown",(event)=>{
   if(event.key === "Escape"){
     contextMenu.classList.remove("context-menu--visible");
     DownloadOverlay.classList.remove('active');
+    closeBulkDownload();
   }
 });
 
@@ -1298,6 +1886,7 @@ function triggerLoadingGif() {
     document.documentElement.classList.add("torrent-panel-open");
 })();
 
+setupBulkDownloadEvents();
 triggerLoadingGif();
 manageSaveDropDowns();
 addSaveDropDownEventListener();

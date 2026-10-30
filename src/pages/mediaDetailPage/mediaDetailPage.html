@@ -10,6 +10,7 @@
     <link rel="preload" href="../../shared/loadingDiv.css" as="style">
     <link rel="preload" href="../../shared/dropDown.css" as="style">
     <link rel="preload" href="../../shared/warningMessage.css" as="style">
+    <link rel="preload" href="../../shared/toggleSwitch.css" as="style">
     <link rel="preload" href="../homePage/homePage.css" as="style">
     <link rel="preload" href="mediaDetailPage.css" as="style">
 
@@ -17,6 +18,7 @@
     <link rel="stylesheet" href="../../shared/loadingDiv.css">
     <link rel="stylesheet" href="../../shared/dropDown.css">
     <link rel="stylesheet" href="../../shared/warningMessage.css">
+    <link rel="stylesheet" href="../../shared/toggleSwitch.css">
     <link rel="stylesheet" href="../homePage/homePage.css">
     <link rel="stylesheet" href="mediaDetailPage.css">
   </head>
@@ -103,6 +105,17 @@
                 <p id="p-movie-trailer">Watch Trailer</p>
               </div>
             </div>
+
+            <div id="bulk-download-div" style="display:none">
+              <button id="btn-bulkDownload" class="button-wrapper" type="button" aria-label="Download episodes" onclick="openBulkDownload()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <path d="M7 10l5 5 5-5"/>
+                  <path d="M12 15V3"/>
+                </svg>
+                <p id="p-bulk-download">Download Episodes</p>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -118,7 +131,6 @@
               <button class="select-trigger" aria-haspopup="listbox" aria-expanded="false">Season —</button>
               <div class="select-dropdown" role="listbox" id="select-Seasons"></div>
             </div>
-
           </div>
 
           <div id="EpisodesContainer">
@@ -191,6 +203,104 @@
       </div>
     </div>
 
+
+
+    <div class="overlay" id="bulkDownloadOverlay">
+      <div class="download-container bulk-container" id="bulkContainer" role="dialog" aria-modal="true" aria-labelledby="bulkTitle">
+        <button class="floating-x-remove-btn" id="bulkCloseBtn" aria-label="Close">×</button>
+
+        <!-- Cinematic hero: backdrop, title logo, quality -->
+        <header class="bulk-hero" id="bulkHero">
+          <div class="bulk-hero-image" id="bulkHeroImage"></div>
+          <div class="bulk-hero-shade"></div>
+
+          <div class="bulk-hero-copy">
+            <h2 id="bulkTitle">Download episodes</h2>
+            <img class="bulk-hero-logo" id="bulkHeroLogo" alt="" hidden>
+            <p class="bulk-subtitle" id="bulkSubtitle"></p>
+          </div>
+
+          <div class="bulk-quality" id="bulkQualityWrap">
+            <span class="bulk-quality-title">Quality</span>
+            <div class="bulk-segmented" id="bulkQuality" role="radiogroup" aria-label="Video quality">
+              <label><input type="radio" name="bulkQuality" value="best"><span>Best</span></label>
+              <label><input type="radio" name="bulkQuality" value="4K"><span>4K</span></label>
+              <label><input type="radio" name="bulkQuality" value="1080p" checked><span>1080p</span></label>
+              <label><input type="radio" name="bulkQuality" value="720p"><span>720p</span></label>
+              <label><input type="radio" name="bulkQuality" value="480p"><span>480p</span></label>
+            </div>
+          </div>
+        </header>
+
+        <div class="bulk-scroll bulk-lockable">
+
+          <!-- Season + episode picker -->
+          <section class="bulk-picker">
+            <aside class="bulk-rail" aria-label="Seasons">
+              <div class="bulk-rail-head">
+                <span class="bulk-section-title">Seasons</span>
+                <div class="bulk-list-actions">
+                  <button type="button" class="bulk-link-btn" id="bulkSelectAll">All</button>
+                  <button type="button" class="bulk-link-btn" id="bulkClearAll">None</button>
+                </div>
+              </div>
+              <div class="bulk-season-list" id="bulkSeasonList"></div>
+            </aside>
+
+            <div class="bulk-panel">
+              <div class="bulk-panel-head">
+                <div class="bulk-panel-heading">
+                  <h3 id="bulkPanelTitle"></h3>
+                  <p id="bulkPanelMeta"></p>
+                </div>
+                <button type="button" class="bulk-link-btn bulk-pill-btn" id="bulkSeasonToggle">Select season</button>
+              </div>
+              <div class="bulk-episode-list" id="bulkEpisodeList"></div>
+            </div>
+          </section>
+
+          <!-- Destination + options -->
+          <section class="bulk-section bulk-destination">
+            <span class="bulk-section-title">Save to</span>
+            <div class="bulk-path">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              </svg>
+              <input type="text" id="bulkDownloadPath" value="/home/pcuser/Downloads/Videos/" aria-label="Download location" spellcheck="false">
+              <button id="bulkBrowseBtn" type="button">Browse</button>
+            </div>
+            <div class="bulk-options">
+              <label class="bulk-switch">
+                <span class="custom-toggle">
+                  <input type="checkbox" id="bulkAddSubtitles" checked>
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </span>
+                <span class="bulk-switch-label">Download subtitles</span>
+              </label>
+              <label class="bulk-switch">
+                <span class="custom-toggle">
+                  <input type="checkbox" id="bulkRememberPath">
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </span>
+                <span class="bulk-switch-label">Remember this location</span>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <footer class="bulk-footer">
+          <div class="bulk-progress" id="bulkProgress" aria-hidden="true"><span id="bulkProgressBar"></span></div>
+          <div class="message" id="bulkMessage" role="alert"></div>
+          <div class="bulk-footer-row">
+            <p class="bulk-summary" id="bulkSummary" aria-live="polite"></p>
+            <div class="bulk-footer-actions">
+              <button id="bulkCancelBtn" class="bulk-btn bulk-btn-ghost" type="button">Cancel</button>
+              <button id="bulkDownloadBtn" class="bulk-btn bulk-btn-primary" type="button">Download</button>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
 
   </body>
 
