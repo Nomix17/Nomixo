@@ -1554,28 +1554,115 @@ function parseBulkStreams(streams) {
   return parsed;
 }
 
-function pickBulkStream(parsedStreams, wantedQuality) {
+const BULK_REUSE_MIN_SEEDER_RATIO = 0.25;
+const BULK_ENOUGH_SEEDERS = 20;
+
+function pickBulkStream(parsedStreams, wantedQuality, chosenHashes = new Set(), coverage = new Map()) {
   if (!parsedStreams.length) return null;
 
   const known = parsedStreams.filter(s => s.tier < BULK_QUALITY_ORDER.length);
   const pool = known.length ? known : parsedStreams;
   const bySeeders = (a, b) => b.seeders - a.seeders;
 
+  let tier;
+  let usedFallback = false;
   if (wantedQuality === "best") {
-    const bestTier = Math.min(...pool.map(s => s.tier));
-    return { stream: pool.filter(s => s.tier === bestTier).sort(bySeeders)[0], usedFallback: false };
+    tier = Math.min(...pool.map(s => s.tier));
+  } else {
+    const targetTier = BULK_QUALITY_ORDER.indexOf(wantedQuality);
+    if (pool.some(s => s.tier === targetTier)) {
+      tier = targetTier;
+    } else {
+      tier = [...pool].sort((a, b) =>
+        Math.abs(a.tier - targetTier) - Math.abs(b.tier - targetTier) ||
+        a.tier - b.tier
+      )[0].tier;
+      usedFallback = true;
+    }
   }
 
-  const targetTier = BULK_QUALITY_ORDER.indexOf(wantedQuality);
-  const exact = pool.filter(s => s.tier === targetTier).sort(bySeeders);
-  if (exact.length) return { stream: exact[0], usedFallback: false };
+  const candidates = pool.filter(s => s.tier === tier);
+  const allScored = scoreBulkCandidates(candidates);
+  const scored = allScored.some(s => !s.badSource) ? allScored.filter(s => !s.badSource) : allScored;
 
-  const closest = [...pool].sort((a, b) =>
-    Math.abs(a.tier - targetTier) - Math.abs(b.tier - targetTier) ||
-    a.tier - b.tier ||
+  const minSeeders = Math.min(
+    Math.max(...scored.map(s => s.seeders)) * BULK_REUSE_MIN_SEEDER_RATIO,
+    BULK_ENOUGH_SEEDERS
+  );
+  const healthy = scored.filter(s => s.seeders >= minSeeders);
+  const minQuality = Math.max(...healthy.map(s => s.qualityScore)) - BULK_REUSE_MAX_QUALITY_DROP;
+
+  const viable = healthy.filter(s => s.qualityScore >= minQuality);
+
+  const stream = [...viable].sort((a, b) =>
+    (chosenHashes.has(b.hash) - chosenHashes.has(a.hash)) ||
+    ((coverage.get(b.hash) ?? 0) - (coverage.get(a.hash) ?? 0)) ||
+    (b.qualityScore - a.qualityScore) ||
     bySeeders(a, b)
   )[0];
-  return { stream: closest, usedFallback: true };
+
+  return { stream, usedFallback };
+}
+
+const BULK_REUSE_MAX_QUALITY_DROP = 25;
+
+const bulkHas = (text, pattern) => new RegExp(`(?<![a-z0-9])(?:${pattern})(?![a-z0-9])`, "i").test(text);
+
+function parseBulkSizeGB(sizeText) {
+  const match = String(sizeText ?? "").match(/([\d.,]+)\s*(TB|GB|MB|KB)/i);
+  if (!match) return null;
+  const value = parseFloat(match[1].replace(",", "."));
+  if (Number.isNaN(value)) return null;
+  const unit = match[2].toUpperCase();
+  return value * { TB: 1024, GB: 1, MB: 1 / 1024, KB: 1 / 1048576 }[unit];
+}
+
+function getBulkReleaseTraits(stream) {
+  const text = `${stream.torrentTitle ?? ""} ${stream.fileName ?? ""} ${stream.Quality ?? ""}`
+    .replace(/[._]/g, " ");
+
+  let source = 40;
+  let bad = false;
+  if (bulkHas(text, "cam|hdcam|ts|hdts|telesync|tc|telecine|scr|screener|r5")) bad = true;
+  else if (bulkHas(text, "remux")) source = 90;
+  else if (bulkHas(text, "blu ?ray|bdrip|brrip|bd")) source = 80;
+  else if (bulkHas(text, "web ?dl|amzn|nf|dsnp|atvp|hmax|hulu")) source = 60;
+  else if (bulkHas(text, "web ?rip|web")) source = 45;
+  else if (bulkHas(text, "hdtv|pdtv")) source = 30;
+  else if (bulkHas(text, "dvd ?rip|dvd")) source = 20;
+
+  let codecFactor = 1;
+  if (bulkHas(text, "av1")) codecFactor = 1.8;
+  else if (bulkHas(text, "x265|h ?265|hevc")) codecFactor = 1.6;
+
+  const hdr = bulkHas(text, "dv|dovi|dolby vision|hdr|hdr10\\+?") ? 8 : 0;
+
+  let audio = 0;
+  if (bulkHas(text, "atmos|truehd|dts ?hd(?: ?ma)?|dts ?x")) audio = 6;
+  else if (bulkHas(text, "dd\\+|ddp\\d?|eac3|dts|ac3|dd5 1")) audio = 3;
+
+  return { source, bad, codecFactor, hdr, audio };
+}
+
+const BULK_IDEAL_SIZE_GB = [8, 3, 1.2, 0.6, 3];
+const BULK_OVERSIZE_PENALTY = 40;
+
+function scoreBulkCandidates(candidates) {
+  return candidates.map(stream => {
+    const t = getBulkReleaseTraits(stream);
+    const ideal = BULK_IDEAL_SIZE_GB[stream.tier] ?? BULK_IDEAL_SIZE_GB[BULK_IDEAL_SIZE_GB.length - 1];
+    const gb = parseBulkSizeGB(stream.Size);
+
+    let sizeScore = 0;
+    if (gb != null) {
+      const eff = Math.min(gb * t.codecFactor, ideal);
+      sizeScore = 40 * Math.log(1 + eff) / Math.log(1 + ideal);
+      if (gb > ideal) sizeScore -= BULK_OVERSIZE_PENALTY * Math.log2(gb / ideal);
+    }
+
+    const qualityScore = t.source + sizeScore + t.hdr + t.audio;
+    return { ...stream, qualityScore, badSource: t.bad };
+  });
 }
 
 async function runBulkWithConcurrency(items, limit, worker, isStale) {
@@ -1591,30 +1678,49 @@ async function runBulkWithConcurrency(items, limit, worker, isStale) {
 
 async function resolveBulkTargets(selected, wantedQuality, imdb_id, onProgress, isStale) {
   const results = new Array(selected.length).fill(null);
+  const parsedPerEpisode = new Array(selected.length).fill(null);
   let done = 0;
 
   await runBulkWithConcurrency(selected, BULK_CONCURRENCY, async ({ season, episode }, index) => {
     try {
       const streams = await fetchBulkEpisodeStreams(imdb_id, season, episode);
-      const choice = pickBulkStream(parseBulkStreams(streams), wantedQuality);
-      if (choice) {
-        const torrentInfo = {
-          MediaId: MediaId,
-          MediaType: MediaType,
-          IMDB_ID: imdb_id,
-          Title: GlobalTitle,
-          ...choice.stream,
-          seasonNumber: bulkPad(season),
-          episodeNumber: bulkPad(episode)
-        };
-        results[index] = { target: buildDownloadTargetInfo(torrentInfo), usedFallback: choice.usedFallback };
-      }
+      parsedPerEpisode[index] = parseBulkStreams(streams);
     } catch (err) {
       console.error(`Bulk: failed to fetch ${bulkEpisodeLabel(season, episode)}`, err);
     }
     done++;
     if (!isStale()) onProgress(done, selected.length);
   }, isStale);
+
+  if (isStale()) return { targets: [], missing: [], fallbackCount: 0 };
+
+  const coverage = new Map();
+  parsedPerEpisode.forEach(parsed => {
+    if (!parsed) return;
+    new Set(parsed.map(s => s.hash)).forEach(hash => {
+      coverage.set(hash, (coverage.get(hash) ?? 0) + 1);
+    });
+  });
+
+  const chosenHashes = new Set();
+  selected.forEach(({ season, episode }, index) => {
+    const parsed = parsedPerEpisode[index];
+    if (!parsed) return;
+    const choice = pickBulkStream(parsed, wantedQuality, chosenHashes, coverage);
+    if (!choice) return;
+
+    chosenHashes.add(choice.stream.hash);
+    const torrentInfo = {
+      MediaId: MediaId,
+      MediaType: MediaType,
+      IMDB_ID: imdb_id,
+      Title: GlobalTitle,
+      ...choice.stream,
+      seasonNumber: bulkPad(season),
+      episodeNumber: bulkPad(episode)
+    };
+    results[index] = { target: buildDownloadTargetInfo(torrentInfo), usedFallback: choice.usedFallback };
+  });
 
   const targets = [];
   const missing = [];
