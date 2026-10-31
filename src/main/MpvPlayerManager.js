@@ -1,14 +1,12 @@
 import { Worker } from "worker_threads";
 import { spawn } from "child_process";
 import { access, mkdir } from 'fs/promises';
-import {
-  pathExists
-} from "./utils.js";
 import WebTorrent from "webtorrent";
 import http from "http";
 import path from "path";
 import os from "os";
 
+import { pathExists } from "./utils.js";
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
 import { normaliseFileName } from "./utils.js";
@@ -342,7 +340,7 @@ class MpvPlayerManager {
     this.#lastSecondBeforeQuit = 0;
 
     if (NextEpisodeManager.isLocalDownload(nextEpisode)) {
-      await this.playVideoOverMpv(nextEpisode, undefined, this.#settings);
+      await this.playVideoOverMpv(nextEpisode, nextEpisode?.local_subs , this.#settings);
     } else {
       await this.playTorrentOverMpv(nextEpisode, this.#settings);
     }

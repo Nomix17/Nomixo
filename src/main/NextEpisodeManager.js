@@ -1,8 +1,12 @@
+import path from "path";
 import { config } from "./config.js";
 import { loadDownloadStorage } from "./storageManagement.js";
 import { parseTorrentioStream } from "./utils.js";
 import { log } from "./debugging.js";
-
+import {
+  loadSubsFromSubDir,
+  loadSubsFromVideoDirectory
+} from "./localSubs.js"
 
 class NextEpisodeManager {
   nextEpisodeInfo = null;
@@ -54,6 +58,14 @@ class NextEpisodeManager {
 
     const downloadEntry = await this.#findDownloadedEpisode(metaData.MediaId, nextEpisode);
     if (downloadEntry != null) {
+      const localSubs = await loadSubsFromSubDir(downloadEntry);
+      const videoDirSubs = await loadSubsFromVideoDirectory(
+        path.join(downloadEntry?.downloadPath, downloadEntry?.fileName)
+      );
+      downloadEntry.local_subs = [...localSubs, ...videoDirSubs]
+        .map(sub => sub?.url)
+        .filter(sub => sub != null);
+      log.info(`Loading ${downloadEntry.local_subs.length} subs`);
       return downloadEntry;
     }
 
