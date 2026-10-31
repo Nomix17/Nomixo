@@ -309,7 +309,6 @@ function runMpvProcess(
     `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`,
     `--force-media-title=${videoTitle}`,
     `--input-ipc-server=${ipcPath}`,
-    `--mute=yes`,
     `--ytdl=no`,
     `--network-timeout=300`,
     ...subsArgument
