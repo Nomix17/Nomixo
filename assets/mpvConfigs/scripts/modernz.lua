@@ -49,6 +49,11 @@ local colors = {
   next_ep_color = "#FFFFFF",                 -- fill color of the button
   next_ep_text_color = "#111111",            -- text/icon color of the button
   next_ep_hover_color = "#FFFFFF",           -- fill color of the button on hover (it also gets more transparent)
+
+  -- Track menus (drop-ups opened by the subtitle and audio buttons)
+  menu_bg_color = "#000000",             -- background color of the subtitle and audio menus
+  menu_text_color = "#FFFFFF",           -- color of the text and icons in the subtitle and audio menus
+  menu_selected_color = "#25456f",       -- background color of the selected track in the menus
 }
 
 -- Parameters
@@ -115,6 +120,16 @@ local user_opts = {
     raise_subtitles = true,                -- raise subtitles above the OSC when shown
     raise_subtitle_amount = 80,           -- amount by which subtitles are raised when the OSC is shown (in pixels)
 
+    -- Track menus (drop-ups)
+    sub_menu = true,                       -- left-click the subtitle button to open a drop-up with all tracks, size and delay controls
+    audio_menu = true,                     -- left-click the audio button to open a drop-up with all tracks and the audio delay control
+    menu_width = 340,                      -- width of the drop-up menus
+    menu_max_rows = 7,                     -- max visible tracks before the list scrolls (mouse wheel)
+    menu_font_size = 15,                   -- font size of the drop-up menus
+    menu_close_on_select = false,          -- close the menu after picking a track
+    sub_size_step = 0.1,                   -- subtitle size step (sub-scale) for the size buttons
+    audio_delay_step = 0.1,                -- audio delay step in seconds for the delay buttons
+
     -- Buttons display and functionality
     jump_buttons = false,                   -- show the jump backward and forward buttons
     jump_amount = 10,                      -- change the jump amount in seconds
@@ -136,7 +151,7 @@ local user_opts = {
     info_button = false,                    -- show info button
     ontop_button = true,                   -- show window on top button
     screenshot_button = false,             -- show screenshot button
-    sub_delay_button = true,               -- show subtitle delay buttons (- and +)
+    sub_delay_button = false,              -- show subtitle delay buttons (- and +) in the bar (they are also in the subtitle menu)
     screenshot_flag = "subtitles",         -- flag for screenshot button: "subtitles", "video", "window", "each-frame"
                                            -- https://mpv.io/manual/master/#command-interface-screenshot-%3Cflags%3E
     sub_delay_step = 0.1,                  -- subtitle delay step in seconds for the delay buttons
@@ -188,6 +203,9 @@ local user_opts = {
     next_ep_color = colors.next_ep_color,                      -- fill color of the "Play Next Episode" button
     next_ep_text_color = colors.next_ep_text_color,            -- text/icon color of the "Play Next Episode" button
     next_ep_hover_color = colors.next_ep_hover_color,          -- fill color of the "Play Next Episode" button on hover
+    menu_bg_color = colors.menu_bg_color,              -- background color of the subtitle and audio menus
+    menu_text_color = colors.menu_text_color,          -- color of the text and icons in the subtitle and audio menus
+    menu_selected_color = colors.menu_selected_color,  -- background color of the selected track in the menus
 
     -- "Play Next Episode" button
     -- only shown when mpv is started with --script-opts=haveNextEp=true
@@ -454,6 +472,15 @@ local language = {
         zoom_out = "Zoom Out",
         sub_delay_down = "Subtitle Delay -",
         sub_delay_up = "Subtitle Delay +",
+        sub_menu_title = "Subtitles",
+        sub_search = "Search subtitles",
+        sub_no_results = "No results",
+        sub_off = "Off",
+        sub_size = "Size",
+        sub_delay = "Delay",
+        sub_reset = "Click to reset",
+        sub_forced = "Forced",
+        sub_external = "External",
         download = "Download",
         download_in_progress = "Download in progress",
         downloading = "Downloading",
@@ -527,6 +554,13 @@ local function set_osc_locale()
     locale.idle = idle_ass_tags .. locale.idle
 end
 
+-- locale lookup with fallback (translations loaded from json may lack newer keys)
+local function L(key, default)
+    local v = locale and locale[key]
+    if v == nil or v == "" then return default end
+    return v
+end
+
 local function contains(list, item)
     local t = type(list) == "table" and list or {}
     if type(list) ~= "table" then
@@ -566,7 +600,24 @@ local function set_osc_styles()
     local playpause_size = user_opts.playpause_size or 28
     local midbuttons_size = user_opts.midbuttons_size or 24
     local sidebuttons_size = user_opts.sidebuttons_size or 24
+    local mfs = user_opts.menu_font_size
+    local mtext = osc_color_convert(user_opts.menu_text_color)
+    local msel = osc_color_convert(user_opts.menu_selected_color)
+    local mtxt = "\\blur0\\bord0\\shad0\\q2\\1c&H" .. mtext .. "&\\3c&H0&\\fn" .. user_opts.font
     osc_styles = {
+        menu_shadow = "{\\blur12\\bord0\\1c&H000000&}",
+        menu_bg = "{\\blur0\\bord1\\1c&H" .. osc_color_convert(user_opts.menu_bg_color) .. "&\\3c&HFFFFFF&}",
+        menu_title = "{" .. mtxt .. "\\b1\\fs" .. mfs .. "}",
+        menu_text = "{" .. mtxt .. "\\fs" .. mfs .. "}",
+        menu_text_sel = "{" .. mtxt .. "\\b1\\fs" .. mfs .. "}",
+        menu_tag = "{" .. mtxt .. "\\fs" .. (mfs - 3) .. "}",
+        menu_icon = "{\\blur0\\bord0\\shad0\\1c&H" .. mtext .. "&\\3c&HFFFFFF&\\fs" .. (mfs + 3) .. "\\fn" .. iconfont .. "}",
+        menu_field = "{\\blur0\\bord1\\1c&HFFFFFF&\\3c&H" .. msel .. "&}",
+        menu_row_bg = "{\\blur0\\bord0\\1c&HFFFFFF&}",
+        menu_row_sel = "{\\blur0\\bord0\\1c&H" .. msel .. "&}",
+        menu_hover = "{\\1c&HFFFFFF&}",
+        menu_hover_sel = "{\\1c&H" .. msel .. "&}",
+        menu_dot = "{\\blur0\\bord0\\1c&H" .. mtext .. "&}",
         osc_fade_bg = "{\\blur" .. user_opts.fade_blur_strength .. "\\bord" .. user_opts.fade_alpha .. "\\1c&H0&\\3c&H" .. osc_color_convert(user_opts.osc_color) .. "&}",
         window_fade_bg = "{\\blur" .. user_opts.window_fade_blur_strength .. "\\bord" .. user_opts.window_fade_alpha .. "\\1c&H0&\\3c&H" .. osc_color_convert(user_opts.osc_color) .. "&}",
         window_control = "{\\blur1\\bord0.5\\1c&H" .. osc_color_convert(user_opts.window_controls_color) .. "&\\3c&H0&\\fs25\\fn" .. iconfont .. "}",
@@ -654,6 +705,12 @@ local state = {
     is_image = false,
     url_path = "",                           -- used for yt-dlp downloading
     next_ep_input = false,                   -- is the "next-episode" mouse section currently enabled?
+    menu = nil,                              -- which track menu (drop-up) is open: "sub", "audio" or nil
+    menu_scroll = nil,                   -- first visible row of the track list (nil = auto, shows the selected track)
+    menu_input = false,                  -- is the "track-menu" mouse section currently enabled?
+    menu_ensure = false,                 -- scroll the selected track into view on the next build
+    menu_query = "",                         -- text typed into the menu's search bar
+    menu_text = false,                       -- is the "any_unicode" typing binding currently enabled?
 }
 
 -- "Play Next Episode" button
@@ -669,7 +726,7 @@ end
 local next_ep_enabled = have_next_episode()
 
 local function next_ep_active()
-    if not next_ep_enabled or state.is_image then return false end
+    if not next_ep_enabled or state.is_image or state.menu then return false end
     local remaining = mp.get_property_number("time-remaining")
     local duration = mp.get_property_number("duration")
     return remaining ~= nil and duration ~= nil and duration > 0
@@ -890,6 +947,9 @@ local function ass_draw_rr_h_cw(ass, x0, y0, x1, y1, r1, hexagon, r2)
 end
 
 local function get_hidetimeout()
+    if state.menu then
+        return -1 -- keep the OSC shown while the subtitle menu is open
+    end
     if user_opts.visibility == "always" then
         return -1 -- disable autohide
     end
@@ -1913,6 +1973,492 @@ local function window_controls()
 end
 
 
+--
+-- Track menus (drop-up): subtitles and audio
+--
+-- Opened by left-clicking the subtitle / audio button. Lists every track of that type
+-- (plus "Off") and has stepper rows for the related settings (subtitle size + delay,
+-- audio delay). It is built as regular OSC elements, so it shares the OSC's fade,
+-- scaling and theme colors. Only one menu is open at a time (state.menu = "sub" | "audio").
+--
+local lang_names = {
+    eng = "English", spa = "Spanish", fre = "French", fra = "French", ger = "German", deu = "German",
+    ita = "Italian", por = "Portuguese", rus = "Russian", jpn = "Japanese", kor = "Korean",
+    chi = "Chinese", zho = "Chinese", ara = "Arabic", hin = "Hindi", tur = "Turkish", pol = "Polish",
+    dut = "Dutch", nld = "Dutch", swe = "Swedish", nor = "Norwegian", nob = "Norwegian", dan = "Danish",
+    fin = "Finnish", heb = "Hebrew", tha = "Thai", vie = "Vietnamese", ind = "Indonesian",
+    cze = "Czech", ces = "Czech", hun = "Hungarian", rum = "Romanian", ron = "Romanian",
+    gre = "Greek", ell = "Greek", ukr = "Ukrainian", per = "Persian", fas = "Persian",
+    en = "English", es = "Spanish", fr = "French", de = "German", it = "Italian", pt = "Portuguese",
+    ru = "Russian", ja = "Japanese", ko = "Korean", zh = "Chinese", ar = "Arabic", hi = "Hindi",
+    tr = "Turkish", pl = "Polish", nl = "Dutch", sv = "Swedish", no = "Norwegian", da = "Danish",
+    fi = "Finnish", he = "Hebrew", th = "Thai", vi = "Vietnamese", id = "Indonesian", cs = "Czech",
+    hu = "Hungarian", ro = "Romanian", el = "Greek", uk = "Ukrainian", fa = "Persian",
+}
+
+local codec_names = {
+    -- subtitles
+    subrip = "SRT", srt = "SRT", ass = "ASS", ssa = "SSA", webvtt = "VTT", mov_text = "TX3G",
+    hdmv_pgs_subtitle = "PGS", dvd_subtitle = "VobSub", dvb_subtitle = "DVB",
+    -- audio
+    aac = "AAC", ac3 = "AC3", eac3 = "E-AC3", dts = "DTS", truehd = "TrueHD", flac = "FLAC",
+    opus = "Opus", vorbis = "Vorbis", mp3 = "MP3", mp2 = "MP2", alac = "ALAC", wmav2 = "WMA",
+}
+
+local function get_tracks(track_type)
+    local list = {}
+    for _, t in ipairs(mp.get_property_native("track-list") or {}) do
+        if t.type == track_type then list[#list + 1] = t end
+    end
+    return list
+end
+
+local function channel_layout(n)
+    if not n then return nil end
+    local known = {[1] = "1.0", [2] = "2.0", [3] = "2.1", [6] = "5.1", [8] = "7.1"}
+    return known[n] or (n .. "ch")
+end
+
+-- returns a human readable label and a short tag line for a track
+local function track_text(kind, t)
+    local lang = (t.lang and t.lang ~= "") and t.lang or nil
+    local title = (t.title and t.title ~= "") and t.title or nil
+    local name = lang and (lang_names[lang:lower()] or lang_names[lang:lower():match("^%a+") or ""]) or nil
+    local main = name or (lang and lang:upper()) or nil
+
+    if title and (not main or (title:lower() ~= main:lower() and title:lower() ~= (lang or ""):lower())) then
+        main = main and (main .. " - " .. title) or title
+    end
+    if not main then
+        local f = t["external-filename"]
+        main = f and f:match("([^/\\]+)$") or (kind.fallback() .. " " .. t.id)
+    end
+
+    local tags = {}
+    if t.forced then tags[#tags + 1] = L("sub_forced", "Forced") end
+    if t.external then tags[#tags + 1] = L("sub_external", "External") end
+    if t.codec and t.codec ~= "" then
+        local c = codec_names[t.codec]
+        if not c and t.codec:find("^pcm") then c = "PCM" end
+        tags[#tags + 1] = c or t.codec:upper():sub(1, 8)
+    end
+    if kind.track_type == "audio" then
+        local ch = channel_layout(t["demux-channel-count"])
+        if ch then tags[#tags + 1] = ch end
+    end
+    return main, table.concat(tags, " \194\183 ")
+end
+
+-- cut a string to n characters (utf-8 aware); second return value tells if it was cut
+local function truncate_chars(str, n)
+    local count, i, len = 0, 1, #str
+    while i <= len do
+        if count >= n then return str:sub(1, i - 1), true end
+        local c = str:byte(i)
+        i = i + (c >= 240 and 4 or c >= 224 and 3 or c >= 192 and 2 or 1)
+        count = count + 1
+    end
+    return str, false
+end
+
+-- escape text for ASS (track titles may contain "{", "}" or "\")
+local function ass_escape(str)
+    str = str:gsub("\\", "\\\239\187\191") -- backslash + zero width no-break space
+    str = str:gsub("{", "\\{")
+    str = str:gsub("}", "\\}")
+    return (str:gsub("\n", " "))
+end
+
+local function fmt_percent(v)
+    return string.format("%d%%", math.floor(v * 100 + 0.5))
+end
+
+local function fmt_delay(d)
+    if math.abs(d) < 0.0005 then return "0 s" end
+    local str = string.format("%+.3f", d)
+    str = str:gsub("0+$", "")
+    str = str:gsub("%.$", "")
+    return str .. " s"
+end
+
+-- what each menu shows. "controls" are the stepper rows below the track list
+local menu_kinds = {
+    sub = {
+        track_type = "sub", prop = "sid", search = true,
+        fallback = function () return L("subtitle", "Subtitle") end,
+        title = function () return L("sub_menu_title", "Subtitles") end,
+        controls = {
+            {key = "size", label = function () return L("sub_size", "Size") end,
+             prop = "sub-scale", default = 1, min = 0.1, max = 5,
+             step = function () return user_opts.sub_size_step end, fmt = fmt_percent},
+            {key = "delay", label = function () return L("sub_delay", "Delay") end,
+             prop = "sub-delay", default = 0,
+             step = function () return user_opts.sub_delay_step end, fmt = fmt_delay},
+        },
+    },
+    audio = {
+        track_type = "audio", prop = "aid",
+        fallback = function () return L("audio", "Audio") end,
+        title = function () return L("audio", "Audio") end,
+        controls = {
+            {key = "delay", label = function () return L("sub_delay", "Delay") end,
+             prop = "audio-delay", default = 0,
+             step = function () return user_opts.audio_delay_step end, fmt = fmt_delay},
+        },
+    },
+}
+
+-- builds the rows of a menu ("Off" + every track), filtered by the search query.
+-- also returns the unfiltered row count and whether a track is currently selected
+local function menu_items(kind, query)
+    local cur_id = mp.get_property_native(kind.prop)
+    local has_track = cur_id ~= nil and cur_id ~= false
+    local all = {{id = false, label = L("sub_off", "Off"), tag = "", selected = not has_track, hay = "off"}}
+    for _, t in ipairs(get_tracks(kind.track_type)) do
+        local label, tag = track_text(kind, t)
+        all[#all + 1] = {
+            id = t.id, label = label, tag = tag, selected = has_track and cur_id == t.id,
+            hay = (label .. " " .. tag .. " " .. (t.lang or "")):lower(),
+        }
+    end
+    if not query or query:match("^%s*$") then return all, #all, has_track end
+
+    -- every word of the query has to match (case-insensitive, anywhere in the row)
+    local items = {}
+    for _, it in ipairs(all) do
+        local ok = true
+        for term in query:lower():gmatch("%S+") do
+            if not it.hay:find(term, 1, true) then ok = false break end
+        end
+        if ok then items[#items + 1] = it end
+    end
+    return items, #all, has_track
+end
+
+local function menu_toggle(name)
+    local count = name == "sub" and sub_track_count or audio_track_count
+    if count == 0 then return end
+    state.menu = (state.menu ~= name) and name or nil
+    state.menu_scroll = nil
+    state.menu_query = ""
+    state.showtime = mp.get_time() -- (re)start the OSC hide timer
+    request_init()
+end
+
+local function menu_close()
+    if state.menu then
+        state.menu = nil
+        state.menu_query = ""
+        state.showtime = mp.get_time() -- the OSC hides after its normal timeout from now
+        request_init()
+    end
+end
+
+-- arrow keys: select the previous/next row of the (filtered) list; the first entry is "Off"
+local function menu_step(dir)
+    local kind = menu_kinds[state.menu]
+    if not kind then return end
+    local items = menu_items(kind, kind.search and state.menu_query or "")
+    if #items == 0 then return end
+    local cur
+    for i, it in ipairs(items) do
+        if it.selected then cur = i end
+    end
+    -- the current track may be filtered out: then start from the first/last result
+    local nxt = cur and math.max(1, math.min(#items, cur + dir)) or (dir > 0 and 1 or #items)
+    if nxt == cur then return end
+    state.menu_ensure = true -- keep the new row in view
+    mp.set_property(kind.prop, items[nxt].id and tostring(items[nxt].id) or "no")
+    request_init()
+end
+
+-- search bar input (typed characters arrive through an "any_unicode" key binding)
+local function menu_text_input(info)
+    local kind = menu_kinds[state.menu]
+    if not (kind and kind.search) then return end
+    if info.key_text and info.key_text ~= "" and
+        (info.event == "press" or info.event == "down" or info.event == "repeat") then
+        state.menu_query = state.menu_query .. info.key_text
+        state.menu_scroll = 0 -- show the best matches from the top
+        request_init()
+    end
+end
+
+local function menu_backspace(clear_all)
+    if state.menu_query == "" then return end
+    if clear_all then
+        state.menu_query = ""
+    else
+        state.menu_query = state.menu_query:gsub("[%z\1-\127\194-\244][\128-\191]*$", "")
+    end
+    state.menu_scroll = 0
+    request_init()
+end
+
+-- esc: clears the search first, then closes the menu
+local function menu_escape()
+    if state.menu_query ~= "" then
+        menu_backspace(true)
+    else
+        menu_close()
+    end
+end
+
+-- enter: with a search, pick the first result unless one of the results is already selected
+local function menu_enter()
+    local kind = menu_kinds[state.menu]
+    if kind and kind.search and state.menu_query ~= "" then
+        local items = menu_items(kind, state.menu_query)
+        local has_selected = false
+        for _, it in ipairs(items) do
+            if it.selected then has_selected = true end
+        end
+        if #items > 0 and not has_selected then
+            mp.set_property(kind.prop, items[1].id and tostring(items[1].id) or "no")
+        end
+    end
+    menu_close()
+end
+
+-- change a numeric property by delta (rounded to avoid float drift), optionally clamped
+local function menu_adjust(prop, default, delta, min, max)
+    local v = mp.get_property_number(prop, default) + delta
+    v = math.floor(v * 1000 + 0.5) / 1000
+    if min and v < min then v = min end
+    if max and v > max then v = max end
+    mp.set_property_number(prop, v)
+end
+
+local function build_track_menu(name, refY, osc_w, anchor_x)
+    local kind = menu_kinds[name]
+    if #get_tracks(kind.track_type) == 0 then return end
+
+    local fs = user_opts.menu_font_size
+    local query = kind.search and state.menu_query or ""
+    local items, total_all, has_track = menu_items(kind, query)
+    local total = #items
+
+    -- geometry
+    local row_h = math.floor(fs * 2.2)
+    local pad, header_h, ctrl_h = 12, 30, 40
+    local search_h = kind.search and 36 or 0
+    local fixed_h = pad + header_h + search_h + 11 + ctrl_h * #kind.controls + 8
+    local bottom = refY - 92 -- sits just above the seekbar row
+    local fit = math.max(3, math.floor((bottom - 16 - fixed_h) / row_h))
+    -- the height comes from the unfiltered list, so the panel does not jump while typing
+    local vis_cap = math.min(total_all, math.max(1, user_opts.menu_max_rows), fit)
+    local vis = math.min(total, vis_cap) -- rows actually drawn
+    local list_h = vis_cap * row_h
+    local W = math.min(user_opts.menu_width, osc_w - 30)
+    local H = fixed_h + list_h
+    local x0 = math.floor(math.max(15, math.min(osc_w - 15 - W, anchor_x - W / 2)))
+    local y_top = math.floor(bottom - H)
+
+    -- scrolling (first visible row); by default the selected track is brought into view
+    local max_scroll = math.max(0, total - vis_cap)
+    local scroll = state.menu_scroll
+    if scroll == nil then
+        local sel = 1
+        for i, it in ipairs(items) do
+            if it.selected then sel = i end
+        end
+        scroll = sel - math.ceil(vis_cap / 2)
+    end
+    if state.menu_ensure then
+        state.menu_ensure = false
+        for i, it in ipairs(items) do
+            if it.selected then
+                if i - 1 < scroll then scroll = i - 1
+                elseif i > scroll + vis_cap then scroll = i - vis_cap end
+            end
+        end
+    end
+    scroll = math.max(0, math.min(max_scroll, scroll))
+    state.menu_scroll = scroll
+
+    local function scroll_by(d)
+        local ns = math.max(0, math.min(max_scroll, (state.menu_scroll or 0) + d))
+        if ns ~= state.menu_scroll then
+            state.menu_scroll = ns
+            request_init()
+        end
+    end
+
+    local function select_track(item)
+        mp.set_property(kind.prop, item.id and tostring(item.id) or "no")
+        if user_opts.menu_close_on_select then
+            state.menu = nil
+            state.showtime = mp.get_time()
+        end
+        request_init()
+    end
+
+    -- small helpers to create themed pieces
+    local function add_box(ename, x, y, w, h, style, layer, radius, an, alpha1)
+        local ne = new_element(ename, "box")
+        local lo = add_layout(ename)
+        lo.geometry = {x = x, y = y, an = an or 7, w = w, h = h}
+        lo.style = style
+        lo.layer = layer
+        lo.box.radius = radius or 0
+        if alpha1 then lo.alpha[1] = alpha1 end
+        return ne, lo
+    end
+
+    local function add_text(ename, x, y, an, w, h, style, layer, content)
+        local ne = new_element(ename, "button")
+        ne.content = content
+        ne.styledown = false
+        local lo = add_layout(ename)
+        lo.geometry = {x = x, y = y, an = an, w = w, h = h}
+        lo.style = style
+        lo.layer = layer
+        return ne, lo
+    end
+
+    -- shadow + panel (the panel also catches the mouse wheel for scrolling)
+    add_box("menu_shadow", x0 + W / 2, y_top + H / 2 + 4, W + 10, H + 10, osc_styles.menu_shadow, 60, 16, 5, 165)
+    local bg, bg_lo = add_box("menu_bg", x0, y_top, W, H, osc_styles.menu_bg, 61, 12, 7, 25)
+    bg_lo.alpha[3] = 205
+    bg.eventresponder["wheel_up_press"] = function () scroll_by(-1) end
+    bg.eventresponder["wheel_down_press"] = function () scroll_by(1) end
+
+    add_text("menu_title", x0 + pad + 6, y_top + pad + header_h / 2, 4, W - pad * 2, header_h,
+        osc_styles.menu_title, 64, kind.title())
+
+    -- search bar
+    if kind.search then
+        local fy = y_top + pad + header_h
+        local _, flo = add_box("menu_field", x0 + 8, fy, W - 16, 28, osc_styles.menu_field, 62, 8, 7, 238)
+        flo.alpha[3] = 170
+        local q = state.menu_query
+        local content
+        if q == "" then
+            content = "{\\alpha&H70&}|{\\alpha&H60&}  " .. L("sub_search", "Search subtitles")
+        else
+            local starts = {}
+            for pos in q:gmatch("()[%z\1-\127\194-\244][\128-\191]*") do starts[#starts + 1] = pos end
+            local maxc = math.max(8, math.floor((W - 16 - 56) / (fs * 0.55)))
+            local shown, cut = q, false
+            if #starts > maxc then
+                shown, cut = q:sub(starts[#starts - maxc + 1]), true
+            end
+            content = (cut and "..." or "") .. ass_escape(shown) .. "{\\alpha&H70&}|"
+        end
+        add_text("menu_field_txt", x0 + 8 + 12, fy + 14, 4, W - 16 - 48, 28, osc_styles.menu_text, 64, content)
+        if q ~= "" then
+            local clr = add_text("menu_field_clear", x0 + W - 8 - 16, fy + 14, 5, 24, 24, osc_styles.menu_text, 64, "\195\151")
+            clr.eventresponder["mbtn_left_up"] = function ()
+                state.menu_query = ""
+                state.menu_scroll = 0
+                request_init()
+            end
+        end
+    end
+
+    -- track list
+    local list_y = y_top + pad + header_h + search_h
+    local has_scroll = max_scroll > 0
+    local row_w = W - 16 - (has_scroll and 10 or 0)
+
+    if total == 0 then
+        local _, elo = add_text("menu_empty", x0 + 8 + 30, list_y + row_h / 2, 4, row_w - 30, row_h,
+            osc_styles.menu_text, 64, L("sub_no_results", "No results"))
+        elo.alpha[1] = 110
+    end
+
+    for i = 1, vis do
+        local it = items[scroll + i]
+        local row_y = list_y + (i - 1) * row_h
+        local cy = row_y + row_h / 2
+        local sel = it.selected
+
+        -- the row background is the clickable part (and the hover highlight)
+        local rbg = add_box("menu_row_bg" .. i, x0 + 8, row_y + 1, row_w, row_h - 2,
+            sel and osc_styles.menu_row_sel or osc_styles.menu_row_bg, 62, 8, 7, sel and 70 or 255)
+        rbg.hoverstyle = sel and osc_styles.menu_hover_sel or osc_styles.menu_hover
+        rbg.hoveralpha = {[1] = sel and 40 or 225, [2] = 255, [3] = 255, [4] = 255}
+        rbg.eventresponder["mbtn_left_up"] = function () select_track(it) end
+
+        -- label (cut to fit next to the tag)
+        local tag_w = #it.tag > 0 and (#it.tag * (fs - 3) * 0.6 + 12) or 0
+        local avail = row_w - 30 - 10 - tag_w
+        local maxc = math.max(6, math.floor(avail / (fs * (sel and 0.56 or 0.52))))
+        local label, cut = truncate_chars(it.label, maxc)
+        if cut then label = label .. "..." end
+        add_text("menu_row_txt" .. i, x0 + 8 + 30, cy, 4, row_w - 30, row_h,
+            sel and osc_styles.menu_text_sel or osc_styles.menu_text, 64, ass_escape(label))
+
+        if #it.tag > 0 then
+            local _, tlo = add_text("menu_row_tag" .. i, x0 + 8 + row_w - 10, cy, 6, 120, row_h,
+                osc_styles.menu_tag, 64, ass_escape(it.tag))
+            tlo.alpha[1] = 100
+        end
+
+        if sel then
+            add_box("menu_dot", x0 + 8 + 15, cy, 8, 8, osc_styles.menu_dot, 64, 4, 5)
+        end
+    end
+
+    -- scrollbar
+    if has_scroll then
+        local tr_h = list_h - 8
+        add_box("menu_sb_track", x0 + W - 11, list_y + 4, 3, tr_h, osc_styles.menu_row_bg, 63, 1.5, 7, 235)
+        local th = math.max(18, tr_h * vis_cap / total)
+        local ty = list_y + 4 + (tr_h - th) * (scroll / max_scroll)
+        add_box("menu_sb_thumb", x0 + W - 11, ty, 3, th, osc_styles.menu_dot, 64, 1.5, 7, 140)
+    end
+
+    -- divider
+    local div_y = list_y + list_h + 6
+    add_box("menu_div", x0 + pad, div_y, W - pad * 2, 1, osc_styles.menu_row_bg, 63, 0, 7, 215)
+
+    -- "label  (-)  value  (+)" rows. holding a button repeats the action, clicking the value resets it
+    local ctrl_y0 = div_y + 1 + 4
+    local function add_stepper(c, row, layer)
+        local cy = ctrl_y0 + (row - 1) * ctrl_h + ctrl_h / 2
+        local x_plus = x0 + W - pad - 6 - 14
+        local x_val = x_plus - 14 - 38
+        local x_minus = x_val - 38 - 14
+        local base = "menu_" .. c.key
+
+        local lbl = add_text(base .. "_label", x0 + pad + 6, cy, 4, 100, ctrl_h,
+            osc_styles.menu_text, layer, c.label())
+        lbl.enabled = has_track
+
+        local function add_step_button(ename, cx, icon, dir)
+            local cbg = add_box(ename .. "_bg", cx, cy, 28, 28, osc_styles.menu_row_bg, layer, 14, 5, 235)
+            if has_track then
+                cbg.hoverstyle = osc_styles.menu_hover
+                cbg.hoveralpha = {[1] = 200, [2] = 255, [3] = 255, [4] = 255}
+            end
+            local b = add_text(ename, cx, cy, 5, 28, 28, osc_styles.menu_icon, layer + 1, icon)
+            b.enabled = has_track
+            b.softrepeat = true
+            b.eventresponder["mbtn_left_down"] = function ()
+                menu_adjust(c.prop, c.default, dir * c.step(), c.min, c.max)
+            end
+        end
+        add_step_button(base .. "_minus", x_minus, icons.sub_delay_down, -1)
+        add_step_button(base .. "_plus", x_plus, icons.sub_delay_up, 1)
+
+        local v = add_text(base .. "_val", x_val, cy, 5, 76, 28, osc_styles.menu_text, layer + 1,
+            function () return c.fmt(mp.get_property_number(c.prop, c.default)) end)
+        v.enabled = has_track
+        v.eventresponder["mbtn_left_up"] = function () mp.set_property_number(c.prop, c.default) end
+        v.tooltip_style = osc_styles.tooltip
+        v.tooltipF = L("sub_reset", "Click to reset")
+        v.nothingavailable = ""
+    end
+
+    for i, c in ipairs(kind.controls) do
+        add_stepper(c, i, 66 + (i - 1) * 2)
+    end
+
+    -- own mouse section (see render()), so the menu works outside of the OSC bar too
+    add_area("track-menu", x0, y_top, x0 + W, y_top + H)
+end
+
 local layouts = {}
 
 -- Default layout
@@ -2099,10 +2645,12 @@ layouts["modern"] = function ()
     end
     
     -- Subtitle button
+    local sub_anchor_x
     if subtitle_track then
         lo = add_layout("sub_track")
         lo.geometry = {x = end_x, y = refY - 35, an = 5, w = 24, h = 24}
         lo.style = osc_styles.control_3
+        sub_anchor_x = end_x
         end_x = end_x - 45
     end
 
@@ -2120,10 +2668,12 @@ layouts["modern"] = function ()
     end
     
     -- Audio button
+    local audio_anchor_x
     if audio_track then
         lo = add_layout("audio_track")
         lo.geometry = {x = end_x, y = refY - 35, an = 5, w = 24, h = 24}
         lo.style = osc_styles.control_3
+        audio_anchor_x = end_x
         end_x = end_x - 45
     end
 
@@ -2206,6 +2756,16 @@ layouts["modern"] = function ()
         add_area("next-episode", get_hitbox_coords(nx_cx, nx_cy, 5, nx_w, nx_h))
     end
 
+    -- Track menu (drop-up above the subtitle / audio button)
+    if state.menu then
+        local is_sub = state.menu == "sub"
+        local anchor = is_sub and sub_anchor_x or audio_anchor_x
+        local btn = elements[is_sub and "sub_track" or "audio_track"]
+        if user_opts[is_sub and "sub_menu" or "audio_menu"] and anchor and btn and btn.visible then
+            build_track_menu(state.menu, refY, osc_w, anchor)
+        end
+    end
+
 end
 
 
@@ -2261,6 +2821,10 @@ end
 local function osc_visible(visible)
     if state.osc_visible ~= visible then
         state.osc_visible = visible
+        if not visible and state.menu then
+            state.menu = nil -- the menu closes together with the OSC
+            request_init()
+        end
         update_margins()
         adjust_subtitles(true)
     end
@@ -2456,7 +3020,14 @@ local function osc_init()
         return (locale.audio .. " " .. mp.get_property_number("aid", "-") .. "/" .. audio_track_count .. " [" .. prop .. "]")
     end
     ne.nothingavailable = locale.no_audio
-    ne.eventresponder["mbtn_left_up"] = command_callback(user_opts.audio_track_mbtn_left_command)
+    local audio_left_cmd = command_callback(user_opts.audio_track_mbtn_left_command)
+    ne.eventresponder["mbtn_left_up"] = function ()
+        if user_opts.audio_menu then
+            menu_toggle("audio")
+        elseif audio_left_cmd then
+            audio_left_cmd()
+        end
+    end
     ne.eventresponder["mbtn_right_up"] = command_callback(user_opts.audio_track_mbtn_right_command)
     ne.eventresponder["shift+mbtn_left_down"] = command_callback(user_opts.audio_track_mbtn_mid_command)
     ne.eventresponder["wheel_down_press"] = command_callback(user_opts.audio_track_wheel_down_command)
@@ -2475,7 +3046,14 @@ local function osc_init()
         return (locale.subtitle .. " " .. mp.get_property_number("sid", "-") .. "/" .. sub_track_count .. " [" .. prop .. "]")
     end
     ne.nothingavailable = locale.no_subs
-    ne.eventresponder["mbtn_left_up"] = command_callback(user_opts.sub_track_mbtn_left_command)
+    local sub_left_cmd = command_callback(user_opts.sub_track_mbtn_left_command)
+    ne.eventresponder["mbtn_left_up"] = function ()
+        if user_opts.sub_menu then
+            menu_toggle("sub")
+        elseif sub_left_cmd then
+            sub_left_cmd()
+        end
+    end
     ne.eventresponder["mbtn_right_up"] = command_callback(user_opts.sub_track_mbtn_right_command)
     ne.eventresponder["shift+mbtn_left_down"] = command_callback(user_opts.sub_track_mbtn_mid_command)
     ne.eventresponder["wheel_down_press"] = command_callback(user_opts.sub_track_wheel_down_command)
@@ -3092,6 +3670,7 @@ local function hide_osc()
         -- typically hide happens at render() from tick(), but now tick() is
         -- no-op and won't render again to remove the osc, so do that manually.
         state.osc_visible = false
+        state.menu = nil
         adjust_subtitles(false)
         render_wipe()
     elseif user_opts.fadeduration > 0 then
@@ -3256,6 +3835,16 @@ local function enable_osc(enable)
             mp.disable_key_bindings("next-episode")
             state.next_ep_input = false
         end
+        if state.menu_text then
+            mp.remove_key_binding("modernz-menu-text")
+            state.menu_text = false
+        end
+        if state.menu_input then
+            mp.disable_key_bindings("track-menu-outside")
+            mp.disable_key_bindings("track-menu")
+            mp.disable_key_bindings("track-menu-keys")
+            state.menu_input = false
+        end
     end
 end
 
@@ -3407,6 +3996,48 @@ local function render()
             mp.disable_key_bindings("next-episode")
         end
         state.next_ep_input = next_ep_wanted
+    end
+
+    -- subtitle menu: own mouse section, so it is clickable/scrollable above the OSC bar
+    local menu_wanted = false
+    if osc_param.areas["track-menu"] then
+        menu_wanted = state.osc_visible and state.menu
+        for _,cords in ipairs(osc_param.areas["track-menu"]) do
+            if menu_wanted then
+                set_virt_mouse_area(cords.x1, cords.y1, cords.x2, cords.y2, "track-menu")
+                if mouse_hit_coords(cords.x1, cords.y1, cords.x2, cords.y2) then
+                    mouse_over_osc = true -- keep the OSC (and the menu) alive while hovering it
+                end
+            end
+        end
+    end
+    if menu_wanted then
+        -- the whole window, to close the menu when clicking outside of it
+        set_virt_mouse_area(0, 0, osc_param.playresx, osc_param.playresy, "track-menu-outside")
+    end
+    local menu_kind_now = menu_wanted and menu_kinds[state.menu]
+    local text_wanted = (menu_kind_now and menu_kind_now.search) and true or false
+    if text_wanted ~= state.menu_text then
+        if text_wanted then
+            mp.add_forced_key_binding("any_unicode", "modernz-menu-text", menu_text_input,
+                {complex = true, repeatable = true})
+        else
+            mp.remove_key_binding("modernz-menu-text")
+        end
+        state.menu_text = text_wanted
+    end
+    if menu_wanted ~= state.menu_input then
+        if menu_wanted then
+            -- enable order = priority: the menu itself must be above the "outside" section
+            mp.enable_key_bindings("track-menu-outside")
+            mp.enable_key_bindings("track-menu")
+            mp.enable_key_bindings("track-menu-keys")
+        else
+            mp.disable_key_bindings("track-menu-outside")
+            mp.disable_key_bindings("track-menu")
+            mp.disable_key_bindings("track-menu-keys")
+        end
+        state.menu_input = menu_wanted
     end
 
     if osc_param.areas["window-controls-title"] then
@@ -3592,7 +4223,11 @@ mp.register_event("file-loaded", function()
         show_osc()
     end
 end)
-mp.register_event("start-file", request_init)
+mp.register_event("start-file", function()
+    state.menu = nil
+    state.menu_scroll = nil
+    request_init()
+end)
 mp.observe_property("track-list", "native", request_init)
 mp.observe_property("playlist-count", "native", request_init)
 mp.observe_property("playlist-pos", "native", request_init)
@@ -3666,6 +4301,11 @@ mp.observe_property("loop-file", "bool", function(_, val)
         state.looping = false
     end
 end)
+mp.observe_property("sub-delay", "number", request_tick)
+mp.observe_property("sub-scale", "number", request_tick)
+mp.observe_property("sid", "native", function() if state.menu then request_init() end end)
+mp.observe_property("aid", "native", function() if state.menu then request_init() end end)
+mp.observe_property("audio-delay", "number", request_tick)
 mp.observe_property("sub-pos", "native", function(_, value)
     if value == nil then return end
 
@@ -3737,6 +4377,74 @@ mp.set_key_bindings({
     {"wheel_left",          "ignore"},
     {"wheel_right",         "ignore"},
 }, "next-episode", "force")
+
+-- subtitle menu (enabled from render() while it is open)
+-- every mouse event over the menu is consumed here, so nothing leaks through to the window
+-- (double click = fullscreen, click = pause, wheel = volume, etc.)
+mp.set_key_bindings({
+    {"mbtn_left",           function() process_event("mbtn_left", "up") end,
+                            function() process_event("mbtn_left", "down") end},
+    {"shift+mbtn_left",     "ignore"},
+    {"mbtn_right",          "ignore"},
+    {"shift+mbtn_right",    "ignore"},
+    {"mbtn_mid",            "ignore"},
+    {"mbtn_left_dbl",       "ignore"},
+    {"shift+mbtn_left_dbl", "ignore"},
+    {"mbtn_right_dbl",      "ignore"},
+    {"mbtn_mid_dbl",        "ignore"},
+    {"wheel_up",            function() process_event("wheel_up", "press") end},
+    {"wheel_down",          function() process_event("wheel_down", "press") end},
+    {"wheel_left",          "ignore"},
+    {"wheel_right",         "ignore"},
+}, "track-menu", "force")
+
+-- mouse press while a menu is open: anywhere outside of it closes it.
+-- OSC buttons/seekbar still get the click, clicks on the video are only used to close the menu
+local function menu_outside(source, what)
+    if what == "down" and state.menu then
+        local on_button = false
+        if source == "mbtn_left" then
+            for _, el in ipairs(elements) do
+                -- the subtitle / audio buttons open, switch or close the menu themselves
+                if ((el.name == "sub_track" and user_opts.sub_menu) or
+                    (el.name == "audio_track" and user_opts.audio_menu)) and mouse_hit(el) then
+                    on_button = true
+                end
+            end
+        end
+        if not on_button then
+            menu_close()
+        end
+    end
+    if source == "mbtn_left" then
+        process_event(source, what)
+    end
+end
+
+-- a click anywhere else closes the menu (the section is enabled below the "track-menu" one)
+mp.set_key_bindings({
+    {"mbtn_left",           function() menu_outside("mbtn_left", "up") end,
+                            function() menu_outside("mbtn_left", "down") end},
+    {"shift+mbtn_left",     function() end, function() menu_close() end},
+    {"mbtn_right",          function() end, function() menu_close() end},
+    {"shift+mbtn_right",    function() end, function() menu_close() end},
+    {"mbtn_mid",            function() end, function() menu_close() end},
+    {"mbtn_left_dbl",       "ignore"},
+    {"shift+mbtn_left_dbl", "ignore"},
+    {"mbtn_right_dbl",      "ignore"},
+    {"mbtn_mid_dbl",        "ignore"},
+}, "track-menu-outside", "force")
+
+-- keyboard: up/down pick the previous/next track, esc/enter close the menu
+mp.set_key_bindings({
+    {"up",       function() menu_step(-1) end},
+    {"down",     function() menu_step(1) end},
+    {"esc",      function() menu_escape() end},
+    {"enter",    function() menu_enter() end},
+    {"kp_enter", function() menu_enter() end},
+    {"bs",       function() menu_backspace(false) end},
+    {"ctrl+bs",  function() menu_backspace(true) end},
+}, "track-menu-keys", "force")
 
 local function always_on(val)
     if state.enabled then
@@ -3924,6 +4632,7 @@ local function validate_user_opts()
         user_opts.windowcontrols_close_hover, user_opts.windowcontrols_max_hover, user_opts.windowcontrols_min_hover,
         user_opts.cache_info_color, user_opts.thumbnail_border_outline,
         user_opts.next_ep_color, user_opts.next_ep_text_color, user_opts.next_ep_hover_color,
+        user_opts.menu_bg_color, user_opts.menu_text_color, user_opts.menu_selected_color,
     }
 
     for _, color in pairs(color_list) do
@@ -3971,3 +4680,5 @@ set_virt_mouse_area(0, 0, 0, 0, "window-controls")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls-right")
 set_virt_mouse_area(0, 0, 0, 0, "window-controls-title")
 set_virt_mouse_area(0, 0, 0, 0, "next-episode")
+set_virt_mouse_area(0, 0, 0, 0, "track-menu")
+set_virt_mouse_area(0, 0, 0, 0, "track-menu-outside")
