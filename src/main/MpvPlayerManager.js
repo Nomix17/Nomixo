@@ -341,6 +341,10 @@ class MpvPlayerManager {
       return;
     }
 
+    this.#browserWindow.webContents.send(
+      "torrent-streaming-report",
+      { stage: "next-episode-info", data: nextEpisode}
+    );
     this.#lastSecondBeforeQuit = 0;
 
     if (NextEpisodeManager.isLocalDownload(nextEpisode)) {

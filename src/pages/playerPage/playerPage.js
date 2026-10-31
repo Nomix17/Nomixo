@@ -196,6 +196,17 @@ function monitoringTorrentStreamingReports() {
     if (report.stage === "load-failed") {
       const { title, message } = loadFailureDetails(report.data);
       return createWarningDiv(message, title);
+
+    } else if (report.stage === "next-episode-info") {
+      const title = report?.data?.Title;
+      const seasonNumber = report?.data?.seasonNumber;
+      const episodeNumber = report?.data?.episodeNumber;
+      const year = report?.data?.Year
+
+      document.getElementById("h-title").textContent = title;
+      document.getElementById("p-episode").textContent =
+        seasonNumber != null && episodeNumber != null ? `S${seasonNumber} E${episodeNumber}` : "";
+      document.getElementById("p-meta").textContent = year;
     }
     setStatus(stageToLabel(report));
   });
