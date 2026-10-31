@@ -986,48 +986,47 @@ function hideUpdateError() {
 
 updateVersionBtn.addEventListener('click', () => {
   if (updateVersionBtn.classList.contains('downloading')) {
+    localStorage.removeItem("updates-download-progress");
     window.electronAPI.cancelUpdateDownload();
     return;
   }
-
   if (!updateVersionBtn.classList.contains('active')) return;
-
-  hideUpdateError();
-  updateVersionBtn.classList.remove('active');
-  updateVersionBtn.classList.add('downloading');
-  updateVersionBtn.textContent = 'Downloading...';
-  updateDescEl.textContent = 'Downloading update...';
-  updateProgressRow.classList.add('active');
+  localStorage.setItem("updates-download-progress", JSON.stringify({ percent: 0 }));
+  showDownloadingUI("0.00");
 
   window.electronAPI.downloadUpdate();
 });
 
-updateVersionBtn.addEventListener('mouseenter', () => {
-  if (updateVersionBtn.classList.contains('downloading')) {
-    updateVersionBtn.textContent = 'Cancel Download';
-  }
-});
+function showDownloadingUI(percent) {
+  updateVersionBtn.classList.remove('active');
+  updateVersionBtn.classList.add('downloading');
+  updateVersionBtn.style.display = '';
+  updateVersionBtn.textContent = 'Cancel Download';
+  updateDescEl.textContent = 'Downloading update...';
+  restartUpdateBtn.classList.remove('active');
+  hideUpdateError();
 
-updateVersionBtn.addEventListener('mouseleave', () => {
-  if (updateVersionBtn.classList.contains('downloading')) {
-    updateVersionBtn.textContent = 'Downloading...';
-  }
-});
+  updateProgressRow.classList.add('active');
+  updateProgressBarFill.style.width = `${percent}%`;
+  updateProgressText.textContent = `${percent}%`;
+}
 
 function handleUpdateDownloadProgress(progressObj) {
   if (progressObj?.status === "cancelled") {
+    localStorage.removeItem("updates-download-progress");
     setUpdateButton(updateInfo);
     return;
   }
 
-  const percentage = progressObj?.percent?.toFixed(2);
-  if (percentage !== undefined) {
-    updateProgressBarFill.style.width = `${percentage}%`;
-    updateProgressText.textContent = `${percentage}%`;
-  }
+  const percent = progressObj?.percent;
+  if (typeof percent !== "number") return;
+
+  showDownloadingUI(percent.toFixed(2));
+  localStorage.setItem("updates-download-progress", JSON.stringify(progressObj));
 }
 
 function handleUpdateDownloaded() {
+  localStorage.removeItem("updates-download-progress");
   if(updateErrorRow.classList.contains("active")) return;
   updateProgressRow.classList.remove('active');
   updateVersionBtn.classList.remove('active', 'downloading');
@@ -1078,6 +1077,7 @@ function getUpdateErrorMessage(error) {
 
 function handleUpdateDownloadError(error) {
   console.error('Update download failed:', error);
+  localStorage.removeItem("updates-download-progress");
   const errorMsg = getUpdateErrorMessage(error);
 
   updateProgressRow.classList.remove('active');
@@ -1088,11 +1088,11 @@ function handleUpdateDownloadError(error) {
   updateVersionBtn.classList.add('active');
   updateVersionBtn.style.display = '';
   updateVersionBtn.textContent = updateInfo?.version
-    ? `Retry Download ${updateInfo.version}`
+    ? `Retry Download (v${updateInfo.version})`
     : 'Retry Download';
 
   updateDescEl.textContent = 'Update failed. You can try downloading it again.';
-  updateErrorText.textContent = error;
+  updateErrorText.textContent = errorMsg;
   updateErrorRow.classList.add('active');
   updateErrorRow.classList.remove('error-shake');
   void updateErrorRow.offsetWidth;
@@ -1113,13 +1113,19 @@ function scrollToUpdateSection() {
 }
 
 function initUpdateRelatedUI() {
-  const progress = localStorage.getItem("updates-download-progress");
   const update_downloaded = localStorage.getItem("update_downloaded") === "true";
-  if(update_downloaded) {
+  if (update_downloaded) {
     handleUpdateDownloaded();
-  } else if(progress !== null) {
-    updateProgressRow.classList.remove("active");
+    return;
+  }
+
+  const progress = localStorage.getItem("updates-download-progress");
+  if (progress === null) return;
+
+  try {
     handleUpdateDownloadProgress(JSON.parse(progress));
+  } catch {
+    localStorage.removeItem("updates-download-progress");
   }
 }
 
@@ -1127,7 +1133,10 @@ restartUpdateBtn.addEventListener('click', () => {
   window.electronAPI.restartAndUpdate();
 });
 
-window.electronAPI.onUpdateAvailable?.((info) => setUpdateButton(JSON.parse(info)));
+window.electronAPI.onUpdateAvailable?.((info) => {
+  if (updateVersionBtn.classList.contains('downloading')) return;
+  setUpdateButton(JSON.parse(info));
+});
 window.electronAPI.onUpdateDownloadProgress?.(handleUpdateDownloadProgress);
 window.electronAPI.onUpdateDownloaded?.(handleUpdateDownloaded);
 window.electronAPI.onUpdateDownloadFailed?.((error) => handleUpdateDownloadError(error));
