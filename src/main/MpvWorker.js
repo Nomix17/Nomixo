@@ -298,9 +298,7 @@ function runMpvProcess(
   ].filter(Boolean).join(" ");
 
   ipcPath = makeIpcPath();
-
-  const childProcessArguments = [
-    videoFullPath,
+  const addedArgs = [
     "--keep-open=yes",
     `--config-dir=${mpvConfigDirectory}`,
     `--start=${startFromTime}`,
@@ -311,6 +309,10 @@ function runMpvProcess(
     `--input-ipc-server=${ipcPath}`,
     `--ytdl=no`,
     `--network-timeout=300`,
+  ];
+  const childProcessArguments = [
+    videoFullPath,
+    ...addedArgs,
     ...subsArgument
   ];
 
@@ -321,15 +323,7 @@ function runMpvProcess(
   sawStreamTimeout = false;
   loadFailureReported = false;
   if (activeTorrent) startBufferingReports();
-  log.info("Launching mpv with options:\n" +
-    `--keep-open=yes\n` +
-    `--config-dir=${mpvConfigDirectory}\n` +
-    `--start=${startFromTime}\n` +
-    `--geometry=${mpvWindowConfigs.geometry}\n` +
-    `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}\n` +
-    `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}\n` +
-    `--force-media-title=${videoTitle}`
-  );
+  log.info("Launching mpv with options:\n" + addedArgs.join("\n"));
 
   mpvProcess.on("error", async (err) => {
     errorOccurred = true;

@@ -1,4 +1,5 @@
 import { Worker } from "worker_threads";
+import { parseArgs } from 'node:util';
 import { spawn } from "child_process";
 import { access, mkdir } from 'fs/promises';
 import WebTorrent from "webtorrent";
@@ -319,8 +320,11 @@ class MpvPlayerManager {
       this.#lastSecondBeforeQuit =
         currentPosition >= videoDuration - 120 ? 0 : currentPosition;
     }
-
-    process.stdout.write(line);
+    const { values } = parseArgs({
+      options: { "log-mpv":  { type: 'boolean', default: false } },
+    });
+    if(values["log-mpv"])
+      process.stdout.write(line);
 
     return nextEpisodeRequested;
   }
