@@ -2,14 +2,15 @@ import { ipcMain, app } from 'electron';
 import pkg from 'electron-updater';
 import { log } from "./debugging.js";
 import Store from 'electron-store';
-const { autoUpdater } = pkg;
+const { autoUpdater, CancellationToken } = pkg;
 
 export class UpdateManager {
   constructor(appManager) {
     this.appManager = appManager;
     this.store = new Store();
     this.autoUpdater = autoUpdater;
-
+    this.downloadCancellationToken = null;
+    this.cancelRequested = false;
     this._configureUpdater();
     this._registerUpdaterListeners();
     this._registerIpcHandlers();
@@ -84,20 +85,59 @@ export class UpdateManager {
   }
 
   async _onDownloadProgress(progress) {
+    if (this.cancelRequested) return;
     await this._sendToRenderer('updates-download-progress', 'update_download_progress', progress);
   }
 
+  _isCancellationError(error) {
+    return error?.name === 'CancellationError' || error?.message === 'cancelled';
+  }
+
   async _onDownloadFailed(error) {
-    if (this.browserWindow) {
+    if (this.cancelRequested || this._isCancellationError(error)) return;
+
+    if (this.browserWindow && !this.browserWindow.isDestroyed()) {
       this.browserWindow.webContents.send('update-download-error', {
         message: error?.message ?? String(error),
         stack: error?.stack ?? null,
       });
     }
   }
+
+  async _downloadUpdate() {
+    if (this.downloadCancellationToken) return;
+    this.cancelRequested = false;
+    this.downloadCancellationToken = new CancellationToken();
+    try {
+      await this.autoUpdater.downloadUpdate(this.downloadCancellationToken);
+    } catch (error) {
+      log.error(`Download Update ended: ${error?.message ?? error}`);
+    } finally {
+      this.downloadCancellationToken = null;
+      this.cancelRequested = false;
+    }
+  }
+
+  async cancelUpdateDownload() {
+    if (!this.downloadCancellationToken) return false;
+
+    this.cancelRequested = true;
+    this.downloadCancellationToken.cancel();
+
+    if (this.browserWindow && !this.browserWindow.isDestroyed()) {
+      await this.browserWindow.webContents.executeJavaScript(
+        `localStorage.removeItem('update_download_progress');
+         localStorage.removeItem('updates-download-progress');`
+      );
+      this.browserWindow.webContents.send('updates-download-progress', { status: 'cancelled' });
+    }
+    return true;
+  }
+
   _registerIpcHandlers() {
-    ipcMain.on('download-update', () => this.autoUpdater.downloadUpdate());
+    ipcMain.on('download-update', () => this._downloadUpdate());
     ipcMain.on('restart-and-update', () => this._restartAndUpdate());
+    ipcMain.on('cancel-update-download', () => this.cancelUpdateDownload());
     ipcMain.handle('get-app-version', () => app.getVersion());
   }
 
@@ -116,6 +156,7 @@ export class UpdateManager {
     ipcMain.removeAllListeners('download-update');
     ipcMain.removeAllListeners('restart-and-update');
     ipcMain.removeHandler('get-app-version');
+    ipcMain.removeHandler('cancel-update-download');
     this.autoUpdater.removeAllListeners();
   }
 }
