@@ -402,13 +402,24 @@ function sendProgressCallBack({ torrentId, message, done = false, error = false 
 }
 
 // ======================= DOWNLOAD OTHER THINGS =======================
+let downloadQueue = Promise.resolve();
+function enqueue(task) {
+  const result = downloadQueue.then(task);
+  downloadQueue = result.catch(() => {});
+  return result;
+}
 
 ipcMain.handle("download-image", async (event, downloadPath, imageUrl) => {
-  const posterDownloadPath = path.join(downloadPath, "POSTERS");
-  const ImagePath = await downloadImage(posterDownloadPath, imageUrl);
-  return ImagePath
-    ? { download_result: "success", image_path: ImagePath }
-    : { download_result: "failed" };
+  let cachedImage;
+  try {
+    cachedImage = await enqueue(() => downloadImage(Paths.imageCachePath, imageUrl));
+  } catch {
+    return { download_result: "failed" };
+  }
+  if (!cachedImage) return { download_result: "failed" };
+  const destinationPath = path.join(downloadPath, "POSTERS", path.basename(cachedImage));
+  await copyFile(cachedImage, destinationPath);
+  return { download_result: "success", image_path: destinationPath };
 });
 
 ipcMain.handle("download-backdrop", async (event, backgroundImageUrl, title) => {

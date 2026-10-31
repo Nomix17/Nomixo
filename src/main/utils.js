@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import path from 'path';
 import {log} from "./debugging.js";
-import { access, readdir, mkdir, writeFile, stat } from 'fs/promises';
+import { access, readdir, mkdir, writeFile, stat, rename, unlink } from 'fs/promises';
 
 export function generateUniqueId(seed) {
   const hash = crypto.createHash('sha256');
@@ -116,20 +116,37 @@ export function truncate(text, max = 40) {
   return text.length > max ? text.slice(0, max) + "…" : text;
 }
 
+
 export async function downloadImage(downloadDir, posterUrl) {
+  let tmp = null;
   try {
     await mkdir(downloadDir, { recursive: true });
+    const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
+
+    try {
+      const stats = await stat(file);
+      if (stats.isFile() && stats.size > 0) {
+        return file;
+      }
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+
     const controller = new AbortController();
     const res = await fetch(posterUrl, { signal: controller.signal });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const buffer = Buffer.from(await res.arrayBuffer());
     if (!buffer.length) throw new Error('Empty file');
-    const file = path.join(downloadDir, path.basename(new URL(posterUrl).pathname));
-    await writeFile(file, buffer);
+
+    tmp = `${file}.${process.pid}.tmp`;
+    await writeFile(tmp, buffer);
+    await rename(tmp, file);
+    tmp = null;
     return file;
   } catch (err) {
+    if (tmp) await unlink(tmp).catch(() => {});
     log.error(`Failed to download ${posterUrl}:`, err.message);
-    return null;
+    throw err;
   }
 }
 

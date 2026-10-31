@@ -28,6 +28,7 @@ export class Paths {
 
   static defaultDownloadPath = Paths.__downloads;
   static videoCachePath = path.join(Paths.__cache, "video_cache");
+  static imageCachePath = path.join(Paths.__cache, "image_cache");
   static postersDirPath = path.join(Paths.__cache, "posters");
   static searchHistoryCacheFile = path.join(Paths.__cache, "search_history.json");
 
@@ -56,6 +57,9 @@ export class FilesManager {
 
     if (!fs.existsSync(Paths.videoCachePath))
       fs.mkdirSync(Paths.videoCachePath, { recursive: true });
+
+    if (!fs.existsSync(Paths.imageCachePath))
+      fs.mkdirSync(Paths.imageCachePath, { recursive: true });
 
     if (!fs.existsSync(Paths.__downloads))
       fs.mkdirSync(Paths.__downloads, { recursive: true });
