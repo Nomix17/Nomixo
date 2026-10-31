@@ -358,14 +358,9 @@ class MpvPlayerManager {
 
     for (const [index, item] of Object.entries(LibraryInfo.media)) {
       if (item.MediaId === metaData.MediaId && item.MediaType === metaData.MediaType) {
+        delete metaData.local_subs;
         LibraryInfo.media[index].lastPlaybackPosition = lastPbPosition;
-        LibraryInfo.media[index].seasonNumber = metaData?.seasonNumber;
-        LibraryInfo.media[index].episodeNumber = metaData?.episodeNumber;
-        LibraryInfo.media[index].MagnetLink = metaData?.MagnetLink;
-        LibraryInfo.media[index].bgImagePath = metaData?.bgImagePath;
-        LibraryInfo.media[index].bgImageUrl = metaData?.bgImageUrl;
-        LibraryInfo.media[index].downloadPath = metaData?.downloadPath;
-        LibraryInfo.media[index].fileName = metaData?.fileName;
+        LibraryInfo.media[index] = {...LibraryInfo.media[index], ...metaData, typeOfSave: LibraryInfo.media[index].typeOfSave};
         LibraryInfo.media[index].timeOfSave = Date.now().toString();
 
         if (!LibraryInfo.media[index].typeOfSave.includes("Currently Watching")) {
@@ -384,7 +379,6 @@ class MpvPlayerManager {
         typeOfSave: ["Currently Watching"]
       });
     }
-
     await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
   }
 
