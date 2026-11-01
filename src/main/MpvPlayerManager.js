@@ -21,11 +21,13 @@ class MpvPlayerManager {
   #lastSecondBeforeQuit = 0;
   inVideoPlayerPage = false;
   #browserWindow = null;
+  #restoreAndFocusWindow =  null;
   #settings = null;
   #nextEpisodeManager = new NextEpisodeManager();
 
-  constructor(browserWindow) {
+  constructor(browserWindow, restoreAndFocusWindowCallback) {
     this.#browserWindow = browserWindow;
+    this.#restoreAndFocusWindow = restoreAndFocusWindowCallback;
   }
 
   get nextEpisodeInfo() {
@@ -170,7 +172,7 @@ class MpvPlayerManager {
     if (this.#streamClient) this.#streamClient.destroy();
     if (this.#mpv) this.#mpv.kill();
     if (this.#browserWindow && !this.#browserWindow.isVisible())
-      this.showAndFocusWindow();
+      this.#restoreAndFocusWindow();
     if (this.#worker && this.#worker.threadId !== -1) {
       this.#worker.postMessage({ type: "shutdown" });
       this.#worker = null;
@@ -212,7 +214,7 @@ class MpvPlayerManager {
         worker.once("exit", () => clearTimeout(forceKill));
         this.#worker = null;
       }
-      if (showWindow) this.showAndFocusWindow();
+      if (showWindow) this.#restoreAndFocusWindow();
     };
 
     const handleError = (errorMsg) => {
@@ -384,16 +386,6 @@ class MpvPlayerManager {
       });
     }
     await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
-  }
-
-  showAndFocusWindow() {
-    const win = this.#browserWindow;
-    if (!win || win.isDestroyed()) return;
-    if (win.isMinimized()) win.restore();
-    win.setAlwaysOnTop(true);
-    win.show();
-    win.focus();
-    win.setAlwaysOnTop(false);
   }
 
   async #getLatestPlaybackPosition(metaData) {

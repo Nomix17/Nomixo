@@ -45,8 +45,7 @@ export class AppManager {
     }
 
     this.app.on("second-instance", () => {
-      if (this.browserWindow?.isMinimized()) this.browserWindow.restore();
-      this.browserWindow?.focus();
+      this.restoreAndFocusWindow();
     });
 
     this.app.on("ready", async () => {
@@ -60,7 +59,7 @@ export class AppManager {
       this.browserWindow = await this.#createBrowserWindow();
       this.#setupBrowserWindowListeners();
       this.browserWindow.loadFile(entryPointFile);
-      this.mpvPlayerManager = new MpvPlayerManager(this.browserWindow);
+      this.mpvPlayerManager = new MpvPlayerManager(this.browserWindow, () => this.restoreAndFocusWindow());
       this.torrentDownloadManager = new TorrentDownloadManager(
         this.browserWindow,
         (entry) => this.mpvPlayerManager.playVideoOverMpv(entry)
@@ -130,7 +129,8 @@ export class AppManager {
     this.browserWindow.once("ready-to-show", () => {
       if (this.shouldBeMaximized)
         this.browserWindow.maximize();
-      this.browserWindow.show();
+      if (!this.openedInBackground)
+        this.browserWindow.show();
     });
   }
 
@@ -167,5 +167,15 @@ export class AppManager {
   applyZoomFactor(newZF) {
     this.browserWindow.webContents.setZoomFactor(newZF);
     this.mainZoomFactor = newZF;
+  }
+
+  restoreAndFocusWindow() {
+    if (!this.browserWindow || this.browserWindow.isDestroyed()) return;
+    if (this.browserWindow.isMinimized()) this.browserWindow.restore();
+    this.browserWindow.setAlwaysOnTop(true);
+    this.browserWindow.show();
+    this.browserWindow.focus();
+    this.browserWindow.setAlwaysOnTop(false);
+    this.openedInBackground = false;
   }
 }
