@@ -97,7 +97,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateAvailable: (callback) => ipcRenderer.on('update_available', (event, data) => callback(data)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update_downloaded', callback),
   onUpdateDownloadProgress: (callback) => ipcRenderer.on('updates-download-progress', (event, data) => callback(data)),
-  onUpdateDownloadFailed: (callback) => ipcRenderer.on('update-download-error', (event, data) => callback(data))
+  onUpdateDownloadFailed: (callback) => ipcRenderer.on('update-download-error', (event, data) => callback(data)),
+
+  runInBackground: () => ipcRenderer.send('run-in-background')
 });
 
 const canGoBack = ipcRenderer.sendSync("can-go-back");

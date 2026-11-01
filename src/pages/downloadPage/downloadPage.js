@@ -1453,6 +1453,11 @@ window.addEventListener("resize",()=>{
   alignSizeDiv();
 });
 
+document.getElementById("btn-runInBackground").addEventListener("click", () => {
+  if(document.getElementById("btn-runInBackground").classList.contains("disabled")) return;
+  window.electronAPI.runInBackground();
+});
+
 setupKeyPressesHandler();
 loadDownloadMediaFromLib();
 setupCategoryBtn();

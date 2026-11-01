@@ -17,6 +17,7 @@ export class AppManager {
   defaultSettingsPromise = null;
   positionWasChangedViaGoBackButton = false;
   shouldBeMaximized = false;
+  openedInBackground = false;
 
   torrentDownloadManager = null;
   mpvPlayerManager = null;
@@ -26,6 +27,7 @@ export class AppManager {
     this.store = new Store();
     this.defaultSettingsPromise = defaultSettingsPromise;
     nativeTheme.themeSource = "dark";
+    this.store.delete("opened-in-background");
   }
 
   initializeApp() {
@@ -126,6 +128,11 @@ export class AppManager {
       });
     });
 
+    this.browserWindow.on("show", () => {
+      log.info("Showing Window");
+      this.openedInBackground = false;
+    });
+
     this.browserWindow.once("ready-to-show", () => {
       if (this.shouldBeMaximized)
         this.browserWindow.maximize();
@@ -167,6 +174,14 @@ export class AppManager {
   applyZoomFactor(newZF) {
     this.browserWindow.webContents.setZoomFactor(newZF);
     this.mainZoomFactor = newZF;
+  }
+
+  runInBackground() {
+    if (this.openedInBackground) return;
+    this.openedInBackground = true;
+    if (!this.browserWindow || this.browserWindow.isDestroyed()) return;
+    this.browserWindow.hide();
+    log.info("Hiding Window");
   }
 
   restoreAndFocusWindow() {

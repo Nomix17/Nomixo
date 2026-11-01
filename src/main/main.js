@@ -7,7 +7,6 @@ import { log } from "./debugging.js";
 import dotenv from "dotenv";
 import { config } from "./config.js";
 import { AppManager } from "./AppManager.js";
-import MpvPlayerManager from "./MpvPlayerManager.js";
 import { initTorrentTrackers } from "./torrentTracker.js";
 import { SubDownloadManager } from "./SubDownloadManager.js";
 import languageDict from "./languageDict.js";
@@ -842,6 +841,9 @@ const updateManager = new UpdateManager(appManager);
 updateManager.checkForUpdates();
 
 // ======================= PROCESS =======================
+ipcMain.on('run-in-background', () => {
+  appManager.runInBackground();
+});
 
 process.on("unhandledRejection", (reason) => {
   if (reason?.name === "AbortError") return;

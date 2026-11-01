@@ -976,3 +976,18 @@
 .change-path-container .delete-title {
   font-size: 17px;
 }
+
+#btn-runInBackground {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#btn-runInBackground.disabled {
+  opacity: 0.3;
+}
+#btn-runInBackground svg {
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
