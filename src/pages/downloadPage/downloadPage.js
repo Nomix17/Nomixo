@@ -13,7 +13,7 @@ let monitoringProgress = false;
 async function loadDownloadMediaFromLib() {
   const library = await libraryDumpPromise;
   const scrollValue = await getCachedScrollValue();
-  const defaultSortType = await getCachedSortTypeValue();
+  const defaultSortType = await loadDownloadsSortByValue();
 
   if(library != null && library?.downloads != null) {
     const sortedMediaEntries = sortDownloadLibrary(library.downloads);
@@ -1064,11 +1064,6 @@ function monitorErrors() {
   });
 }
 
-async function getCachedSortTypeValue() {
-  let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
-  return cachedData ? cachedData.sort_type : "newest";
-}
-
 async function getCachedScrollValue() {
   let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   return cachedData ? cachedData.download_container_top_scroll_value : 0;
@@ -1444,9 +1439,23 @@ async function initSortingDropdown() {
     const libraryElements = await window.electronAPI.loadDownloadLibraryInfo();
     if (!libraryElements?.downloads) return;
     sortDoneDownloadingElements(libraryElements, newValue)
+    saveDownloadsSortByValue(newValue);
   });
-  const defaultSortType = await getCachedSortTypeValue();
+  const defaultSortType = await loadDownloadsSortByValue();
   setDropdownValue(sortingDropdown, defaultSortType);
+}
+
+async function saveDownloadsSortByValue(newValue) {
+  const settings = await window.electronAPI.loadSettings();
+  window.electronAPI.applySettings({
+    ...settings,
+    downloads_sort_by_value: newValue
+  });
+}
+
+async function loadDownloadsSortByValue() {
+  const settings = await window.electronAPI.loadSettings();
+  return settings?.downloads_sort_by_value ?? "newest";
 }
 
 window.addEventListener("resize",()=>{
