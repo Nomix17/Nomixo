@@ -65,6 +65,7 @@ async function addDropDownsEventListener() {
     cancelRandomPick();
     const sortType = getDropdownValue(SelectSortType);
     sortMediaELements(SortingCriteria[sortType]);
+    saveLibrarySortByValue(sortType);
   });
 
 }
@@ -330,6 +331,19 @@ function changeDescriptionTitleValue(newTypeOfSave=typeOfSave){
     descriptionTitle.innerText = newTypeOfSave;
 }
 
+async function saveLibrarySortByValue(newValue) {
+  const settings = await window.electronAPI.loadSettings();
+  window.electronAPI.applySettings({
+    ...settings,
+    library_sort_by_value: newValue
+  });
+}
+
+async function loadLibrarySortByValue() {
+  const settings = await window.electronAPI.loadSettings();
+  return settings?.library_sort_by_value ?? "newest";
+}
+
 async function loadCachedMediaData(cachedData){
   const containersData = cachedData?.containers_data;
   if(containersData){
@@ -403,7 +417,7 @@ async function initPage() {
 
   const mediaType = cachedMediaInfo?.dropdown_mediaType || "all";
   const saveType = cachedMediaInfo?.dropdown_saveType || typeOfSave || "All";
-  const sortType = cachedMediaInfo?.dropdown_sortType || "newest";
+  const sortType = await loadLibrarySortByValue();
 
   changeDescriptionTitleValue();
   setDropdownValue(SelectMediaType, mediaType);
