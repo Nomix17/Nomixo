@@ -14,6 +14,12 @@ import { normaliseFileName } from "./utils.js";
 import { getLibraryEntry, loadLibraryStorage, overwriteStorageFile } from "./storageManagement.js";
 import NextEpisodeManager from "./NextEpisodeManager.js";
 
+
+const { values: cliArgs } = parseArgs({
+  options: { "log-mpv": { type: 'boolean', default: false } },
+  strict: false,
+});
+
 class MpvPlayerManager {
   #worker = null;
   #streamClient = null;
@@ -322,10 +328,8 @@ class MpvPlayerManager {
       this.#lastSecondBeforeQuit =
         currentPosition >= videoDuration - 120 ? 0 : currentPosition;
     }
-    const { values } = parseArgs({
-      options: { "log-mpv":  { type: 'boolean', default: false } },
-    });
-    if(values["log-mpv"])
+
+    if(cliArgs["log-mpv"])
       process.stdout.write(line);
 
     return nextEpisodeRequested;
