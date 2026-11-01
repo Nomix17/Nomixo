@@ -104,6 +104,7 @@ export class AppManager {
         contextIsolation: true,
         nodeIntegration: false,
         zoomFactor: this.mainZoomFactor,
+        backgroundThrottling: false,
         zoomMode: 'isolated',
       },
     });
