@@ -4568,6 +4568,12 @@ mp.register_script_message("osc-hide", function()
         osc_visible(false)
     end
 end)
+-- ">" triggers "Play Next Episode", but only when a next episode is available
+mp.add_forced_key_binding(">", "play-next-episode", function()
+    if next_ep_enabled then
+        print("PLAY_NEXT_EPISODE")
+    end
+end)
 mp.add_key_binding(nil, "visibility", function() visibility_mode("cycle") end)
 mp.add_key_binding(nil, "progress-toggle", function()
     user_opts.persistentprogress = not user_opts.persistentprogress
