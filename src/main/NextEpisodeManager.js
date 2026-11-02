@@ -130,7 +130,8 @@ class NextEpisodeManager {
         el.MediaId === mediaId &&
         el.MediaType === 'tv' &&
         Number.parseInt(el.seasonNumber) === season &&
-        Number.parseInt(el.episodeNumber) === episode
+        Number.parseInt(el.episodeNumber) === episode &&
+        el.Status === "DONE"
     );
 
     if (entry?.downloadPath && entry?.fileName) return entry;
