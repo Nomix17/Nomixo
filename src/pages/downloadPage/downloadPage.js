@@ -12,6 +12,7 @@ let monitoringProgress = false;
 
 async function loadDownloadMediaFromLib() {
   const library = await libraryDumpPromise;
+  collapseCategories();
   const scrollValue = await getCachedScrollValue();
   const defaultSortType = await loadDownloadsSortByValue();
 
@@ -1064,8 +1065,16 @@ function monitorErrors() {
   });
 }
 
+async function collapseCategories() {
+  const categoriesToCollapse = JSON.parse(localStorage.getItem('to_collapse') ?? '[]');
+  categoriesToCollapse.forEach(elId => {
+    if(elId != null)
+      document.getElementById(elId).classList.add("collapse")
+  });
+}
+
 async function getCachedScrollValue() {
-  let cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
   return cachedData ? cachedData.download_container_top_scroll_value : 0;
 }
 
@@ -1465,6 +1474,13 @@ window.addEventListener("resize",()=>{
 document.getElementById("btn-runInBackground").addEventListener("click", () => {
   if(document.getElementById("btn-runInBackground").classList.contains("disabled")) return;
   window.electronAPI.runInBackground();
+});
+
+document.querySelectorAll(".title-container").forEach(el => {
+  el.addEventListener("click", () => {
+    const categorie = el.closest(".downloads-categorie");
+    categorie.classList.toggle("collapse");
+  });
 });
 
 setupKeyPressesHandler();

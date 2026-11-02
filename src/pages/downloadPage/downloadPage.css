@@ -128,6 +128,10 @@
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
+.downloads-categorie.collapse .movieContainer {
+  display: none;
+}
+
 .movieContainer:has(> .empty-container-text:not(.hidden)) {
   min-height: 216px;
   border-radius: 14px;

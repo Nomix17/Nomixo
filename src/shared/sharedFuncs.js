@@ -419,6 +419,14 @@ function getMovieDetailPageCacheData() {
 function getDownloadCacheData(){
   const downloadElementsContainers = document.querySelector(".download-categorie-container");
   const sortingDropdown = document.getElementById("select-sort");
+  localStorage.setItem(
+    "to_collapse",
+    JSON.stringify(
+      [...document.querySelectorAll(".collapse")]
+        .map(el => el.id)
+        .filter(Boolean)
+    )
+  );
   return {
     page:"download",
     "download_container_top_scroll_value":downloadElementsContainers.scrollTop,
