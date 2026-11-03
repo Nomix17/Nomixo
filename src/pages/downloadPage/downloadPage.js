@@ -1081,6 +1081,11 @@ async function getCachedScrollValue() {
   return cachedData ? cachedData.download_container_top_scroll_value : 0;
 }
 
+async function getCachedDownloadedSearchValue() {
+  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  return cachedData ? cachedData.downloaded_search_value : "";
+}
+
 async function scrollTo(scrollValue) {
   const downloadMediaContainer = document.querySelector(".download-categorie-container");
   downloadMediaContainer.scrollTop = scrollValue;
@@ -1095,6 +1100,7 @@ function initDownloadUI(){
 function updateDownloadUI() {
   handleEmptyDownloadCategories();
   updateElementsCounterForEachContainer();
+  applyDoneSearchFilter();
   disableBorderArrowBtnsForQueuedEls();
 }
 
@@ -1111,6 +1117,12 @@ function handleEmptyDownloadCategories() {
 
     if (elementCategoryControllBtn)
       elementCategoryControllBtn.classList.toggle("disabled", isEmpty);
+
+    if (downloadCategorieDiv.id === "download-done-div") {
+      const searchInput = document.getElementById("completed-download-search");
+      document.getElementById("completed-download-search-wrapper")?.classList.toggle("disabled", isEmpty);
+      if (searchInput) searchInput.disabled = isEmpty;
+    }
 
     if (isEmpty && downloadCategorieDiv.id === "currently-downloading-div")
       removeDownloadBackgroundDiv();
@@ -1500,6 +1512,80 @@ document.querySelectorAll(".title-container").forEach(el => {
   });
 });
 
+function applyDoneSearchFilter() {
+  const input = document.getElementById("completed-download-search");
+  const wrapper = document.getElementById("completed-download-search-wrapper");
+  const noResults = document.getElementById("completed-no-results");
+  if (!input || !wrapper || !noResults) return;
+
+  const query = input.value.trim().toLowerCase();
+  const medias = [...document.querySelectorAll("#download-done-div .download-media")];
+
+  let visibleCount = 0;
+  for (const el of medias) {
+    const title = el.querySelector(".movie-title-p")?.textContent?.toLowerCase() ?? "";
+    const matches = !query || title.includes(query);
+    el.classList.toggle("hide", !matches);
+    if (matches) visibleCount++;
+  }
+
+  wrapper.classList.toggle("has-value", input.value.length > 0);
+
+  const showNoResults = query.length > 0 && medias.length > 0 && visibleCount === 0;
+  noResults.classList.toggle("hidden", !showNoResults);
+  if (showNoResults)
+    document.getElementById("completed-no-results-title").textContent =
+      `No results for “${input.value.trim()}”`;
+}
+
+async function setupDoneSearch() {
+  const cachedValue = await getCachedDownloadedSearchValue();
+  const input = document.getElementById("completed-download-search");
+  const wrapper = document.getElementById("completed-download-search-wrapper");
+  if (!input || !wrapper) return;
+  input.value = cachedValue;
+
+  const openDoneCategory = () => {
+    dontGoBack = true
+    document.getElementById("download-done-div")?.classList.remove("collapse");
+  }
+
+  input.addEventListener("input", () => {
+    openDoneCategory();
+    applyDoneSearchFilter();
+    wrapper.classList.toggle("has-value", input.value.length > 0);
+  });
+
+  input.addEventListener("focus", openDoneCategory);
+
+  wrapper.addEventListener("mousedown", (e) => {
+    if (e.target !== input) {
+      e.preventDefault();
+      input.focus();
+    }
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.stopPropagation();
+      input.blur();
+      applyDoneSearchFilter();
+    }
+    if (e.key.startsWith("Arrow"))
+      e.stopPropagation();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (input.disabled || wrapper.classList.contains("disabled")) return;
+    if (e.key.toLowerCase() === "/") {
+      e.preventDefault();
+      input.focus();
+      input.select();
+    }
+  });
+}
+
+setupDoneSearch();
 setupKeyPressesHandler();
 loadDownloadMediaFromLib();
 setupCategoryBtn();

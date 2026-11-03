@@ -429,7 +429,8 @@ function getDownloadCacheData(){
   );
   return {
     page:"download",
-    "download_container_top_scroll_value":downloadElementsContainers.scrollTop,
+    "download_container_top_scroll_value": downloadElementsContainers.scrollTop,
+    "downloaded_search_value": document.getElementById("completed-download-search")?.value ?? "",
     sort_type: getDropdownValue(sortingDropdown)
   };
 }

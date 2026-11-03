@@ -63,7 +63,16 @@
 .title-container .title{
   display: flex;
   flex-direction: row;
+  align-items: center;
   gap: 10px;
+  cursor: pointer;
+}
+.title-container .title * {
+  cursor: pointer;
+}
+
+.title-container .title svg {
+  height: 100%;
 }
 
 #custom-sortType-dropdown {
@@ -72,7 +81,8 @@
 
 .downloads-categorie h1 {
   flex-shrink: 0;
-  margin: 9px 9px 9px 22.5px;
+  margin: 9px;
+  margin-left: 0px;
   font-size: 31.5px;
 }
 
@@ -997,4 +1007,100 @@
   width: 22px;
   height: 22px;
   pointer-events: none;
+}
+
+.download-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  width: 200px;
+  min-width: 150px;
+  height: 42px;
+  margin: 9px 9px 9px auto;
+  padding: 0 12px;
+  gap: 8px;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  cursor: text;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              opacity 0.2s ease;
+}
+
+.download-search-wrapper:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+}
+
+.download-search-wrapper:focus-within,
+.download-search-wrapper.has-value {
+  width: 300px;
+}
+
+.download-search-wrapper:focus-within {
+  background-color: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08), 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.download-search-wrapper .search-icon {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.download-search-wrapper:focus-within .search-icon {
+  opacity: 0.95;
+}
+
+.download-search {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  font-size: 14.5px;
+  font-family: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  cursor: text;
+}
+
+.download-search::placeholder {
+  color: inherit;
+  opacity: 0.45;
+}
+
+/* nothing completed yet: nothing to search */
+.download-search-wrapper.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* narrow windows: search drops to its own full-width row under the title */
+@media (max-width: 900px) {
+  .downloads-categorie .categorie-top-bar:has(.download-search-wrapper) {
+    flex-wrap: wrap;
+  }
+
+  .download-search-wrapper,
+  .download-search-wrapper:focus-within,
+  .download-search-wrapper.has-value {
+    order: 3;
+    flex: 1 1 100%;
+    width: auto;
+    margin: 9px 22.5px 9px 22.5px;
+  }
 }
