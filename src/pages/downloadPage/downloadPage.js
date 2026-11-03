@@ -4,7 +4,8 @@ const queuedDownloadsDiv  = document.getElementById("download-queue-div");
 const pausedDownloadsDiv = document.getElementById("download-paused-div");
 const doneDownloadsDiv = document.getElementById("download-done-div");
 const libraryDumpPromise = window.electronAPI.loadDownloadLibraryInfo();
-const sortingDropdown = document.getElementById("select-sort");
+const sortingCompletedDropDown = document.getElementById("select-downloaded-media-sort");
+const sortingQueuedDropDown = document.getElementById("select-queued-media-sort");
 
 const LOADING_MSG = "Starting Download";
 const SUBS_DOWNLOADING_MSG = "Downloading subs";
@@ -280,7 +281,7 @@ function monitorDownloads() {
         doneDownloadContainer.appendChild(TargetDownloadElement);
       MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);
       const downloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
-      sortedMediaInsert(downloadContainer, TargetDownloadElement, SortingCriteria[getDropdownValue(sortingDropdown)]);
+      sortedMediaInsert(downloadContainer, TargetDownloadElement, SortingCriteria[getDropdownValue(sortingCompletedDropDown)]);
       updateDownloadUI();
     }
   });
@@ -892,12 +893,14 @@ async function MarkDownloadElementAsQueued(MediaDownloadElement) {
     const elementId = MediaDownloadElement.id;
     [upArrow,downArrow].forEach((el, elIndex) => {
       el.addEventListener("click", async () => {
+        if(el.classList.contains("disabled")) return;
         const newOrder = 
           await window.electronAPI.shiftDownloadQueueElement (
             elementId,
             (elIndex * 2) - 1 // either 1 or -1
           );
         reorderDownloadCategorie(queuedDownloadsDiv, newOrder);
+        resetQueuedSortDropdown();
       });
     });
 
@@ -1054,8 +1057,8 @@ function disableBorderArrowBtnsForQueuedEls() {
 
   const topUpArrow = queuedEls[0].querySelector(".up-arrow");
   const bottomDownArrow = queuedEls[queuedEls.length - 1].querySelector(".down-arrow");
-  bottomDownArrow.classList.add("disabled");
-  topUpArrow.classList.add("disabled");
+  bottomDownArrow?.classList.add("disabled");
+  topUpArrow?.classList.add("disabled");
 }
 
 function monitorErrors() {
@@ -1472,17 +1475,78 @@ async function sortDoneDownloadingElements(downloadLibraryDump, sortType) {
   reorderDownloadCategorie(doneDownloadsDiv, sortedEntries, false);
 }
 
+let queuedSortPlaceholder = "Sort items by";
+function resetQueuedSortDropdown() {
+  const trigger = sortingQueuedDropDown.closest(".custom-select")?.querySelector(".select-trigger");
+  if (trigger) trigger.textContent = queuedSortPlaceholder;
+  sortingQueuedDropDown.removeAttribute("data-value");
+  sortingQueuedDropDown.querySelectorAll(".select-option").forEach(opt => opt.classList.remove("selected"));
+  saveQueuedDownloadsSortByValue(null);
+}
+
+let queuedSortChain = Promise.resolve();
+function sortQueuedDownloadingElements(sortType, animateTransition = true) {
+  queuedSortChain = queuedSortChain
+    .then(() => applyQueuedSortToMainQueue(sortType, animateTransition))
+    .catch(error => console.error("Failed to sort the download queue:", error));
+  return queuedSortChain;
+}
+
+async function applyQueuedSortToMainQueue(sortType, animateTransition) {
+  const library = await window.electronAPI.loadDownloadLibraryInfo();
+  if (!library?.downloads) return;
+
+  const queueList = await window.electronAPI.getDownloadQueueList();
+  if (!Array.isArray(queueList) || queueList.length < 2) return;
+
+  const queuedEntries = library.downloads.filter(el => queueList.includes(el.torrentId));
+  const sortedIds = sortDownloadLibrary(queuedEntries, SortingCriteria[sortType]).map(entry => entry.torrentId);
+  const targetOrder = [
+    ...sortedIds,
+    ...queueList.filter(id => !sortedIds.includes(id))
+  ];
+
+  let currentOrder = [...queueList];
+  outer:
+  for (let targetIndex = 0; targetIndex < targetOrder.length; targetIndex++) {
+    const torrentId = targetOrder[targetIndex];
+    let position = currentOrder.indexOf(torrentId);
+
+    while (position > targetIndex) {
+      const newOrder = await window.electronAPI.shiftDownloadQueueElement(torrentId, -1);
+      if (!Array.isArray(newOrder)) break outer;
+      currentOrder = newOrder;
+
+      const newPosition = currentOrder.indexOf(torrentId);
+      if (newPosition === -1 || newPosition >= position) break outer;
+      position = newPosition;
+    }
+  }
+
+  reorderDownloadCategorie(queuedDownloadsDiv, currentOrder, animateTransition);
+}
+
 async function initSortingDropdown() {
   dropDownInit();
-  sortingDropdown.addEventListener("dropdownChange", async () => {
-    const newValue = getDropdownValue(sortingDropdown);
+  sortingCompletedDropDown.addEventListener("dropdownChange", async () => {
+    const newValue = getDropdownValue(sortingCompletedDropDown);
     const libraryElements = await window.electronAPI.loadDownloadLibraryInfo();
     if (!libraryElements?.downloads) return;
     sortDoneDownloadingElements(libraryElements, newValue)
     saveDownloadsSortByValue(newValue);
   });
   const defaultSortType = await loadDownloadsSortByValue();
-  setDropdownValue(sortingDropdown, defaultSortType);
+  setDropdownValue(sortingCompletedDropDown, defaultSortType);
+
+  sortingQueuedDropDown.addEventListener("dropdownChange", async () => {
+    const newValue = getDropdownValue(sortingQueuedDropDown);
+    sortQueuedDownloadingElements(newValue);
+    saveQueuedDownloadsSortByValue(newValue);
+  });
+  const queuedTrigger = sortingQueuedDropDown.closest(".custom-select")?.querySelector(".select-trigger");
+  if (queuedTrigger?.textContent.trim()) queuedSortPlaceholder = queuedTrigger.textContent.trim();
+  const defaultQueuedSortType = await loadQueuedDownloadsSortByValue();
+  if (defaultQueuedSortType) setDropdownValue(sortingQueuedDropDown, defaultQueuedSortType);
 }
 
 async function saveDownloadsSortByValue(newValue) {
@@ -1496,6 +1560,19 @@ async function saveDownloadsSortByValue(newValue) {
 async function loadDownloadsSortByValue() {
   const settings = await window.electronAPI.loadSettings();
   return settings?.downloads_sort_by_value ?? "newest";
+}
+
+async function saveQueuedDownloadsSortByValue(newValue) {
+  const settings = await window.electronAPI.loadSettings();
+  window.electronAPI.applySettings({
+    ...settings,
+    queued_downloads_sort_by_value: newValue
+  });
+}
+
+async function loadQueuedDownloadsSortByValue() {
+  const settings = await window.electronAPI.loadSettings();
+  return settings?.queued_downloads_sort_by_value ?? null;
 }
 
 window.addEventListener("resize",()=>{
