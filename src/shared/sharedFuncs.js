@@ -929,9 +929,10 @@ function setupNavigationBtnHandler() {
 }
 
 const SortingCriteria = {
-  alphabetical: 0,
-  newest: 1,
-  oldest: 2
+  alphabeticalAsc: 0,
+  alphabeticalDesc: 1,
+  newest: 2,
+  oldest: 3
 }
 
 // ################################### MEDIA ELEMENT CREATION ###################################

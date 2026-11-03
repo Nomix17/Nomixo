@@ -288,11 +288,20 @@ function setupRandomPicker() {
   window.addEventListener("beforeunload", clearRandomHighlight);
 }
 
-function sortMediaELements(sortingType = SortingCriteria.alphabetical) {
+function sortMediaELements(sortingType = SortingCriteria.alphabeticalAsc) {
   const mediaElements = Array.from(SavedMedia.children);
   switch (sortingType) {
-    case SortingCriteria.alphabetical:{
+    case SortingCriteria.alphabeticalAsc:{
       mediaElements.sort((a,b) => {
+        const aTitle = a.querySelector(".parag-MovieTitle p").textContent || "";
+        const bTitle = b.querySelector(".parag-MovieTitle p").textContent || "";
+        return aTitle.localeCompare(bTitle);
+      });
+      break;
+    }
+
+    case SortingCriteria.alphabeticalDesc:{
+      mediaElements.sort((b,a) => {
         const aTitle = a.querySelector(".parag-MovieTitle p").textContent || "";
         const bTitle = b.querySelector(".parag-MovieTitle p").textContent || "";
         return aTitle.localeCompare(bTitle);

@@ -296,8 +296,11 @@ function belongsBefore(newElement, existingElement, sortingType) {
     return Number(el.dataset.StatusUpdateTime) || 0;
   }
   switch (sortingType) {
-    case SortingCriteria.alphabetical: {
+    case SortingCriteria.alphabeticalAsc: {
       return getElementTitle(newElement).localeCompare(getElementTitle(existingElement)) < 0;
+    }
+    case SortingCriteria.alphabeticalDesc: {
+      return getElementTitle(newElement).localeCompare(getElementTitle(existingElement)) > 0;
     }
     case SortingCriteria.newest: {
       return getElementStatusUpdateTime(newElement) > getElementStatusUpdateTime(existingElement);
@@ -1381,7 +1384,7 @@ function setupCategoryBtn() {
 
 function sortDownloadLibrary(libraryEntryPoints, sortingType = SortingCriteria.newest) {
   switch (sortingType) {
-    case SortingCriteria.alphabetical: {
+    case SortingCriteria.alphabeticalAsc: {
       return libraryEntryPoints.sort((a, b) => {
         const aTitle =
           a.seasonNumber && a.episodeNumber
@@ -1394,6 +1397,20 @@ function sortDownloadLibrary(libraryEntryPoints, sortingType = SortingCriteria.n
         return aTitle.localeCompare(bTitle);
       });
     }
+    case SortingCriteria.alphabeticalDesc: {
+      return libraryEntryPoints.sort((b, a) => {
+        const aTitle =
+          a.seasonNumber && a.episodeNumber
+            ? `${a.Title} S${a.seasonNumber} E${a.episodeNumber}`
+            : a.Title;
+        const bTitle =
+          b.seasonNumber && b.episodeNumber
+            ? `${b.Title} S${b.seasonNumber} E${b.episodeNumber}`
+            : b.Title;
+        return aTitle.localeCompare(bTitle);
+      });
+    }
+
 
     case SortingCriteria.newest: {
       return libraryEntryPoints.sort(
