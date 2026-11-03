@@ -1071,8 +1071,10 @@ function monitorErrors() {
 async function collapseCategories() {
   const categoriesToCollapse = JSON.parse(localStorage.getItem('to_collapse') ?? '[]');
   categoriesToCollapse.forEach(elId => {
-    if(elId != null)
+    if(elId != null) {
       document.getElementById(elId).classList.add("collapse")
+      document.getElementById(elId).querySelector("svg").innerHTML = chevronRight;
+    }
   });
 }
 
@@ -1508,6 +1510,7 @@ document.getElementById("btn-runInBackground").addEventListener("click", () => {
 document.querySelectorAll(".title-container").forEach(el => {
   el.addEventListener("click", () => {
     const categorie = el.closest(".downloads-categorie");
+    el.querySelector("svg").innerHTML = categorie.classList.contains("collapse") ? chevronBottom : chevronRight;
     categorie.classList.toggle("collapse");
   });
 });

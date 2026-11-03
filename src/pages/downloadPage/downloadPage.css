@@ -1,9 +1,21 @@
+#div-main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#div-middle {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 #div-middle-right {
   display: flex;
   flex-direction: column;
   height: 100%;
   max-height: 100vh;
-  padding: 18px 0 72px;
+  padding: 18px 0 0 10px;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -18,10 +30,6 @@
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
-}
-
-#download-done-div {
-  margin-bottom: 27px;
 }
 
 #div-text {
@@ -58,6 +66,9 @@
 .downloads-categorie .title-container {
   display: flex;
   justify-content: space-between;
+}
+#download-done-div {
+  margin-bottom: 27px;
 }
 
 .title-container .title{
