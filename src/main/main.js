@@ -415,16 +415,23 @@ function enqueue(task) {
 }
 
 ipcMain.handle("download-image", async (event, downloadPath, imageUrl) => {
-  let cachedImage;
   try {
-    cachedImage = await enqueue(() => downloadImage(Paths.imageCachePath, imageUrl));
-  } catch {
+    let cachedImage;
+    try {
+      cachedImage = await enqueue(() => downloadImage(Paths.imageCachePath, imageUrl));
+    } catch(err) {
+      throw new Error(err);
+    }
+    if (!cachedImage) return { download_result: "failed" };
+    const destinationDir = path.join(downloadPath, "POSTERS");
+    await mkdir(destinationDir, { recursive: true });
+    const destinationPath = path.join(destinationDir, path.basename(cachedImage));
+    await copyFile(cachedImage, destinationPath);
+    return { download_result: "success", image_path: destinationPath };
+  } catch(err) {
+    log.error(err);
     return { download_result: "failed" };
   }
-  if (!cachedImage) return { download_result: "failed" };
-  const destinationPath = path.join(downloadPath, "POSTERS", path.basename(cachedImage));
-  await copyFile(cachedImage, destinationPath);
-  return { download_result: "success", image_path: destinationPath };
 });
 
 ipcMain.handle("download-backdrop", async (event, backgroundImageUrl, title) => {
