@@ -1074,11 +1074,73 @@ function monitorErrors() {
 async function collapseCategories() {
   const categoriesToCollapse = JSON.parse(localStorage.getItem('to_collapse') ?? '[]');
   categoriesToCollapse.forEach(elId => {
-    if(elId != null) {
-      document.getElementById(elId).classList.add("collapse")
-      document.getElementById(elId).querySelector("svg").innerHTML = chevronRight;
-    }
+    const categorie = elId != null ? document.getElementById(elId) : null;
+    if(categorie) setCategorieCollapsed(categorie, true, false);
   });
+}
+
+const COLLAPSE_ANIM_DURATION = 300;
+const COLLAPSE_ANIM_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
+
+function isCategorieCollapsed(categorie) {
+  return categorie.classList.contains("collapse") || categorie.classList.contains("collapsing");
+}
+
+function setCategorieCollapsed(categorie, collapsed, animate = true) {
+  const box = categorie.querySelector(".movieContainer");
+  if(!box || isCategorieCollapsed(categorie) === collapsed) return;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!animate || reduceMotion) {
+    box._collapseAnim?.cancel();
+    box._collapseAnim = null;
+    box.style.overflow = "";
+    categorie.classList.remove("collapsing");
+    categorie.classList.toggle("collapse", collapsed);
+    return;
+  }
+
+  const readBox = () => {
+    const cs = getComputedStyle(box);
+    return {
+      height: cs.height,
+      minHeight: cs.minHeight,
+      paddingTop: cs.paddingTop,
+      paddingBottom: cs.paddingBottom,
+      opacity: cs.opacity
+    };
+  };
+  const closed = { height: "0px", minHeight: "0px", paddingTop: "0px", paddingBottom: "0px", opacity: "0" };
+
+  // start from wherever the box currently is (also handles clicks mid-animation)
+  const from = categorie.classList.contains("collapse") ? closed : readBox();
+  box._collapseAnim?.cancel();
+
+  let to;
+  if(collapsed) {
+    categorie.classList.add("collapsing");
+    to = closed;
+  } else {
+    categorie.classList.remove("collapse", "collapsing");
+    to = readBox();
+  }
+
+  box.style.overflow = "hidden";
+  const anim = box.animate([from, to], {
+    duration: COLLAPSE_ANIM_DURATION,
+    easing: COLLAPSE_ANIM_EASING
+  });
+  box._collapseAnim = anim;
+
+  anim.onfinish = () => {
+    if(box._collapseAnim !== anim) return;
+    box._collapseAnim = null;
+    box.style.overflow = "";
+    if(collapsed) {
+      categorie.classList.remove("collapsing");
+      categorie.classList.add("collapse");
+    }
+  };
 }
 
 async function getCachedScrollValue() {
@@ -1587,8 +1649,7 @@ document.getElementById("btn-runInBackground").addEventListener("click", () => {
 document.querySelectorAll(".title-container").forEach(el => {
   el.addEventListener("click", () => {
     const categorie = el.closest(".downloads-categorie");
-    el.querySelector("svg").innerHTML = categorie.classList.contains("collapse") ? chevronBottom : chevronRight;
-    categorie.classList.toggle("collapse");
+    setCategorieCollapsed(categorie, !isCategorieCollapsed(categorie));
   });
 });
 
@@ -1627,7 +1688,8 @@ async function setupDoneSearch() {
 
   const openDoneCategory = () => {
     dontGoBack = true
-    document.getElementById("download-done-div")?.classList.remove("collapse");
+    const doneCategorie = document.getElementById("download-done-div");
+    if(doneCategorie) setCategorieCollapsed(doneCategorie, false);
   }
 
   input.addEventListener("input", () => {

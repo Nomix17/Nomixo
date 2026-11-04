@@ -84,6 +84,12 @@
 
 .title-container .title svg {
   height: 100%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.downloads-categorie.collapse .title-container .title svg,
+.downloads-categorie.collapsing .title-container .title svg {
+  transform: rotate(-90deg);
 }
 
 #custom-sortType-dropdown {
