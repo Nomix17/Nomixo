@@ -5,9 +5,10 @@ import {
   findFile,
   normaliseFileName
 } from './utils.js';
+import { createIPC } from "./ipc.js";
 import { log } from './debugging.js';
 import { spawn } from 'child_process';
-import { parentPort, workerData, threadId } from 'worker_threads';
+import { parentPort, threadId } from 'worker_threads';
 import net from 'net';
 import WebTorrent from 'webtorrent';
 import express from 'express';
@@ -26,12 +27,39 @@ let sawStreamTimeout = false;
 let loadFailureReported = false;
 let ipcPath = null;
 let nextEpisodeFlag = null;
+let session = null;
 config.init();
+
+const ipc = createIPC(parentPort, {
+  async shutdown() {
+    await cleanup();
+    setImmediate(() => {
+      ipc.close();
+      parentPort.close();
+    });
+  },
+
+  onEvent(name, payload) {
+    if (name === 'next_episode_ready') {
+      nextEpisodeFlag = Boolean(payload);
+      pushNextEpisodeFlag();
+    }
+  },
+});
 
 const MPV_PLAYING_REGEX = /(?:AV|V|A):\s+\d+:\d+:\d+/;
 
 function sendProgress(stage, data) {
-  parentPort.postMessage({ type: 'progress', stage, ...(data !== undefined && { data }) });
+  ipc.emit('progress', { stage, data });
+}
+
+async function getWindowConf() {
+  try {
+    return await ipc.call('getWindowConfigs');
+  } catch (err) {
+    log.error('Failed to get window config, using defaults:', err.message);
+    return { geometry: '70%x70%', fullscreened: false, maximized: false };
+  }
 }
 
 function startBufferingReports() {
@@ -70,10 +98,7 @@ function detectLoadFailure(text) {
 }
 
 SubDownloadManager.sendProgressCallBack = (progressInfo) => {
-  parentPort.postMessage({
-    type: "subtitles_progress",
-    progressInfo,
-  });
+  ipc.emit('subtitles_progress', progressInfo);
 }
 
 function makeIpcPath() {
@@ -98,16 +123,8 @@ function pushNextEpisodeFlag() {
   sendToMpv(['script-message', 'have-next-episode', nextEpisodeFlag ? 'yes' : 'no']);
 }
 
-function StreamTorrent(
-  MpvExecPath,
-  metaData,
-  startFromTime,
-  videoCachePath,
-  subDirectory,
-  mpvConfigDirectory,
-  mpvWindowConfigs,
-  subtitleSettings
-) {
+function StreamTorrent() {
+  const { metaData, videoCachePath, subDirectory, subtitleSettings } = session;
   return new Promise(async (resolve, reject) => {
     sendProgress('trackers');
     const trackers = await getTorrentTrackers()
@@ -134,11 +151,7 @@ function StreamTorrent(
 
       if (!file) {
         const errorMsg = "No suitable video file was found";
-        parentPort.postMessage({
-          type: "status",
-          message: "Torrent Fetching Error",
-          error: errorMsg
-        });
+        ipc.emit('torrent_error', errorMsg);
         await cleanup();
         return reject(new Error(errorMsg));
       }
@@ -207,12 +220,7 @@ function StreamTorrent(
             .filter(response => response.status === "success")
             .map(response => response.file);
 
-          runMpvProcess(
-            MpvExecPath, url,
-            mpvConfigDirectory, metaData,
-            startFromTime,
-            subsPaths, mpvWindowConfigs
-          );
+          runMpvProcess(url, subsPaths);
 
         } catch (error) {
           log.error(error.message);
@@ -239,32 +247,20 @@ function StreamTorrent(
     torrent.on('error', async (err) => {
       const errorMsg = `Torrent error: ${err.message}`;
       log.error(errorMsg);
-      parentPort.postMessage({ type: "status", message: "Torrent Fetching Error", error: errorMsg });
+      ipc.emit('torrent_error', errorMsg);
       await cleanup();
       reject(err);
     });
   });
 }
 
-async function PlayLocalVideo(
-  MpvExecPath,
-  metaData,
-  startFromTime,
-  subsPaths,
-  mpvConfigDirectory,
-  mpvWindowConfigs
-) {
+async function PlayLocalVideo() {
+  const { metaData, subsPaths } = session;
   return new Promise(async(resolve, reject) => {
     try {
       const videoFullPath = await findFile(metaData.downloadPath, metaData.fileName);
       if (videoFullPath)
-        runMpvProcess(
-          MpvExecPath, videoFullPath,
-          mpvConfigDirectory, metaData,
-          startFromTime,
-          subsPaths, mpvWindowConfigs,
-          resolve, reject
-        );
+        runMpvProcess(videoFullPath, subsPaths, resolve, reject);
       else
         throw new Error(`Cannot Find File Named:<br> ${metaData.fileName}`);
     } catch (err) {
@@ -274,17 +270,8 @@ async function PlayLocalVideo(
   });
 }
 
-function runMpvProcess(
-  MpvExecPath,
-  videoFullPath,
-  mpvConfigDirectory,
-  metaData,
-  startFromTime,
-  subsPaths,
-  mpvWindowConfigs,
-  onClose,
-  onError
-) {
+async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
+  const { MpvExecPath, mpvConfigDirectory, metaData, startFromTime } = session;
   sendProgress('launching');
   const subsArgument = subsPaths != null ? subsPaths.map(path => `--sub-file=${path}`) : [];
   const isWindows = os.platform() === 'win32';
@@ -298,13 +285,15 @@ function runMpvProcess(
   ].filter(Boolean).join(" ");
 
   ipcPath = makeIpcPath();
+  const win = await getWindowConf();
+
   const addedArgs = [
     "--keep-open=yes",
     `--config-dir=${mpvConfigDirectory}`,
     `--start=${startFromTime}`,
-    `--geometry=${mpvWindowConfigs.geometry}`,
-    `--fullscreen=${mpvWindowConfigs.fullscreened ? "yes" : "no"}`,
-    `--window-maximized=${mpvWindowConfigs.maximized ? "yes" : "no"}`,
+    `--geometry=${win.geometry}`,
+    `--fullscreen=${win.fullscreened ? "yes" : "no"}`,
+    `--window-maximized=${win.maximized ? "yes" : "no"}`,
     `--force-media-title=${videoTitle}`,
     `--input-ipc-server=${ipcPath}`,
     `--ytdl=no`,
@@ -335,11 +324,7 @@ function runMpvProcess(
     log.error(errMsg);
     await cleanup();
 
-    parentPort.postMessage({
-      type: "status",
-      message: "playback_error",
-      error: errMsg
-    });
+    ipc.emit('playback_error', errMsg);
 
     if (onError) onError(new Error(errMsg));
   });
@@ -350,7 +335,7 @@ function runMpvProcess(
     log.info(`MPV process closed (exit code ${code})`);
     await cleanup();
 
-    parentPort.postMessage({ type: "status", message: "playback_done" });
+    ipc.emit('playback_done');
     if (onClose) onClose();
   });
 
@@ -364,11 +349,7 @@ function runMpvProcess(
         pushNextEpisodeFlag();
       }
       if (!playbackStarted && !loadFailureReported) detectLoadFailure(text);
-      parentPort.postMessage({
-        type: "status",
-        message: "mpv_output_data",
-        data: data.toString()
-      });
+      ipc.emit('mpv_output', text);
     });
   });
 }
@@ -428,58 +409,28 @@ function destroyClient(client) {
   ]);
 }
 
-parentPort.on('message', async (msg) => {
-  if (msg.type === 'next_episode_ready') {
-    nextEpisodeFlag = Boolean(msg.value);
-    pushNextEpisodeFlag();
-    return;
-  }
-  if (msg.type === 'shutdown') {
-    await cleanup();
-    parentPort.removeAllListeners('message');
-    parentPort.close();
-  }
-});
+try {
+  session = await ipc.call('getPlaybackConfig');
+} catch (err) {
+  ipc.emit('playback_error', err.message);
+  await cleanup();
+}
 
-if (workerData.typeOfPlay === "StreamTorrent") {
-  StreamTorrent(
-    workerData.MpvExecPath,
-    workerData.metaData,
-    workerData.startFromTime,
-    workerData.videoCachePath,
-    workerData.subDirectory,
-    workerData.mpvConfigDirectory,
-    workerData.mpvWindowConfigs,
-    workerData.subtitleSettings
-  )
+if (session?.typeOfPlay === "StreamTorrent") {
+  StreamTorrent()
   .catch(async (err) => {
-    parentPort.postMessage({
-      type: "status",
-      message: "Torrent Fetching Error",
-      error: err.message
-    });
+    ipc.emit('torrent_error', err.message);
     await cleanup();
   });
 
-} else if (workerData.typeOfPlay === "LocalFile") {
-  PlayLocalVideo(
-    workerData.MpvExecPath,
-    workerData.metaData,
-    workerData.startFromTime,
-    workerData.subsPaths,
-    workerData.mpvConfigDirectory,
-    workerData.mpvWindowConfigs
-  )
+} else if (session?.typeOfPlay === "LocalFile") {
+  PlayLocalVideo()
   .catch(async (err) => {
     const errMsg = err.code === "ENOENT" || err.code === "ENOTDIR"
       ? "MPV not found. Install it or set its path in settings."
       : err.message;
 
-    parentPort.postMessage({
-      type: "status",
-      message: "playback_error",
-      error: errMsg
-    });
+    ipc.emit('playback_error', errMsg);
     await cleanup();
   });
 }

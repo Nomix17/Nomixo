@@ -7,6 +7,7 @@ import http from "http";
 import path from "path";
 import os from "os";
 
+import { createIPC } from './ipc.js';
 import { pathExists } from "./utils.js";
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
@@ -22,6 +23,7 @@ const { values: cliArgs } = parseArgs({
 
 class MpvPlayerManager {
   #worker = null;
+  #ipc = null;
   #streamClient = null;
   #mpv = null;
   #lastSecondBeforeQuit = 0;
@@ -118,23 +120,19 @@ class MpvPlayerManager {
     const startFromTime = await this.#getLatestPlaybackPosition(metaData);
     const { MpvExecPath, LanguagesToDownload, DownloadAllSubtitles } = settings;
 
-    this.#worker = new Worker(Paths.MpvWorkerPath, {
-      workerData: {
-        MpvExecPath,
-        typeOfPlay: "StreamTorrent",
-        metaData,
-        startFromTime,
-        videoCachePath: Paths.videoCachePath,
-        subDirectory: Paths.subDirectory,
-        mpvConfigDirectory: Paths.mpvConfigDirectory,
-        mpvWindowConfigs: this.#getWindowConfigs(),
-        subtitleSettings: { LanguagesToDownload, DownloadAllSubtitles },
-      },
-      type: "module",
-    });
+    this.#worker = new Worker(Paths.MpvWorkerPath, { type: "module" });
 
-    this.#handleWorker(metaData);
-    this.#notifyWhenNextReady(nextPromise, this.#worker);
+    this.#handleWorker({
+      MpvExecPath,
+      typeOfPlay: "StreamTorrent",
+      metaData,
+      startFromTime,
+      videoCachePath: Paths.videoCachePath,
+      subDirectory: Paths.subDirectory,
+      mpvConfigDirectory: Paths.mpvConfigDirectory,
+      subtitleSettings: { LanguagesToDownload, DownloadAllSubtitles },
+    });
+    this.#notifyWhenNextReady(nextPromise, this.#worker, this.#ipc);
     this.inVideoPlayerPage = true;
   }
 
@@ -145,31 +143,24 @@ class MpvPlayerManager {
     const startFromTime = await this.#getLatestPlaybackPosition(metaData);
     const { MpvExecPath } = settings;
 
-    this.#worker = new Worker(Paths.MpvWorkerPath, {
-      workerData: {
-        MpvExecPath,
-        typeOfPlay: "LocalFile",
-        metaData,
-        startFromTime,
-        subsPaths,
-        mpvConfigDirectory: Paths.mpvConfigDirectory,
-        mpvWindowConfigs: this.#getWindowConfigs(),
-      },
-      type: "module",
-    });
+    this.#worker = new Worker(Paths.MpvWorkerPath, { type: "module" });
 
-    this.#handleWorker(metaData);
-    this.#notifyWhenNextReady(nextPromise, this.#worker);
+    this.#handleWorker({
+      MpvExecPath,
+      typeOfPlay: "LocalFile",
+      metaData,
+      startFromTime,
+      subsPaths,
+      mpvConfigDirectory: Paths.mpvConfigDirectory
+    });
+    this.#notifyWhenNextReady(nextPromise, this.#worker, this.#ipc);
     this.inVideoPlayerPage = true;
   }
 
-  #notifyWhenNextReady(nextPromise, worker) {
+  #notifyWhenNextReady(nextPromise, worker, ipc) {
     nextPromise.then(() => {
       if (this.#worker !== worker) return;
-      worker.postMessage({
-        type: "next_episode_ready",
-        value: this.#nextEpisodeManager.hasNext(),
-      });
+      ipc.emit("next_episode_ready", this.#nextEpisodeManager.hasNext());
     });
   }
 
@@ -180,8 +171,9 @@ class MpvPlayerManager {
     if (this.#browserWindow && !this.#browserWindow.isVisible())
       this.#restoreAndFocusWindow();
     if (this.#worker && this.#worker.threadId !== -1) {
-      this.#worker.postMessage({ type: "shutdown" });
+      this.#ipc?.call("shutdown").catch(() => {});
       this.#worker = null;
+      this.#ipc = null;
     }
   }
 
@@ -198,7 +190,9 @@ class MpvPlayerManager {
     return { geometry, fullscreened, maximized };
   }
 
-  #handleWorker(metaData) {
+  #handleWorker(session) {
+    const { metaData } = session;
+    const worker = this.#worker;
     let handled = false;
 
     const exitVideoPlayerPage = () => {
@@ -213,12 +207,12 @@ class MpvPlayerManager {
     };
 
     const closeWorker = ({ showWindow = true } = {}) => {
-      if (this.#worker && this.#worker.threadId !== -1) {
-        const worker = this.#worker;
-        worker.postMessage({ type: "shutdown" });
+      if (this.#worker === worker && worker.threadId !== -1) {
+        ipc.call("shutdown").catch(() => {});
         const forceKill = setTimeout(() => worker.terminate(), 3000);
         worker.once("exit", () => clearTimeout(forceKill));
         this.#worker = null;
+        this.#ipc = null;
       }
       if (showWindow) this.#restoreAndFocusWindow();
     };
@@ -241,61 +235,70 @@ class MpvPlayerManager {
       closeWorker();
     };
 
-    this.#worker.on("message", (msg) => {
-      if (handled) return;
+    const ipc = createIPC(worker, {
+      getPlaybackConfig: () => session,
+      getWindowConfigs: () => this.#getWindowConfigs(),
 
-      if (msg.type === "progress") {
-        this.#browserWindow.webContents.send("torrent-streaming-report", {
-          type: "progress",
-          stage: msg.stage,
-          data: msg.data
-        });
-      } else if (msg.type === "subtitles_progress") {
-        this.#browserWindow.webContents.send(
-          "subtitles-download-progress", {
-            torrentId: msg.progressInfo.torrentId,
-            message :msg.progressInfo.message,
-            done :msg.progressInfo.done,
-            error :msg.progressInfo.error
-          }
-        )
-      }
-      if (msg.type !== "status") return;
-      switch (msg.message) {
-        case "mpv_output_data": {
-          const nextEpisodeRequested = this.#handleMpvOutput(msg.data);
+      onEvent: (name, payload) => {
+        if (handled) return;
 
-          if (nextEpisodeRequested && !handled) {
-            if (this.#nextEpisodeManager.hasNext()) {
-              handled = true;
-              this.#savePlaybackPosition(this.#lastSecondBeforeQuit, metaData);
-              closeWorker();
+        switch (name) {
+          case "progress":
+            this.#browserWindow.webContents.send("torrent-streaming-report", {
+              type: "progress",
+              stage: payload.stage,
+              data: payload.data
+            });
+            break;
 
-              this.#playNextEpisode().catch((err) => {
-                log.error("Failed to start next episode:", err);
-                handled = false;
-                handleError(err?.message || "Failed to start next episode");
-              });
+          case "subtitles_progress":
+            this.#browserWindow.webContents.send("subtitles-download-progress", {
+              torrentId: payload.torrentId,
+              message: payload.message,
+              done: payload.done,
+              error: payload.error
+            });
+            break;
+
+          case "mpv_output": {
+            const nextEpisodeRequested = this.#handleMpvOutput(payload);
+
+            if (nextEpisodeRequested && !handled) {
+              if (this.#nextEpisodeManager.hasNext()) {
+                handled = true;
+                this.#savePlaybackPosition(this.#lastSecondBeforeQuit, metaData);
+                closeWorker();
+
+                this.#playNextEpisode().catch((err) => {
+                  log.error("Failed to start next episode:", err);
+                  handled = false;
+                  handleError(err?.message || "Failed to start next episode");
+                });
+              }
             }
+            break;
           }
-          break;
-        }
-        case "playback_done":
-          handleDone();
-          break;
-        case "playback_error":
-        case "Torrent Fetching Error":
-          handleError(msg.error);
-          break;
-      }
-    });
 
-    this.#worker.on("error", (err) => {
+          case "playback_done":
+            handleDone();
+            break;
+
+          case "playback_error":
+          case "torrent_error":
+            handleError(payload);
+            break;
+        }
+      },
+    });
+    this.#ipc = ipc;
+
+    worker.on("error", (err) => {
       log.error("Mpv Worker thread error:", err);
       handleError(err.message);
     });
 
-    this.#worker.on("exit", (code) => {
+    worker.on("exit", (code) => {
+      ipc.close();
       log.info(`Mpv Worker exited with code ${code}`);
       if (code === 0 || code === null) {
         handleDone();
@@ -310,7 +313,17 @@ class MpvPlayerManager {
     const nextEpisodeRequested = line.includes("PLAY_NEXT_EPISODE");
 
     if(this.#browserWindow?.isVisible() && (line.includes("MPV_WINDOW_OPENED") || line.includes("AV:")))
-      this.#browserWindow.hide();
+      this.#hideWindow();
+
+    if(line.includes("FULLSCREEN_ON"))
+      this.#restoreFullscreen = true;
+    else if(line.includes("FULLSCREEN_OFF"))
+      this.#restoreFullscreen = false;
+
+    if(line.includes("MAXIMIZED_ON"))
+      this.#restoreMaximize = true;
+    else if(line.includes("MAXIMIZED_OFF"))
+      this.#restoreMaximize = false;
 
     if (line.includes("AV:")) {
       const parts = line.split("AV:")[1].split("/");
