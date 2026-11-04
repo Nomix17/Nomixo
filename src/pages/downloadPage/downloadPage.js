@@ -1699,6 +1699,7 @@ async function setupDoneSearch() {
   });
 
   input.addEventListener("focus", openDoneCategory);
+  input.addEventListener("blur", () => { dontGoBack = false });
 
   wrapper.addEventListener("mousedown", (e) => {
     if (e.target !== input) {
