@@ -4256,6 +4256,7 @@ mp.observe_property("seeking", "native", function(_, seeking)
 end)
 mp.observe_property("fullscreen", "bool", function(_, val)
     state.fullscreen = val
+    print(val and "FULLSCREEN_ON" or "FULLSCREEN_OFF")
     state.marginsREQ = true
     adjust_subtitles(state.osc_visible)
     request_init_resize()
@@ -4270,6 +4271,7 @@ mp.observe_property("title-bar", "bool", function(_, val)
 end)
 mp.observe_property("window-maximized", "bool", function(_, val)
     state.maximized = val
+    print(val and "MAXIMIZED_ON" or "MAXIMIZED_OFF")
     request_init_resize()
 end)
 mp.observe_property("idle-active", "bool", function(_, val)

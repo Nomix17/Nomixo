@@ -32,6 +32,8 @@ class MpvPlayerManager {
   #restoreAndFocusWindow =  null;
   #settings = null;
   #nextEpisodeManager = new NextEpisodeManager();
+  #restoreFullscreen = null;
+  #restoreMaximize = null
 
   constructor(browserWindow, restoreAndFocusWindowCallback) {
     this.#browserWindow = browserWindow;
@@ -169,7 +171,10 @@ class MpvPlayerManager {
     if (this.#streamClient) this.#streamClient.destroy();
     if (this.#mpv) this.#mpv.kill();
     if (this.#browserWindow && !this.#browserWindow.isVisible())
-      this.#restoreAndFocusWindow();
+      this.#restoreAndFocusWindow({
+        fullscreen: this.#restoreFullscreen,
+        maximize: this.#restoreMaximize
+      });
     if (this.#worker && this.#worker.threadId !== -1) {
       this.#ipc?.call("shutdown").catch(() => {});
       this.#worker = null;
@@ -214,7 +219,11 @@ class MpvPlayerManager {
         this.#worker = null;
         this.#ipc = null;
       }
-      if (showWindow) this.#restoreAndFocusWindow();
+      if (showWindow)
+        this.#restoreAndFocusWindow({
+          fullscreen: this.#restoreFullscreen,
+          maximize: this.#restoreMaximize
+        });
     };
 
     const handleError = (errorMsg) => {
@@ -421,6 +430,12 @@ class MpvPlayerManager {
     return entry[0].lastPlaybackPosition;
   }
 
+  #hideWindow() {
+    this.#restoreFullscreen = this.#browserWindow.isFullScreen();
+    this.#restoreMaximize = this.#browserWindow.isMaximized();
+    console.log("WAS FULLSCREENED", this.#restoreFullscreen);
+    this.#browserWindow.hide();
+  }
 }
 
 export default MpvPlayerManager;

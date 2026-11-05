@@ -60,7 +60,7 @@ export class AppManager {
       this.browserWindow = await this.#createBrowserWindow();
       this.#setupBrowserWindowListeners();
       this.browserWindow.loadFile(entryPointFile);
-      this.mpvPlayerManager = new MpvPlayerManager(this.browserWindow, () => this.restoreAndFocusWindow());
+      this.mpvPlayerManager = new MpvPlayerManager(this.browserWindow, (args) => this.restoreAndFocusWindow(args));
       this.torrentDownloadManager = new TorrentDownloadManager(
         this.browserWindow,
         (entry) => this.mpvPlayerManager.playVideoOverMpv(entry)
@@ -184,13 +184,24 @@ export class AppManager {
     log.info("Hiding Window");
   }
 
-  restoreAndFocusWindow() {
-    if (!this.browserWindow || this.browserWindow.isDestroyed()) return;
-    if (this.browserWindow.isMinimized()) this.browserWindow.restore();
-    this.browserWindow.setAlwaysOnTop(true);
-    this.browserWindow.show();
-    this.browserWindow.focus();
-    this.browserWindow.setAlwaysOnTop(false);
+  restoreAndFocusWindow({ fullscreen = null, maximize = null } = {}) {
+    const win = this.browserWindow;
+    if (!win || win.isDestroyed()) return;
+    if (win.isMinimized()) win.restore();
+
+    win.setAlwaysOnTop(true);
+    win.show();
+    win.focus();
+    win.setAlwaysOnTop(false);
+
+    if (maximize !== null && win.isMaximized() !== maximize) {
+      if (maximize) win.maximize();
+      else win.unmaximize();
+    }
+
+    if (fullscreen !== null && win.isFullScreen() !== fullscreen)
+      win.setFullScreen(fullscreen);
+
     this.store.delete("opened-in-background");
   }
 }
