@@ -32,6 +32,60 @@
   box-sizing: border-box;
 }
 
+#btn-loadFromDir {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 11px;
+  font-size: 1.1em;
+  color: inherit;
+  background-color: rgba(var(--background-color), 0.85);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.3s ease, gap 0.3s ease, padding 0.3s ease, background-color 0.3s ease;
+}
+
+#btn-loadFromDir span {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.3s ease, opacity 0.3s ease;
+}
+
+#btn-loadFromDir:hover,
+#btn-loadFromDir:focus-visible {
+  opacity: 1;
+  gap: 8px;
+  padding: 11px 16px;
+  background-color: rgba(var(--background-color), 0.85);
+}
+
+#btn-loadFromDir:hover span,
+#btn-loadFromDir:focus-visible span {
+  max-width: 160px;
+  opacity: 1;
+}
+
+#btn-loadFromDir:active {
+  background-color: rgba(var(--background-color), 0.5);
+}
+
+#btn-loadFromDir svg {
+  flex-shrink: 0;
+  width: 1.4em;
+  height: 1.4em;
+  fill: rgb(var(--text-color));
+}
+
 #div-text {
   position: fixed;
   top: 50vh;

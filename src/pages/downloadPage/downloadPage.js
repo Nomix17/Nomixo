@@ -17,17 +17,8 @@ async function loadDownloadMediaFromLib() {
   const scrollValue = await getCachedScrollValue();
   const defaultSortType = await loadDownloadsSortByValue();
 
-  if(library != null && library?.downloads != null) {
-    const sortedMediaEntries = sortDownloadLibrary(library.downloads);
-
-    for(const mediaEntry of sortedMediaEntries)
-      createDownloadElement(mediaEntry);
-    alignSizeDiv();
-
-    const queueList = await window.electronAPI.getDownloadQueueList();
-    reorderDownloadCategorie(queuedDownloadsDiv, queueList, false);
-
-    sortDoneDownloadingElements(library, defaultSortType);
+  if(library != null) {
+    await insertDownloadData(library.downloads ?? [], defaultSortType);
   }
 
   if(!monitoringProgress) {
@@ -37,6 +28,20 @@ async function loadDownloadMediaFromLib() {
 
   scrollTo(scrollValue);
   initDownloadUI()
+}
+
+async function insertDownloadData(entries, sortType) {
+  const sortedMediaEntries = sortDownloadLibrary(entries);
+
+  for(const mediaEntry of sortedMediaEntries)
+    createDownloadElement(mediaEntry);
+  alignSizeDiv();
+
+  const queueList = await window.electronAPI.getDownloadQueueList();
+  reorderDownloadCategorie(queuedDownloadsDiv, queueList, false);
+
+  if(entries.length)
+    sortDoneDownloadingElements(entries, sortType);
 }
 
 async function createDownloadElementFromId(torrentId) {
@@ -1531,9 +1536,9 @@ function reorderDownloadCategorie(categoryDownloadDivs, orderedTorrentIds, anima
   updateDownloadUI();
 }
 
-async function sortDoneDownloadingElements(downloadLibraryDump, sortType) {
-  const libraryEntryPoints = downloadLibraryDump.downloads.filter(el => el.Status === "DONE");
-  const sortedEntries = await sortDownloadLibrary(libraryEntryPoints, SortingCriteria[sortType]).map(entry => entry.torrentId);
+async function sortDoneDownloadingElements(downloadEntires, sortType) {
+  const downloadedEntires = downloadEntires.filter(el => el.Status === "DONE");
+  const sortedEntries = await sortDownloadLibrary(downloadedEntires, SortingCriteria[sortType]).map(entry => entry.torrentId);
   reorderDownloadCategorie(doneDownloadsDiv, sortedEntries, false);
 }
 
@@ -1594,7 +1599,7 @@ async function initSortingDropdown() {
     const newValue = getDropdownValue(sortingCompletedDropDown);
     const libraryElements = await window.electronAPI.loadDownloadLibraryInfo();
     if (!libraryElements?.downloads) return;
-    sortDoneDownloadingElements(libraryElements, newValue)
+    sortDoneDownloadingElements(libraryElements.downloads, newValue)
     saveDownloadsSortByValue(newValue);
   });
   const defaultSortType = await loadDownloadsSortByValue();
@@ -1651,6 +1656,12 @@ document.querySelectorAll(".title-container").forEach(el => {
     const categorie = el.closest(".downloads-categorie");
     setCategorieCollapsed(categorie, !isCategorieCollapsed(categorie));
   });
+});
+
+document.getElementById("btn-loadFromDir").addEventListener("click", async () => {
+  const info = await window.electronAPI.loadDownloadsFromDir() ?? [];
+  if (info?.downloads)
+    await insertDownloadData(info.downloads, getDropdownValue(sortingCompletedDropDown));
 });
 
 function applyDoneSearchFilter() {

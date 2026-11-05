@@ -2,7 +2,7 @@ import path from "path";
 import os from "os";
 import { spawn } from "child_process";
 import { randomUUID } from "crypto";
-import { readFile, writeFile, rename, unlink } from 'fs/promises';
+import { readFile, readdir, stat, rm, writeFile, mkdir, rename, unlink } from 'fs/promises';
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
 import { downloadImage, pathExists } from "./utils.js";
@@ -95,7 +95,7 @@ export async function insertNewDownloadEntry(torrentEntry, Status = "LOADING") {
     StatusUpdateTime: Date.now(),
   };
 
-  const wasInserted = await withFileLock(Paths.downloadLibraryFilePath, async () => {
+  const insertedToLib = await withFileLock(Paths.downloadLibraryFilePath, async () => {
     const downloadLib = await loadDownloadStorage();
 
     const existingIndex = downloadLib.downloads.findIndex(
@@ -113,11 +113,25 @@ export async function insertNewDownloadEntry(torrentEntry, Status = "LOADING") {
     return true;
   });
 
-  if (!wasInserted) {
+  if (!insertedToLib) {
     log.info("Editing Download Status of: " + torrentEntry.torrentId);
     await editDownloadStorageEntry(torrentEntry.torrentId, "Status", Status);
+  } else {
+    await createDownloadNavigator(newEntry);
   }
-  return wasInserted;
+
+  return insertedToLib;
+}
+
+export async function createDownloadNavigator(newEntry) {
+  const navigatorPath = path.join(newEntry?.downloadPath, Paths.navigatorFileName);
+  await withFileLock(navigatorPath, async () => {
+    await mkdir(newEntry.downloadPath, { recursive: true });
+    const relativeEntries = makePathsRelative(newEntry, newEntry?.downloadPath);
+    await overwriteStorageFile(navigatorPath, relativeEntries);
+    log.info("Creating Navigator for:", newEntry.torrentId);
+    return true;
+  });
 }
 
 export async function changeDownloadEntryInfo(torrentId, newMediaInfo) {
@@ -183,16 +197,31 @@ export async function saveDownloadProgress(torrentEntry, downloadedBytes, totalS
 
 export async function editDownloadStorageEntry(torrentId, key, value) {
   await withFileLock(Paths.downloadLibraryFilePath, async () => {
-    const downloadLibraryInfo = await loadDownloadStorage();
-    for (let index = 0; index < downloadLibraryInfo.downloads.length; index++) {
-      if (downloadLibraryInfo.downloads[index].torrentId === torrentId) {
-        if (key === "Status")
-          downloadLibraryInfo.downloads[index]["StatusUpdateTime"] = Date.now();
-        downloadLibraryInfo.downloads[index][key] = value;
-        break;
-      }
+    const library = await loadDownloadStorage();
+    const entry = library.downloads.find(d => d.torrentId === torrentId);
+
+    if (!entry) {
+      log.warn("editDownloadStorageEntry: torrent not found:", torrentId);
+      return;
     }
-    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLibraryInfo);
+
+    const now = Date.now();
+    if (key === "Status") entry.StatusUpdateTime = now;
+    entry[key] = value;
+
+    await overwriteStorageFile(Paths.downloadLibraryFilePath, library);
+
+    const navigatorPath = path.join(entry.downloadPath, Paths.navigatorFileName);
+    try {
+      await withFileLock(navigatorPath, async () => {
+        const navigator = await loadJsonFile(navigatorPath);
+        if (key === "Status") navigator.StatusUpdateTime = now;
+        navigator[key] = value;
+        await overwriteStorageFile(navigatorPath, navigator);
+      });
+    } catch (err) {
+      log.error("Failed to update navigator for:", torrentId, err);
+    }
   });
 }
 
@@ -339,5 +368,54 @@ async function resolveMpvExecFromPATH() {
       log.warn("mpv not found in PATH");
       resolve(null);
     });
+  });
+}
+
+function makePathsRelative(obj, basePath) {
+  const updatedObj = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string' && path.isAbsolute(value)) {
+      updatedObj[key] = path.relative(basePath, value) || './';
+      console.log(updatedObj[key]);
+    } else {
+      updatedObj[key] = value;
+    }
+  }
+  return updatedObj;
+}
+
+async function lookForNavigators(rootDir) {
+  let results = [];
+  const dirContent = await readdir(rootDir);
+  for(const inode of dirContent) {
+    const inodePath = path.join(rootDir, inode);
+    if((await stat(inodePath)).isDirectory()) {
+      const recursive_res = await lookForNavigators(inodePath);
+      results = [...results, ...recursive_res];
+
+    } else if(inode === Paths.navigatorFileName) {
+      try {
+        const navigator_content = await loadJsonFile(inodePath);
+        if (navigator_content.Status !== "DONE") {
+          navigator_content.Status = "PAUSED";
+        }
+        results.push({ navigator_dir: rootDir, navigator_content });
+      } catch(err) {
+        log.error(err.message);
+      }
+    }
+  }
+  return results;
+}
+
+export async function loadDownloadMediaFromDir(rootDir) {
+  const navigators = await lookForNavigators(rootDir);
+  return navigators.map(({ navigator_dir, navigator_content }) => {
+    const result = { ...navigator_content };
+    for (const [key, value] of Object.entries(result)) {
+      if (key.includes("Path"))
+        result[key] = path.join(navigator_dir, value);
+    }
+    return result;
   });
 }

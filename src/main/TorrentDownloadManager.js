@@ -11,6 +11,7 @@ import {
   loadSettings,
   getDownloadEntry,
   insertNewDownloadEntry,
+  createDownloadNavigator,
   saveDownloadProgress,
   editDownloadStorageEntry,
   removeDownloadStorageEntry,

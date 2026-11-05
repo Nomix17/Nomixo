@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   editElementInDownloadLibraryInfo: (torrentId, key, value) => ipcRenderer.invoke("edit-download-lib",torrentId, key, value),
   loadDownloadLibraryInfo: (targetIdentification) => ipcRenderer.invoke("load-from-download-lib",targetIdentification),
   changeDownloadPath: (mediaInfo, destinationPath) => ipcRenderer.invoke("change-download-path", mediaInfo, destinationPath),
+  loadDownloadsFromDir: () => ipcRenderer.invoke("load-downloads-from-dir"),
 
   downloadSubtitles: (mediaInfo, subsObjects) => ipcRenderer.invoke("download-subtitles", mediaInfo, subsObjects),
   fetchSubtitles: (mediaInfo) => ipcRenderer.invoke("fetch-subtitles", mediaInfo),

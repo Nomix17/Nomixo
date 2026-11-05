@@ -26,6 +26,7 @@ import {
   loadSettings,
   loadDownloadStorage,
   loadLibraryStorage,
+  loadDownloadMediaFromDir,
   changeDownloadEntryInfo,
   changeLibraryEntryInfo,
   editDownloadStorageEntry,
@@ -650,6 +651,33 @@ ipcMain.handle("change-download-path", async (event, mediaInfo, destinationPath)
   }
 
   return { success: true };
+});
+
+ipcMain.handle("load-downloads-from-dir", async () => {
+  const settings = await loadSettings();
+  const defaultDownloadPath = settings?.DefaultDownloadPath;
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+    defaultPath: lastOpenedDir || defaultDownloadPath || app.getPath("home"),
+  });
+  if (canceled) return null;
+  lastOpenedDir = filePaths[0];
+  const targetDir = filePaths[0];
+
+  const results = await loadDownloadMediaFromDir(targetDir);
+  if(!results.length) return;
+
+  const downloadLibInfo = (await loadDownloadStorage())?.downloads ?? [];
+
+  const existingIds = new Set(downloadLibInfo.map(d => d.torrentId));
+  const newItems = results.filter(r => !existingIds.has(r.torrentId));
+
+  await overwriteStorageFile(
+    Paths.downloadLibraryFilePath,
+    { "downloads": [...downloadLibInfo, ...newItems] }
+  );
+
+  return { "downloads": [...downloadLibInfo, ...newItems] };
 });
 
 

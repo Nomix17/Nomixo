@@ -34,6 +34,8 @@ export class Paths {
 
   static MpvWorkerPath = path.join(Paths.__dirname, "MpvWorker.js");
   static subDirectory = path.join(Paths.__temp, "tempSubs");
+
+  static navigatorFileName = "navigator.json";
 }
 
 export class FilesManager {
