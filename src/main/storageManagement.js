@@ -376,7 +376,6 @@ function makePathsRelative(obj, basePath) {
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'string' && path.isAbsolute(value)) {
       updatedObj[key] = path.relative(basePath, value) || './';
-      console.log(updatedObj[key]);
     } else {
       updatedObj[key] = value;
     }
