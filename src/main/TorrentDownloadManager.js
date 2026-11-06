@@ -1,4 +1,5 @@
-import { QueuedWebTorrent } from './QueuedWebTorrent.js';
+import { QueuedWebTorrent, isDiskFullError } from './QueuedWebTorrent.js';
+import { dialog } from 'electron';
 import {
   sanitizeFilename,
   generateUniqueId,
@@ -63,11 +64,18 @@ class TorrentDownloadManager {
   }
 
   async getTorrentDownloadPath(torrentEntry) {
-    Paths.defaultDownloadPath = torrentEntry?.userDownloadPath ?? Paths.defaultDownloadPath;
-    torrentEntry.dirName = this.sanitizeDirNameForOS(torrentEntry);
-    const torrentDownloadPath = path.join(Paths.defaultDownloadPath, torrentEntry.dirName);
-    await mkdir(torrentDownloadPath, { recursive: true });
-    return torrentDownloadPath;
+    try {
+      Paths.defaultDownloadPath = torrentEntry?.userDownloadPath ?? Paths.defaultDownloadPath;
+      torrentEntry.dirName = this.sanitizeDirNameForOS(torrentEntry);
+      const torrentDownloadPath = path.join(Paths.defaultDownloadPath, torrentEntry.dirName);
+      await mkdir(torrentDownloadPath, { recursive: true });
+      return torrentDownloadPath;
+    } catch(err) {
+      if(isDiskFullError(err))
+        this.handleDiskFull(torrentEntry, err);
+      else
+        log.error(err);
+    }
   }
 
   async executeTorrentDownload(torrentEntry, priority = false, downloadSubtitles = torrentEntry.downloadSubtitles ?? true) {
@@ -113,6 +121,10 @@ class TorrentDownloadManager {
       )
       .catch((err) => {
         if (err?.name === 'TorrentCancelledError') return;
+        if (isDiskFullError(err)) {
+          this.handleDiskFull(torrentEntry, err);
+          return;
+        }
         log.error(`Torrent error: ${torrentEntry.torrentId}, ${err?.message ?? err}`);
         this.reportDownloadError("Torrent Download", torrentEntry.torrentId, err);
         this.WINDOW.webContents.send("download-progress-stream", {
@@ -121,6 +133,32 @@ class TorrentDownloadManager {
           Error: err?.message
         });
       });
+  }
+
+  handleDiskFull(torrentEntry, err) {
+    log.error(`Disk full while downloading ${torrentEntry.torrentId}:`, err?.message ?? err);
+
+    this.pushStatusUpdate([{ status: "FAILED", torrentId: torrentEntry.torrentId }]);
+    this.reportDownloadError("Disk Full", torrentEntry.torrentId, err);
+    this.WINDOW.webContents.send("download-progress-stream", {
+      TorrentId: torrentEntry.torrentId,
+      Status: "error",
+      Error: "Not enough disk space"
+    });
+
+    const title = truncate(torrentEntry?.Title || 'Unknown title');
+    dialog.showMessageBox(this.WINDOW, {
+      type: "error",
+      title: "Disk Full",
+      message: "Download stopped: not enough disk space",
+      detail:
+        `"${title}" could not be saved because the drive is full.\n\n` +
+        `Location: ${torrentEntry.downloadPath ?? Paths.defaultDownloadPath}\n\n` +
+        `Free up some space, then resume the download. ` +
+        `Queued downloads were not started.`,
+      buttons: ["OK"]
+    })
+      .catch((e) => log.error("Failed to show disk full popup:", e?.message ?? e));
   }
 
   attachTorrentHandlers(torrent, torrentEntry) {

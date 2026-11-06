@@ -11,6 +11,10 @@ class TorrentCancelledError extends Error {
   }
 }
 
+export function isDiskFullError(err) {
+  return err?.code === 'ENOSPC' || /ENOSPC|no space left/i.test(err?.message ?? '');
+}
+
 export class QueuedWebTorrent {
   constructor(opts) {
     this.client = new WebTorrent(opts);
@@ -140,8 +144,24 @@ export class QueuedWebTorrent {
     torrent.on('error', (err) => {
       if (this.current?.info?.torrentId !== item.torrentInfo.torrentId) return;
       log.error(`Error on ${item.torrentInfo.torrentId}:`, err);
+      const diskFull = isDiskFullError(err);
       item.reject(err);
       this.current = null;
+
+      try {
+        SubDownloadManager.abortDownload(item.torrentInfo.torrentId);
+      } catch (_) {}
+
+      if (!torrent.destroyed) {
+        torrent.destroy({ destroyStore: false }, (destroyErr) => {
+          if (destroyErr) log.error(`Error destroying failed torrent ${item.torrentInfo.torrentId}:`, destroyErr);
+        });
+      }
+
+      if (diskFull) {
+        log.warn(`Disk full: queue paused after ${item.torrentInfo.torrentId} failed`);
+        return;
+      }
       this._processQueue();
     });
 
