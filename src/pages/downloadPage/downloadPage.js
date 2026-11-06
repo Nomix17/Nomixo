@@ -41,7 +41,9 @@ async function insertDownloadData(entries, sortType) {
   reorderDownloadCategorie(queuedDownloadsDiv, queueList, false);
 
   if(entries.length)
-    sortDoneDownloadingElements(entries, sortType);
+    await sortDoneDownloadingElements(entries, sortType);
+  else
+    await layoutDoneDownloads();
 }
 
 async function createDownloadElementFromId(torrentId) {
@@ -76,6 +78,7 @@ async function createDownloadElement(mediaLibEntryPoint) {
   let MediaDownloadElement = createMediaDownloadElement(mediaLibEntryPoint,formatedDownloadInfo);
   MediaDownloadElement.className = "download-media";
   MediaDownloadElement.id = ElementIdentifier;
+  tagEpisodeMetadata(MediaDownloadElement, mediaLibEntryPoint);
 
   let insiderProgressBar = MediaDownloadElement.querySelector(".progress-bar-div .inside");
   insiderProgressBar.style.width = progress + "%";
@@ -128,6 +131,8 @@ async function createDownloadElement(mediaLibEntryPoint) {
   downloadContainer.appendChild(MediaDownloadElement);
 
   handleCancelButton(mediaLibEntryPoint,CancelButton);
+  if(downloadStatus === "DONE")
+    scheduleDoneLayout();
 }
 
 async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement) {
@@ -285,8 +290,7 @@ function monitorDownloads() {
       if(doneDownloadContainer)
         doneDownloadContainer.appendChild(TargetDownloadElement);
       MarkDownloadElementAsFinished(TargetDownloadElement,libraryElement);
-      const downloadContainer = doneDownloadsDiv.querySelector(".movieContainer");
-      sortedMediaInsert(downloadContainer, TargetDownloadElement, SortingCriteria[getDropdownValue(sortingCompletedDropDown)]);
+      await layoutDoneDownloads(undefined, true);
       updateDownloadUI();
     }
   });
@@ -1148,13 +1152,19 @@ function setCategorieCollapsed(categorie, collapsed, animate = true) {
   };
 }
 
+const cachedDataPormise = window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+async function getCachedExpandedSeries() {
+  const cachedData = await cachedDataPormise;
+  return cachedData?.expanded_series ?? [];
+}
+
 async function getCachedScrollValue() {
-  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const cachedData = await cachedDataPormise;
   return cachedData ? cachedData.download_container_top_scroll_value : 0;
 }
 
 async function getCachedDownloadedSearchValue() {
-  const cachedData = await window.electronAPI.loadPageCachedDataFromHistory(document.URL);
+  const cachedData = await cachedDataPormise;
   return cachedData ? cachedData.downloaded_search_value : "";
 }
 
@@ -1536,10 +1546,13 @@ function reorderDownloadCategorie(categoryDownloadDivs, orderedTorrentIds, anima
   updateDownloadUI();
 }
 
-async function sortDoneDownloadingElements(downloadEntires, sortType) {
-  const downloadedEntires = downloadEntires.filter(el => el.Status === "DONE");
-  const sortedEntries = await sortDownloadLibrary(downloadedEntires, SortingCriteria[sortType]).map(entry => entry.torrentId);
-  reorderDownloadCategorie(doneDownloadsDiv, sortedEntries, false);
+async function sortDoneDownloadingElements(downloadEntires, sortType, animate = false) {
+  for(const entry of downloadEntires ?? []) {
+    if(entry.Status !== "DONE") continue;
+    const el = document.getElementById(entry.torrentId);
+    if(el) tagEpisodeMetadata(el, entry);
+  }
+  await layoutDoneDownloads(SortingCriteria[sortType], animate);
 }
 
 let queuedSortPlaceholder = "Sort items by";
@@ -1599,7 +1612,7 @@ async function initSortingDropdown() {
     const newValue = getDropdownValue(sortingCompletedDropDown);
     const libraryElements = await window.electronAPI.loadDownloadLibraryInfo();
     if (!libraryElements?.downloads) return;
-    sortDoneDownloadingElements(libraryElements.downloads, newValue)
+    sortDoneDownloadingElements(libraryElements.downloads, newValue, true)
     saveDownloadsSortByValue(newValue);
   });
   const defaultSortType = await loadDownloadsSortByValue();
@@ -1676,9 +1689,17 @@ function applyDoneSearchFilter() {
   let visibleCount = 0;
   for (const el of medias) {
     const title = el.querySelector(".movie-title-p")?.textContent?.toLowerCase() ?? "";
-    const matches = !query || title.includes(query);
+    const group = el.closest(".series-group");
+    const seriesTitle = group?.dataset.seriesTitle?.toLowerCase() ?? "";
+    const matches = !query || title.includes(query) || seriesTitle.includes(query);
     el.classList.toggle("hide", !matches);
     if (matches) visibleCount++;
+  }
+
+  for (const group of doneDownloadsDiv.querySelectorAll(".series-group")) {
+    const hasVisible = !!group.querySelector(".download-media:not(.hide)");
+    group.classList.toggle("hide", !hasVisible);
+    group.classList.toggle("search-open", query.length > 0 && hasVisible);
   }
 
   wrapper.classList.toggle("has-value", input.value.length > 0);
@@ -1738,6 +1759,306 @@ async function setupDoneSearch() {
     }
   });
 }
+
+
+const MIN_EPISODES_TO_GROUP = 2;
+const GROUP_ANIM_DURATION = 300;
+const expandedSeriesGroups = new Set();
+let currentDoneSortType = null;
+let doneLayoutScheduled = false;
+let doneLayoutRunning = false;
+let doneLayoutAnimate = false;
+
+function tagEpisodeMetadata(el, entry) {
+  const isEpisode = !!(entry?.seasonNumber && entry?.episodeNumber);
+  el.dataset.isEpisode = isEpisode ? "1" : "";
+  if(isEpisode) {
+    el.dataset.seriesKey = String(entry.IMDB_ID || entry.Title || "").toLowerCase();
+    el.dataset.seriesTitle = entry.Title ?? "";
+    el.dataset.seasonNumber = entry.seasonNumber;
+    el.dataset.episodeNumber = entry.episodeNumber;
+  }
+  if(entry?.StatusUpdateTime != null) el.dataset.StatusUpdateTime = entry.StatusUpdateTime;
+  el.dataset.sizeBytes = entry?.Total ?? 0;
+  if(entry?.posterPath) el.dataset.posterPath = entry.posterPath;
+}
+
+function scheduleDoneLayout() {
+  if(doneLayoutScheduled) return;
+  doneLayoutScheduled = true;
+  queueMicrotask(() => {
+    doneLayoutScheduled = false;
+    layoutDoneDownloads();
+  });
+}
+
+function getDoneSortType() {
+  if(currentDoneSortType) return currentDoneSortType;
+  try {
+    return SortingCriteria[getDropdownValue(sortingCompletedDropDown)] ?? SortingCriteria.newest;
+  } catch {
+    return SortingCriteria.newest;
+  }
+}
+
+function getDoneItemTitle(item) {
+  if(item.classList.contains("series-group")) return item.dataset.seriesTitle ?? "";
+  return item.querySelector(".movie-title-p")?.innerText ?? "";
+}
+
+function getDoneItemTime(item, sortType) {
+  const time = (el) => Number(el.dataset.StatusUpdateTime) || 0;
+  if(!item.classList.contains("series-group")) return time(item);
+  const times = [...item.querySelectorAll(".download-media")].map(time);
+  return sortType === SortingCriteria.oldest ? Math.min(...times) : Math.max(...times);
+}
+
+function compareDoneItems(a, b, sortType) {
+  switch(sortType) {
+    case SortingCriteria.alphabeticalAsc:
+      return getDoneItemTitle(a).localeCompare(getDoneItemTitle(b));
+    case SortingCriteria.alphabeticalDesc:
+      return getDoneItemTitle(b).localeCompare(getDoneItemTitle(a));
+    case SortingCriteria.oldest:
+      return getDoneItemTime(a, sortType) - getDoneItemTime(b, sortType);
+    case SortingCriteria.newest:
+    default:
+      return getDoneItemTime(b, sortType) - getDoneItemTime(a, sortType);
+  }
+}
+
+function compareEpisodes(a, b, sortType) {
+  const byNumber = (Number(a.dataset.seasonNumber) - Number(b.dataset.seasonNumber)) ||
+                   (Number(a.dataset.episodeNumber) - Number(b.dataset.episodeNumber));
+  const time = (el) => Number(el.dataset.StatusUpdateTime) || 0;
+  switch(sortType) {
+    case SortingCriteria.alphabeticalDesc:
+      return -byNumber;
+    case SortingCriteria.newest:
+      return (time(b) - time(a)) || byNumber;
+    case SortingCriteria.oldest:
+      return (time(a) - time(b)) || byNumber;
+    default:
+      return byNumber;
+  }
+}
+
+function createSeriesGroupElement(seriesKey, seriesTitle) {
+  const group = document.createElement("div");
+  group.className = "series-group";
+  group.dataset.seriesKey = seriesKey;
+  group.dataset.seriesTitle = seriesTitle;
+
+  group.innerHTML = `
+    <div class="series-group-header" role="button" aria-expanded="false">
+      <div class="series-group-poster-div poster-div">
+        <img class="series-group-poster poster-img" alt="">
+      </div>
+      <div class="series-group-info">
+        <p class="series-group-title"></p>
+        <p class="series-group-meta"></p>
+      </div>
+      <div class="series-group-right">
+        <button class="series-group-watch play-button" tabindex="0" type="button"></button>
+        <span class="series-group-chevron">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </div>
+    </div>
+    <div class="series-group-body"><div class="series-group-episodes"></div></div>`;
+  group.querySelector(".series-group-title").textContent = seriesTitle;
+  group.querySelector(".series-group-watch").innerHTML = `${videoIcon}<p>Watch</p>`;
+
+  const header = group.querySelector(".series-group-header");
+  const toggle = () => setSeriesGroupExpanded(group, !group.classList.contains("expanded"));
+  header.addEventListener("click", toggle);
+  header.addEventListener("keydown", (e) => {
+    if(e.target !== header) return;
+    if(e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+  });
+
+  group.querySelector(".series-group-poster-div").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const first = [...group.querySelectorAll(".download-media")].sort(compareEpisodes)[0];
+    const poster = first?.querySelector(".poster-img") ?? first?.querySelector(".poster-div");
+    poster?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+  });
+
+  group.querySelector(".series-group-watch").addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const first = [...group.querySelectorAll(".download-media")].sort(compareEpisodes)[0];
+    if(!first) return;
+    const library = await window.electronAPI.loadDownloadLibraryInfo();
+    const info = library?.downloads?.find(entry => entry.torrentId === first.id);
+    if(info) openMediaVideo(info);
+  });
+
+  return group;
+}
+
+function setSeriesGroupExpanded(group, expanded, animate = true) {
+  const body = group.querySelector(".series-group-body");
+  const header = group.querySelector(".series-group-header");
+  const key = group.dataset.seriesKey;
+  if(group.classList.contains("expanded") === expanded) return;
+
+  expanded ? expandedSeriesGroups.add(key) : expandedSeriesGroups.delete(key);
+  header.setAttribute("aria-expanded", String(expanded));
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  body._anim?.cancel();
+  clearTimeout(group._expandingTimer);
+
+  if(!animate || reduceMotion) {
+    group.classList.remove("expanding");
+    group.classList.toggle("expanded", expanded);
+    return;
+  }
+
+  const from = body.offsetHeight;
+  group.classList.toggle("expanded", expanded);
+  group.classList.remove("search-open");
+  const to = expanded ? body.scrollHeight : 0;
+
+  if(expanded) {
+    group.classList.add("expanding");
+    const count = Math.min(group.querySelectorAll(".download-media").length, 12);
+    group._expandingTimer = setTimeout(
+      () => group.classList.remove("expanding"),
+      GROUP_ANIM_DURATION + 500 + count * 45
+    );
+  } else {
+    group.classList.remove("expanding");
+  }
+
+  body.style.overflow = "hidden";
+  const anim = body.animate(
+    [{ height: from + "px", opacity: expanded ? 0 : 1 }, { height: to + "px", opacity: expanded ? 1 : 0 }],
+    { duration: GROUP_ANIM_DURATION + 100, easing: COLLAPSE_ANIM_EASING }
+  );
+  body._anim = anim;
+  const finish = () => {
+    if(body._anim !== anim) return;
+    body._anim = null;
+    body.style.overflow = "";
+  };
+  anim.onfinish = finish;
+  anim.oncancel = finish;
+}
+
+function refreshSeriesGroupHeader(group, episodes) {
+  const seasonNumbers = [...new Set(episodes.map(el => Number(el.dataset.seasonNumber)))].sort((a, b) => a - b);
+
+  group.querySelector(".series-group-meta").textContent =
+    `${episodes.length} episodes • ${seasonNumbers.length} season${seasonNumbers.length > 1 ? "s" : ""} • Completed`;
+
+  const poster = group.querySelector(".series-group-poster");
+  const posterDiv = group.querySelector(".series-group-poster-div");
+  const source = episodes.map(el => el.querySelector(".poster-img"))
+                         .find(img => img?.classList.contains("show") && img.src);
+  if(source) {
+    if(poster.src !== source.src) poster.src = source.src;
+    poster.classList.add("show");
+    posterDiv.classList.remove("flashing-Div");
+  } else {
+    posterDiv.classList.add("flashing-Div");
+    clearTimeout(group._posterRetry);
+    group._posterRetry = setTimeout(() => {
+      if(group.isConnected) refreshSeriesGroupHeader(group, [...group.querySelectorAll(".download-media")]);
+    }, 1500);
+  }
+}
+
+async function layoutDoneDownloads(sortType, animate = false) {
+  if(sortType !== undefined) currentDoneSortType = sortType;
+  if(doneLayoutRunning) {
+    doneLayoutAnimate = doneLayoutAnimate || animate;
+    return;
+  }
+  doneLayoutRunning = true;
+  let flipEls = [], flipBefore = null;
+  try {
+    const cachedExpandedSeries = await getCachedExpandedSeries();
+    animate = animate || doneLayoutAnimate;
+    doneLayoutAnimate = false;
+    const activeSort = getDoneSortType();
+    const container = doneDownloadsDiv.querySelector(".movieContainer");
+    if(!container) return;
+
+    if(animate) {
+      flipEls = [...container.children].filter(el =>
+        el.classList.contains("series-group") || el.classList.contains("download-media"));
+      flipBefore = snapshotRects(flipEls);
+    }
+
+    const doneEpisodes = [...container.querySelectorAll(".download-media")];
+
+    const bySeries = new Map();
+    for(const el of doneEpisodes) {
+      if(!el.dataset.isEpisode) continue;
+      const list = bySeries.get(el.dataset.seriesKey) ?? [];
+      list.push(el);
+      bySeries.set(el.dataset.seriesKey, list);
+    }
+
+    const existingGroups = new Map(
+      [...container.querySelectorAll(".series-group")].map(g => [g.dataset.seriesKey, g])
+    );
+    const topLevel = [];
+
+    for(const el of doneEpisodes) {
+      if(!el.dataset.isEpisode) topLevel.push(el);
+    }
+
+    for(const [key, episodes] of bySeries) {
+      let group = existingGroups.get(key);
+      if(episodes.length < MIN_EPISODES_TO_GROUP) {
+        topLevel.push(...episodes);
+        continue;
+      }
+      if(!group) {
+        group = createSeriesGroupElement(key, episodes[0].dataset.seriesTitle);
+        if(expandedSeriesGroups.has(key) || cachedExpandedSeries.includes(key)) {
+          group.classList.add("expanded");
+          group.querySelector(".series-group-header").setAttribute("aria-expanded", "true");
+          expandedSeriesGroups.add(key);
+        }
+      }
+      existingGroups.delete(key);
+      const episodesBox = group.querySelector(".series-group-episodes");
+      episodes.sort((a, b) => compareEpisodes(a, b, activeSort));
+      episodes.forEach((ep, i) => {
+        ep.style.setProperty("--i", Math.min(i, 12));
+        episodesBox.appendChild(ep);
+      });
+      refreshSeriesGroupHeader(group, episodes);
+      topLevel.push(group);
+    }
+
+    for(const stale of existingGroups.values()) stale.remove();
+
+    topLevel.sort((a, b) => compareDoneItems(a, b, activeSort));
+    for(const item of topLevel) container.appendChild(item);
+  } finally {
+    doneLayoutRunning = false;
+  }
+  updateDownloadUI();
+  if(animate && flipBefore) {
+    const after = [...doneDownloadsDiv.querySelectorAll(".movieContainer > .series-group, .movieContainer > .download-media")];
+    animateReorder(after, flipBefore);
+  }
+}
+
+(function observeDoneContainer() {
+  const container = doneDownloadsDiv.querySelector(".movieContainer");
+  if(!container) return;
+  new MutationObserver((mutations) => {
+    if(doneLayoutRunning) return;
+    const removed = mutations.some(m =>
+      [...m.removedNodes].some(n => n.nodeType === 1 && n.classList.contains("download-media") && !n.isConnected));
+    if(removed) scheduleDoneLayout();
+  }).observe(container, { childList: true, subtree: true });
+})();
 
 setupDoneSearch();
 setupKeyPressesHandler();

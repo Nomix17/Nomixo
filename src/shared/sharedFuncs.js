@@ -437,6 +437,7 @@ function getDownloadCacheData(){
     page:"download",
     "download_container_top_scroll_value": downloadElementsContainers.scrollTop,
     "downloaded_search_value": document.getElementById("completed-download-search")?.value ?? "",
+    "expanded_series": [...document.querySelectorAll(".series-group.expanded")].map(el => el.dataset.seriesKey),
     sort_type: getDropdownValue(sortingDropdown)
   };
 }
