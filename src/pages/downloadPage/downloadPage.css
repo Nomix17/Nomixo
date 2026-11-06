@@ -1339,6 +1339,45 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
+.downloads-categorie .categorie-top-bar {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+.downloads-categorie .title-container { min-width: 0; flex: 0 1 auto; }
+.title-container .title { min-width: 0; }
+.title-container .title svg { flex-shrink: 0; }
+.far-right-div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.download-media,
+.series-group-header { flex-wrap: wrap; }
+.download-movie-middle-div,
+.series-group-info { flex: 1 1 240px; min-width: 0; }
+.download-movie-right-div:not(.up-side-down),
+.series-group-right { margin-left: auto; height: auto; }
+.movie-title-p { word-break: break-word; }
+
+@media (max-width: 900px) {
+  .far-right-div { flex: 1 1 100%; justify-content: flex-start; order: 3; }
+}
+
+@media (max-width: 700px) {
+  .download-movie-right-div:not(.up-side-down),
+  .series-group-right {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+  .play-button,
+  .delete-button,
+  .series-group-right .play-button { margin-right: 0; }
+  .download-media:has(.context-menu-button) .movie-title-p { padding-right: 36px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .series-group.expanding .series-group-episodes::before,
   .series-group.expanding .series-group-episodes > .download-media { animation: none; }
