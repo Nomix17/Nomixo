@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain, dialog, shell } from "electron";
+import { BrowserWindow, app, ipcMain, dialog, shell, session } from "electron";
 import path from "path";
 import { mkdir, copyFile, writeFile, readFile, unlink, rm, access, readdir, stat, rename } from 'fs/promises';
 
@@ -20,6 +20,7 @@ import {
   findFile,
   sendSystemNotification,
   downloadImage,
+  getDirSize
 } from "./utils.js";
 
 import {
@@ -762,6 +763,57 @@ ipcMain.handle("remove-search-history-item", async (event, query) => {
 
 ipcMain.on("send-system-notification", (event, options) => {
   sendSystemNotification(options);
+});
+
+ipcMain.handle("clear-app-cache", async () => {
+  try {
+    const ses = session.defaultSession;
+    await ses.clearCache();
+    await ses.clearCodeCaches({});
+    await ses.clearStorageData({
+      storages: [
+        "cachestorage",
+        "serviceworkers",
+        "shadercache",
+        "filesystem",
+        "indexdb",
+        "websql",
+      ],
+    });
+    await ses.clearHostResolverCache();
+    await ses.clearAuthCache();
+    await Promise.allSettled(Paths.cacheFiles.map(path => {
+      if(path) return rm(path, { recursive: true, force: true });
+    }));
+    return { success: true };
+  } catch(err) {
+    console.error("Failed to clear cache:", err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("get-cache-size", async () => {
+  const ses = session.defaultSession;
+  const userData = app.getPath("userData");
+
+  const [httpCache, videoCache, codeCache, gpuCache, serviceWorker, indexedDB, localStorage] =
+    await Promise.all([
+      ses.getCacheSize(),
+      Paths.videoCacheDir ? getDirSize(Paths.videoCacheDir) : 0,
+      getDirSize(path.join(userData, "Code Cache")),
+      getDirSize(path.join(userData, "GPUCache")),
+      getDirSize(path.join(userData, "Service Worker")),
+      getDirSize(path.join(userData, "IndexedDB")),
+      getDirSize(path.join(userData, "Local Storage")),
+    ]);
+
+  const total =
+    httpCache + videoCache + codeCache + gpuCache + serviceWorker + indexedDB + localStorage;
+
+  return {
+    total,
+    breakdown: { httpCache, videoCache, codeCache, gpuCache, serviceWorker, indexedDB, localStorage },
+  };
 });
 
 // ======================= NAVIGATION HELPERS =======================

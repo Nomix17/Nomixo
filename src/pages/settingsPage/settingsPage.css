@@ -130,10 +130,6 @@ table {
   padding-top: 14.72px;
 }
 
-.setting-row:last-child {
-  border-bottom: none;
-}
-
 .setting-row-stacked {
   flex-direction: column;
   align-items: stretch;
@@ -1703,4 +1699,58 @@ input[type="range"]::-webkit-slider-thumb {
 #cancelBtn:hover {
   background-color: transparent;
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+.clear-cache-row {
+  gap: 12px;
+  margin: 14.72px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  transition: background-color .18s ease, border-color .18s ease;
+}
+
+.clear-cache-row .setting-text {
+  flex: 1;
+  max-width: none;
+}
+
+#btn-clearCache {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 90px;
+  height: 39.56px;
+  padding: 0 12.88px;
+  font-size: 13.8px;
+  font-weight: 500;
+  border-radius: 7.36px;
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgb(var(--text-color));
+  cursor: pointer;
+  transition: background 0.12s, transform 0.1s;
+}
+
+#btn-clearCache:not(:disabled):hover {
+  background-color: transparent;
+}
+
+#btn-clearCache:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cache-size {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  font-size: 13.34px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: rgba(var(--text-color), 0.8);
 }

@@ -174,3 +174,28 @@ export function parseTorrentioStream(streamData) {
   const MagnetLink = `magnet:?xt=urn:btih:${hash}`
   return { rawStreamTitle: fullTitle, torrentTitle, Quality, hash, SeedersNumber: toIntOrRaw(SeedersNumber), Size, fileName, MagnetLink };
 }
+
+export async function getDirSize(dir) {
+  let total = 0;
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return 0;
+  }
+
+  await Promise.all(
+    entries.map(async (entry) => {
+      const full = path.join(dir, entry.name);
+      try {
+        if (entry.isDirectory()) {
+          total += await getDirSize(full);
+        } else if (entry.isFile()) {
+          total += (await stat(full)).size;
+        }
+      } catch { }
+    })
+  );
+
+  return total;
+}

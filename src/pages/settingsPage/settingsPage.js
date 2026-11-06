@@ -762,6 +762,44 @@ exportBtn.addEventListener("click", async () => {
     displayMessage({ title: "Export complete", body: "Library was exported." });
 });
 
+const clearCacheBtn = document.getElementById("btn-clearCache");
+clearCacheBtn.addEventListener("click", async () => {
+  clearCacheBtn.disabled = true;
+  try {
+    const result = await window.electronAPI.clearAppCache();
+
+    if (result?.success) {
+      displayMessage({
+        title: "Cache cleared",
+        body: "Cached data was removed.",
+      });
+    } else {
+      displayMessage({
+        title: "Failed to clear cache",
+        body: result?.error ?? "Something went wrong.",
+      });
+    }
+  } catch (err) {
+    displayMessage({
+      title: "Failed to clear cache",
+      body: err.message,
+    });
+  } finally {
+    clearCacheBtn.disabled = false;
+  }
+  refreshCacheSize();
+});
+
+function refreshCacheSize() {
+  const cacheSizeEl = document.getElementById('cacheSize');
+  return window.electronAPI.getCacheSize()
+    .then(size => { cacheSizeEl.textContent = formatBytes(size.total); })
+    .catch(err => {
+      console.error('Failed to get cache size:', err);
+      cacheSizeEl.textContent = 'Unknown';
+    });
+}
+
 const confirmImportBtn = document.getElementById("confirmImportBtn");
 confirmImportBtn.addEventListener("click", async() => {
   const mergeRadioInput = document.getElementById("radio-merge");
@@ -1157,5 +1195,6 @@ dropDownInit();
 initBackupSection();
 initCurrentVersion();
 loadSettings();
+refreshCacheSize();
 initLanguageDropdown();
 handleNavigationWithArrowKeys((element) => element.focus());
