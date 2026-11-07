@@ -174,25 +174,49 @@ function editEntryInfo(torrentId, newMediaInfo, libraryDump) {
 }
 
 export async function saveDownloadProgress(torrentEntry, downloadedBytes, totalSize) {
-  await withFileLock(Paths.downloadLibraryFilePath, async () => {
+  const isDone = torrentEntry.Status === "DONE";
+  const typeOfSave = isDone ? "Download-Complete" : "Download";
+
+  const downloadPath = await withFileLock(Paths.downloadLibraryFilePath, async () => {
     const downloadLib = await loadDownloadStorage();
 
     const existingIndex = downloadLib.downloads.findIndex(
       item => item.torrentId === torrentEntry.torrentId
     );
+    if (existingIndex === -1) return null;
 
-    if (existingIndex !== -1) {
-      downloadLib.downloads[existingIndex]["Downloaded"] = downloadedBytes;
-      downloadLib.downloads[existingIndex]["typeOfSave"] =
-        torrentEntry.Status === "DONE" ? "Download-Complete" : "Download";
-      downloadLib.downloads[existingIndex]["Total"] = totalSize;
-
-      if (torrentEntry.Status === "DONE")
-        downloadLib.downloads[existingIndex]["Status"] = "DONE";
-
-      await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+    const entry = downloadLib.downloads[existingIndex];
+    entry["Downloaded"] = downloadedBytes;
+    entry["Total"] = totalSize;
+    entry["typeOfSave"] = typeOfSave;
+    if (isDone) {
+      entry["Status"] = "DONE";
+      entry["StatusUpdateTime"] = Date.now();
     }
+
+    await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
+    return entry.downloadPath;
   });
+
+  if (!downloadPath) return;
+
+  const navigatorPath = path.join(downloadPath, Paths.navigatorFileName);
+  try {
+    await withFileLock(navigatorPath, async () => {
+      const navigator = await loadJsonFile(navigatorPath);
+      navigator.Downloaded = downloadedBytes;
+      navigator.Total = totalSize;
+      navigator.typeOfSave = typeOfSave;
+      if (isDone) {
+        navigator.Status = "DONE";
+        navigator.StatusUpdateTime = Date.now();
+      }
+      await overwriteStorageFile(navigatorPath, navigator);
+    });
+  } catch (err) {
+    if (err.code === "ENOENT") return;
+    log.error("Failed to update navigator for:", torrentEntry.torrentId, err);
+  }
 }
 
 export async function editDownloadStorageEntry(torrentId, key, value) {
