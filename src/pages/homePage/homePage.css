@@ -184,7 +184,7 @@ body, html {
 }
 
 #div-middle-left.active::before {
-  width: 230px;
+  width: 225px;
   background-color: rgba(var(--background-color), 0.95);
   background-image:
     radial-gradient(120% 45% at 0% 0%, rgba(var(--accent-color), 0.14) 0%, transparent 70%),
@@ -214,16 +214,14 @@ body, html {
 .btn-middle-left::before {
   content: attr(aria-label);
   position: absolute;
-  /* the pill grows outward around the 50x50 button (8px left, 5px top/bottom),
-     so the icon gets breathing room but layout and button spacing don't change */
-  left: -8px;
+  left: -4px;
   top: -5px;
   box-sizing: border-box;
-  width: 210px;            /* right edge unchanged */
+  width: 203px;
   height: 60px;
   display: flex;
   align-items: center;
-  padding-left: 75px;      /* label text stays where it was */
+  padding-left: 75px;
   border-radius: 14px;
   border: 1px solid transparent;
   background-color: transparent;
@@ -294,6 +292,7 @@ body, html {
 }
 
 .btn-middle-left { position: relative; }
+
 .btn-middle-left::after {
   content: "";
   position: absolute;
@@ -301,15 +300,36 @@ body, html {
   top: 50%;
   width: 5px;
   height: 0;
-  border-radius: 5px;
+  border-radius: 999px;
   background: rgb(var(--accent-color));
+  box-shadow: 0 0 10px rgba(var(--accent-color), 0.55);
   transform: translateY(-50%);
   opacity: 0;
   transition: height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
-#div-middle-left.active .btn-middle-left.active::after {
-  height: 15px;
-  opacity: 0.8;
+
+.btn-middle-left.active::after {
+  height: 22px;
+  opacity: 1;
+  animation: pill-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.btn-middle-left:not(.active):hover::after {
+  height: 10px;
+  opacity: 0.5;
+}
+
+@keyframes pill-pop {
+  0%   { height: 0;    opacity: 0; transform: translateY(-50%) translateX(-6px); }
+  60%  { height: 30px; opacity: 1; transform: translateY(-50%) translateX(0); }
+  100% { height: 22px; opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-middle-left.active::after { animation: none; }
+}
+#btn-settings {
+  margin-top: auto;
 }
 #div-middle-left.active .btn-middle-left:focus-visible::after,
 #div-middle-left.active .btn-middle-left:focus::after {
@@ -1379,4 +1399,24 @@ i[data-lucide="expand"] {
     padding-top: 8px;
     padding-bottom: 8px;
   }
+}
+
+#btn-settings .icon {
+  transform-origin: 50% 50%;
+  transition: fill 0.3s ease, transform 0.9s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+#btn-settings:hover .icon,
+#btn-settings:focus-visible .icon,
+#btn-settings:active .icon,
+#btn-settings.active .icon {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #btn-settings .icon { transition: fill 0.3s ease; }
+  #btn-settings:hover .icon,
+  #btn-settings:focus-visible .icon,
+  #btn-settings:active .icon,
+  #btn-settings.active .icon { transform: none; }
 }
