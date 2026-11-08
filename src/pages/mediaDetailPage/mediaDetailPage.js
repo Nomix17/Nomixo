@@ -1072,6 +1072,7 @@ function isOnLeftBorder(event,ToResizeDiv) {
 
 function dragResizeDiv(ToResizeDiv) {
   ToResizeDiv.addEventListener("mousedown",(event)=>{
+    if(window.matchMedia("(max-width: 880px)").matches) return;
     const onLeftBorder = isOnLeftBorder(event,ToResizeDiv);
     if(onLeftBorder){
       const listener = addEventListenerWithArgs(window,"mousemove",moveDiv,ToResizeDiv);

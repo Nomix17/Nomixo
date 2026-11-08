@@ -2274,7 +2274,6 @@ html.torrent-panel-open #div-movieMedias.visible-flex {
   }
 }
 
-/* ===== Single download overlay (toned-down sibling of the bulk dialog) ===== */
 #downloadOverlay {
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(2px);
@@ -2526,4 +2525,236 @@ html.torrent-panel-open #div-movieMedias.visible-flex {
 
 #singleContainer .floating-x-remove-btn {
   background: rgba(0, 0, 0, 0.45);
+}
+
+html {
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--text-color), 0.3) transparent;
+}
+html::-webkit-scrollbar { width: 8px; height: 8px; }
+html::-webkit-scrollbar-thumb {
+  background: rgba(var(--text-color), 0.3);
+  border-radius: 8px;
+}
+#div-main {
+  display: flex;
+  min-width: 320px;
+  min-height: 480px;
+}
+#div-top { flex: none; }
+
+#div-detailsColumn { min-width: min(300px, 100%); }
+#div-movieDetails { overflow-x: hidden; }
+#div-genresInfos,
+#div-directorInfos { max-width: min(450px, 100%); }
+#div-castInfos { max-width: min(360px, 100%); }
+#div-movieSummary { max-width: min(630px, 100%); }
+#bottomButtonsDiv { max-width: min(630px, 100%); }
+#div-genelareInfos { flex-wrap: wrap; }
+
+#h1-MovieTitle {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: clamp(28px, 4vw, 45px);
+}
+#div-MovieLogoTitleContainer {
+  max-width: min(calc(360px + 2vh), calc(100% - 1vh));
+  min-height: min(135px, 18vh);
+}
+#img-MovieLogoTitle {
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(180px, 24vh);
+}
+.collectionLinkName { max-width: min(280px, 50vw); }
+.floatingDiv { max-width: min(540px, 90vw); }
+
+#div-episodesSidePanel,
+#div-torrentSidePanel {
+  flex-shrink: 1;
+  min-width: 240px;
+  max-width: 60vw;
+}
+.div-TorrentMedia .div-MediaDescription { min-width: 0; }
+
+@media (max-width: 1100px) {
+  #div-middle { padding-left: 32px; }
+
+  .episode-image-container,
+  .episode-image-container .episode-image {
+    width: 96px;
+    height: 54px;
+  }
+  .div-episode-information {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+    margin: 0 12px;
+  }
+  .div-episode-information .episode-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 880px) {
+  #div-middle {
+    flex-direction: column;
+    padding: 0 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  #div-detailsColumn {
+    flex: none;
+    height: auto;
+    min-width: 0;
+  }
+  #div-movieDetails {
+    flex: none;
+    overflow: visible;
+    -webkit-mask-image: none;
+            mask-image: none;
+  }
+  #bottomButtonsDiv { padding-bottom: 16px; }
+
+  #div-episodesSidePanel,
+  #div-torrentSidePanel {
+    flex: none;
+    width: 100% !important;
+    min-width: 0;
+    max-width: none;
+    margin: 0 0 16px;
+    height: max(60vh, 360px);
+    border-radius: 20px;
+  }
+  .toggleButton svg { transform: rotate(90deg); }
+
+  #EpisodesContainer,
+  #div-movieMedias {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    cursor: default !important;/
+  }
+
+  #dummyDiv { height: 15px !important; }
+  #div-torrentSidePanel { padding-bottom: 15px !important; }
+
+  html.torrent-panel-open #div-torrentSidePanel,
+  .torrent-panel--open {
+    border-radius: 20px !important;
+  }
+}
+
+@media (max-height: 640px) {
+  #div-top { padding-top: 8px; }
+  #h1-MovieTitle { margin-top: 2vh; margin-bottom: 2vh; }
+  #div-MovieLogoTitleContainer { margin-bottom: 2vh; }
+  #p-movieDuration,
+  #p-movieYearOfRelease { margin-top: 12px; margin-bottom: 12px; }
+}
+
+@media (max-height: 600px) {
+  #singleContainer { overflow-y: auto; }
+  .single-hero { padding-top: 40px; }
+  #singleContainer .media-poster { width: 88px; height: 132px; }
+  #singleContainer #mediaTitle { font-size: 24px; }
+  .single-body { flex: none; overflow: visible; }
+  .single-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
+      rgb(var(--background-color));
+  }
+}
+
+@media (max-width: 860px) {
+  .bulk-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 14px;
+  }
+  .bulk-hero-copy { max-width: 100%; }
+  .bulk-quality { align-items: flex-start; }
+}
+@media (max-height: 700px) {
+  .bulk-hero { min-height: 150px; padding-top: 20px; padding-bottom: 16px; }
+  .bulk-hero-logo { max-height: 70px; }
+  .bulk-subtitle { font-size: clamp(22px, 3.2vw, 32px); }
+  .bulk-picker { height: clamp(200px, 42vh, 300px); }
+}
+@media (max-height: 520px) {
+  #bulkContainer { overflow-y: auto; max-height: 96vh; }
+  .bulk-scroll { flex: none; overflow: visible; }
+  .bulk-picker { height: 260px; }
+  .bulk-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    padding-top: 8px;
+    padding-bottom: 10px;
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
+      var(--bulk-surface);
+  }
+  .bulk-footer-row { gap: 8px; }
+  .bulk-footer .bulk-btn,
+  .single-footer .bulk-btn { padding-top: 9px; padding-bottom: 9px; }
+}
+
+@media (max-width: 560px) {
+  #div-middle { padding: 0 12px; }
+  #p-movieDuration,
+  #p-movieYearOfRelease { margin: 14px 16px 14px 8px; }
+  .div-NothingWasFound { padding: 0 24px; }
+
+  .split-save-btn,
+  #movie-trailer-div,
+  #bulk-download-div { max-width: 100%; }
+  .button-wrapper,
+  .split-save-btn__main { padding-left: 11px; padding-right: 11px; }
+  #p-movie-trailer,
+  #p-bulk-download { margin-left: 8px; }
+
+  .div-episodes-Element,
+  .div-TorrentMedia {
+    padding: 12px 0 12px 12px;
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+  .episode-image-container,
+  .episode-image-container .episode-image { width: 80px; height: 45px; }
+
+  .bulk-btn-primary,
+  .single-footer .bulk-btn-primary { min-width: 0; padding-left: 20px; padding-right: 20px; }
+  .bulk-quality { width: 100%; }
+  .bulk-segmented {
+    width: 100%;
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .bulk-segmented span { padding: 7px 4px; }
+}
+
+@media (max-width: 420px) {
+  #singleContainer { width: 96vw; }
+  .single-hero { padding: 44px 16px 14px; }
+  #singleContainer .media-info { gap: 14px; }
+  #singleContainer .media-poster { width: 72px; height: 108px; }
+  #singleContainer #mediaTitle { font-size: 20px; }
+  .single-body { padding: 6px 16px 16px; }
+  .single-footer { padding: 12px 16px 14px; }
+  .single-options { flex-direction: column; }
+
+  .bulk-hero { padding: 18px 16px 14px; }
+  .bulk-scroll { padding: 4px 16px 14px; }
+  .bulk-footer { padding: 12px 16px 14px; }
+  .bulk-season-name { max-width: 110px; }
+  .bulk-options { flex-direction: column; }
 }
