@@ -1327,3 +1327,56 @@ i[data-lucide="expand"] {
   font-size: 12.5px;
   color: rgba(255,255,255,0.75);
 }
+
+
+#div-middle {
+  min-height: 0;
+  min-width: 0;
+}
+
+#div-middle-right {
+  min-width: 0;
+}
+
+#div-middle-left {
+  gap: clamp(6px, calc((100vh - 400px) / 4), 8vh);
+}
+
+.div-categories-description {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 660px) {
+  #div-top:has(#div-input-container) {
+    flex-wrap: wrap;
+    height: 133.8px;
+    row-gap: 12px;
+    align-content: center;
+  }
+  #div-top:has(#div-input-container) #div-input-container {
+    order: 3;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  #div-top:has(#div-input-container) #btn-fullscreen {
+    order: 2;
+  }
+  #div-main:has(#div-input-container) #div-middle-left::before {
+    top: -133.8px;
+  }
+}
+
+@media (max-width: 560px) {
+  #input-searchForMovie {
+    flex: 1 1 auto;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-height: 460px) {
+  #div-middle-left {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
