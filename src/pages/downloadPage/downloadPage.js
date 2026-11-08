@@ -35,8 +35,6 @@ async function insertDownloadData(entries, sortType) {
 
   for(const mediaEntry of sortedMediaEntries)
     createDownloadElement(mediaEntry);
-  alignSizeDiv();
-
   const queueList = await window.electronAPI.getDownloadQueueList();
   reorderDownloadCategorie(queuedDownloadsDiv, queueList, false);
 
@@ -385,15 +383,6 @@ async function SaveDownloadStatus(torrentId, Status) {
   );
 }
 
-function alignSizeDiv() {
-  const downloadTorrent = currentlyDownloadingDiv.querySelectorAll(".download-media");
-  downloadTorrent.forEach(element=>{
-    let ProgressBar = element.querySelector(".progress-bar-div");
-    let sizeDiv = element.querySelector(".movie-size-div");
-    sizeDiv.style.maxWidth = ProgressBar.offsetWidth;
-  });
-}
-
 // Helper function to hide context menu with animation
 function hideContextMenu(menuDiv) {
   menuDiv.classList.remove("visible");
@@ -628,6 +617,7 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
 
   CancelButton.remove();
   PausePlayButton.remove();
+  MediaDownloadElement.classList.add("is-finished");
 
   let existingContextMenu = MediaDownloadElement.querySelector(".context-menu-button");
   if (existingContextMenu) existingContextMenu.remove();
@@ -1654,10 +1644,6 @@ async function loadQueuedDownloadsSortByValue() {
   const settings = await window.electronAPI.loadSettings();
   return settings?.queued_downloads_sort_by_value ?? null;
 }
-
-window.addEventListener("resize",()=>{
-  alignSizeDiv();
-});
 
 document.getElementById("btn-runInBackground").addEventListener("click", () => {
   if(document.getElementById("btn-runInBackground").classList.contains("disabled")) return;

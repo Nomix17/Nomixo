@@ -306,6 +306,7 @@
   min-width: 0;
   width: 100%;
   gap: 14.4px;
+  container-type: inline-size;
 }
 
 .movie-title-p {
@@ -354,6 +355,11 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
+  max-width: calc(100cqw - 81px - 18px);
+}
+
+.download-media.is-finished .movie-size-div {
+  max-width: none;
 }
 
 .downloaded-size,
