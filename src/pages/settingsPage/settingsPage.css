@@ -1754,3 +1754,242 @@ input[type="range"]::-webkit-slider-thumb {
   white-space: nowrap;
   color: rgba(var(--text-color), 0.8);
 }
+
+
+#div-middle-right,
+#div-middle-right .inner {
+  min-width: 0;
+}
+#div-middle-right .inner {
+  width: 100%;
+}
+.setting-label,
+.setting-desc,
+.section-desc,
+.backup-card-desc {
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 1100px) {
+  #div-middle-right .inner {
+    max-width: 100%;
+  }
+
+  .settings-card {
+    margin: 0 16px 20px 16px;
+    padding: 22px 24px 28px 24px;
+  }
+  #ThemeOptionContainer {
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 800px) {
+  #div-middle-right .inner {
+    padding-bottom: 90px;   }
+
+  .settings-card {
+    margin: 0 8px 16px 8px;
+    padding: 18px 16px 22px 16px;
+    border-radius: 14px;
+  }
+
+  .section-header {
+    gap: 12px;
+    padding-bottom: 12px;
+  }
+  .section-header-text h1 {
+    font-size: 21px;
+  }
+
+    .setting-row {
+    flex-wrap: wrap;
+    gap: 12px 20px;
+  }
+  .setting-row-stacked {
+    flex-wrap: nowrap;
+  }
+  .setting-row .setting-text {
+    flex: 1 1 240px;
+    max-width: 100%;
+  }
+  .setting-text-standalone {
+    flex: 0 0 auto;
+    max-width: 100%;
+  }
+  .setting-row-stacked .setting-text {
+    flex: 0 0 auto;
+  }
+  .setting-control {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+    .setting-control:has(#zoomFactorContainer) {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+  #zoomFactorContainer {
+    width: 100%;
+  }
+  #input-ZoomFactor {
+    width: 100%;
+    max-width: 100%;
+  }
+
+    .exec-path-container,
+  .subtitle-lang-search-wrapper {
+    padding-right: 0;
+  }
+
+    .input-container {
+    flex-wrap: wrap;
+    gap: 16px 11px;
+  }
+  .input-container h2 {
+    flex: 1 1 100%;
+    min-width: 0;
+    margin: 0;
+  }
+  .input-container .input-wrapper,
+  .exec-path-container .input-wrapper {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+  .input-container .hint {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+  }
+  .api-key-inputs-div {
+    gap: 28px;
+  }
+
+    .backup-cards-row {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .backup-card {
+    flex: 1 1 220px;
+    width: auto;
+    min-width: 0;
+  }
+
+  .about-links-grid {
+    flex-wrap: wrap;
+  }
+  .about-link-card {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
+  .clear-cache-row {
+    flex-wrap: wrap;
+  }
+  .clear-cache-row .setting-text {
+    flex: 1 1 180px;
+  }
+
+  .prepared-themes-div {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+    #div-ApplyButton {
+    padding: 8px 32px;
+    max-width: calc(100vw - 24px);
+  }
+
+    .overlay .delete-container {
+    max-width: calc(100vw - 24px);
+  }
+  #details-customizeTheme {
+    width: 94vw;
+    height: 88vh;
+    padding: 38px 18px 18px 18px;
+  }
+  .theme-scroll-content {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+  }
+  #details-customizeTheme h2 {
+    white-space: normal;
+    min-width: 0;
+  }
+  #details-customizeTheme h2 .field-hint {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .settings-card {
+    margin: 0 4px 12px 4px;
+    padding: 16px 12px 18px 12px;
+  }
+
+  .section-icon {
+    width: 22px;
+    height: 22px;
+    margin-top: 4px;
+  }
+
+    .setting-control {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  .update-version-btn {
+    width: 100%;
+    height: auto;
+    min-height: 39.56px;
+    padding: 8px 14px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .backup-card,
+  .about-link-card {
+    flex-basis: 100%;
+  }
+
+    .clear-cache-row .setting-text {
+    flex: 1 1 calc(100% - 50px);
+  }
+  .clear-cache-row .cache-size {
+    margin-right: auto;
+  }
+
+  .subtitle-lang-add-btn {
+    width: 72px;
+  }
+
+  .prepared-themes-div {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  #div-ApplyButton {
+    padding: 8px 20px;
+  }
+  .floating-version-chip {
+    right: 8px;
+    bottom: 4px;
+    font-size: 12px;
+  }
+
+  #details-customizeTheme {
+    width: 98vw;
+    height: 92vh;
+    padding: 36px 12px 12px 12px;
+  }
+}
+
+@media (max-height: 520px) {
+  #details-customizeTheme {
+    height: 94vh;
+    padding-top: 30px;
+    padding-bottom: 12px;
+  }
+}
