@@ -60,3 +60,8 @@
 .div-categories-description h1{
   margin:0px !important;
 }
+
+#div-OptionsContainer {
+  flex-wrap: wrap;
+  row-gap: 12px;
+}
