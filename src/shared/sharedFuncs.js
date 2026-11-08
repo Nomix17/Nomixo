@@ -223,7 +223,7 @@ function openDiscoveryPage(genreId = "All", MediaType = "All" , SortBase = "Defa
   return navigate(`../pages/discoveryPage/discoveryPage.html?GenreId=${genreId}&MediaType=${MediaType}&SortBase=${SortBase}`);
 }
 
-function OpenLibaryPage(typeOfSave = "All"){
+function openLibaryPage(typeOfSave = "All"){
   return navigate(`../pages/libraryPage/libraryPage.html?typeOfSave=${typeOfSave}`);
 }
 
@@ -231,11 +231,11 @@ function openCollectionPage(collectionId){
   return navigate(`../pages/collectionPage/collectionPage.html?CollectionId=${collectionId}`);
 }
 
-function OpenDownloadPage(){
+function openDownloadPage(){
   return navigate("../pages/downloadPage/downloadPage.html");
 }
 
-function OpenSettingsPage(){
+function openSettingsPage(){
   return navigate("../pages/settingsPage/settingsPage.html");
 }
 
