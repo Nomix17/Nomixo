@@ -685,7 +685,7 @@ function setupDeleteButtonLogic(MediaInfo, deleteMediaButton) {
     let closeBtn = deleteMediaOverlay.querySelector('#closeBtn');
     let cancelBtn = deleteMediaOverlay.querySelector('#cancelBtn');
     let deleteBtn = deleteMediaOverlay.querySelector('#deleteBtn');
-    
+
     const closeBtnNew = closeBtn.cloneNode(true);
     closeBtn.parentNode.replaceChild(closeBtnNew, closeBtn);
     
@@ -729,6 +729,7 @@ function setupDeleteButtonLogic(MediaInfo, deleteMediaButton) {
 function fillingDeleteOverlay(MediaInfo) {
   const deleteOverlay = document.getElementById('deleteOverlay');
 
+  const deleteTitle = deleteOverlay.querySelector(".delete-title");
   const mediaPosterContainer = deleteOverlay.querySelector('#mediaPoster');
   const mediaPosterImg = deleteOverlay.querySelector('#mediaPosterImg');
   const mediaTitle = deleteOverlay.querySelector('#mediaTitle');
@@ -742,8 +743,12 @@ function fillingDeleteOverlay(MediaInfo) {
   mediaSize.innerHTML = MediaInfo.Size +" • "+MediaInfo.Quality;
 
   mediaYear.innerHTML = MediaInfo.Year;
-  if(MediaInfo.seasonNumber && MediaInfo.episodeNumber)
+  if(MediaInfo.seasonNumber && MediaInfo.episodeNumber) {
     seasonEpisode.innerText = `S${MediaInfo.seasonNumber}-E${MediaInfo.episodeNumber}`;
+    deleteTitle.innerHTML = `Delete This Episode?`
+  } else {
+    deleteTitle.innerHTML = `Delete This Movie?`
+  }
 }
 
 
