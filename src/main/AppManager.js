@@ -186,7 +186,7 @@ export class AppManager {
 
   restoreAndFocusWindow({ fullscreen = null, maximize = null } = {}) {
     const win = this.browserWindow;
-    if (!win || win.isDestroyed()) return;
+    if (!win || win.isDestroyed()) return Promise.resolve();
     if (win.isMinimized()) win.restore();
 
     win.setAlwaysOnTop(true);
@@ -194,14 +194,33 @@ export class AppManager {
     win.focus();
     win.setAlwaysOnTop(false);
 
-    if (maximize !== null && win.isMaximized() !== maximize) {
-      if (maximize) win.maximize();
-      else win.unmaximize();
-    }
+    const applyMaximize = () => {
+      if (win.isDestroyed() || win.isFullScreen()) return;
+      if (maximize !== null && win.isMaximized() !== maximize) {
+        if (maximize) win.maximize();
+        else win.unmaximize();
+      }
+    };
 
-    if (fullscreen !== null && win.isFullScreen() !== fullscreen)
-      win.setFullScreen(fullscreen);
+    const settled = new Promise((resolve) => {
+      const timer = setTimeout(resolve, 1500);
+      const done = () => { clearTimeout(timer); resolve(); };
+
+      if (fullscreen === true) {
+        applyMaximize();
+        if (win.isFullScreen()) return done();
+        win.once("enter-full-screen", done);
+        win.setFullScreen(true);
+      } else if (fullscreen === false && win.isFullScreen()) {
+        win.once("leave-full-screen", () => { applyMaximize(); done(); });
+        win.setFullScreen(false);
+      } else {
+        applyMaximize();
+        done();
+      }
+    });
 
     this.store.delete("opened-in-background");
+    return settled;
   }
 }

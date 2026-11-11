@@ -43,6 +43,11 @@ const ipc = createIPC(parentPort, {
     if (name === 'next_episode_ready') {
       nextEpisodeFlag = Boolean(payload);
       pushNextEpisodeFlag();
+    } else if (name === 'sync_window_state') {
+      if (payload?.maximize !== undefined)
+        sendToMpv(['set_property', 'window-maximized', Boolean(payload.maximize)]);
+      if (payload?.fullscreen !== undefined)
+        sendToMpv(['set_property', 'fullscreen', Boolean(payload.fullscreen)]);
     }
   },
 });
@@ -270,6 +275,27 @@ async function PlayLocalVideo() {
   });
 }
 
+function pipeLines(stream, onLine) {
+  let buf = '';
+  stream.on('data', (data) => {
+    buf += data.toString();
+    const parts = buf.split(/[\r\n]+/);
+    buf = parts.pop();
+    parts.forEach((line) => { if (line) onLine(line); });
+  });
+}
+
+function handleMpvLine(text) {
+  if (!playbackStarted && MPV_PLAYING_REGEX.test(text) && !text.includes('(Paused)')) {
+    playbackStarted = true;
+    stopBufferingReports();
+    sendProgress('playing');
+    pushNextEpisodeFlag();
+  }
+  if (!playbackStarted && !loadFailureReported) detectLoadFailure(text);
+  ipc.emit('mpv_output', text);
+}
+
 async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
   const { MpvExecPath, mpvConfigDirectory, metaData, startFromTime } = session;
   sendProgress('launching');
@@ -339,19 +365,7 @@ async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
     if (onClose) onClose();
   });
 
-  [mpvProcess.stdout, mpvProcess.stderr].forEach(dataPipe => {
-    dataPipe.on('data', (data) => {
-      const text = data.toString();
-      if (!playbackStarted && MPV_PLAYING_REGEX.test(text) && !text.includes('(Paused)')) {
-        playbackStarted = true;
-        stopBufferingReports();
-        sendProgress('playing');
-        pushNextEpisodeFlag();
-      }
-      if (!playbackStarted && !loadFailureReported) detectLoadFailure(text);
-      ipc.emit('mpv_output', text);
-    });
-  });
+  [mpvProcess.stdout, mpvProcess.stderr].forEach(pipe => pipeLines(pipe, handleMpvLine));
 }
 
 async function cleanup() {

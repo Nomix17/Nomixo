@@ -4254,9 +4254,15 @@ mp.observe_property("seeking", "native", function(_, seeking)
         mp.unregister_event(show_osc) -- remove event when seeking stops
     end
 end)
+-- mpv flips fullscreen/maximized during VO teardown; don't report that as a user toggle
+local shutting_down = false
+mp.register_event("shutdown", function() shutting_down = true end)
+
 mp.observe_property("fullscreen", "bool", function(_, val)
     state.fullscreen = val
-    print(val and "FULLSCREEN_ON" or "FULLSCREEN_OFF")
+    if not shutting_down and val ~= nil then
+        print(val and "FULLSCREEN_ON" or "FULLSCREEN_OFF")
+    end
     state.marginsREQ = true
     adjust_subtitles(state.osc_visible)
     request_init_resize()
@@ -4271,7 +4277,9 @@ mp.observe_property("title-bar", "bool", function(_, val)
 end)
 mp.observe_property("window-maximized", "bool", function(_, val)
     state.maximized = val
-    print(val and "MAXIMIZED_ON" or "MAXIMIZED_OFF")
+    if not shutting_down and val ~= nil then
+        print(val and "MAXIMIZED_ON" or "MAXIMIZED_OFF")
+    end
     request_init_resize()
 end)
 mp.observe_property("idle-active", "bool", function(_, val)
