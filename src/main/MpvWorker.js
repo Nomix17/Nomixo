@@ -29,7 +29,11 @@ let loadFailureReported = false;
 let ipcPath = null;
 let nextEpisodeFlag = null;
 let session = null;
+let requestedFullscreen = false;
 config.init();
+
+let now = null;
+let performanceCalculated = false;
 
 const ipc = createIPC(parentPort, {
   async shutdown() {
@@ -44,11 +48,6 @@ const ipc = createIPC(parentPort, {
     if (name === 'next_episode_ready') {
       nextEpisodeFlag = Boolean(payload);
       pushNextEpisodeFlag();
-    } else if (name === 'sync_window_state') {
-      if (payload?.maximize !== undefined)
-        sendToMpv(['set_property', 'window-maximized', Boolean(payload.maximize)]);
-      if (payload?.fullscreen !== undefined)
-        sendToMpv(['set_property', 'fullscreen', Boolean(payload.fullscreen)]);
     }
   },
 });
@@ -279,6 +278,10 @@ async function PlayLocalVideo() {
 function pipeLines(stream, onLine) {
   let buf = '';
   stream.on('data', (data) => {
+    if(!performanceCalculated) {
+      log.info("Mpv Launching Time:", Date.now() - now, "ms");
+      performanceCalculated = true
+    }
     buf += data.toString();
     const parts = buf.split(/[\r\n]+/);
     buf = parts.pop();
@@ -292,6 +295,8 @@ function handleMpvLine(text) {
     stopBufferingReports();
     sendProgress('playing');
     pushNextEpisodeFlag();
+    if (requestedFullscreen)
+      sendToMpv(['set_property', 'fullscreen', true]);
   }
   if (!playbackStarted && !loadFailureReported) detectLoadFailure(text);
   ipc.emit('mpv_output', text);
@@ -314,6 +319,8 @@ async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
   ipcPath = makeIpcPath();
   const win = await getWindowConf();
   const accentColor = rgbaToHex(win["accent-color"]);
+  requestedFullscreen = Boolean(win.fullscreened);
+  log.info("Window config received:", JSON.stringify({ geometry: win.geometry, fullscreened: win.fullscreened, maximized: win.maximized }));
 
   const yesNo = (v) => (v ? "yes" : "no");
   const options = {
@@ -322,7 +329,7 @@ async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
     "start": startFromTime,
     "geometry": win.geometry,
     "fullscreen": yesNo(win.fullscreened),
-    "window-maximized": yesNo(win.maximized),
+    "window-maximized": yesNo(win.maximized && !win.fullscreened),
     "force-media-title": videoTitle,
     "input-ipc-server": ipcPath,
     "ytdl": "no",
@@ -341,7 +348,7 @@ async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
   ];
 
   let errorOccurred = false;
-
+  now = Date.now()
   mpvProcess = spawn(mpvExecutable, childProcessArguments);
   playbackStarted = false;
   sawStreamTimeout = false;

@@ -34,7 +34,7 @@ class MpvPlayerManager {
   #nextEpisodeManager = new NextEpisodeManager();
   #windowState = { fullscreen: false, maximize: false };
   #hasSnapshot = false;
-  #launchedState = null;
+  #restorePromise = null;
 
   constructor(browserWindow, restoreAndFocusWindowCallback) {
     this.#browserWindow = browserWindow;
@@ -179,13 +179,18 @@ class MpvPlayerManager {
     }
   }
 
-  #getWindowConfigs() {
-    const { fullscreen, maximize } = this.#hasSnapshot
-      ? this.#windowState
-      : {
-          fullscreen: this.#browserWindow.isFullScreen(),
-          maximize: this.#browserWindow.isMaximized(),
-        };
+  async #getWindowConfigs() {
+    await this.#restorePromise;
+
+    if (!this.#hasSnapshot) {
+      this.#windowState = {
+        fullscreen: this.#browserWindow.isFullScreen(),
+        maximize: this.#browserWindow.isMaximized(),
+      };
+      this.#hasSnapshot = true;
+    }
+    const { fullscreen, maximize } = this.#windowState;
+
     const [windowWidth, windowHeight] = this.#browserWindow.getSize();
     const [windowPosX, windowPosY] = this.#browserWindow.getPosition();
     const geometry =
@@ -193,7 +198,7 @@ class MpvPlayerManager {
         ? "70%x70%"
         : `${windowWidth}x${windowHeight}+${windowPosX}+${windowPosY}`;
 
-    this.#launchedState = { fullscreen, maximize };
+    log.info("Launching mpv with window state:", this.#windowState);
     return { geometry, fullscreened: fullscreen, maximized: maximize };
   }
 
@@ -245,7 +250,7 @@ class MpvPlayerManager {
     const ipc = createIPC(worker, {
       getPlaybackConfig: () => session,
       getWindowConfigs: async () => ({
-        ...this.#getWindowConfigs(),
+        ...(await this.#getWindowConfigs()),
         "accent-color": (await loadTheme())["accent-color"]
       }),
 
@@ -328,6 +333,7 @@ class MpvPlayerManager {
     if (this.#hasSnapshot) {
       for (const m of line.matchAll(/(FULLSCREEN|MAXIMIZED)_(ON|OFF)/g)) {
         const on = m[2] === "ON";
+        log.info(`mpv reported ${m[0]}`);
         if (m[1] === "FULLSCREEN") this.#windowState.fullscreen = on;
         else this.#windowState.maximize = on;
       }
@@ -433,32 +439,20 @@ class MpvPlayerManager {
   }
 
   #hideWindow() {
-    if (!this.#hasSnapshot) {
-      this.#windowState = {
-        fullscreen: this.#browserWindow.isFullScreen(),
-        maximize: this.#browserWindow.isMaximized(),
-      };
-      this.#hasSnapshot = true;
-
-      const launched = this.#launchedState;
-      if (launched) {
-        const diff = {};
-        if (launched.fullscreen !== this.#windowState.fullscreen)
-          diff.fullscreen = this.#windowState.fullscreen;
-        if (launched.maximize !== this.#windowState.maximize)
-          diff.maximize = this.#windowState.maximize;
-        if (Object.keys(diff).length) this.#ipc?.emit("sync_window_state", diff);
-      }
-    }
     this.#browserWindow.hide();
   }
 
   #restoreWindowOnce() {
-    if (!this.#hasSnapshot) return;
+    if (!this.#hasSnapshot) return this.#restorePromise;
     const { fullscreen, maximize } = this.#windowState;
     this.#hasSnapshot = false;
-    this.#launchedState = null;
-    return this.#restoreAndFocusWindow({ fullscreen, maximize });
+    const promise = Promise.resolve(
+      this.#restoreAndFocusWindow({ fullscreen, maximize })
+    ).finally(() => {
+      if (this.#restorePromise === promise) this.#restorePromise = null;
+    });
+    this.#restorePromise = promise;
+    return promise;
   }
 }
 
