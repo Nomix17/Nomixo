@@ -123,9 +123,9 @@ local user_opts = {
     -- Track menus (drop-ups)
     sub_menu = true,                       -- left-click the subtitle button to open a drop-up with all tracks, size and delay controls
     audio_menu = true,                     -- left-click the audio button to open a drop-up with all tracks and the audio delay control
-    menu_width = 340,                      -- width of the drop-up menus
-    menu_max_rows = 7,                     -- max visible tracks before the list scrolls (mouse wheel)
-    menu_font_size = 15,                   -- font size of the drop-up menus
+    menu_width = 300,                      -- width of the drop-up menus
+    menu_max_rows = 6,                     -- max visible tracks before the list scrolls (mouse wheel)
+    menu_font_size = 13,                   -- font size of the drop-up menus
     menu_close_on_select = false,          -- close the menu after picking a track
     sub_size_step = 0.1,                   -- subtitle size step (sub-scale) for the size buttons
     audio_delay_step = 0.1,                -- audio delay step in seconds for the delay buttons
@@ -2240,7 +2240,7 @@ local function build_track_menu(name, refY, osc_w, anchor_x)
 
     -- geometry
     local row_h = math.floor(fs * 2.2)
-    local pad, header_h, ctrl_h = 12, 30, 40
+    local pad, header_h, ctrl_h = 10, 28, 36
     local search_h = kind.search and 36 or 0
     local fixed_h = pad + header_h + search_h + 11 + ctrl_h * #kind.controls + 8
     local bottom = refY - 92 -- sits just above the seekbar row
@@ -4600,8 +4600,117 @@ mp.register_script_message("thumbfast-info", function(json)
     end
 end)
 
+-- accent color (--script-opts=accent-color=#RRGGBB)
+-- Derives a set of colors from the accent (via HSL):
+--   seekbarfg_color, menu_selected_color  -> the accent itself
+--   seekbar_cache_color                   -> lighter shade of the accent
+--   menu_bg_color                         -> very dark, lightly tinted
+--   thumbnail_border_color / _outline     -> dark tints
+--   hover_effect_color                    -> light tint
+-- A color is only replaced if it is still at its default value, so anything
+-- set explicitly in modernz.conf wins. Text/icon colors are never touched.
+-- If accent-color is not passed, nothing changes.
+local function parse_hex_color(str)
+    if not str then return nil end
+    str = tostring(str):gsub("[\"'%s]", "")
+    local hex = str:match("^#?(%x%x%x%x%x%x)$")
+    if not hex then
+        local short = str:match("^#?(%x%x%x)$")
+        if short then
+            hex = short:gsub(".", "%0%0")
+        end
+    end
+    if not hex then return nil end
+    return tonumber(hex:sub(1, 2), 16), tonumber(hex:sub(3, 4), 16), tonumber(hex:sub(5, 6), 16)
+end
+
+local function rgb_to_hsl(r, g, b)
+    r, g, b = r / 255, g / 255, b / 255
+    local max, min = math.max(r, g, b), math.min(r, g, b)
+    local l = (max + min) / 2
+    local h, s = 0, 0
+    local d = max - min
+    if d ~= 0 then
+        s = l > 0.5 and d / (2 - max - min) or d / (max + min)
+        if max == r then
+            h = (g - b) / d + (g < b and 6 or 0)
+        elseif max == g then
+            h = (b - r) / d + 2
+        else
+            h = (r - g) / d + 4
+        end
+        h = h / 6
+    end
+    return h, s, l
+end
+
+local function hsl_to_rgb(h, s, l)
+    if s == 0 then
+        local v = math.floor(l * 255 + 0.5)
+        return v, v, v
+    end
+    local function hue2rgb(p, q, t)
+        if t < 0 then t = t + 1 end
+        if t > 1 then t = t - 1 end
+        if t < 1 / 6 then return p + (q - p) * 6 * t end
+        if t < 1 / 2 then return q end
+        if t < 2 / 3 then return p + (q - p) * (2 / 3 - t) * 6 end
+        return p
+    end
+    local q = l < 0.5 and l * (1 + s) or l + s - l * s
+    local p = 2 * l - q
+    return math.floor(hue2rgb(p, q, h + 1 / 3) * 255 + 0.5),
+           math.floor(hue2rgb(p, q, h) * 255 + 0.5),
+           math.floor(hue2rgb(p, q, h - 1 / 3) * 255 + 0.5)
+end
+
+local function apply_accent_color()
+    local arg = mp.get_opt("accent-color")
+    if not arg or arg == "" then return end
+
+    local r, g, b = parse_hex_color(arg)
+    if not r then
+        msg.warn("accent-color '" .. arg .. "' is not a valid hex color. Ignoring.")
+        return
+    end
+
+    local function clamp(v, lo, hi) return math.min(hi, math.max(lo, v)) end
+    local function hex(rr, gg, bb) return string.format("#%02x%02x%02x", rr, gg, bb) end
+    local function hsl_hex(h, s, l) return hex(hsl_to_rgb(h, clamp(s, 0, 1), clamp(l, 0, 1))) end
+
+    -- only replace colors that are still at their default value
+    local function set_default(key, value)
+        if user_opts[key] == colors[key] then
+            user_opts[key] = value
+        end
+    end
+
+    local h, s, l = rgb_to_hsl(r, g, b)
+
+    -- seekbar progress: the accent exactly as given
+    set_default("seekbarfg_color", hex(r, g, b))
+    -- cache ranges: same hue, lighter so they stay visible against the progress color
+    set_default("seekbar_cache_color", hsl_hex(h, s, clamp(l + 0.30, 0.55, 0.80)))
+
+    -- selected menu row: keep lightness in a range where it stands out from
+    -- the menu background and white menu text stays readable on it
+    local sel_l = clamp(l, 0.22, 0.45)
+    set_default("menu_selected_color", sel_l == l and hex(r, g, b) or hsl_hex(h, s, sel_l))
+
+    -- surfaces: dark, desaturated tints of the accent hue
+    local tint_s = clamp(s * 0.4, 0, 0.25)
+    set_default("menu_bg_color", hsl_hex(h, tint_s, 0.09))
+    set_default("thumbnail_border_color", hsl_hex(h, tint_s, 0.07))
+    set_default("thumbnail_border_outline", hsl_hex(h, tint_s, 0.25))
+
+    -- hover: light tint of the accent
+    set_default("hover_effect_color", hsl_hex(h, clamp(s, 0, 0.7), 0.88))
+end
+
 -- validate string type user options
 local function validate_user_opts()
+    apply_accent_color()
+
     if user_opts.window_top_bar ~= "auto" and
        user_opts.window_top_bar ~= "yes" and
        user_opts.window_top_bar ~= "no" then

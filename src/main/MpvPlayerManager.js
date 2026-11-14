@@ -12,7 +12,7 @@ import { pathExists } from "./utils.js";
 import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
 import { normaliseFileName } from "./utils.js";
-import { getLibraryEntry, loadLibraryStorage, overwriteStorageFile } from "./storageManagement.js";
+import { getLibraryEntry, loadLibraryStorage, overwriteStorageFile, loadTheme } from "./storageManagement.js";
 import NextEpisodeManager from "./NextEpisodeManager.js";
 
 
@@ -244,7 +244,10 @@ class MpvPlayerManager {
 
     const ipc = createIPC(worker, {
       getPlaybackConfig: () => session,
-      getWindowConfigs: () => this.#getWindowConfigs(),
+      getWindowConfigs: async () => ({
+        ...this.#getWindowConfigs(),
+        "accent-color": (await loadTheme())["accent-color"]
+      }),
 
       onEvent: (name, payload) => {
         if (handled) return;

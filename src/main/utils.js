@@ -199,3 +199,23 @@ export async function getDirSize(dir) {
 
   return total;
 }
+
+export function rgbaToHex(color) {
+  const parts = String(color).match(/\d*\.?\d+/g);
+
+  if (!parts || parts.length < 3) {
+    log.error("Invalid color: expected at least 3 values (r, g, b)");
+    return null;
+  }
+
+  return (
+    "#" +
+    parts
+      .slice(0, 3)
+      .map((v) => {
+        const n = Math.min(255, Math.max(0, Math.round(Number(v))));
+        return n.toString(16).padStart(2, "0");
+      })
+      .join("")
+  );
+}

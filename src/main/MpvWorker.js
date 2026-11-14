@@ -3,7 +3,8 @@ import { getTorrentTrackers } from './torrentTracker.js';
 import { config } from "./config.js";
 import {
   findFile,
-  normaliseFileName
+  normaliseFileName,
+  rgbaToHex
 } from './utils.js';
 import { createIPC } from "./ipc.js";
 import { log } from './debugging.js';
@@ -312,22 +313,30 @@ async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
 
   ipcPath = makeIpcPath();
   const win = await getWindowConf();
+  const accentColor = rgbaToHex(win["accent-color"]);
 
-  const addedArgs = [
-    "--keep-open=yes",
-    `--config-dir=${mpvConfigDirectory}`,
-    `--start=${startFromTime}`,
-    `--geometry=${win.geometry}`,
-    `--fullscreen=${win.fullscreened ? "yes" : "no"}`,
-    `--window-maximized=${win.maximized ? "yes" : "no"}`,
-    `--force-media-title=${videoTitle}`,
-    `--input-ipc-server=${ipcPath}`,
-    `--ytdl=no`,
-    `--network-timeout=300`,
-  ];
+  const yesNo = (v) => (v ? "yes" : "no");
+  const options = {
+    "keep-open": "yes",
+    "config-dir": mpvConfigDirectory,
+    "start": startFromTime,
+    "geometry": win.geometry,
+    "fullscreen": yesNo(win.fullscreened),
+    "window-maximized": yesNo(win.maximized),
+    "force-media-title": videoTitle,
+    "input-ipc-server": ipcPath,
+    "ytdl": "no",
+    "network-timeout": 300,
+    "script-opts=accent-color": accentColor,
+  };
+
+  const optionArgs = Object.entries(options)
+    .filter(([, value]) => value != null)
+    .map(([key, value]) => `--${key}=${value}`);
+
   const childProcessArguments = [
     videoFullPath,
-    ...addedArgs,
+    ...optionArgs,
     ...subsArgument
   ];
 
@@ -338,7 +347,7 @@ async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
   sawStreamTimeout = false;
   loadFailureReported = false;
   if (activeTorrent) startBufferingReports();
-  log.info("Launching mpv with options:\n" + addedArgs.join("\n"));
+  log.info("Launching mpv with options:\n" + [...optionArgs].join("\n"));
 
   mpvProcess.on("error", async (err) => {
     errorOccurred = true;
