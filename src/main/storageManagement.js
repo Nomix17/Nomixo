@@ -442,3 +442,28 @@ export async function loadDownloadMediaFromDir(rootDir) {
     return result;
   });
 }
+
+export async function loadTheme() {
+  if(!await pathExists(Paths.ThemeFilePath))
+    await FilesManager.initializeDataFiles();
+  try {
+    const colors = {};
+    const fileContent = await readFile(Paths.ThemeFilePath, "utf-8");
+    const savedTheme = fileContent
+      .replaceAll(":root{", "")
+      .replaceAll("}", "")
+      .replaceAll("--", "")
+      .replaceAll(";", "")
+      .replaceAll(" ", "");
+    const linesArray = savedTheme.split("\n").filter((line) => line !== "");
+    for(const line of linesArray) {
+      const [key, value] = line.split(":");
+      colors[key] = value;
+    }
+    return colors
+  } catch (err) {
+    log.error("Failed to Load Theme File:", err);
+  }
+
+  return {};
+}

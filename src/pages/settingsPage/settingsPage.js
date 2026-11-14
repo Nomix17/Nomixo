@@ -315,54 +315,55 @@ FontSizeInput.addEventListener("keypress",(event) => {
     commitFontSize()
 });
 
-// global Functions 
-function populateThemeDialogFromEntries(entries){
-  entries.forEach(([elementId, rawValue]) => {
-    let elementValue = String(rawValue).trim();
+function populateThemeDialog(themeColors) {
+  for(const [key, value] of Object.entries(themeColors)) {
+    let elementValue = String(value).trim();
 
-    if(elementId === "background-gradient-value"){
-      document.getElementById(elementId).value = 100 - (parseFloat(elementValue) * 100); // I want the max value to be 25%
-      return;
+    if(key === "background-gradient-value"){
+      document.getElementById(key).value = 100 - (parseFloat(elementValue) * 100); // I want the max value to be 25%
+      continue;
     }
-
-    let inputElement = document.getElementById(elementId);
-    if(!inputElement) return;
+    const inputElement = document.getElementById(key);
+    if(!inputElement) continue;
 
     try {
-      let inputColor;
-      let alphaValue;
+      const parts = elementValue.split(",");
+      let inputColor = elementValue;
 
-      if(elementValue.split(",").length === 4){
-          let alphaInputRange = inputElement.parentElement.querySelector(".alphaRangeValue");
-          inputColor = elementValue.split(",")[0]+","+elementValue.split(",")[1]+","+elementValue.split(",")[2];
-          alphaValue = elementValue.split(",")[3];
-          if(alphaInputRange) alphaInputRange.value = parseFloat(alphaValue)*100;
-      }else{
-        inputColor = elementValue;
+      if (parts.length === 4) {
+        const alpha = parseFloat(parts[3]);
+        const alphaRange = inputElement.parentElement.querySelector(".alphaRangeValue");
+
+        inputColor = parts.slice(0, 3).join(",");
+        if (alphaRange) alphaRange.value = alpha * 100;
       }
+
       inputElement.value = rgbToHex(inputColor);
     } catch (err) {
       console.error(err.message);
     }
-  });
+  };
 }
 
 async function loadCurrentTheme(){
-  let ThemeObj = await window.electronAPI.loadTheme();
-  const entries = ThemeObj.theme.map(obj => {
-    const key = Object.keys(obj)[0];
-    return [key, obj[key]];
-  });
-  populateThemeDialogFromEntries(entries);
+  let themeColors = await window.electronAPI.loadTheme();
+  populateThemeDialog(themeColors);
 }
 
-async function loadThemeFromPath(themePath){
+const parseThemeColors = (decls) => {
+  const themeColors = {};
+  for(const item of decls) {
+    const sanitizedItem = item.replaceAll("--","");
+    const [key, value] = sanitizedItem.split(":");
+    themeColors[key] = value;
+  }
+  return themeColors;
+};
+
+async function loadThemeFromPath(themePath) {
   const varDecls = await extractThemeVars(themePath);
-  const entries = varDecls.map(decl => {
-    const [name, value] = decl.split(/:(.+)/).map(s => s.trim());
-    return [name.replace(/^--/, ""), value];
-  });
-  populateThemeDialogFromEntries(entries);
+  const themeColors = parseThemeColors(varDecls);
+  populateThemeDialog(themeColors);
 }
 
 async function loadSettings() {

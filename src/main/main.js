@@ -34,7 +34,8 @@ import {
   getLibraryEntry,
   overwriteStorageFile,
   readSearchHistory,
-  writeSearchHistory
+  writeSearchHistory,
+  loadTheme
 } from "./storageManagement.js";
 
 import {
@@ -828,30 +829,6 @@ function navigateToPreviousPage() {
 }
 
 // ======================= SETTINGS HELPERS =======================
-async function loadTheme() {
-  try {
-    let savedTheme = await readFile(Paths.ThemeFilePath, "utf-8");
-    savedTheme = savedTheme
-      .replaceAll(":root{", "")
-      .replaceAll("}", "")
-      .replaceAll("--", "")
-      .replaceAll(";", "")
-      .replaceAll(" ", "");
-    const linesArray = savedTheme.split("\n").filter((line) => line !== "");
-    return {
-      theme: linesArray.map((obj) => {
-        const [key, value] = obj.split(":");
-        return { [key]: value };
-      }),
-    };
-  } catch (err) {
-    log.error("Failed to Load Theme File");
-    log.error(err.message);
-    await FilesManager.initializeDataFiles();
-    return await loadTheme();
-  }
-}
-
 async function loadSubConfigs() {
   const JsonConfig = {};
   const mpvConfig = await readFile(Paths.SubConfigFile, "utf-8");

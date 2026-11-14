@@ -1676,8 +1676,8 @@ async function handleSplashScreen() {
   }
 
   const themeColors = await window.electronAPI.loadTheme();
-  const colorObj = themeColors.theme.find(item => "background-color" in item);
-  const useDarkIcon = colorObj ? isWhiteMode(colorObj["background-color"]) : false;
+  const bgColor = themeColors?.["background-color"];
+  const useDarkIcon = bgColor ? isWhiteMode(bgColor) : false;
 
   const logImg = document.getElementById("img-splash-logo");
   const logoSrc = "../../../assets/logo/" + (useDarkIcon ? "dark-icon.png" : "icon.png");
