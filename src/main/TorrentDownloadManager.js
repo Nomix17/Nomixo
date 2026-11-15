@@ -11,6 +11,8 @@ import {
 import {
   loadSettings,
   getDownloadEntry,
+  loadDownloadStorage,
+  applyDownloadStatusChanges,
   insertNewDownloadEntry,
   createDownloadNavigator,
   saveDownloadProgress,
@@ -78,7 +80,7 @@ class TorrentDownloadManager {
     }
   }
 
-  async executeTorrentDownload(torrentEntry, priority = false, downloadSubtitles = torrentEntry.downloadSubtitles ?? true) {
+  async executeTorrentDownload(torrentEntry, priority = false, downloadSubtitles = torrentEntry.downloadSubtitles ?? true, persistStatus = true) {
     torrentEntry.downloadSubtitles = downloadSubtitles;
     const settings = await loadSettings();
     const subtitleSettings = {
@@ -98,7 +100,7 @@ class TorrentDownloadManager {
       }
     );
 
-    if (status !== 'PAUSED') {
+    if (status !== 'PAUSED' && persistStatus) {
       const isNewEntry = await insertNewDownloadEntry(torrentEntry, status, priority);
       if (isNewEntry) {
         this.pushStatusUpdate([{ status: status, torrentId: torrentEntry.torrentId }]);
@@ -283,15 +285,12 @@ class TorrentDownloadManager {
     });
   }
 
-  async pushStatusUpdate(changes) {
+  async pushStatusUpdate(changes, { persist = true } = {}) {
     this.WINDOW.webContents.send("update-download-status", changes);
+    if (!persist) return;
 
-    for (const change of changes) {
-      if (!change.status || !change.torrentId) continue;
-
-      await editDownloadStorageEntry(change.torrentId, "Status", change?.status)
-        .catch((err) => log.error(`Failed to persist status for ${change.torrentId}:`, err.message));
-    }
+    await applyDownloadStatusChanges(changes)
+      .catch((err) => log.error("Failed to persist status changes:", err.message));
   }
 
   async toggleTorrentDownload(torrentId) {
@@ -384,6 +383,55 @@ class TorrentDownloadManager {
       .getQueueTorrentIds()
       .map((id) => ({ status: "QUEUED", torrentId: id }));
     return [...queuedTorrents, { torrentId, status: status }];
+  }
+
+  async addManyToQueue(torrentIds = []) {
+    const addedStatus = new Map();
+    const library = await loadDownloadStorage();
+    const entriesById = new Map((library?.downloads ?? []).map(e => [e.torrentId, e]));
+    for (const torrentId of torrentIds) {
+      try {
+        const torrentEntry = entriesById.get(torrentId);
+        if (!torrentEntry) {
+          log.error(`Cannot queue unknown torrent: ${torrentId}`);
+          continue;
+        }
+        const { status } = await this.executeTorrentDownload(
+          torrentEntry, false, torrentEntry.downloadSubtitles ?? true, false
+        );
+        addedStatus.set(torrentId, status);
+      } catch (err) {
+        log.error(`Failed to queue ${torrentId}:`, err.message);
+        addedStatus.set(torrentId, "FAILED");
+      }
+    }
+
+    const changes = new Map();
+    for (const id of this.downloadClient.getQueueTorrentIds())
+      changes.set(id, "QUEUED");
+    for (const [id, status] of addedStatus)
+      if (!changes.has(id)) changes.set(id, status);
+
+    this.pushStatusUpdate(
+      [...changes].map(([torrentId, status]) => ({ torrentId, status }))
+    );
+  }
+
+  async removeManyFromQueue(torrentIds = []) {
+    const changes = new Map();
+    for (const torrentId of torrentIds) {
+      try {
+        const statusChanges = await this.downloadClient.cancelDownload(torrentId);
+        for (const change of statusChanges ?? [])
+          if (change?.torrentId) {
+            changes.delete(change.torrentId);
+            changes.set(change.torrentId, change);
+          }
+      } catch (err) {
+        log.error(`Failed to remove ${torrentId} from queue:`, err.message);
+      }
+    }
+    if (changes.size) this.pushStatusUpdate([...changes.values()]);
   }
 
   async removeTorrentFromQueue(torrentId) {

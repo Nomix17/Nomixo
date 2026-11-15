@@ -338,8 +338,9 @@ function sortedMediaInsert(container, newElement, sortingType = SortingCriteria.
 function handleCancelButton(mediaInfo,cancelDownloadButton) {
   if(cancelDownloadButton) {
     cancelDownloadButton.addEventListener("click",async () => {
+      if(typeof mediaInfo === "function") mediaInfo = await mediaInfo();
       const TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
-      TargetDownloadElement.remove();
+      TargetDownloadElement?.remove();
       const MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
       if(MediaDownloadElementContainer.innerHTML.trim() === "")
         putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
@@ -375,6 +376,14 @@ function removeLoadingAnimation(torrentId,PausePlayButton) {
   PausePlayButton.classList.remove("requesting-continue-download");
   clearInterval(loadingIntervals[torrentId]);
   delete loadingIntervals[torrentId];
+}
+
+let saveStatusChain = Promise.resolve();
+function SaveDownloadStatusInBackground(torrentId, Status) {
+  saveStatusChain = saveStatusChain
+    .then(() => SaveDownloadStatus(torrentId, Status))
+    .catch(err => console.error("Failed to save status:", err));
+  return saveStatusChain;
 }
 
 async function SaveDownloadStatus(torrentId, Status) {
@@ -445,8 +454,10 @@ async function createPausedDownloadsContextMenu(torrentId) {
   const menuDiv = document.createElement("div");
   menuDiv.classList.add("select-dropdown");
 
-  const library = await window.electronAPI.loadDownloadLibraryInfo();
-  const targetLibInfo = library?.downloads.find(element => element.torrentId === torrentId);
+  const getTargetLibInfo = async () => {
+    const library = await window.electronAPI.loadDownloadLibraryInfo();
+    return library?.downloads.find(element => element.torrentId === torrentId);
+  };
 
   const addToQueue = document.createElement("div");
   addToQueue.textContent = "Add to download queue";
@@ -459,7 +470,8 @@ async function createPausedDownloadsContextMenu(torrentId) {
   changeDownloadPath.addEventListener("click", async (event) => {
     event.stopPropagation();
     hideContextMenu(menuDiv);
-    openChangeDownloadPathOverlay(targetLibInfo);
+    const targetLibInfo = await getTargetLibInfo();
+    if(targetLibInfo) openChangeDownloadPathOverlay(targetLibInfo);
   });
 
   const cancelDownload = document.createElement("div");
@@ -469,12 +481,10 @@ async function createPausedDownloadsContextMenu(torrentId) {
   addToQueue.addEventListener("click", async (e) => {
     e.stopPropagation();
     hideContextMenu(menuDiv);
-    if(targetLibInfo != null) {
-      await window.electronAPI.addTorrentToDownloadQueue(torrentId);
-    }
+    await window.electronAPI.addTorrentToDownloadQueue(torrentId);
   });
 
-  handleCancelButton(targetLibInfo,cancelDownload);
+  handleCancelButton(getTargetLibInfo,cancelDownload);
   cancelDownload.addEventListener("click", async(e) => {
     e.stopPropagation();
     hideContextMenu(menuDiv);
@@ -1014,6 +1024,11 @@ function animateReorder(elements, beforePositions) {
     deltas.set(el, { x: before.left - after.left, y: before.top - after.top });
   }
 
+  for (const el of [...deltas.keys()]) {
+    if (el.classList.contains("downloads-categorie")) continue;
+    if (fadeIn.includes(el.closest(".downloads-categorie"))) deltas.delete(el);
+  }
+
   for (const [el, delta] of deltas) {
     if (el.classList.contains("downloads-categorie")) continue;
     const parentDelta = deltas.get(el.closest(".downloads-categorie"));
@@ -1181,8 +1196,29 @@ function updateDownloadUI() {
   disableBorderArrowBtnsForQueuedEls();
 }
 
+function syncVisibleDropdownWidths() {
+  document
+    .querySelectorAll(".downloads-categorie:not(.hide) .custom-select:not(.noResize)")
+    .forEach(select => {
+      const trigger = select.querySelector(".select-trigger");
+      const dropdown = select.querySelector(".select-dropdown");
+      if(!trigger || !dropdown) return;
+
+      dropdown.style.display = "block";
+      dropdown.style.opacity = "0";
+      dropdown.style.pointerEvents = "none";
+      const width = dropdown.offsetWidth;
+      dropdown.style.display = "";
+      dropdown.style.opacity = "";
+      dropdown.style.pointerEvents = "";
+
+      if(width > 0) trigger.style.width = width + "px";
+    });
+}
+
 function handleEmptyDownloadCategories() {
   const categories = document.querySelectorAll(".downloads-categorie");
+  let sectionBecameVisible = false;
 
   for (const downloadCategorieDiv of categories) {
     const container = downloadCategorieDiv.querySelector('.movieContainer');
@@ -1204,11 +1240,16 @@ function handleEmptyDownloadCategories() {
     if (isEmpty && downloadCategorieDiv.id === "currently-downloading-div")
       removeDownloadBackgroundDiv();
 
+    const wasHidden = downloadCategorieDiv.classList.contains("hide");
     downloadCategorieDiv.classList.toggle("hide", isEmpty && (
       downloadCategorieDiv.id === "download-queue-div" ||
       downloadCategorieDiv.id === "download-paused-div"
     ));
+    if(wasHidden && !downloadCategorieDiv.classList.contains("hide"))
+      sectionBecameVisible = true;
   }
+
+  if(sectionBecameVisible) syncVisibleDropdownWidths();
 }
 
 function updateElementsCounterForEachContainer() {
@@ -1309,8 +1350,8 @@ async function handleDownloadCategorieChanging(categorieChangedTorrents) {
 
 async function processCategorieChanges(categorieChangedTorrents) {
   const DOWNLOAD_CATEGORIES = {
-    "PAUSED": { categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: "PAUSED" },
-    "QUEUED": { categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued, saveStatus: "QUEUED" },
+    "PAUSED": { categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused },
+    "QUEUED": { categoryDiv: queuedDownloadsDiv, applyUIState: MarkDownloadElementAsQueued },
     "FAILED": { categoryDiv: pausedDownloadsDiv, applyUIState: MarkDownloadElementAsPaused, saveStatus: "PAUSED" },
     "LOADING": { categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsLoading },
     "SUBS_DOWNLOAD": { categoryDiv: currentlyDownloadingDiv, applyUIState: MarkDownloadElementAsDownloadSubs },
@@ -1350,13 +1391,17 @@ async function processCategorieChanges(categorieChangedTorrents) {
       continue;
     }
 
+    const targetElementContainer = category?.categoryDiv?.querySelector(".movieContainer");
+    if(bulkMove?.status === res.status) {
+      targetElement.dataset.downloadStatus = res.status;
+      bulkMove.movedIds.add(res.torrentId);
+      continue;
+    }
+
     category.applyUIState(targetElement);
     targetElement.dataset.downloadStatus = res.status;
 
-    const targetElementContainer = category?.categoryDiv?.querySelector(".movieContainer");
-    if(bulkMove?.status === res.status) {
-      bulkMove.movedIds.add(res.torrentId);
-    } else if(category.categoryDiv === pausedDownloadsDiv) {
+    if(category.categoryDiv === pausedDownloadsDiv) {
       insertAtTopOfContainer(
         targetElementContainer,
         targetElement,
@@ -1374,14 +1419,12 @@ async function processCategorieChanges(categorieChangedTorrents) {
       pendingSaves.push([res.torrentId, category.saveStatus]);
   }
 
-  updateDownloadUI();
+  if(!bulkMove) updateDownloadUI();
   if(animateMove)
     animateReorder(animatedEls, positionsBefore);
 
   for(const [torrentId, status] of pendingSaves)
-    await SaveDownloadStatus(torrentId, status);
-
-  updateDownloadUI();
+    SaveDownloadStatusInBackground(torrentId, status);
 }
 
 function insertAtTopOfContainer(container, element, afterElement = null) {
@@ -1402,20 +1445,64 @@ function getCategoryElementIds(categoryDiv) {
   ).map(el => el.id);
 }
 
+function createSectionGhost(sectionDiv, hideCards) {
+  if(sectionDiv.classList.contains("hide")) return null;
+  const rect = sectionDiv.getBoundingClientRect();
+  if(!rect.width || !rect.height) return null;
+
+  const ghost = sectionDiv.cloneNode(true);
+  ghost.removeAttribute("id");
+  ghost.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
+  ghost.setAttribute("aria-hidden", "true");
+  ghost.inert = true;
+  Object.assign(ghost.style, {
+    position: "fixed",
+    left: rect.left + "px",
+    top: rect.top + "px",
+    width: rect.width + "px",
+    height: rect.height + "px",
+    margin: "0",
+    boxSizing: "border-box",
+    pointerEvents: "none",
+    zIndex: "20"
+  });
+  if(hideCards) {
+    const box = ghost.querySelector(".movieContainer");
+    if(box) box.style.visibility = "hidden";
+  }
+  document.body.appendChild(ghost);
+  return ghost;
+}
+
+function fadeOutAndRemoveGhost(ghost, fade) {
+  if(!ghost) return;
+  if(!fade) { ghost.remove(); return; }
+  const anim = ghost.animate(
+    [{ opacity: 1 }, { opacity: 0 }],
+    { duration: ANIM_DURATION, easing: ANIM_EASING, fill: "forwards" }
+  );
+  anim.onfinish = anim.oncancel = () => ghost.remove();
+  setTimeout(() => ghost.remove(), ANIM_DURATION + 200);
+}
+
 let bulkMove = null;
 
-async function runBulkCategoryMove({ finalOrder, apiCall, targetStatus, targetDiv, placeAtTop }) {
+async function runBulkCategoryMove({ finalOrder, apiCall, batchApiCall, applyUIState, targetStatus, targetDiv, placeAtTop }) {
   if(bulkMove || !finalOrder.length) return;
   bulkMove = { status: targetStatus, movedIds: new Set() };
+  let ghost = null;
 
   try {
     const callOrder = placeAtTop ? [...finalOrder].reverse() : finalOrder;
-    for(const torrentId of callOrder)
-      await apiCall(torrentId);
+    if(batchApiCall)
+      await batchApiCall(callOrder);
+    else
+      for(const torrentId of callOrder)
+        await apiCall(torrentId);
 
     await new Promise(resolve => setTimeout(resolve, 50));
     while(pendingCategoryChanges > 0)
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise(resolve => setTimeout(resolve, 5));
 
     const elements = finalOrder
       .filter(id => bulkMove.movedIds.has(id))
@@ -1424,6 +1511,11 @@ async function runBulkCategoryMove({ finalOrder, apiCall, targetStatus, targetDi
 
     const affected = getAnimatableEls();
     const before = snapshotRects(affected);
+
+    const sourceDiv = targetDiv === queuedDownloadsDiv ? pausedDownloadsDiv : queuedDownloadsDiv;
+    ghost = createSectionGhost(sourceDiv, !targetDiv.classList.contains("hide"));
+
+    await Promise.all(elements.map(el => applyUIState(el)));
 
     const container = targetDiv.querySelector(".movieContainer");
     if(placeAtTop) {
@@ -1437,8 +1529,11 @@ async function runBulkCategoryMove({ finalOrder, apiCall, targetStatus, targetDi
     }
 
     updateDownloadUI();
+    fadeOutAndRemoveGhost(ghost, sourceDiv.classList.contains("hide"));
+    ghost = null;
     animateReorder(affected.filter(el => el.isConnected), before);
   } finally {
+    ghost?.remove();
     bulkMove = null;
     updateDownloadUI();
   }
@@ -1454,6 +1549,8 @@ function setupCategoryBtn() {
     runBulkCategoryMove({
       finalOrder: pausedIds,
       apiCall: id => window.electronAPI.addTorrentToDownloadQueue(id),
+      batchApiCall: ids => window.electronAPI.addTorrentsToDownloadQueue(ids),
+      applyUIState: MarkDownloadElementAsQueued,
       targetStatus: "QUEUED",
       targetDiv: queuedDownloadsDiv,
       placeAtTop: false
@@ -1464,6 +1561,8 @@ function setupCategoryBtn() {
     runBulkCategoryMove({
       finalOrder: getCategoryElementIds(queuedDownloadsDiv),
       apiCall: id => window.electronAPI.removeTorrentFromDownloadQueue(id),
+      batchApiCall: ids => window.electronAPI.removeTorrentsFromDownloadQueue(ids),
+      applyUIState: MarkDownloadElementAsPaused,
       targetStatus: "PAUSED",
       targetDiv: pausedDownloadsDiv,
       placeAtTop: true

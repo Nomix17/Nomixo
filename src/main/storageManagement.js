@@ -249,6 +249,48 @@ export async function editDownloadStorageEntry(torrentId, key, value) {
   });
 }
 
+export async function applyDownloadStatusChanges(changes) {
+  const valid = (changes ?? []).filter(c => c?.status && c?.torrentId);
+  if (!valid.length) return;
+
+  const touched = await withFileLock(Paths.downloadLibraryFilePath, async () => {
+    const library = await loadDownloadStorage();
+    if (!library?.downloads) return [];
+
+    const byId = new Map(library.downloads.map(d => [d.torrentId, d]));
+    const now = Date.now();
+    const updated = [];
+    for (const { torrentId, status } of valid) {
+      const entry = byId.get(torrentId);
+      if (!entry) {
+        log.warn("applyDownloadStatusChanges: torrent not found:", torrentId);
+        continue;
+      }
+      entry.Status = status;
+      entry.StatusUpdateTime = now;
+      updated.push(entry);
+    }
+    if (updated.length)
+      await overwriteStorageFile(Paths.downloadLibraryFilePath, library);
+    return updated.map(e => ({ downloadPath: e.downloadPath, status: e.Status, now }));
+  });
+
+  await Promise.all(touched.map(async ({ downloadPath, status, now }) => {
+    if (!downloadPath) return;
+    const navigatorPath = path.join(downloadPath, Paths.navigatorFileName);
+    try {
+      await withFileLock(navigatorPath, async () => {
+        const navigator = await loadJsonFile(navigatorPath);
+        navigator.Status = status;
+        navigator.StatusUpdateTime = now;
+        await overwriteStorageFile(navigatorPath, navigator);
+      });
+    } catch (err) {
+      log.error("Failed to update navigator in:", downloadPath, err);
+    }
+  }));
+}
+
 export async function removeDownloadStorageEntry(torrentId) {
   await withFileLock(Paths.downloadLibraryFilePath, async () => {
     const downloadLib = await loadDownloadStorage();

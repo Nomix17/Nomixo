@@ -61,6 +61,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   cancelDownload: (mediaInfo) => ipcRenderer.invoke("cancel-torrent-download", mediaInfo),
   addTorrentToDownloadQueue: (torrentId) => ipcRenderer.invoke("add-torrent-to-download-queue", torrentId),
   removeTorrentFromDownloadQueue: (torrentId) => ipcRenderer.invoke("remove-torrent-from-download-queue", torrentId),
+  addTorrentsToDownloadQueue: (torrentIds) => ipcRenderer.invoke("add-torrents-to-download-queue", torrentIds),
+  removeTorrentsFromDownloadQueue: (torrentIds) => ipcRenderer.invoke("remove-torrents-from-download-queue", torrentIds),
   shiftDownloadQueueElement: (torrentId, offset) => ipcRenderer.invoke("shift-download-queue-element", torrentId, offset),
   updateDownloadCategorie:(callback) => ipcRenderer.on("update-download-categorie",(event,data) => callback(data)),
   getDownloadQueueList: () => ipcRenderer.invoke("get-download-queue-list"),

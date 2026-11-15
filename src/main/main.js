@@ -397,6 +397,14 @@ ipcMain.handle("remove-torrent-from-download-queue", async (event, torrentId) =>
   await appManager.torrentDownloadManager.removeTorrentFromQueue(torrentId);
 });
 
+ipcMain.handle("add-torrents-to-download-queue", async (event, torrentIds) => {
+  await appManager.torrentDownloadManager.addManyToQueue(torrentIds);
+});
+
+ipcMain.handle("remove-torrents-from-download-queue", async (event, torrentIds) => {
+  await appManager.torrentDownloadManager.removeManyFromQueue(torrentIds);
+});
+
 ipcMain.handle("shift-download-queue-element", (event, torrentId, offset) => {
   return appManager.torrentDownloadManager.downloadClient.shiftQueuedItem(torrentId, offset);
 });
