@@ -23,7 +23,10 @@ export class Paths {
   static ThemeFilePath = path.join(Paths.__configs, "Theme.css");
   static libraryFilePath = path.join(Paths.__configs, "library.json");
   static downloadLibraryFilePath = path.join(Paths.__configs, "downloads.json");
+
   static mpvConfigDirectory = path.join(Paths.__configs, "mpvConfigs");
+  static mpvScriptsDirectory = path.join(Paths.mpvConfigDirectory, "scripts");
+  static mpvScriptsVersion = path.join(Paths.mpvScriptsDirectory, "mpv_scripts_version");
   static SubConfigFile = path.join(Paths.mpvConfigDirectory, "mpv.conf");
 
   static defaultDownloadPath = Paths.__downloads;
@@ -74,12 +77,33 @@ export class FilesManager {
       fs.mkdirSync(Paths.__downloads, { recursive: true });
   }
 
+  static mpvScriptsVersionMissmatch() {
+    try {
+      const version = fs.readFileSync(Paths.mpvScriptsVersion, "utf-8");
+      return (
+        version == null ||
+        version.trim().toLowerCase() != app.getVersion().trim().toLowerCase()
+      )
+    } catch {}
+    return true;
+  }
+
   static copyDefaultDirs() {
     if (!fs.existsSync(Paths.mpvConfigDirectory)) {
       fs.cpSync(
         path.join(Paths.__assets, 'mpvConfigs'),
         Paths.mpvConfigDirectory, { recursive: true }
       );
+    }
+
+    if(this.mpvScriptsVersionMissmatch()) {
+      log.info("Mpv scripts aren't up to date, copying updated files")
+      fs.cpSync(
+        path.join(Paths.__assets, 'mpvConfigs/scripts'),
+        Paths.mpvScriptsDirectory, { recursive: true, force: true }
+      )
+
+      fs.writeFileSync(Paths.mpvScriptsVersion, app.getVersion());
     }
 
     if (!fs.existsSync(Paths.themesDirPath)) {
