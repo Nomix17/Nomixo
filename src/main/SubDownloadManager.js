@@ -141,7 +141,7 @@ export class SubDownloadManager {
       }
     } catch (err) {
       if (signal?.aborted) throw err;
-      log.error(`Episode group lookup failed, using original numbering: ${err.message}`);
+      log.formattedError("Episode group lookup failed:", err);
     }
 
     return original;
@@ -275,7 +275,7 @@ export class SubDownloadManager {
         log.info(`Subtitle download for ${torrentId} aborted`);
         return this.#fail(torrentId, "Subtitle download aborted");
       }
-      log.error(`Subtitle download for ${torrentId} failed: ${err}`);
+      log.formattedError(`Subtitle download for ${torrentId} failed:`, err);
       return this.#fail(torrentId, err.message);
     } finally {
       this.activeDownloads.delete(torrentId);

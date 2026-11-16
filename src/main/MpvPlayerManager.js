@@ -72,7 +72,7 @@ class MpvPlayerManager {
           (f) => normaliseFileName(f.name) === normaliseFileName(fileName)
         );
 
-        if (!file) return reject("No video file found in torrent");
+        if (!file) return reject(new Error("No video file found in torrent"));
 
         file.select();
 
@@ -210,7 +210,8 @@ class MpvPlayerManager {
     const exitVideoPlayerPage = () => {
       if (!this.inVideoPlayerPage) return;
       this.inVideoPlayerPage = false;
-      this.#savePlaybackPosition(this.#lastSecondBeforeQuit, metaData);
+      this.#savePlaybackPosition(this.#lastSecondBeforeQuit, metaData)
+        .catch((err) => log.formattedError("Failed to save playback position:", err));
       this.cleanup();
       this.#browserWindow.webContents.send("msg-from-main-process", {
         type: "request",
@@ -229,14 +230,12 @@ class MpvPlayerManager {
       return showWindow ? this.#restoreWindowOnce() : undefined;
     };
 
-    const handleError = (errorMsg) => {
+    const handleError = (err) => {
       if (handled) return;
       handled = true;
-      log.error("Playback/torrent error:", errorMsg);
-      this.#browserWindow.webContents.send(
-        "torrent-fetching-error",
-        errorMsg || "Unknown error"
-      );
+      log.formattedError("Playback/torrent error:", err);
+      const userMessage = typeof err === "string" ? err : err?.message ?? err?.msg ?? "Unknown error";
+      this.#browserWindow.webContents.send("torrent-fetching-error", userMessage);
       closeWorker();
     };
 
@@ -281,13 +280,13 @@ class MpvPlayerManager {
             if (nextEpisodeRequested && !handled) {
               if (this.#nextEpisodeManager.hasNext()) {
                 handled = true;
-                this.#savePlaybackPosition(this.#lastSecondBeforeQuit, metaData);
+                this.#savePlaybackPosition(this.#lastSecondBeforeQuit, metaData)
+        .catch((err) => log.formattedError("Failed to save playback position:", err));
                 Promise.resolve(closeWorker())
                   .then(() => this.#playNextEpisode())
                   .catch((err) => {
-                    log.error("Failed to start next episode:", err);
                     handled = false;
-                    handleError(err?.message || "Failed to start next episode");
+                    handleError(err ?? "Failed to start next episode");
                   });
               }
             }
@@ -308,8 +307,7 @@ class MpvPlayerManager {
     this.#ipc = ipc;
 
     worker.on("error", (err) => {
-      log.error("Mpv Worker thread error:", err);
-      handleError(err.message);
+      handleError(err);
     });
 
     worker.on("exit", (code) => {

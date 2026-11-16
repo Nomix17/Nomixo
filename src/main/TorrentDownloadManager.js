@@ -58,7 +58,7 @@ class TorrentDownloadManager {
         const { status } = await this.executeTorrentDownload(torrentEntry, false, downloadSubtitles);
         results.push({ success: true, torrentId, status });
       } catch (error) {
-        log.error(`Error processing torrent:`, error);
+        log.formattedError(`Error processing torrent:`, error);
         results.push({ success: false, error: error.message, torrentId: torrentEntry?.torrentId });
       }
     }
@@ -76,7 +76,7 @@ class TorrentDownloadManager {
       if(isDiskFullError(err))
         this.handleDiskFull(torrentEntry, err);
       else
-        log.error(err);
+        log.formattedError(`Failed to create download directory for ${torrentEntry?.torrentId}:`, err);
     }
   }
 
@@ -127,7 +127,7 @@ class TorrentDownloadManager {
           this.handleDiskFull(torrentEntry, err);
           return;
         }
-        log.error(`Torrent error: ${torrentEntry.torrentId}, ${err?.message ?? err}`);
+        log.formattedError(`Torrent error: ${torrentEntry.torrentId}`, err);
         this.reportDownloadError("Torrent Download", torrentEntry.torrentId, err);
         this.WINDOW.webContents.send("download-progress-stream", {
           TorrentId: torrentEntry.torrentId,
@@ -160,7 +160,7 @@ class TorrentDownloadManager {
         `Queued downloads were not started.`,
       buttons: ["OK"]
     })
-      .catch((e) => log.error("Failed to show disk full popup:", e?.message ?? e));
+      .catch((e) => log.formattedError("Failed to show disk full popup:", e));
   }
 
   attachTorrentHandlers(torrent, torrentEntry) {
@@ -270,7 +270,7 @@ class TorrentDownloadManager {
       });
       log.info(`Torrent cleaned up: ${torrentEntry.torrentId}`);
     } catch (err) {
-      log.error(err.message);
+      log.formattedError(`Post-download cleanup failed for ${torrentEntry.torrentId}:`, err);
     }
 
     log.success(`Download completed: ${torrentEntry.torrentId}`);
@@ -290,7 +290,7 @@ class TorrentDownloadManager {
     if (!persist) return;
 
     await applyDownloadStatusChanges(changes)
-      .catch((err) => log.error("Failed to persist status changes:", err.message));
+      .catch((err) => log.formattedError("Failed to persist status changes:", err));
   }
 
   async toggleTorrentDownload(torrentId) {
@@ -324,7 +324,7 @@ class TorrentDownloadManager {
       return [{ status: "LOADING", torrentId }, ...queuedTorrents];
 
     } catch (err) {
-      log.error(err.message);
+      log.formattedError(`Failed to continue download ${torrentId}:`, err);
       return [{ status: "FAILED", error: err.message, torrentId }];
     }
   }
@@ -343,7 +343,7 @@ class TorrentDownloadManager {
       .then((torrentEntry) => {
         if (!torrentEntry) log.error(`Cannot find torrent with Id: ${torrentId}`);
       })
-      .catch((err) => log.error(`Failed to look up torrent ${torrentId}:`, err.message));
+      .catch((err) => log.formattedError(`Failed to look up torrent ${torrentId}:`, err));
 
     return await this.downloadClient.cancelDownload(torrentId);
   }
@@ -356,7 +356,7 @@ class TorrentDownloadManager {
   async _cancelTorrentDownload(torrentEntry) {
     const res = await this.downloadClient.cancelDownload(torrentEntry.torrentId);
     this._cleanupCancelledTorrentFiles(torrentEntry).catch((err) =>
-      log.error(`Failed to clean up cancelled torrent ${torrentEntry.torrentId}:`, err.message)
+      log.formattedError(`Failed to clean up cancelled torrent ${torrentEntry.torrentId}:`, err)
     );
 
     return res;
@@ -401,7 +401,7 @@ class TorrentDownloadManager {
         );
         addedStatus.set(torrentId, status);
       } catch (err) {
-        log.error(`Failed to queue ${torrentId}:`, err.message);
+        log.formattedError(`Failed to queue ${torrentId}:`, err);
         addedStatus.set(torrentId, "FAILED");
       }
     }
@@ -428,7 +428,7 @@ class TorrentDownloadManager {
             changes.set(change.torrentId, change);
           }
       } catch (err) {
-        log.error(`Failed to remove ${torrentId} from queue:`, err.message);
+        log.formattedError(`Failed to remove ${torrentId} from queue:`, err);
       }
     }
     if (changes.size) this.pushStatusUpdate([...changes.values()]);

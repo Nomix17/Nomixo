@@ -17,7 +17,7 @@ export async function loadDownloadStorage() {
     return await loadJsonFile(Paths.downloadLibraryFilePath);
   } catch(err) {
     if(err.code === "ENOENT") return { downloads : [] };
-    log.error("Failed to load Download Storage:", err);
+    log.formattedError("Failed to load Download Storage:", err);
   }
 }
 
@@ -26,7 +26,7 @@ export async function loadLibraryStorage() {
     return await loadJsonFile(Paths.libraryFilePath);
   } catch(err) {
     if(err.code === "ENOENT") return { media : [] };
-    log.error("Failed to load Library Storage:", err); 
+    log.formattedError("Failed to load Library Storage:", err); 
   }
 }
 
@@ -64,7 +64,7 @@ export async function overwriteStorageFile(filePath, newData) {
     await rename(tempPath, filePath);
 
   } catch (err) {
-    log.error("Failed to overwrite storage file:", err);
+    log.formattedError("Failed to overwrite storage file:", err);
     try { await unlink(tempPath); } catch {}
   }
 }
@@ -104,8 +104,8 @@ export async function insertNewDownloadEntry(torrentEntry, Status = "LOADING") {
 
     if (existingIndex !== -1) return false;
 
-    downloadImage(posterDownloadPath, torrentEntry?.bgImageUrl);
-    downloadImage(posterDownloadPath, torrentEntry?.posterUrl);
+    downloadImage(posterDownloadPath, torrentEntry?.bgImageUrl).catch((err) => log.formattedError("Failed to cache image:", err));
+    downloadImage(posterDownloadPath, torrentEntry?.posterUrl).catch((err) => log.formattedError("Failed to cache image:", err));
 
     downloadLib.downloads.push(newEntry);
     await overwriteStorageFile(Paths.downloadLibraryFilePath, downloadLib);
@@ -215,7 +215,7 @@ export async function saveDownloadProgress(torrentEntry, downloadedBytes, totalS
     });
   } catch (err) {
     if (err.code === "ENOENT") return;
-    log.error("Failed to update navigator for:", torrentEntry.torrentId, err);
+    log.formattedError(`Failed to update navigator for ${torrentEntry.torrentId}:`, err);
   }
 }
 
@@ -244,7 +244,7 @@ export async function editDownloadStorageEntry(torrentId, key, value) {
         await overwriteStorageFile(navigatorPath, navigator);
       });
     } catch (err) {
-      log.error("Failed to update navigator for:", torrentId, err);
+      log.formattedError(`Failed to update navigator for ${torrentId}:`, err);
     }
   });
 }
@@ -286,7 +286,7 @@ export async function applyDownloadStatusChanges(changes) {
         await overwriteStorageFile(navigatorPath, navigator);
       });
     } catch (err) {
-      log.error("Failed to update navigator in:", downloadPath, err);
+      log.formattedError(`Failed to update navigator in ${downloadPath}:`, err);
     }
   }));
 }
@@ -326,8 +326,8 @@ export async function readSearchHistory() {
     const data = await readFile(Paths.searchHistoryCacheFile, "utf-8");
     if (data.trim() === "") throw new Error("Empty Search History");
     return JSON.parse(data)?.history || [];
-  } catch (error) {
-    log.error("Failed to load search history: ", error.message);
+  } catch (err) {
+    log.formattedError("Failed to load search history:", err);
     return [];
   }
 }
@@ -339,8 +339,8 @@ export async function writeSearchHistory(history) {
       JSON.stringify({ history }, null, 2),
       "utf-8"
     );
-  } catch (error) {
-    log.error("Failed to save search history: ", error.message);
+  } catch (err) {
+    log.formattedError("Failed to save search history:", err);
   }
 }
 
@@ -359,7 +359,7 @@ export async function loadSettings() {
 
     return JData;
   } catch (err) {
-    log.error(err.message);
+    log.formattedError("Failed to load settings, using defaults:", err);
     return {
       PageZoomFactor: 1,
       TurnOnSubsByDefaultInternal: true,
@@ -466,7 +466,7 @@ async function lookForNavigators(rootDir) {
         }
         results.push({ navigator_dir: rootDir, navigator_content });
       } catch(err) {
-        log.error(err.message);
+        log.formattedError(`Failed to read navigator file ${inodePath}:`, err);
       }
     }
   }
@@ -504,7 +504,7 @@ export async function loadTheme() {
     }
     return colors
   } catch (err) {
-    log.error("Failed to Load Theme File:", err);
+    log.formattedError("Failed to Load Theme File:", err);
   }
 
   return {};

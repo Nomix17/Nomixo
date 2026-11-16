@@ -19,8 +19,10 @@ export async function loadSubsFromSubDir(mediaInfo) {
   const subsDirectory = path.join(mediaInfo.downloadPath, `SUBS_${torrentId}`);
 
   try {
-    if (!(await pathExists(subsDirectory)))
-      throw new Error(`Subtitles aren't downloaded in: ${subsDirectory}`);
+    if (!(await pathExists(subsDirectory))) {
+      log.info(`Subtitles aren't downloaded in: ${subsDirectory}`);
+      return [];
+    }
     const subFileNames = await readdir(subsDirectory);
     return subFileNames.map((subFileName) => {
       const displayName = subFileName.split("-")?.[0] ?? subFileName;
@@ -32,7 +34,7 @@ export async function loadSubsFromSubDir(mediaInfo) {
       };
     });
   } catch (err) {
-    log.error(err.message);
+    log.formattedError(`Failed to read subtitles from ${subsDirectory}:`, err);
     return [];
   }
 }
@@ -55,7 +57,7 @@ export async function loadSubsFromVideoDirectory(videoPath) {
       return [];
     });
   } catch (err) {
-    log.warn(err);
+    log.warn(`Failed to scan ${videoParentsPath} for subtitles:`, err.message);
     return [];
   }
 }

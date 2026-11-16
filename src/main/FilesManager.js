@@ -56,7 +56,7 @@ export class FilesManager {
       FilesManager.copyDefaultFiles();
       log.info("Config files were successfully initialized");
     } catch (err) {
-      log.error("Failed to initialize config files\n", err.message);
+      log.formattedError("Failed to initialize config files:", err);
     }
   }
 
@@ -144,7 +144,7 @@ export class FilesManager {
         Wyzie_API_KEY="${apiKeys["Wyzie_API_KEY"]}"
       `);
     } catch(err) {
-      log.error(err.message);
+      log.formattedError("Failed to write API keys into env file:", err);
     }
   }
 }

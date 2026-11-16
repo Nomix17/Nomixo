@@ -79,7 +79,7 @@ export class QueuedWebTorrent {
       item.instance.removeAllListeners('done');
       item.instance.removeAllListeners('error');
       item.instance.destroy({ destroyStore: false }, (err) => {
-        if (err) log.error(`Error destroying torrent ${item.info.torrentId} while pausing to front:`, err);
+        if (err) log.formattedError(`Error destroying torrent ${item.info.torrentId} while pausing to front:`, err);
       });
     }
   }
@@ -105,7 +105,7 @@ export class QueuedWebTorrent {
         item.torrentInfo.torrentId,
         item.torrentInfo.downloadPath,
         item.subtitleSettings
-      ).catch(err => log.error(`Subtitle download failed for ${item.torrentInfo.torrentId}:`, err));
+      ).catch(err => log.formattedError(`Subtitle download failed for ${item.torrentInfo.torrentId}:`, err));
 
       if (this.current?.info?.torrentId !== item.torrentInfo.torrentId) {
         return null;
@@ -123,7 +123,7 @@ export class QueuedWebTorrent {
       log.info(`Discarding orphaned torrent (superseded during add): ${item.torrentInfo.torrentId}`);
       await new Promise((resolve) => {
         torrent.destroy({ destroyStore: false }, (err) => {
-          if (err) log.error(`Error destroying orphaned torrent ${item.torrentInfo.torrentId}:`, err);
+          if (err) log.formattedError(`Error destroying orphaned torrent ${item.torrentInfo.torrentId}:`, err);
           resolve();
         });
       });
@@ -143,7 +143,7 @@ export class QueuedWebTorrent {
 
     torrent.on('error', (err) => {
       if (this.current?.info?.torrentId !== item.torrentInfo.torrentId) return;
-      log.error(`Error on ${item.torrentInfo.torrentId}:`, err);
+      log.formattedError(`Error on ${item.torrentInfo.torrentId}:`, err);
       const diskFull = isDiskFullError(err);
       item.reject(err);
       this.current = null;
@@ -154,7 +154,7 @@ export class QueuedWebTorrent {
 
       if (!torrent.destroyed) {
         torrent.destroy({ destroyStore: false }, (destroyErr) => {
-          if (destroyErr) log.error(`Error destroying failed torrent ${item.torrentInfo.torrentId}:`, destroyErr);
+          if (destroyErr) log.formattedError(`Error destroying failed torrent ${item.torrentInfo.torrentId}:`, destroyErr);
         });
       }
 
@@ -176,7 +176,7 @@ export class QueuedWebTorrent {
 
   _startTorrentSafe(item) {
     return this._startTorrent(item).catch((err) => {
-      log.error(`Failed to start torrent ${item.torrentInfo.torrentId}:`, err);
+      log.formattedError(`Failed to start torrent ${item.torrentInfo.torrentId}:`, err);
       if (this.current?.info?.torrentId === item.torrentInfo.torrentId) {
         this.current = null;
       }
@@ -242,7 +242,7 @@ export class QueuedWebTorrent {
       item.instance.removeAllListeners('done');
       item.instance.removeAllListeners('error');
       item.instance.destroy({ destroyStore: false }, (err) => {
-        if (err) log.error(`Error destroying torrent ${torrentInfo.torrentId}:`, err);
+        if (err) log.formattedError(`Error destroying torrent ${torrentInfo.torrentId}:`, err);
       });
     }
   }
@@ -278,7 +278,7 @@ export class QueuedWebTorrent {
       item.instance.removeAllListeners('done');
       item.instance.removeAllListeners('error');
       item.instance.destroy({ destroyStore: false }, (err) => {
-        if (err) log.error(`Error destroying torrent ${item.info.torrentId} while requeuing:`, err);
+        if (err) log.formattedError(`Error destroying torrent ${item.info.torrentId} while requeuing:`, err);
       });
     }
   }

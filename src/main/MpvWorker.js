@@ -62,7 +62,7 @@ async function getWindowConf() {
   try {
     return await ipc.call('getWindowConfigs');
   } catch (err) {
-    log.error('Failed to get window config, using defaults:', err.message);
+    log.formattedError('Failed to get window config:', err);
     return { geometry: '70%x70%', fullscreened: false, maximized: false };
   }
 }
@@ -117,9 +117,9 @@ function sendToMpv(command) {
   if (!mpvProcess || !ipcPath) return;
   const sock = net.connect(ipcPath);
   sock.once('connect', () => sock.end(JSON.stringify({ command }) + '\n'));
-  sock.once('error', (e) => {
+  sock.once('error', (err) => {
     sock.destroy();
-    log.error('mpv IPC failed:', e.code);
+    log.error('mpv IPC failed:', err.code ?? err);
   });
 }
 
@@ -132,7 +132,13 @@ function StreamTorrent() {
   const { metaData, videoCachePath, subDirectory, subtitleSettings } = session;
   return new Promise(async (resolve, reject) => {
     sendProgress('trackers');
-    const trackers = await getTorrentTrackers()
+    let trackers;
+    try {
+      trackers = await getTorrentTrackers();
+    } catch (err) {
+      log.formattedError("Failed to load trackers:", err);
+      return reject(err);
+    }
     log.info("Loading Torrent:", metaData?.fileName);
     webTorrentClient = new WebTorrent({ lsd: false, utp: false });
     // webTorrentClient = new WebTorrent();
@@ -201,7 +207,7 @@ function StreamTorrent() {
 
         const stream = file.createReadStream({ start, end });
         stream.on('error', (err) => {
-          log.error('Stream error:', err);
+          log.formattedError('Stream error:', err);
         });
         res.on('close', () => {
           stream.destroy();
@@ -228,7 +234,7 @@ function StreamTorrent() {
           runMpvProcess(url, subsPaths);
 
         } catch (error) {
-          log.error(error.message);
+          log.formattedError("Failed to start streaming:", error);
           reject(error);
         }
       });
@@ -250,9 +256,8 @@ function StreamTorrent() {
     torrent.on("warning", (warn) => log.warn("Torrent warning:", warn.message));
 
     torrent.on('error', async (err) => {
-      const errorMsg = `Torrent error: ${err.message}`;
-      log.error(errorMsg);
-      ipc.emit('torrent_error', errorMsg);
+      log.formattedError("Torrent error:", err);
+      ipc.emit('torrent_error', err.message);
       await cleanup();
       reject(err);
     });
@@ -269,7 +274,7 @@ async function PlayLocalVideo() {
       else
         throw new Error(`Cannot Find File Named:<br> ${metaData.fileName}`);
     } catch (err) {
-      log.error(err);
+      log.formattedError("Failed to play local video:", err);
       reject(err);
     }
   });
@@ -361,9 +366,9 @@ async function runMpvProcess(videoFullPath, subsPaths, onClose, onError) {
 
     const errMsg = err.code === "ENOENT" || err.code === "ENOTDIR"
       ? "MPV not found. Install it or set its path in settings"
-      : `MPV process error: ${err.message}`;
+      : err.message;
 
-    log.error(errMsg);
+    log.formattedError("mpv process error:", err);
     await cleanup();
 
     ipc.emit('playback_error', errMsg);
@@ -397,7 +402,7 @@ async function cleanup() {
       mpvProcess = null;
       log.info('MPV killed');
     } catch (err) {
-      log.error('Failed to kill mpv:', err);
+      log.formattedError('Failed to kill mpv:', err);
     }
   }
 
@@ -414,7 +419,7 @@ async function cleanup() {
       ]);
       expressServer = null;
     } catch (err) {
-      log.error('Failed to close server:', err);
+      log.formattedError('Failed to close server:', err);
     }
   }
 
@@ -425,7 +430,7 @@ async function cleanup() {
       await destroyClient(client);
       log.info('WebTorrent client destroyed');
     } catch (err) {
-      log.error('Failed to destroy torrent client:', err);
+      log.formattedError('Failed to destroy torrent client:', err);
     }
   }
 
@@ -442,6 +447,7 @@ function destroyClient(client) {
 try {
   session = await ipc.call('getPlaybackConfig');
 } catch (err) {
+  log.formattedError('Failed to get playback config:', err);
   ipc.emit('playback_error', err.message);
   await cleanup();
 }

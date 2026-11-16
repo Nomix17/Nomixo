@@ -60,22 +60,27 @@ initTorrentTrackers();
 ipcMain.handle("load-settings", async () => {
   try {
     return await loadSettings();
-  } catch {
-    throw new Error("Something Went Wrong When Loading Settings!");
+  } catch (err) {
+    log.formattedError("Failed to load settings:", err);
+    throw new Error("Something Went Wrong When Loading Settings!", { cause: err });
   }
 });
 
 ipcMain.handle("load-theme", async () => {
   try {
     return await loadTheme();
-  } catch {
-    throw new Error("Something Went Wrong When Loading Theme!");
+  } catch (err) {
+    log.formattedError("Failed to load theme:", err);
+    throw new Error("Something Went Wrong When Loading Theme!", { cause: err });
   }
 });
 
 ipcMain.handle("load-sub", async() => {
   try { return await loadSubConfigs(); }
-  catch(err) { throw new Error(`Failed to load sub configs: ${err}`); }
+  catch(err) {
+    log.formattedError("Failed to load sub configs:", err);
+    throw new Error(`Failed to load sub configs: ${err.message}`, { cause: err });
+  }
 });
 
 ipcMain.handle("apply-settings", async (event, SettingsObj) => {
@@ -88,7 +93,7 @@ ipcMain.handle("apply-settings", async (event, SettingsObj) => {
   try {
     await writeFile(Paths.SettingsFilePath, JSON.stringify(FullSettings, null, 2));
   } catch (err) {
-    log.error(err);
+    log.formattedError("Failed to save settings:", err);
   }
   return null;
 });
@@ -105,7 +110,7 @@ ipcMain.on("apply-theme", async (event, ThemeObj) => {
   try {
     await writeFile(Paths.ThemeFilePath, themeFileContent);
   } catch (err) {
-    log.error(err);
+    log.formattedError("Failed to save theme:", err);
   }
 });
 
@@ -120,8 +125,8 @@ ipcMain.handle("apply-prepared-theme", async (event, themefileName) => {
   try {
     const themeFilePath = path.join(Paths.themesDirPath, `${themefileName}.css`);
     await copyThemeFileToMainTheme(themefileName, themeFilePath);
-  } catch(error) {
-    log.error(error);
+  } catch(err) {
+    log.formattedError("Failed to apply theme:", err);
   }
 });
 
@@ -156,7 +161,7 @@ ipcMain.handle("get-prepared-themes", async () => {
         }
       });
   } catch (err) {
-    log.error(`Failed to read themes directory at ${Paths.themesDirPath}`, err);
+    log.formattedError("Failed to read themes directory:", err);
     return [];
   }
 });
@@ -316,6 +321,7 @@ ipcMain.handle("import-external-subs", async (event, mediaInfo) => {
     return { success: true };
 
   } catch (err) {
+    log.formattedError("Failed to copy subtitle files:", err);
     return { success: false, error: err.message };
   }
 });
@@ -342,7 +348,7 @@ ipcMain.handle("save-api-key", async (event, apiKeys) => {
   try {
     await FilesManager.writeAPIKEYIntoEnvFile(apiKeys);
   } catch (err) {
-    log.error(err.message);
+    log.formattedError("Failed to save API keys:", err);
     return false;
   }
   return true;
@@ -427,12 +433,7 @@ function enqueue(task) {
 
 ipcMain.handle("download-image", async (event, downloadPath, imageUrl) => {
   try {
-    let cachedImage;
-    try {
-      cachedImage = await enqueue(() => downloadImage(Paths.imageCachePath, imageUrl));
-    } catch(err) {
-      throw new Error(err);
-    }
+    const cachedImage = await enqueue(() => downloadImage(Paths.imageCachePath, imageUrl));
     if (!cachedImage) return { download_result: "failed" };
     const destinationDir = path.join(downloadPath, "POSTERS");
     await mkdir(destinationDir, { recursive: true });
@@ -440,7 +441,7 @@ ipcMain.handle("download-image", async (event, downloadPath, imageUrl) => {
     await copyFile(cachedImage, destinationPath);
     return { download_result: "success", image_path: destinationPath };
   } catch(err) {
-    log.error(err);
+    log.formattedError("Failed to download image:", err);
     return { download_result: "failed" };
   }
 });
@@ -462,7 +463,7 @@ ipcMain.handle("download-backdrop", async (event, backgroundImageUrl, title) => 
     await writeFile(filePath, Buffer.from(arrayBuffer));
     return filePath;
   } catch (err) {
-    console.error("Failed to download backdrop:", err);
+    log.formattedError("Failed to download backdrop:", err);
     throw err;
   }
 });
@@ -548,8 +549,8 @@ ipcMain.handle("import-library", async (event, merge) => {
     const jsonString = JSON.stringify({ media: mergedLibrary }, null, 2);
     await writeFile(Paths.libraryFilePath, jsonString, 'utf8');
     return true;
-  } catch(error) {
-    log.error("Cannot Import Library:", error.message);
+  } catch(err) {
+    log.formattedError("Cannot Import Library:", err);
     return false;
   }
 });
@@ -570,8 +571,8 @@ ipcMain.handle("export-library", async(event) => {
     await copyFile(Paths.libraryFilePath, path.join(destinationPath, `nomixo_library_dump_${day}_${month}_${year}.json`));
     return true;
 
-  } catch(error) {
-    log.error("Connot Export Library: ", error.message);
+  } catch(err) {
+    log.formattedError("Connot Export Library: ", err);
     return false
   }
 });
@@ -656,7 +657,7 @@ ipcMain.handle("change-download-path", async (event, mediaInfo, destinationPath)
     }
 
   } catch (err) {
-    log.error(err);
+    log.formattedError("Failed to change download path:", err);
     return { success: false, error: err.message };
   }
 
@@ -706,7 +707,7 @@ ipcMain.handle("download-subtitles", async (event, torrentEntry) => {
       }
     );
   } catch (err) {
-    log.error("Failed To Download Subtitles", torrentEntry.torrentId + ":", err.message);
+    log.formattedError(`Failed To Download Subtitles ${torrentEntry.torrentId}:`, err);
     return { updated: false };
   }
   return { updated: true };
@@ -796,7 +797,7 @@ ipcMain.handle("clear-app-cache", async () => {
     }));
     return { success: true };
   } catch(err) {
-    console.error("Failed to clear cache:", err);
+    log.formattedError("Failed to clear cache:", err);
     return { success: false, error: err.message };
   }
 });
@@ -919,6 +920,5 @@ ipcMain.on('run-in-background', () => {
 
 process.on("unhandledRejection", (reason) => {
   if (reason?.name === "AbortError") return;
-  const errorDetails = reason instanceof Error ? reason.stack : reason;
-  log.error("Unhandled rejection:", errorDetails);
+  log.formattedError("Unhandled rejection:", reason);
 });

@@ -101,7 +101,7 @@ class NextEpisodeManager {
       this.nextEpisodeInfo = info;
     } catch (err) {
       if (signal.aborted) return null;
-      log.error("Failed to resolve next episode info:", err);
+      log.formattedError("Failed to resolve next episode info:", err);
       this.nextEpisodeInfo = null;
     }
 

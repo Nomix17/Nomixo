@@ -110,8 +110,8 @@ export class UpdateManager {
     this.downloadCancellationToken = new CancellationToken();
     try {
       await this.autoUpdater.downloadUpdate(this.downloadCancellationToken);
-    } catch (error) {
-      log.error(`Download Update ended: ${error?.message ?? error}`);
+    } catch (err) {
+      log.formattedError("Download Update ended:", err);
     } finally {
       this.downloadCancellationToken = null;
       this.cancelRequested = false;
@@ -146,10 +146,10 @@ export class UpdateManager {
       if (this.store.has('pendingUpdate'))
         this.store.delete('pendingUpdate');
       this.autoUpdater.quitAndInstall();
-    });
+    }).catch((err) => log.formattedError("Failed to apply update:", err));
   }
   checkForUpdates() {
-    this.autoUpdater.checkForUpdates();
+    this.autoUpdater.checkForUpdates().catch((err) => log.formattedError("Update check failed:", err));
   }
 
   dispose() {

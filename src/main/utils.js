@@ -145,7 +145,7 @@ export async function downloadImage(downloadDir, posterUrl) {
     return file;
   } catch (err) {
     if (tmp) await unlink(tmp).catch(() => {});
-    log.error(`Failed to download ${posterUrl}:`, err.message);
+    log.error(`Failed to download ${posterUrl}:`, err?.stack ?? err);
     throw err;
   }
 }
