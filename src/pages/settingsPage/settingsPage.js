@@ -210,11 +210,9 @@ const saveNewTheme = async() => {
     container.insertBefore(updatedCard, cardEl);
     cardEl.remove();
 
-    if (CurrentTheme === oldThemeName) {
-      CurrentTheme = newThemeName;
-      document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
-    }
-    selectThemeCard(document.querySelector(`[card-file-name="${CurrentTheme}"]`) ?? updatedCard);
+    CurrentTheme = fileBaseName(res.theme_file_path);
+    document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
+    selectThemeCard(updatedCard);
 
     displayMessage({ title: "Theme updated", body: "The theme was updated." });
   } else {
@@ -229,7 +227,7 @@ const saveNewTheme = async() => {
     const newCard = await createThemeCard(newThemeName, res.theme_file_path);
     container.insertBefore(newCard, addCustomThemeBtn);
     selectThemeCard(newCard);
-    CurrentTheme = newThemeName;
+    CurrentTheme = fileBaseName(res.theme_file_path);
 
     document.getElementById('cssThemeStylesheet').href = 'theme://theme.css?' + Date.now();
     displayMessage({ title: "Theme saved", body: "The new theme was saved." });
@@ -527,8 +525,10 @@ async function fetchSVGMarkup() {
   return res.text();
 }
 
+const fileBaseName = (p) => p.split(/[\\/]/).pop().replace(/\.css$/i, "");
+
 async function extractThemeVars(cssPath) {
-  const res = await fetch(cssPath);
+  const res = await fetch(cssPath, { cache: "no-store" });
   if (!res.ok) {
     console.error(`Failed to load theme CSS at ${cssPath}`, res.status);
     return [];
@@ -547,12 +547,14 @@ const SVGThemeMarkupPromise = fetchSVGMarkup();
 async function createThemeCard(themeName, themePath, isDefault = false) {
   const svgMarkup = await SVGThemeMarkupPromise;
   const vars = await extractThemeVars(themePath);
+  const fileName = fileBaseName(themePath);
   const card = document.createElement("div");
   const cardTitle = document.createElement("p");
   const label = themeName.replaceAll(/_/g, " ");
   cardTitle.innerText = label.charAt(0).toUpperCase() + label.slice(1);
   card.classList.add("card");
-  card.setAttribute("card-file-name", themeName);
+  card.setAttribute("card-file-name", fileName);
+  card.setAttribute("card-display-name", themeName);
   card.setAttribute("tabindex", "0");
   card.appendChild(cardTitle);
   card.insertAdjacentHTML("beforeend", svgMarkup);
@@ -563,7 +565,7 @@ async function createThemeCard(themeName, themePath, isDefault = false) {
     svgEl.style.setProperty(name, value);
   });
 
-  card.classList.toggle("selected", CurrentTheme === themeName);
+  card.classList.toggle("selected", CurrentTheme === fileName);
   if (!isDefault) {
     createThemeCardRemovingBtn(card, themeName, themePath);
     createThemeCardEditBtn(card, themeName, themePath);
