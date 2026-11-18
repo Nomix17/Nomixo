@@ -209,7 +209,7 @@ local user_opts = {
 
     -- "Play Next Episode" button
     -- only shown when mpv is started with --script-opts=haveNextEp=true
-    next_ep_time = 15,                     -- show the button during the last N seconds of the video
+    next_ep_percent = 5,                   -- show the button during the last N% of the video's total duration
     next_ep_font_size = 15,                -- font size of the button text
 
     fade_alpha = 130,                      -- alpha of the OSC background (0 to disable)
@@ -715,7 +715,7 @@ local state = {
 
 -- "Play Next Episode" button
 -- Enabled by --script-opts=haveNextEp=true or the "have-next-episode" script message,
--- and only shown during the last `next_ep_time` seconds of the video.
+-- and only shown during the last `next_ep_percent` percent of the video's duration.
 local function have_next_episode()
     local v = mp.get_opt("haveNextEp")
     if not v then return false end
@@ -730,7 +730,7 @@ local function next_ep_active()
     local remaining = mp.get_property_number("time-remaining")
     local duration = mp.get_property_number("duration")
     return remaining ~= nil and duration ~= nil and duration > 0
-        and remaining >= 0 and remaining <= user_opts.next_ep_time
+        and remaining >= 0 and remaining <= duration * (user_opts.next_ep_percent / 100)
 end
 
 local logo_lines = {
@@ -3351,7 +3351,7 @@ local function osc_init()
     ne.eventresponder["mbtn_left_up"] = function() mp.command("script-binding stats/display-page-3") end
 
     -- play next episode
-    -- only exists with --script-opts=haveNextEp=true, and is only drawn/clickable in the last next_ep_time seconds
+    -- only exists with --script-opts=haveNextEp=true, and is only drawn/clickable in the last next_ep_percent % of the video
     ne = new_element("next_ep", "button")
     ne.visible = next_ep_enabled and not state.is_image and osc_param.playresx >= 420
     ne.showF = next_ep_active
@@ -3976,7 +3976,7 @@ local function render()
     end
 
     -- "Play Next Episode" button: its own mouse section, only active while the OSC
-    -- is visible and we are inside the last next_ep_time seconds
+    -- is visible and we are inside the last next_ep_percent % of the video
     local next_ep_wanted = false
     if osc_param.areas["next-episode"] then
         next_ep_wanted = state.osc_visible and next_ep_active()
