@@ -1774,6 +1774,7 @@ function changeFullscreenIcon(isFullscreened) {
       ? fullscreenBtn
       : unFullscreenBtn;
 }
+window.electronAPI.onFullscreenStatusUpdate(changeFullscreenIcon);
 
 async function handleGoBackIcon(){
   const goBackButton = document.querySelector("#btn-goBack");

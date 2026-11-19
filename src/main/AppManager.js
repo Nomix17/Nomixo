@@ -17,6 +17,7 @@ export class AppManager {
   defaultSettingsPromise = null;
   positionWasChangedViaGoBackButton = false;
   shouldBeMaximized = false;
+  lastFullscreenState = null;
 
   torrentDownloadManager = null;
   mpvPlayerManager = null;
@@ -133,6 +134,16 @@ export class AppManager {
       this.store.delete("opened-in-background");
     });
 
+    this.browserWindow.on("resize", () => this.#updateFullscreenState());
+    this.browserWindow.on("move", () => this.#updateFullscreenState());
+    this.browserWindow.on("enter-full-screen", () => this.#updateFullscreenState());
+    this.browserWindow.on("leave-full-screen", () => this.#updateFullscreenState());
+
+    this.browserWindow.webContents.on("did-finish-load", () => {
+      this.lastFullscreenState = null;
+      this.#updateFullscreenState();
+    });
+
     this.browserWindow.once("ready-to-show", () => {
       if (this.shouldBeMaximized)
         this.browserWindow.maximize();
@@ -169,6 +180,33 @@ export class AppManager {
     }else{
       return null;
     }
+  }
+
+  isWindowFullscreen() {
+    const win = this.browserWindow;
+    if (!win || win.isDestroyed()) return false;
+
+    const bounds = win.getBounds();
+    const { bounds: displayBounds } = screen.getDisplayMatching(bounds);
+    const tol = 2;
+    const matchesDisplay =
+      Math.abs(bounds.x - displayBounds.x) <= tol &&
+      Math.abs(bounds.y - displayBounds.y) <= tol &&
+      Math.abs(bounds.width - displayBounds.width) <= tol &&
+      Math.abs(bounds.height - displayBounds.height) <= tol;
+
+    if (process.platform === "linux") return matchesDisplay;
+    return win.isFullScreen() || matchesDisplay;
+  }
+
+  #updateFullscreenState() {
+    const win = this.browserWindow;
+    if (!win || win.isDestroyed()) return;
+    const isFullscreen = this.isWindowFullscreen();
+    if (isFullscreen === this.lastFullscreenState) return;
+    this.lastFullscreenState = isFullscreen;
+    win.setFullScreen(isFullscreen);
+    win.webContents.send("on-fullscreen-status-update", isFullscreen);
   }
 
   applyZoomFactor(newZF) {

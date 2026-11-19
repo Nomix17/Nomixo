@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   toggleFullscreen: () => ipcRenderer.invoke("request-fullscreen"),
   getFullscreenState: () => ipcRenderer.invoke("get-fullscreen-status"),
+  onFullscreenStatusUpdate: (callback) => ipcRenderer.on("on-fullscreen-status-update",(event,data) => callback(data)),
+
   openDirectory_FileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-directory-filesystem-browser",currentPath),
   openFile_FileSystemBrowser: (currentPath) => ipcRenderer.invoke("open-file-filesystem-browser",currentPath),
   importExternalSubs: (mediaInfo) => ipcRenderer.invoke("import-external-subs", mediaInfo),
