@@ -1,3 +1,55 @@
+/* Self-hosted fonts (no CDN round trips) */
+@font-face {
+  font-family: 'Montserrat';
+  src: url('fonts/montserrat-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tabler Icons, subset to the icons this site uses (tabler.io, MIT) */
+@font-face {
+  font-family: 'tabler-icons';
+  src: url('fonts/tabler-icons-subset.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+.ti {
+  font-family: 'tabler-icons' !important;
+  font-style: normal;
+  font-weight: 400;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  speak: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ti-arrow-left:before { content: "\ea19"; }
+.ti-arrow-up-right:before { content: "\ea24"; }
+.ti-bookmark:before { content: "\ea3a"; }
+.ti-brand-debian:before { content: "\ef57"; }
+.ti-brand-github:before { content: "\ec1c"; }
+.ti-brand-redhat:before { content: "\f331"; }
+.ti-brand-windows:before { content: "\ecd8"; }
+.ti-download:before { content: "\ea96"; }
+.ti-key:before { content: "\eac7"; }
+.ti-movie:before { content: "\eafa"; }
+.ti-package:before { content: "\eaff"; }
+.ti-palette:before { content: "\eb01"; }
+.ti-player-play:before { content: "\ed46"; }
+.ti-search:before { content: "\eb1c"; }
+.ti-subtask:before { content: "\ec9f"; }
+.ti-terminal-2:before { content: "\ebef"; }
+.ti-world:before { content: "\eb54"; }
+
+/* Fade the page in once fonts are ready (only when JS is available) */
+body { transition: opacity 0.3s ease; }
+html.js:not(.fonts-ready) body { opacity: 0; }
+
 *, *::before, *::after { 
   box-sizing: border-box; 
   margin: 0; 

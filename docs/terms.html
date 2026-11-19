@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Service - Nomixo</title>
+  <link rel="preload" href="fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/tabler-icons-subset.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/app-icon/icon.png">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="legal.css" />
+  <script>
+    // Hide the page until fonts are ready, then fade in. Capped at 2s so a slow load never leaves a blank page.
+    document.documentElement.classList.add('js');
+    (function () {
+      var show = function () { document.documentElement.classList.add('fonts-ready'); };
+      var fonts = document.fonts;
+      if (!fonts || !fonts.load) { show(); return; }
+      Promise.race([
+        Promise.all([
+          fonts.load('400 1em Montserrat'),
+          fonts.load('600 1em Montserrat'),
+          fonts.load('700 1em Montserrat'),
+          fonts.load('1em tabler-icons', '\uea19')
+        ]),
+        new Promise(function (r) { setTimeout(r, 2000); })
+      ]).then(show, show);
+    })();
+  </script>
+</head>
+<body>
+
+<div class="cinema-backdrop"></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/logo/icon.png" alt="Nomixo icon" />
+  </a>
+  <div class="nav-links">
+    <a href="index.html#features">Features</a>
+    <a href="index.html#how">How it works</a>
+    <a href="index.html#download">Download</a>
+    <a href="https://github.com/Nomix17/Nomixo" target="_blank">GitHub</a>
+  </div>
+  <a class="nav-cta" href="index.html">
+    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+    Back to home
+  </a>
+</nav>
+
+<main class="content-wrapper legal-page">
+  <section>
+    <div class="section-label">Legal</div>
+    <h1>Terms of Service</h1>
+    <p class="legal-updated">Last updated: November 19, 2026</p>
+
+    <p>By downloading or using Nomixo, you agree to these terms. If you don&rsquo;t agree, don&rsquo;t use the app.</p>
+
+    <h2>What Nomixo is</h2>
+    <p>Nomixo is a free, open-source desktop app that runs on your computer. It is a client that connects to third-party services to find information and streams, and plays them using MPV. Nomixo does not host, store, or distribute any media content, and it has no server of its own.</p>
+
+    <h2>Open source license</h2>
+    <p>Nomixo&rsquo;s source code is available at <a href="https://github.com/Nomix17/Nomixo" target="_blank" rel="noopener">github.com/Nomix17/Nomixo</a> under the <a href="https://github.com/Nomix17/Nomixo/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0 license</a>. If these terms and the license conflict about how you may use, copy, or modify the code, the license applies. These terms cover your use of the app itself.</p>
+
+    <h2>Third-party services and content</h2>
+    <p>Nomixo relies on services run by other companies, including TMDB, Torrentio, and Wyzie. They have their own terms and privacy policies, and you are responsible for following them. Nomixo does not control these services and is not responsible for their availability, accuracy, or content.</p>
+    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    <p>You use your own API keys for TMDB and Wyzie. You are responsible for keeping them safe and for following the rules of those services.</p>
+
+    <h2>Your responsibilities</h2>
+    <ul>
+      <li>You are responsible for what you watch, download, and share using Nomixo.</li>
+      <li>You must follow the laws that apply to you, including copyright laws in your country. Only access content you have the right to access.</li>
+      <li>Streaming and downloading use peer-to-peer technology, which can make your IP address visible to other participants. See the <a href="privacy.html">Privacy Policy</a>.</li>
+      <li>Don&rsquo;t use Nomixo to break the law or to harm others.</li>
+    </ul>
+
+    <h2>No warranty</h2>
+    <p>Nomixo is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo;, without warranties of any kind. We don&rsquo;t guarantee that the app will always work, be error-free, or keep your data safe from loss. Keep your own backups of anything important.</p>
+
+    <h2>Limitation of liability</h2>
+    <p>To the fullest extent permitted by law, the developer of Nomixo is not liable for any damages arising from your use of the app, including data loss, content accessed through third-party services, or issues caused by those services.</p>
+
+    <h2>Changes</h2>
+    <p>These terms may be updated from time to time. The latest version will always be on this page with its date. Continuing to use Nomixo after a change means you accept the updated terms.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about these terms: open an issue at <a href="https://github.com/Nomix17/Nomixo/issues" target="_blank" rel="noopener">github.com/Nomix17/Nomixo/issues</a> or email <a href="mailto:izayrit12345678@gmail.com">izayrit12345678@gmail.com</a>.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/Nomix17/Nomixo" target="_blank">GitHub</a>
+    <a href="https://github.com/Nomix17/Nomixo/releases" target="_blank">Releases</a>
+    <a href="https://github.com/Nomix17/Nomixo/blob/main/LICENSE" target="_blank">GPL-3.0</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+  <span>&copy; 2025 Nomixo &mdash; free &amp; open source</span>
+</footer>
+
+</body>
+</html>

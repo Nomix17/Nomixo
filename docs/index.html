@@ -4,13 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nomixo - Free Desktop Streaming</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preload" href="fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/tabler-icons-subset.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/app-icon/icon.png">
   <link rel="stylesheet" href="style.css" />
+  <script>
+    // Hide the page until fonts are ready, then fade in. Capped at 2s so a slow load never leaves a blank page.
+    document.documentElement.classList.add('js');
+    (function () {
+      var show = function () { document.documentElement.classList.add('fonts-ready'); };
+      var fonts = document.fonts;
+      if (!fonts || !fonts.load) { show(); return; }
+      Promise.race([
+        Promise.all([
+          fonts.load('400 1em Montserrat'),
+          fonts.load('600 1em Montserrat'),
+          fonts.load('700 1em Montserrat'),
+          fonts.load('1em tabler-icons', '\uea19')
+        ]),
+        new Promise(function (r) { setTimeout(r, 2000); })
+      ]).then(show, show);
+    })();
+  </script>
 </head>
 <body>
 
@@ -201,7 +216,7 @@
         </a>
 
         <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.20.2/Nomixo-v1.20.2-linux-amd64.deb" target="_blank">
-          <i class="fa-brands fa-linux" aria-hidden="true"></i>
+          <i class="ti ti-brand-debian" aria-hidden="true"></i>
           <div>
             Linux Debian
             <span>.deb · amd64</span>
@@ -209,21 +224,21 @@
         </a>
 
         <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.20.2/Nomixo-v1.20.2-linux-x86_64.rpm" target="_blank">
-          <i class="fa-brands fa-linux" aria-hidden="true"></i>
+          <i class="ti ti-brand-redhat" aria-hidden="true"></i>
           <div>
             Linux RPM
             <span>.rpm · x86_64</span>
           </div>
         </a>
         <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.20.2/Nomixo-v1.20.2-linux-x64.tar.gz" target="_blank">
-          <i class="fa-brands fa-linux" aria-hidden="true"></i>
+          <i class="ti ti-terminal-2" aria-hidden="true"></i>
           <div>
             Linux Generic
             <span>.tar.gz · x64</span>
           </div>
         </a>
         <a class="dl-btn" href="https://github.com/Nomix17/Nomixo/releases/download/v1.20.2/Nomixo-v1.20.2-linux-x86_64.AppImage" target="_blank">
-          <i class="fa-brands fa-linux" aria-hidden="true"></i>
+          <i class="ti ti-package" aria-hidden="true"></i>
           <div>
             Linux AppImage
             <span>.appimage · x64</span>
@@ -240,6 +255,8 @@
     <a href="https://github.com/Nomix17/Nomixo" target="_blank">GitHub</a>
     <a href="https://github.com/Nomix17/Nomixo/releases" target="_blank">Releases</a>
     <a href="https://github.com/Nomix17/Nomixo/blob/main/LICENSE" target="_blank">GPL-3.0</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
   </div>
   <span>© 2025 Nomixo — free &amp; open source</span>
 </footer>

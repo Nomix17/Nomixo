@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy - Nomixo</title>
+  <link rel="preload" href="fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/tabler-icons-subset.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="icon" type="image/x-icon" href="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/app-icon/icon.png">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="legal.css" />
+  <script>
+    document.documentElement.classList.add('js');
+    (function () {
+      var show = function () { document.documentElement.classList.add('fonts-ready'); };
+      var fonts = document.fonts;
+      if (!fonts || !fonts.load) { show(); return; }
+      Promise.race([
+        Promise.all([
+          fonts.load('400 1em Montserrat'),
+          fonts.load('600 1em Montserrat'),
+          fonts.load('700 1em Montserrat'),
+          fonts.load('1em tabler-icons', '\uea19')
+        ]),
+        new Promise(function (r) { setTimeout(r, 2000); })
+      ]).then(show, show);
+    })();
+  </script>
+</head>
+<body>
+
+<div class="cinema-backdrop"></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="https://cdn.jsdelivr.net/gh/Nomix17/Nomixo@main/assets/logo/icon.png" alt="Nomixo icon" />
+  </a>
+  <div class="nav-links">
+    <a href="index.html#features">Features</a>
+    <a href="index.html#how">How it works</a>
+    <a href="index.html#download">Download</a>
+    <a href="https://github.com/Nomix17/Nomixo" target="_blank">GitHub</a>
+  </div>
+  <a class="nav-cta" href="index.html">
+    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+    Back to home
+  </a>
+</nav>
+
+<main class="content-wrapper legal-page">
+  <section>
+    <div class="section-label">Legal</div>
+    <h1>Privacy Policy</h1>
+    <p class="legal-updated">Last updated: November 19, 2026</p>
+
+    <p>Nomixo is a free, open-source desktop app that runs entirely on your computer. You don&rsquo;t need an account to use it, and it has no server, analytics, or tracking. This page explains what data the app handles and who else can see it.</p>
+
+    <h2>Open source</h2>
+    <p>You can verify everything on this page by reading the code at <a href="https://github.com/Nomix17/Nomixo" target="_blank" rel="noopener">github.com/Nomix17/Nomixo</a>.</p>
+
+    <h2>What stays on your computer</h2>
+    <p>The following is stored locally on your device and is never sent to us:</p>
+    <ul>
+      <li>Your library, favorites, watch history, and playback progress</li>
+      <li>Your download queue and downloaded files</li>
+      <li>Your settings and theme</li>
+      <li>The TMDB and Wyzie API keys you enter</li>
+    </ul>
+    <p>The developer of Nomixo does not receive, collect, or have access to any of this.</p>
+
+    <h2>Third-party services</h2>
+    <p>Nomixo connects to other services to work. These are run by other companies, not by Nomixo, and each has its own privacy policy. When Nomixo contacts them, they can see the request and your IP address.</p>
+    <ul>
+      <li><strong>TMDB</strong> provides movie, show, and anime information. Nomixo sends your searches and the titles you browse, along with your own API key.</li>
+      <li><strong>Torrentio</strong> provides stream sources. Nomixo sends the ID of the title you pick to get a list of available streams.</li>
+      <li><strong>Wyzie</strong> provides subtitles. Nomixo sends the title you are watching and your own API key. This is optional.</li>
+    </ul>
+    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+
+    <h2>Peer-to-peer streaming</h2>
+    <p>Nomixo streams and downloads using WebTorrent. This is how peer-to-peer file sharing works: other people in the same swarm can see your IP address and which content you are downloading or sharing. Nomixo has no control over this. If this matters to you, consider using a VPN.</p>
+
+    <h2>MPV</h2>
+    <p>Playback happens in MPV, a separate player that runs on your computer. Nomixo points it at a local stream and does not send playback data anywhere.</p>
+
+    <h2>Deleting your data</h2>
+    <p>Everything Nomixo stores is on your computer. To remove it, uninstall the app and delete its data folder.</p>
+
+    <h2>Children</h2>
+    <p>Nomixo does not knowingly collect personal information from anyone, including children.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this policy changes, the updated version will be posted on this page with a new date.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: open an issue at <a href="https://github.com/Nomix17/Nomixo/issues" target="_blank" rel="noopener">github.com/Nomix17/Nomixo/issues</a> or email <a href="mailto:izayrit12345678@gmail.com">izayrit12345678@gmail.com</a>.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/Nomix17/Nomixo" target="_blank">GitHub</a>
+    <a href="https://github.com/Nomix17/Nomixo/releases" target="_blank">Releases</a>
+    <a href="https://github.com/Nomix17/Nomixo/blob/main/LICENSE" target="_blank">GPL-3.0</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+  <span>&copy; 2025 Nomixo &mdash; free &amp; open source</span>
+</footer>
+
+</body>
+</html>

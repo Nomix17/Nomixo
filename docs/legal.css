@@ -1,0 +1,75 @@
+/* Extra styles for privacy.html and terms.html. Load after style.css */
+
+.legal-page {
+  padding-top: 110px;
+}
+
+.legal-page section {
+  max-width: 860px;
+  padding: 56px 48px;
+}
+
+.legal-page h1 {
+  font-size: clamp(32px, 5vw, 48px);
+  letter-spacing: -1.5px;
+  max-width: none;
+  margin-bottom: 8px;
+}
+
+.legal-updated {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 36px;
+}
+
+.legal-page h2 {
+  font-size: 20px;
+  letter-spacing: -0.3px;
+  margin: 40px 0 12px;
+  padding-top: 28px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.legal-page p,
+.legal-page li {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.legal-page ul {
+  padding-left: 22px;
+  margin-bottom: 12px;
+}
+
+.legal-page strong {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.legal-page a {
+  color: var(--screen-glow);
+  border-bottom: 1px solid var(--screen-glow-border);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.legal-page a:hover {
+  color: var(--text-pure);
+  border-color: var(--text-pure);
+}
+
+.legal-page code {
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+}
+
+@media (max-width: 760px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .legal-page section { padding: 36px 24px; }
+  footer { padding: 32px 24px; }
+}
