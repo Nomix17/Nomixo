@@ -656,7 +656,7 @@ input::selection {
   justify-content:center;
   align-items:center;
   position:absolute;
-  right:4%;
+  right:5%;
   top:7%;
   width:32px;
   height:32px;
@@ -676,10 +676,21 @@ input::selection {
   backface-visibility: hidden;
 }
 
+.div-MovieElement.active .btn-toggle-in-library,
 .div-MovieElement:hover .btn-toggle-in-library,
-.div-MovieElement:hover .btn-remove-from-library{
-  opacity:1;
-  transform: scale(1);
+.div-MovieElement.roulette-active .btn-toggle-in-library,
+.div-MovieElement:focus-visible .btn-toggle-in-library,
+.div-MovieElement.active .btn-remove-from-library,
+.div-MovieElement:hover .btn-remove-from-library,
+.div-MovieElement.roulette-active .btn-remove-from-library,
+.div-MovieElement:focus-visible .btn-remove-from-library {
+  opacity: 1;
+  transform: translateY(-5px) scale(1);
+}
+
+.div-MovieElement:active .btn-toggle-in-library,
+.div-MovieElement:active .btn-remove-from-library {
+  transform: translateY(0) scale(1);
 }
 
 .toggleButtonIcon,
@@ -695,7 +706,11 @@ input::selection {
 .btn-toggle-in-library:hover{
   background-color: rgba(0,0,0,0.55);
   border-color: rgba(255,255,255,0.2);
-  transform: scale(1.05) !important;
+  transform: translateY(-5px) scale(1.05) !important;
+}
+
+.div-MovieElement:active .btn-toggle-in-library:hover {
+  transform: translateY(0) scale(1.05) !important;
 }
 
 .btn-toggle-in-library:hover .toggleButtonIcon{
@@ -708,9 +723,20 @@ input::selection {
 
 .btn-toggle-in-library[pressed=" "] {
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0) scale(1);
   background-color: rgba(var(--background-color), 0.5);
   border-color: rgba(255,255,255,0.2);
+}
+
+.div-MovieElement.active .btn-toggle-in-library[pressed=" "],
+.div-MovieElement:hover .btn-toggle-in-library[pressed=" "],
+.div-MovieElement.roulette-active .btn-toggle-in-library[pressed=" "],
+.div-MovieElement:focus-visible .btn-toggle-in-library[pressed=" "] {
+  transform: translateY(-5px) scale(1);
+}
+
+.div-MovieElement:active .btn-toggle-in-library[pressed=" "] {
+  transform: translateY(0) scale(1);
 }
 
 .btn-toggle-in-library[pressed=" "] .toggleButtonIcon{
