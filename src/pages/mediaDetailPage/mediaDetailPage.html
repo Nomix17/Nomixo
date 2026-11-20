@@ -272,9 +272,32 @@
                   <h3 id="bulkPanelTitle"></h3>
                   <p id="bulkPanelMeta"></p>
                 </div>
-                <button type="button" class="bulk-link-btn bulk-pill-btn" id="bulkSeasonToggle">Select season</button>
+                <div class="bulk-panel-actions">
+                  <button type="button" class="bulk-link-btn bulk-pill-btn bulk-customize-btn" id="bulkCustomizeToggle" aria-pressed="false" title="Choose a specific release for each episode">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/>
+                      <circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>
+                    </svg>
+                    Customize
+                  </button>
+                  <button type="button" class="bulk-link-btn bulk-pill-btn" id="bulkSeasonToggle">Select season</button>
+                </div>
               </div>
               <div class="bulk-episode-list" id="bulkEpisodeList"></div>
+            </div>
+
+            <div class="bulk-streams" id="bulkStreamView" hidden>
+              <div class="bulk-streams-head">
+                <button type="button" class="bulk-stream-back" id="bulkStreamBack" aria-label="Back to episodes">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <div class="bulk-panel-heading">
+                  <h3 id="bulkStreamTitle"></h3>
+                  <p id="bulkStreamMeta"></p>
+                </div>
+              </div>
+              <div class="bulk-stream-filters" id="bulkStreamFilters" role="group" aria-label="Filter by quality" hidden></div>
+              <div class="bulk-stream-list" id="bulkStreamList" role="radiogroup" aria-label="Available releases"></div>
             </div>
           </section>
 

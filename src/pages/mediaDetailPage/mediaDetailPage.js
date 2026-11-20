@@ -55,6 +55,13 @@ const bulkProgress = document.getElementById("bulkProgress");
 const bulkProgressBar = document.getElementById("bulkProgressBar");
 const bulkHeroImage = document.getElementById("bulkHeroImage");
 const bulkHeroLogo = document.getElementById("bulkHeroLogo");
+const bulkCustomizeToggle = document.getElementById("bulkCustomizeToggle");
+const bulkStreamView = document.getElementById("bulkStreamView");
+const bulkStreamBack = document.getElementById("bulkStreamBack");
+const bulkStreamTitle = document.getElementById("bulkStreamTitle");
+const bulkStreamMeta = document.getElementById("bulkStreamMeta");
+const bulkStreamFilters = document.getElementById("bulkStreamFilters");
+const bulkStreamList = document.getElementById("bulkStreamList");
 
 torrentSidePanel.classList.add("preloadingTorrent");
 if(MediaType === "movie") torrentSidePanel.classList.add("visible-block");
@@ -929,7 +936,9 @@ function buildDownloadTargetInfo(torrentInfo) {
     MediaType: torrentInfo.MediaType,
     seasonNumber: torrentInfo.seasonNumber,
     episodeNumber: torrentInfo.episodeNumber,
-    rawStreamTitle: torrentInfo.rawStreamTitle
+    rawStreamTitle: torrentInfo.rawStreamTitle,
+    hash: torrentInfo.hash,
+    manualSelection: Boolean(torrentInfo.manualSelection)
   };
 }
 
@@ -1343,7 +1352,17 @@ function buildBulkSeasonList(seasonNumbers, preselectSeason) {
       dateEl.className = "bulk-episode-date";
       dateEl.textContent = aired ? (episode.air_date ?? "") : "Not aired yet";
 
-      row.append(checkbox, numberEl, episodeNameEl, dateEl);
+      const streamBtn = document.createElement("button");
+      streamBtn.type = "button";
+      streamBtn.className = "bulk-stream-btn";
+      streamBtn.dataset.season = episode.season_number;
+      streamBtn.dataset.episode = episode.episode_number;
+      streamBtn.setAttribute("aria-label", `Choose release for episode ${episode.episode_number}`);
+      streamBtn.innerHTML =
+        `<span class="bulk-stream-btn-label">Auto</span>` +
+        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>`;
+
+      row.append(checkbox, numberEl, episodeNameEl, dateEl, streamBtn);
       episodesEl.append(row);
     });
 
@@ -1426,9 +1445,22 @@ function refreshBulkSelection() {
 
   if (bulkBusy) return;
 
+  const manualCount = bulkCustomize
+    ? getBulkSelectedEpisodes().filter(({ season, episode }) => bulkOverrides.has(bulkEpisodeKey(season, episode))).length
+    : 0;
+  const carriedCount = bulkCustomize
+    ? getBulkSelectedEpisodes().filter(({ season, episode }) => {
+        const key = bulkEpisodeKey(season, episode);
+        return !bulkOverrides.has(key) && bulkCarried.has(key);
+      }).length
+    : 0;
   bulkSummary.textContent = total === 0
     ? "Select the episodes you want"
-    : `${total} episode${total === 1 ? "" : "s"} from ${seasonsUsed} season${seasonsUsed === 1 ? "" : "s"}`;
+    : `${total} episode${total === 1 ? "" : "s"} from ${seasonsUsed} season${seasonsUsed === 1 ? "" : "s"}` +
+      (manualCount ? ` · ${manualCount} chosen manually` : "") +
+      (carriedCount ? ` · ${carriedCount} same release` : "");
+
+  if (bulkCustomize && !bulkSkipCarryRefresh) scheduleBulkCarryRefresh();
   bulkDownloadBtn.textContent = total === 0
     ? "Download"
     : `Download ${total} episode${total === 1 ? "" : "s"}`;
@@ -1490,6 +1522,7 @@ async function openBulkDownload() {
   }
 
   setBulkMessage("");
+  resetBulkCustomize();
   bulkSubtitle.textContent = GlobalTitle ?? "";
   applyBulkHero();
 
@@ -1511,6 +1544,7 @@ async function openBulkDownload() {
 function closeBulkDownload() {
   if (!bulkOverlay.classList.contains("active")) return;
   bulkRunId++;
+  closeBulkStreamView(false);
   setBulkBusy(false);
   bulkOverlay.classList.remove("active");
 }
@@ -1677,23 +1711,24 @@ async function runBulkWithConcurrency(items, limit, worker, isStale) {
   await Promise.all(runners);
 }
 
-async function resolveBulkTargets(selected, wantedQuality, imdb_id, onProgress, isStale) {
+async function resolveBulkTargets(selected, wantedQuality, imdb_id, onProgress, isStale, overrides = new Map()) {
   const results = new Array(selected.length).fill(null);
   const parsedPerEpisode = new Array(selected.length).fill(null);
   let done = 0;
 
   await runBulkWithConcurrency(selected, BULK_CONCURRENCY, async ({ season, episode }, index) => {
-    try {
-      const streams = await fetchBulkEpisodeStreams(imdb_id, season, episode);
-      parsedPerEpisode[index] = parseBulkStreams(streams);
-    } catch (err) {
-      console.error(`Bulk: failed to fetch ${bulkEpisodeLabel(season, episode)}`, err);
+    if (!overrides.has(bulkEpisodeKey(season, episode))) {
+      try {
+        parsedPerEpisode[index] = await getBulkEpisodeStreams(imdb_id, season, episode);
+      } catch (err) {
+        console.error(`Bulk: failed to fetch ${bulkEpisodeLabel(season, episode)}`, err);
+      }
     }
     done++;
     if (!isStale()) onProgress(done, selected.length);
   }, isStale);
 
-  if (isStale()) return { targets: [], missing: [], fallbackCount: 0 };
+  if (isStale()) return { targets: [], missing: [], fallbackCount: 0, manualCount: 0, carriedCount: 0 };
 
   const coverage = new Map();
   parsedPerEpisode.forEach(parsed => {
@@ -1703,38 +1738,63 @@ async function resolveBulkTargets(selected, wantedQuality, imdb_id, onProgress, 
     });
   });
 
-  const chosenHashes = new Set();
+  const chosenHashes = new Set([...overrides.values()].map(stream => stream.hash));
   selected.forEach(({ season, episode }, index) => {
-    const parsed = parsedPerEpisode[index];
-    if (!parsed) return;
-    const choice = pickBulkStream(parsed, wantedQuality, chosenHashes, coverage);
-    if (!choice) return;
+    const manual = overrides.get(bulkEpisodeKey(season, episode));
+    let stream;
+    let usedFallback = false;
+    let carried = false;
 
-    chosenHashes.add(choice.stream.hash);
+    if (manual) {
+      stream = manual;
+    } else {
+      const parsed = parsedPerEpisode[index];
+      if (!parsed) return;
+
+      const carryHash = getBulkCarryHash(season, episode, overrides);
+      const carriedStream = carryHash ? parsed.find(s => s.hash === carryHash) : null;
+
+      if (carriedStream) {
+        stream = carriedStream;
+        carried = true;
+      } else {
+        const choice = pickBulkStream(parsed, wantedQuality, chosenHashes, coverage);
+        if (!choice) return;
+        stream = choice.stream;
+        usedFallback = choice.usedFallback;
+      }
+      chosenHashes.add(stream.hash);
+    }
+
     const torrentInfo = {
       MediaId: MediaId,
       MediaType: MediaType,
       IMDB_ID: imdb_id,
       Title: GlobalTitle,
-      ...choice.stream,
+      ...stream,
+      manualSelection: Boolean(manual),
       seasonNumber: bulkPad(season),
       episodeNumber: bulkPad(episode)
     };
-    results[index] = { target: buildDownloadTargetInfo(torrentInfo), usedFallback: choice.usedFallback };
+    results[index] = { target: buildDownloadTargetInfo(torrentInfo), usedFallback, manual: Boolean(manual), carried };
   });
 
   const targets = [];
   const missing = [];
   let fallbackCount = 0;
+  let manualCount = 0;
+  let carriedCount = 0;
   results.forEach((result, index) => {
     if (result) {
       targets.push(result.target);
       if (result.usedFallback) fallbackCount++;
+      if (result.manual) manualCount++;
+      if (result.carried) carriedCount++;
     } else {
       missing.push(bulkEpisodeLabel(selected[index].season, selected[index].episode));
     }
   });
-  return { targets, missing, fallbackCount };
+  return { targets, missing, fallbackCount, manualCount, carriedCount };
 }
 
 async function startBulkDownload() {
@@ -1751,6 +1811,8 @@ async function startBulkDownload() {
 
   const wantedQuality = getBulkQuality();
   const withSubtitles = bulkSubtitlesCheckbox.checked;
+  const overrides = bulkCustomize ? new Map(bulkOverrides) : new Map();
+  closeBulkStreamView(false);
   const runId = ++bulkRunId;
   const isStale = () => runId !== bulkRunId;
 
@@ -1761,12 +1823,13 @@ async function startBulkDownload() {
     const imdb_id = await IMDB_IDPromise;
     if (!imdb_id) throw new Error("This title has no IMDb ID, so torrents can't be searched.");
 
-    const { targets, missing, fallbackCount } = await resolveBulkTargets(
+    const { targets, missing, fallbackCount, manualCount, carriedCount } = await resolveBulkTargets(
       selected,
       wantedQuality,
       imdb_id,
       (done, total) => setBulkBusy(true, `Looking for torrents: ${done} of ${total}`, done / total),
-      isStale
+      isStale,
+      overrides
     );
     if (isStale()) return;
 
@@ -1794,6 +1857,10 @@ async function startBulkDownload() {
     closeBulkDownload();
 
     const notes = [];
+    if (manualCount)
+      notes.push(`${manualCount} used your chosen release${manualCount === 1 ? "" : "s"}.`);
+    if (carriedCount)
+      notes.push(`${carriedCount} more matched it.`);
     if (fallbackCount)
       notes.push(`${fallbackCount} used the closest available quality.`);
     if (missing.length) {
@@ -1811,6 +1878,357 @@ async function startBulkDownload() {
   } finally {
     if (!isStale()) setBulkBusy(false);
   }
+}
+
+let bulkCustomize = false;
+const bulkOverrides = new Map();
+let bulkStreamCache = new Map();
+let bulkStreamEpisode = null;
+let bulkStreamData = null;
+let bulkStreamRendered = [];
+let bulkStreamFilter = "all";
+let bulkStreamToken = 0;
+
+let bulkCarried = new Map();
+let bulkCarryToken = 0;
+let bulkCarryTimer = null;
+let bulkSkipCarryRefresh = false;
+
+const bulkEpisodeKey = (season, episode) => `${season}:${episode}`;
+
+function getBulkCarryHash(season, episode, overrides) {
+  let hash = null, bestSeason = -1, bestEpisode = -1;
+  overrides.forEach((stream, key) => {
+    const [s, e] = key.split(":").map(Number);
+    const isBefore = s < season || (s === season && e <= episode);
+    const isCloser = s > bestSeason || (s === bestSeason && e > bestEpisode);
+    if (isBefore && isCloser) { hash = stream.hash; bestSeason = s; bestEpisode = e; }
+  });
+  return hash;
+}
+
+function scheduleBulkCarryRefresh() {
+  clearTimeout(bulkCarryTimer);
+  bulkCarryTimer = setTimeout(refreshBulkCarry, 200);
+}
+
+async function refreshBulkCarry() {
+  if (!bulkCustomize || bulkBusy) return;
+  const token = ++bulkCarryToken;
+  const isStale = () => token !== bulkCarryToken || !bulkCustomize || bulkBusy;
+
+  const targets = bulkOverrides.size
+    ? getBulkSelectedEpisodes().filter(({ season, episode }) => !bulkOverrides.has(bulkEpisodeKey(season, episode)))
+    : [];
+  const next = new Map();
+
+  try {
+    const imdb_id = targets.length ? await IMDB_IDPromise : null;
+    if (imdb_id) {
+      await runBulkWithConcurrency(targets, BULK_CONCURRENCY, async ({ season, episode }) => {
+        const carryHash = getBulkCarryHash(season, episode, bulkOverrides);
+        if (!carryHash) return;
+        try {
+          const parsed = await getBulkEpisodeStreams(imdb_id, season, episode);
+          const match = parsed.find(s => s.hash === carryHash);
+          if (match) next.set(bulkEpisodeKey(season, episode), match);
+        } catch (err) {
+        }
+      }, isStale);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  if (isStale()) return;
+
+  const changed = new Set([...bulkCarried.keys(), ...next.keys()]);
+  bulkCarried = next;
+  changed.forEach(key => {
+    const [season, episode] = key.split(":").map(Number);
+    updateBulkStreamChip(season, episode);
+  });
+
+  bulkSkipCarryRefresh = true;
+  refreshBulkSelection();
+  bulkSkipCarryRefresh = false;
+}
+
+function getBulkEpisodeStreams(imdb_id, season, episode) {
+  const key = bulkEpisodeKey(season, episode);
+  if (!bulkStreamCache.has(key)) {
+    const request = fetchBulkEpisodeStreams(imdb_id, season, episode)
+      .then(parseBulkStreams)
+      .catch(err => { bulkStreamCache.delete(key); throw err; });
+    bulkStreamCache.set(key, request);
+  }
+  return bulkStreamCache.get(key);
+}
+
+function getBulkEpisodeRow(season, episode) {
+  return getBulkPanel(season)
+    ?.querySelector(`.bulk-episode-checkbox[data-episode="${episode}"]`)
+    ?.closest(".bulk-episode") ?? null;
+}
+
+function getBulkStreamQualityLabel(stream) {
+  return BULK_QUALITY_ORDER[stream.tier] ?? (String(stream.Quality ?? "").trim() || "Other");
+}
+
+function updateBulkStreamChip(season, episode) {
+  const label = getBulkEpisodeRow(season, episode)?.querySelector(".bulk-stream-btn");
+  if (!label) return;
+  const key = bulkEpisodeKey(season, episode);
+  const manual = bulkOverrides.get(key);
+  const carried = manual ? null : bulkCarried.get(key);
+  const stream = manual ?? carried;
+  label.classList.toggle("is-manual", Boolean(manual));
+  label.classList.toggle("is-carried", Boolean(carried));
+  label.title = carried ? "Same release as your earlier pick" : "";
+  label.querySelector(".bulk-stream-btn-label").textContent = stream
+    ? `${getBulkStreamQualityLabel(stream)} · ${String(stream.Size ?? "").trim()}`.replace(/ · $/, "")
+    : "Auto";
+}
+
+function setBulkCustomize(on) {
+  bulkCustomize = Boolean(on);
+  bulkContainer.classList.toggle("is-customizing", bulkCustomize);
+  bulkCustomizeToggle.setAttribute("aria-pressed", String(bulkCustomize));
+  if (!bulkCustomize) closeBulkStreamView(false);
+  refreshBulkSelection();
+}
+
+function resetBulkCustomize() {
+  bulkOverrides.clear();
+  bulkStreamCache = new Map();
+  bulkCarried = new Map();
+  bulkCarryToken++;
+  clearTimeout(bulkCarryTimer);
+  closeBulkStreamView(false);
+  setBulkCustomize(false);
+}
+
+function setBulkPickerInert(inert) {
+  bulkContainer.querySelectorAll(".bulk-rail, .bulk-panel").forEach(el => { el.inert = inert; });
+}
+
+function openBulkStreamView(season, episode) {
+  bulkStreamEpisode = { season, episode };
+  bulkStreamData = null;
+  bulkStreamRendered = [];
+  bulkStreamFilter = "all";
+  const token = ++bulkStreamToken;
+
+  const name = getBulkEpisodeRow(season, episode)?.querySelector(".bulk-episode-name")?.textContent ?? "";
+  bulkStreamTitle.textContent = `${bulkEpisodeLabel(season, episode)}${name ? ` · ${name}` : ""}`;
+  bulkStreamMeta.textContent = "Looking for releases…";
+  bulkStreamFilters.hidden = true;
+  bulkStreamFilters.innerHTML = "";
+  bulkStreamList.innerHTML = `<div class="bulk-stream-state"><span class="bulk-spinner"></span>Finding torrents</div>`;
+
+  bulkStreamView.hidden = false;
+  setBulkPickerInert(true);
+  bulkStreamBack.focus();
+
+  loadBulkStreamView(token);
+}
+
+async function loadBulkStreamView(token) {
+  const { season, episode } = bulkStreamEpisode;
+  try {
+    const imdb_id = await IMDB_IDPromise;
+    if (!imdb_id) throw new Error("This title has no IMDb ID, so torrents can't be searched.");
+    const parsed = await getBulkEpisodeStreams(imdb_id, season, episode);
+    if (token !== bulkStreamToken) return;
+
+    const wanted = getBulkQuality();
+    const wantedTier = wanted === "best" ? 0 : BULK_QUALITY_ORDER.indexOf(wanted);
+    const scored = scoreBulkCandidates(parsed).sort((a, b) =>
+      (a.badSource - b.badSource) ||
+      (Math.abs(a.tier - wantedTier) - Math.abs(b.tier - wantedTier)) ||
+      (a.tier - b.tier) ||
+      (b.qualityScore - a.qualityScore) ||
+      (b.seeders - a.seeders)
+    );
+    bulkStreamData = {
+      streams: scored,
+      recommendedHash: parsed.length ? pickBulkStream(parsed, wanted)?.stream?.hash ?? null : null
+    };
+    renderBulkStreamList();
+  } catch (err) {
+    if (token !== bulkStreamToken) return;
+    console.error(err);
+    bulkStreamMeta.textContent = "Couldn't load releases";
+    bulkStreamList.innerHTML = "";
+
+    const state = document.createElement("div");
+    state.className = "bulk-stream-state is-error";
+    state.append(document.createTextNode(err?.message || "Couldn't load releases for this episode."));
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "bulk-link-btn bulk-pill-btn";
+    retry.textContent = "Try again";
+    retry.addEventListener("click", () => openBulkStreamView(season, episode));
+    state.append(retry);
+    bulkStreamList.append(state);
+  }
+}
+
+function renderBulkStreamList() {
+  if (!bulkStreamData || !bulkStreamEpisode) return;
+  const { season, episode } = bulkStreamEpisode;
+  const { streams, recommendedHash } = bulkStreamData;
+  const current = bulkOverrides.get(bulkEpisodeKey(season, episode));
+  const carriedHash = current ? null : bulkCarried.get(bulkEpisodeKey(season, episode))?.hash ?? null;
+
+  bulkStreamMeta.textContent = streams.length
+    ? `${streams.length} release${streams.length === 1 ? "" : "s"} found`
+    : "No releases found";
+
+  const tiers = [...new Set(streams.map(s => s.tier))].sort((a, b) => a - b);
+  bulkStreamFilters.innerHTML = "";
+  bulkStreamFilters.hidden = tiers.length < 2;
+  if (tiers.length >= 2) {
+    [["all", "All"], ...tiers.map(tier => [String(tier), getBulkStreamQualityLabel(streams.find(s => s.tier === tier))])]
+      .forEach(([value, label]) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "bulk-stream-chip";
+        chip.dataset.filter = value;
+        chip.textContent = label;
+        chip.setAttribute("aria-pressed", String(bulkStreamFilter === value));
+        bulkStreamFilters.append(chip);
+      });
+  }
+
+  bulkStreamList.innerHTML = "";
+  bulkStreamList.scrollTop = 0;
+
+  const wanted = getBulkQuality();
+  bulkStreamList.append(createBulkStreamOption({
+    index: "auto",
+    selected: !current,
+    badge: "Auto",
+    title: "Automatic",
+    metaParts: carriedHash
+      ? ["Follows your earlier pick (same hash)"]
+      : [wanted === "best" ? "Best available quality" : `Best ${wanted} match`, "picked when the download starts"]
+  }));
+
+  bulkStreamRendered = streams;
+  const visible = streams
+    .map((stream, index) => ({ stream, index }))
+    .filter(({ stream }) => bulkStreamFilter === "all" || String(stream.tier) === bulkStreamFilter);
+
+  visible.forEach(({ stream, index }) => {
+    bulkStreamList.append(createBulkStreamOption({
+      index,
+      selected: current?.hash === stream.hash,
+      badge: getBulkStreamQualityLabel(stream),
+      title: stream.torrentTitle || stream.fileName || stream.hash,
+      metaParts: [
+        String(stream.Size ?? "").trim(),
+        { seeds: stream.SeedersNumber },
+        stream.hash.slice(0, 8)
+      ].filter(Boolean),
+      tags: [
+        stream.hash === carriedHash ? ["Same as your earlier pick", "is-good"] : null,
+        stream.hash === recommendedHash ? ["Recommended", "is-good"] : null,
+        stream.badSource ? ["Low-quality source", "is-warn"] : null,
+        stream.seeders < 3 ? ["Few seeders", "is-warn"] : null
+      ].filter(Boolean)
+    }));
+  });
+
+  try { Promise.resolve(loadIconsDynamically()).catch(console.error); }
+  catch (err) { console.error(err); }
+
+  if (!streams.length) {
+    const empty = document.createElement("div");
+    empty.className = "bulk-stream-state";
+    empty.textContent = "No torrents found for this episode. Automatic will be used.";
+    bulkStreamList.append(empty);
+  } else if (!visible.length) {
+    const empty = document.createElement("div");
+    empty.className = "bulk-stream-state";
+    empty.textContent = "No releases in this quality.";
+    bulkStreamList.append(empty);
+  }
+}
+
+function createBulkStreamOption({ index, selected, badge, title, metaParts, tags = [] }) {
+  const option = document.createElement("button");
+  option.type = "button";
+  option.className = "bulk-stream" + (selected ? " is-selected" : "");
+  option.dataset.index = index;
+  option.setAttribute("role", "radio");
+  option.setAttribute("aria-checked", String(Boolean(selected)));
+
+  const radio = document.createElement("span");
+  radio.className = "bulk-radio";
+
+  const badgeEl = document.createElement("span");
+  badgeEl.className = "bulk-stream-quality" + (index === "auto" ? " is-auto" : "");
+  badgeEl.textContent = badge;
+
+  const body = document.createElement("span");
+  body.className = "bulk-stream-body";
+
+  const titleEl = document.createElement("span");
+  titleEl.className = "bulk-stream-title";
+  titleEl.textContent = title;
+  titleEl.title = title;
+
+  const metaEl = document.createElement("span");
+  metaEl.className = "bulk-stream-meta";
+  metaParts.forEach(part => {
+    const item = document.createElement("span");
+    if (typeof part === "object") {
+      item.className = "bulk-stream-seeds";
+      const seedIcon = document.createElement("div");
+      seedIcon.classList.add("div-seedImage");
+      item.append(seedIcon, document.createTextNode(String(part.seeds)));
+    } else {
+      item.textContent = part;
+    }
+    metaEl.append(item);
+  });
+  tags.forEach(([text, cls]) => {
+    const tag = document.createElement("span");
+    tag.className = `bulk-stream-tag ${cls}`;
+    tag.textContent = text;
+    metaEl.append(tag);
+  });
+
+  body.append(titleEl, metaEl);
+  option.append(radio, badgeEl, body);
+  return option;
+}
+
+function chooseBulkStream(stream) {
+  if (!bulkStreamEpisode) return;
+  const { season, episode } = bulkStreamEpisode;
+  const key = bulkEpisodeKey(season, episode);
+  if (stream) bulkOverrides.set(key, stream);
+  else bulkOverrides.delete(key);
+  bulkCarried.delete(key);
+
+  updateBulkStreamChip(season, episode);
+  closeBulkStreamView();
+  refreshBulkSelection();
+}
+
+function closeBulkStreamView(restoreFocus = true) {
+  if (bulkStreamView.hidden) return false;
+  const episode = bulkStreamEpisode;
+  bulkStreamToken++;
+  bulkStreamView.hidden = true;
+  bulkStreamEpisode = null;
+  bulkStreamData = null;
+  setBulkPickerInert(false);
+  if (restoreFocus && episode) {
+    getBulkEpisodeRow(episode.season, episode.episode)?.querySelector(".bulk-stream-btn")?.focus();
+  }
+  return true;
 }
 
 function setupBulkDownloadEvents() {
@@ -1864,6 +2282,31 @@ function setupBulkDownloadEvents() {
   });
 
   bulkEpisodeList.addEventListener("change", refreshBulkSelection);
+
+  bulkCustomizeToggle.addEventListener("click", () => setBulkCustomize(!bulkCustomize));
+
+  bulkEpisodeList.addEventListener("click", (event) => {
+    const btn = event.target.closest(".bulk-stream-btn");
+    if (!btn) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openBulkStreamView(Number(btn.dataset.season), Number(btn.dataset.episode));
+  });
+
+  bulkStreamBack.addEventListener("click", () => closeBulkStreamView());
+
+  bulkStreamFilters.addEventListener("click", (event) => {
+    const chip = event.target.closest(".bulk-stream-chip");
+    if (!chip) return;
+    bulkStreamFilter = chip.dataset.filter;
+    renderBulkStreamList();
+  });
+
+  bulkStreamList.addEventListener("click", (event) => {
+    const option = event.target.closest(".bulk-stream");
+    if (!option) return;
+    chooseBulkStream(option.dataset.index === "auto" ? null : bulkStreamRendered[Number(option.dataset.index)]);
+  });
 }
 
 async function loadLogoImage(movieLanguage) {
@@ -1986,6 +2429,7 @@ document.addEventListener("mousedown", event => {
 
 window.addEventListener("keydown",(event)=>{
   if(event.key === "Escape"){
+    if (closeBulkStreamView()) return;
     contextMenu.classList.remove("context-menu--visible");
     DownloadOverlay.classList.remove('active');
     closeBulkDownload();

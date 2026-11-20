@@ -527,11 +527,15 @@ body, html {
   min-width:410px;
   height:45px;
   background-color: rgba(var(--input-background-color));
+  color: rgb(var(--text-color));
   border:2px solid rgba(255,255,255,30%);
   border-radius:100px 0 0 100px;
   border-right:none;
   cursor:text;
   transition: border-color 0.3s ease;
+}
+input::placeholder {
+  color: rgba(var(--text-color), 0.6);
 }
 
 #input-searchForMovie:focus{
