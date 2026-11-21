@@ -1,5 +1,5 @@
 const metaData = JSON.parse(sessionStorage.getItem("pageArgs") || "{}");
-
+console.log(metaData);
 const nowLoading = document.getElementById("div-nowLoading");
 const statusText = document.getElementById("span-status");
 const progressBar = document.getElementById("div-progressBar");
@@ -10,7 +10,10 @@ function getMediaDetails() {
     try {
       if (!metaData.MediaType || !metaData.MediaId) return null;
       const apiKey = await window.electronAPI.getTMDBAPIKEY();
-      const res = await fetch(`https://api.themoviedb.org/3/${metaData.MediaType}/${metaData.MediaId}?api_key=${apiKey}`);
+      const res = await fetch(
+        `https://api.themoviedb.org/3/${metaData.MediaType}/${metaData.MediaId}?api_key=${apiKey}`,
+        { signal: AbortSignal.timeout(6000) }
+      );
       return await res.json();
     } catch (err) {
       return null;
@@ -71,56 +74,117 @@ function monitoringErrorsCummingFromMainProcess() {
   });
 }
 
-async function getBackgroundImage() {
-  if (metaData.bgImagePath || metaData.bgImageUrl) return metaData.bgImagePath || metaData.bgImageUrl;
-  const data = await getMediaDetails();
-  if (data?.backdrop_path) return `https://image.tmdb.org/t/p/original${data.backdrop_path}`;
+function toSrc(p) {
+  if (!p) return null;
+  return /^(https?:|file:|data:)/.test(p) ? p : `file://${encodeURI(p)}`;
 }
 
-async function setBackgroundImage() {
-  const bgImage = await getBackgroundImage();
-  if (!bgImage) return;
-  const style = document.documentElement.style;
-  style.backgroundImage = `url('${bgImage}')`;
-  style.backgroundRepeat = "no-repeat";
-  style.backgroundPosition = "center center";
-  style.backgroundSize = "cover";
-  style.backgroundAttachment = "fixed";
+function setBackgroundImage() {
+  const sources = [
+    toSrc(metaData.bgImagePath),
+    metaData.bgImageUrl?.replace(/([^:])\/\//g, "$1/"),
+  ].filter(Boolean);
+
+  const apply = (src) => {
+    const style = document.documentElement.style;
+    style.backgroundImage = `url("${src}")`;
+    style.backgroundRepeat = "no-repeat";
+    style.backgroundPosition = "center center";
+    style.backgroundSize = "cover";
+    style.backgroundAttachment = "fixed";
+  };
+
+  (function tryNext(i) {
+    if (i >= sources.length) return;
+    const img = new Image();
+    img.onload = () => apply(sources[i]);
+    img.onerror = () => tryNext(i + 1);
+    img.src = sources[i];
+  })(0);
 }
 
-async function renderMediaInfo() {
-  const data = await getMediaDetails();
-
-  const title = metaData.title || metaData.MediaTitle || metaData.Title || data?.title || data?.name;
-  if (!title) return nowLoading.classList.add("ready");
-
-  document.title = `${title} - Nomixo`;
-  document.getElementById("h-title").textContent = title;
-
-  const seasonNum = metaData.seasonNumber;
-  const episodeNum = metaData.episodeNumber;
-  document.getElementById("p-episode").textContent =
-    seasonNum != null && episodeNum != null ? `S${seasonNum} E${episodeNum}` : "";
-
-  const date = data?.release_date || data?.first_air_date || "";
-  const year = metaData.year || date.slice(0, 4);
-  const season = metaData.season ?? metaData.Season;
-  const episode = metaData.episode ?? metaData.Episode;
-  const episodeLabel = season != null && episode != null ? `Season ${season}, Episode ${episode}` : "";
-  const runtime = data?.runtime ? `${Math.floor(data.runtime / 60)}h ${data.runtime % 60}m` : "";
-  document.getElementById("p-meta").textContent = [episodeLabel, year, runtime].filter(Boolean).join("  |  ");
-
-  document.getElementById("p-overview").textContent = data?.overview || "";
-
-  const posterPath = metaData.posterPath || (data?.poster_path && `https://image.tmdb.org/t/p/w500${data.poster_path}`);
+function setPoster() {
   const poster = document.getElementById("img-poster");
-  if (posterPath) {
-    poster.onload = () => nowLoading.classList.add("ready");
-    poster.onerror = () => { poster.hidden = true; nowLoading.classList.add("ready"); };
-    poster.src = posterPath;
+  const sources = [toSrc(metaData.posterPath), metaData.posterUrl].filter(Boolean);
+  if (!sources.length) return;
+
+  let i = 0;
+  poster.onerror = () => {
+    if (++i < sources.length) poster.src = sources[i];
+    else poster.hidden = true;
+  };
+  poster.src = sources[0];
+  poster.hidden = false;
+}
+
+function renderMediaInfo() {
+  const title = metaData.Title || metaData.title || metaData.MediaTitle;
+  if (title) {
+    document.title = `${title} - Nomixo`;
+    document.getElementById("h-title").textContent = title;
+  }
+
+  const { seasonNumber, episodeNumber } = metaData;
+  document.getElementById("p-episode").textContent =
+    seasonNumber != null && episodeNumber != null
+      ? `S${seasonNumber} E${episodeNumber}`
+      : "";
+
+  const meta = document.getElementById("p-meta");
+  meta.textContent = [metaData.Year || metaData.year, metaData.Quality]
+    .filter(Boolean)
+    .join("  |  ");
+  const runtimeEl = document.createElement("span");
+  runtimeEl.id = "span-runtime";
+  runtimeEl.className = "skeleton skeleton-inline";
+  meta.append(meta.textContent ? "  |  " : "", runtimeEl);
+
+  const overview = document.getElementById("p-overview");
+  overview.textContent = "";
+  overview.classList.add("loading");
+  const spinner = document.createElement("span");
+  spinner.className = "spinner";
+  spinner.setAttribute("role", "status");
+  spinner.setAttribute("aria-label", "Loading description");
+  overview.append(spinner);
+
+  setPoster();
+  nowLoading.classList.add("ready");
+
+  enrichFromTMDB();
+}
+
+async function enrichFromTMDB() {
+  const data = await getMediaDetails();
+  const overview = document.getElementById("p-overview");
+  const runtimeEl = document.getElementById("span-runtime");
+
+  overview.classList.remove("loading");
+  overview.textContent = data?.overview || "";
+  overview.classList.remove("fade-in");
+  void overview.offsetWidth;
+  overview.classList.add("fade-in");
+
+  const runtime = data?.runtime
+    ? `${Math.floor(data.runtime / 60)}h ${data.runtime % 60}m`
+    : data?.episode_run_time?.[0]
+      ? `${data.episode_run_time[0]}m`
+      : "";
+
+  if (runtimeEl) {
+    if (runtime) {
+      runtimeEl.classList.remove("skeleton", "skeleton-inline");
+      runtimeEl.textContent = runtime;
+    } else {
+      runtimeEl.previousSibling?.remove();
+      runtimeEl.remove();
+    }
+  }
+
+  if (data && !metaData.posterPath && !metaData.posterUrl && data.poster_path) {
+    const poster = document.getElementById("img-poster");
+    poster.src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
     poster.hidden = false;
-  } else {
-    nowLoading.classList.add("ready");
   }
 }
 
