@@ -240,7 +240,7 @@ export async function editDownloadStorageEntry(torrentId, key, value) {
       await withFileLock(navigatorPath, async () => {
         const navigator = await loadJsonFile(navigatorPath);
         if (key === "Status") navigator.StatusUpdateTime = now;
-        navigator[key] = value;
+        navigator[key] = toRelative(key, value, entry.downloadPath);
         await overwriteStorageFile(navigatorPath, navigator);
       });
     } catch (err) {
@@ -437,14 +437,16 @@ async function resolveMpvExecFromPATH() {
   });
 }
 
+const toRelative = (key, value, basePath) => {
+  return key.endsWith("Path") && typeof value === "string" && path.isAbsolute(value)
+    ? (path.relative(basePath, value) || "./")
+    : value;
+}
+
 function makePathsRelative(obj, basePath) {
   const updatedObj = {};
   for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'string' && path.isAbsolute(value)) {
-      updatedObj[key] = path.relative(basePath, value) || './';
-    } else {
-      updatedObj[key] = value;
-    }
+    updatedObj[key] = toRelative(key, value, basePath);
   }
   return updatedObj;
 }
@@ -478,7 +480,7 @@ export async function loadDownloadMediaFromDir(rootDir) {
   return navigators.map(({ navigator_dir, navigator_content }) => {
     const result = { ...navigator_content };
     for (const [key, value] of Object.entries(result)) {
-      if (key.includes("Path"))
+      if (key.endsWith("Path") && typeof value === "string" && !path.isAbsolute(value))
         result[key] = path.join(navigator_dir, value);
     }
     return result;
