@@ -175,6 +175,7 @@
                     <div class="select-option" role="option" value="oldest">Oldest First</div>
                   </div>
                 </div>
+                <button class="categorie-controll" id="btn-select-mode" type="button" aria-pressed="false">Select</button>
               </div>
               <div class="movieContainer">
                 <p class="empty-container-text hidden">
@@ -191,6 +192,17 @@
 
         </div>
       </div>
+    </div>
+
+    <div id="select-bar" role="toolbar" aria-label="Selection actions" inert>
+      <span id="select-bar-count" aria-live="polite">0 selected</span>
+      <button type="button" class="select-bar-btn" id="select-bar-all">Select all</button>
+      <span class="select-bar-divider"></span>
+      <button type="button" class="select-bar-btn" id="select-bar-poster" disabled>Update poster</button>
+      <button type="button" class="select-bar-btn" id="select-bar-subs" disabled>Update subtitles</button>
+      <button type="button" class="select-bar-btn danger" id="select-bar-delete" disabled>Delete</button>
+      <span class="select-bar-divider"></span>
+      <button type="button" class="select-bar-btn" id="select-bar-cancel" aria-label="Exit selection">×</button>
     </div>
 
     <button id="btn-loadFromDir" type="button" aria-label="Load downloads from folder">

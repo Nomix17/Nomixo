@@ -192,8 +192,22 @@ async function imagePathIsValid(imagePath) {
   return await window.electronAPI.checkFileExists(imagePath);
 }
 
+const subtitleWaiters = new Map();
+function waitForSubtitles(torrentId, timeoutMs = 120000) {
+  return new Promise(resolve => {
+    const timer = setTimeout(() => { subtitleWaiters.delete(torrentId); resolve(false); }, timeoutMs);
+    subtitleWaiters.set(torrentId, (ok) => {
+      clearTimeout(timer);
+      subtitleWaiters.delete(torrentId);
+      resolve(ok);
+    });
+  });
+}
+
 function monitorSubtitlesDownloadReport() {
   window.electronAPI.getSubtitlesDownloadProgress(async (data) => {
+    if (data?.done || data?.error) subtitleWaiters.get(data.torrentId)?.(!data.error);
+
     const downloadEl = document.getElementById(data?.torrentId);
     if (!downloadEl) return;
 
@@ -335,17 +349,21 @@ function sortedMediaInsert(container, newElement, sortingType = SortingCriteria.
   }
 }
 
+async function cancelDownloadEntry(mediaInfo, { refreshUI = true } = {}) {
+  const TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
+  TargetDownloadElement?.remove();
+  const MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
+  if(MediaDownloadElementContainer.innerHTML.trim() === "")
+    putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty.");
+  await window.electronAPI.cancelDownload(mediaInfo);
+  if(refreshUI) updateDownloadUI();
+}
+
 function handleCancelButton(mediaInfo,cancelDownloadButton) {
   if(cancelDownloadButton) {
     cancelDownloadButton.addEventListener("click",async () => {
       if(typeof mediaInfo === "function") mediaInfo = await mediaInfo();
-      const TargetDownloadElement = document.getElementById(mediaInfo?.torrentId);
-      TargetDownloadElement?.remove();
-      const MediaDownloadElementContainer = document.querySelector(".download-categorie-container");
-      if(MediaDownloadElementContainer.innerHTML.trim() === "")
-        putTextIntoDiv(MediaDownloadElementContainer,"Your download list is empty."); 
-      await window.electronAPI.cancelDownload(mediaInfo);
-      updateDownloadUI();
+      await cancelDownloadEntry(mediaInfo);
     });
   }
 }
@@ -504,6 +522,49 @@ async function removePausedDownloadsContextMenu(MediaDownloadElement) {
   if(contextBtn) contextBtn.remove();
 }
 
+async function updatePosterForMedia(MediaInfo, totalSizeElement, ctx = {}) {
+  const previousContent = totalSizeElement.innerHTML;
+  totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating poster`;
+
+  let res = { download_result: "failed" };
+  try {
+    const apiKey = ctx.apiKey ?? await window.electronAPI.getTMDBAPIKEY();
+    const lookup = () => getPosterPath(MediaInfo.IMDB_ID, apiKey);
+    let posterFileName;
+    if(ctx.posterNames) {
+      if(!ctx.posterNames.has(MediaInfo.IMDB_ID))
+        ctx.posterNames.set(MediaInfo.IMDB_ID, lookup());
+      posterFileName = await ctx.posterNames.get(MediaInfo.IMDB_ID);
+    } else {
+      posterFileName = await lookup();
+    }
+    res = await window.electronAPI.downloadImage(
+      MediaInfo.downloadPath,
+      `https://image.tmdb.org/t/p/w500/${posterFileName}`
+    );
+    if (res.download_result === "success") {
+      await window.electronAPI.editElementInDownloadLibraryInfo(
+        MediaInfo.torrentId, "posterPath", res.image_path
+      );
+    }
+  } catch (err) {
+    console.error("Poster update failed:", err);
+  }
+
+  const success = res.download_result === "success";
+  totalSizeElement.innerHTML = success ? "Poster Updated ✔" : "Failed To Update Poster ⨯";
+  setTimeout(() => { totalSizeElement.innerHTML = previousContent; }, 3000);
+  return success;
+}
+
+function updateSubtitlesForMedia(MediaInfo, totalSizeElement) {
+  localStorage.setItem(
+    `subtitles_download_reporting_default_text${MediaInfo.torrentId}`,
+    totalSizeElement.innerHTML
+  );
+  return window.electronAPI.downloadSubtitles(MediaInfo);
+}
+
 function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
   const menuDiv = document.createElement("div");
   menuDiv.classList.add("select-dropdown");
@@ -568,40 +629,13 @@ function createFinishedDownloadsContextMenu(totalSizeElement,MediaInfo) {
   updatePosterOption.addEventListener("click", async (e) => {
     e.stopPropagation();
     hideContextMenu(menuDiv);
-    
-    const totalSizeElementContaint = totalSizeElement.innerHTML;
-    totalSizeElement.innerHTML = `<div class="loading-gif"> </div> updating poster`;
-
-    const apiKey = await window.electronAPI.getTMDBAPIKEY().then();
-    const posterFileName = await getPosterPath(MediaInfo.IMDB_ID, apiKey);
-    const res = await window.electronAPI.downloadImage(MediaInfo.downloadPath, `https://image.tmdb.org/t/p/w500/${posterFileName}`);
-
-    if (res.download_result === "success") {
-      await window.electronAPI.editElementInDownloadLibraryInfo(
-        MediaInfo.torrentId,
-        "posterPath",
-        res.image_path
-      );
-    }
-
-    totalSizeElement.innerHTML = 
-      res.download_result === "success" 
-        ? "Poster Updated ✔" 
-        : "Failed To Update Poster ⨯"
-
-    setTimeout(() => {
-      totalSizeElement.innerHTML = totalSizeElementContaint;
-    },3000);
+    await updatePosterForMedia(MediaInfo, totalSizeElement);
   });
 
-  updateSubtitlesOption.addEventListener("click", async(e) => {
+  updateSubtitlesOption.addEventListener("click", (e) => {
     e.stopPropagation();
     hideContextMenu(menuDiv);
-    localStorage.setItem(
-      `subtitles_download_reporting_default_text${MediaInfo.torrentId}`,
-      totalSizeElement.innerHTML
-    );
-    window.electronAPI.downloadSubtitles(MediaInfo);
+    updateSubtitlesForMedia(MediaInfo, totalSizeElement);
   });
 
   // menuDiv.appendChild(playWithExternalPlayerOption);
@@ -628,6 +662,8 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   CancelButton.remove();
   PausePlayButton.remove();
   MediaDownloadElement.classList.add("is-finished");
+  if(!MediaDownloadElement.querySelector(":scope > .select-checkbox"))
+    MediaDownloadElement.prepend(createSelectCheckbox("Select this download"));
 
   let existingContextMenu = MediaDownloadElement.querySelector(".context-menu-button");
   if (existingContextMenu) existingContextMenu.remove();
@@ -681,58 +717,48 @@ function MarkDownloadElementAsFinished(MediaDownloadElement, MediaInfo) {
   setupDeleteButtonLogic(MediaInfo, deleteMediaButton);
 }
 
+function showDeleteOverlay(fillOverlay, onConfirm) {
+  const deleteMediaOverlay = document.getElementById("deleteOverlay");
+  dontGoBack = true;
+  clearDeletePosterStack(deleteMediaOverlay);
+  fillOverlay();
+
+  let closeBtn = deleteMediaOverlay.querySelector('#closeBtn');
+  let cancelBtn = deleteMediaOverlay.querySelector('#cancelBtn');
+  let deleteBtn = deleteMediaOverlay.querySelector('#deleteBtn');
+  const fresh = (btn) => { const n = btn.cloneNode(true); btn.parentNode.replaceChild(n, btn); return n; };
+  closeBtn = fresh(closeBtn);
+  cancelBtn = fresh(cancelBtn);
+  deleteBtn = fresh(deleteBtn);
+
+  deleteMediaOverlay.classList.add("active");
+  [cancelBtn, closeBtn].forEach(btn =>
+    btn.addEventListener("click", () => deleteMediaOverlay.classList.remove("active")));
+  deleteBtn.addEventListener("click", () => {
+    deleteMediaOverlay.classList.remove("active");
+    onConfirm();
+  });
+}
+
 let deleteOverlayEscapeHandler = null;
 function setupDeleteButtonLogic(MediaInfo, deleteMediaButton) {
   const deleteMediaOverlay = document.getElementById("deleteOverlay");
-  
+
   const deleteMediaButtonNew = deleteMediaButton.cloneNode(true);
   deleteMediaButton.parentNode.replaceChild(deleteMediaButtonNew, deleteMediaButton);
-  
-  deleteMediaButtonNew.addEventListener("click", (event) => {
-    dontGoBack = true;
-    fillingDeleteOverlay(MediaInfo);
-    
-    let closeBtn = deleteMediaOverlay.querySelector('#closeBtn');
-    let cancelBtn = deleteMediaOverlay.querySelector('#cancelBtn');
-    let deleteBtn = deleteMediaOverlay.querySelector('#deleteBtn');
 
-    const closeBtnNew = closeBtn.cloneNode(true);
-    closeBtn.parentNode.replaceChild(closeBtnNew, closeBtn);
-    
-    const cancelBtnNew = cancelBtn.cloneNode(true);
-    cancelBtn.parentNode.replaceChild(cancelBtnNew, cancelBtn);
-    
-    const deleteBtnNew = deleteBtn.cloneNode(true);
-    deleteBtn.parentNode.replaceChild(deleteBtnNew, deleteBtn);
-    
-    closeBtn = closeBtnNew;
-    cancelBtn = cancelBtnNew;
-    deleteBtn = deleteBtnNew;
-    
-    deleteMediaOverlay.classList.add("active");
-    
-    [cancelBtn, closeBtn].forEach(btn => {
-      btn.addEventListener("click", () => {
-        deleteMediaOverlay.classList.remove("active");
-      });
-    });
-    
-    handleCancelButton(MediaInfo, deleteBtn);
-    deleteBtn.addEventListener("click", () => {
-      deleteMediaOverlay.classList.remove("active");
-    });
+  deleteMediaButtonNew.addEventListener("click", () => {
+    showDeleteOverlay(
+      () => fillingDeleteOverlay(MediaInfo),
+      () => cancelDownloadEntry(MediaInfo)
+    );
   });
- 
-  if (deleteOverlayEscapeHandler) {
+
+  if (deleteOverlayEscapeHandler)
     document.removeEventListener("keydown", deleteOverlayEscapeHandler);
-  }
-  
   deleteOverlayEscapeHandler = (event) => {
-    if(event.key === "Escape") {
-      deleteMediaOverlay.classList.remove("active");
-    }
+    if(event.key === "Escape") deleteMediaOverlay.classList.remove("active");
   };
-  
   document.addEventListener("keydown", deleteOverlayEscapeHandler);
 }
 
@@ -1799,6 +1825,8 @@ function applyDoneSearchFilter() {
   if (showNoResults)
     document.getElementById("completed-no-results-title").textContent =
       `No results for “${input.value.trim()}”`;
+
+  refreshSelectionUI();
 }
 
 async function setupDoneSearch() {
@@ -1960,6 +1988,7 @@ function createSeriesGroupElement(seriesKey, seriesTitle) {
   group.querySelector(".series-group-watch").innerHTML = `${videoIcon}<p>Watch</p>`;
 
   const header = group.querySelector(".series-group-header");
+  header.prepend(createSelectCheckbox("Select whole series", "series-group-select"));
   const toggle = () => setSeriesGroupExpanded(group, !group.classList.contains("expanded"));
   header.addEventListener("click", toggle);
   header.addEventListener("keydown", (e) => {
@@ -2149,6 +2178,309 @@ async function layoutDoneDownloads(sortType, animate = false) {
     if(removed) scheduleDoneLayout();
   }).observe(container, { childList: true, subtree: true });
 })();
+
+const selectBar = document.getElementById("select-bar");
+const selectModeBtn = document.getElementById("btn-select-mode");
+const selectCountEl = document.getElementById("select-bar-count");
+const selectAllBtn = document.getElementById("select-bar-all");
+const selectPosterBtn = document.getElementById("select-bar-poster");
+const selectSubsBtn = document.getElementById("select-bar-subs");
+const selectDeleteBtn = document.getElementById("select-bar-delete");
+const selectCancelBtn = document.getElementById("select-bar-cancel");
+
+const selectedMediaIds = new Set();
+let selectModeActive = false;
+let selectBusy = false;
+
+function createSelectCheckbox(label, extraClass = "") {
+  const box = document.createElement("button");
+  box.type = "button";
+  box.className = `select-checkbox ${extraClass}`.trim();
+  box.setAttribute("role", "checkbox");
+  box.setAttribute("aria-checked", "false");
+  box.setAttribute("aria-label", label);
+  box.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="tick" d="M20 6L9 17l-5-5"/><path class="dash" d="M6 12h12"/></svg>`;
+  return box;
+}
+
+const getSelectableEls = () =>
+  [...doneDownloadsDiv.querySelectorAll(".download-media:not(.hide)")];
+
+function setSelected(id, on) {
+  on ? selectedMediaIds.add(id) : selectedMediaIds.delete(id);
+}
+
+function toggleGroupSelected(group) {
+  const eps = [...group.querySelectorAll(".download-media:not(.hide)")];
+  const allOn = eps.length > 0 && eps.every(el => selectedMediaIds.has(el.id));
+  eps.forEach(el => setSelected(el.id, !allOn));
+  refreshSelectionUI();
+}
+
+function refreshSelectionUI() {
+  if(!selectBar) return;
+  const visible = getSelectableEls();
+  const visibleIds = new Set(visible.map(el => el.id));
+  for(const id of [...selectedMediaIds])
+    if(!visibleIds.has(id)) selectedMediaIds.delete(id);
+
+  for(const el of visible) {
+    const on = selectedMediaIds.has(el.id);
+    el.classList.toggle("selected", on);
+    const box = el.querySelector(":scope > .select-checkbox");
+    box?.classList.toggle("checked", on);
+    box?.setAttribute("aria-checked", String(on));
+  }
+
+  for(const group of doneDownloadsDiv.querySelectorAll(".series-group")) {
+    const eps = [...group.querySelectorAll(".download-media:not(.hide)")];
+    const n = eps.filter(el => selectedMediaIds.has(el.id)).length;
+    const all = eps.length > 0 && n === eps.length;
+    const box = group.querySelector(".series-group-select");
+    box?.classList.toggle("checked", all);
+    box?.classList.toggle("indeterminate", n > 0 && !all);
+    box?.setAttribute("aria-checked", all ? "true" : n > 0 ? "mixed" : "false");
+    group.classList.toggle("selected", all);
+  }
+
+  const count = selectedMediaIds.size;
+  const hasAny = doneDownloadsDiv.querySelector(".download-media") != null;
+  selectModeBtn.classList.toggle("disabled", !hasAny);
+  if(!hasAny && selectModeActive) setSelectMode(false);
+
+  if(!selectBusy) selectCountEl.textContent = `${count} selected`;
+  const lock = selectBusy || count === 0;
+  [selectPosterBtn, selectSubsBtn, selectDeleteBtn].forEach(b => b.disabled = lock);
+  selectAllBtn.disabled = selectBusy || visible.length === 0;
+  selectAllBtn.textContent = visible.length && count === visible.length ? "Deselect all" : "Select all";
+}
+
+function setSelectMode(active) {
+  if(selectModeActive === active) return;
+  selectModeActive = active;
+  doneDownloadsDiv.classList.toggle("select-mode", active);
+  document.body.classList.toggle("select-mode", active);
+  selectBar.classList.toggle("active", active);
+  selectBar.inert = !active;
+  selectModeBtn.textContent = active ? "Cancel" : "Select";
+  selectModeBtn.setAttribute("aria-pressed", String(active));
+  dontGoBack = active;
+  if(active) {
+    setCategorieCollapsed(doneDownloadsDiv, false);
+    document.dispatchEvent(new MouseEvent("click"));
+  } else {
+    selectedMediaIds.clear();
+  }
+  refreshSelectionUI();
+}
+
+async function getSelectedEntries() {
+  const library = await window.electronAPI.loadDownloadLibraryInfo();
+  const byId = new Map((library?.downloads ?? []).map(e => [e.torrentId, e]));
+  return getSelectableEls()
+    .filter(el => selectedMediaIds.has(el.id))
+    .map(el => byId.get(el.id))
+    .filter(Boolean);
+}
+
+async function runBulkSelectionAction(label, task) {
+  if(selectBusy) return;
+  const entries = await getSelectedEntries();
+  if(!entries.length) return;
+  selectBusy = true;
+  refreshSelectionUI();
+  try {
+    await task(entries, (done) => {
+      selectCountEl.textContent = `${label} ${done}/${entries.length}…`;
+    });
+  } finally {
+    selectBusy = false;
+    refreshSelectionUI();
+  }
+}
+
+function clearDeletePosterStack(overlay) {
+  overlay.querySelector(".delete-poster-stack")?.remove();
+  const posterEl = overlay.querySelector("#mediaPoster");
+  posterEl.classList.remove("has-stack");
+  posterEl.removeAttribute("data-count");
+}
+
+function renderDeletePosterStack(overlay, entries) {
+  const posterEl = overlay.querySelector("#mediaPoster");
+  const stack = document.createElement("div");
+  stack.className = "delete-poster-stack";
+
+  for(const entry of entries) {
+    const episodeTag = (entry.seasonNumber && entry.episodeNumber)
+      ? `S${entry.seasonNumber} E${entry.episodeNumber}` : "";
+    const label = episodeTag ? `${entry.Title} ${episodeTag}` : (entry.Title ?? "");
+
+    const item = document.createElement("div");
+    item.className = "delete-poster-item";
+
+    const fallback = document.createElement("span");
+    fallback.className = "delete-poster-fallback";
+    fallback.textContent = entry.Title ?? "";
+    item.appendChild(fallback);
+
+    if(entry.posterPath) {
+      const img = document.createElement("img");
+      img.alt = label;
+      img.loading = "lazy";
+      img.onerror = () => img.remove();
+      img.src = toFileUrl(entry.posterPath);
+      item.appendChild(img);
+    }
+
+    if(episodeTag) {
+      const badge = document.createElement("span");
+      badge.className = "delete-poster-badge";
+      badge.textContent = episodeTag;
+      item.appendChild(badge);
+    }
+    stack.appendChild(item);
+  }
+
+  stack.addEventListener("wheel", (e) => {
+    if(e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    if(stack.scrollWidth <= stack.clientWidth) return;
+    e.preventDefault();
+    stack.scrollLeft += e.deltaY;
+  }, { passive: false });
+
+  posterEl.after(stack);
+  posterEl.classList.add("has-stack");
+  posterEl.dataset.count = entries.length;
+}
+
+function fillingBulkDeleteOverlay(entries) {
+  const overlay = document.getElementById("deleteOverlay");
+  const episodes = entries.filter(e => e.seasonNumber && e.episodeNumber);
+  const movies = entries.length - episodes.length;
+  const seriesCount = new Set(episodes.map(e => e.IMDB_ID || e.Title)).size;
+  const parts = [];
+  if(movies) parts.push(`${movies} movie${movies > 1 ? "s" : ""}`);
+  if(episodes.length)
+    parts.push(`${episodes.length} episode${episodes.length > 1 ? "s" : ""} from ${seriesCount} series`);
+
+  overlay.querySelector(".delete-title").textContent = `Delete ${entries.length} Items?`;
+  loadImageWithAnimation(
+    overlay.querySelector("#mediaPoster"),
+    overlay.querySelector("#mediaPosterImg"),
+    entries[0].posterPath
+  );
+  renderDeletePosterStack(overlay, entries);
+  overlay.querySelector("#mediaTitle").textContent = parts.join(" • ");
+  overlay.querySelector("#season-episode").textContent = "";
+  overlay.querySelector(".media-year").textContent = "";
+  const totalBytes = entries.reduce((sum, e) => sum + (Number(e.Total) || 0), 0);
+  overlay.querySelector("#mediaSize").textContent = `${(totalBytes / 1024 ** 3).toFixed(2)} GB total`;
+}
+
+selectPosterBtn.addEventListener("click", () =>
+  runBulkSelectionAction("Updating posters", async (entries, progress) => {
+    const ctx = { apiKey: await window.electronAPI.getTMDBAPIKEY(), posterNames: new Map() };
+    let ok = 0, i = 0;
+    for(const entry of entries) {
+      const target = document.getElementById(entry.torrentId)?.querySelector(".total-size");
+      if(target && await updatePosterForMedia(entry, target, ctx)) ok++;
+      progress(++i);
+    }
+    displayMessage({ title: "Posters", body: `${ok} of ${entries.length} poster(s) updated.` });
+  })
+);
+
+selectSubsBtn.addEventListener("click", () =>
+  runBulkSelectionAction("Updating subtitles", async (entries, progress) => {
+    let ok = 0, i = 0;
+    for(const entry of entries) {
+      const target = document.getElementById(entry.torrentId)?.querySelector(".total-size");
+      if(target) {
+        const waiter = waitForSubtitles(entry.torrentId);
+        try {
+          await updateSubtitlesForMedia(entry, target);
+          if(await waiter) ok++;
+        } catch (err) {
+          subtitleWaiters.delete(entry.torrentId);
+          console.error("Subtitle update failed:", err);
+        }
+      }
+      progress(++i);
+    }
+    displayMessage({ title: "Subtitles", body: `${ok} of ${entries.length} subtitle update(s) finished successfully.` });
+  })
+);
+
+selectDeleteBtn.addEventListener("click", async () => {
+  if(selectBusy) return;
+  const entries = await getSelectedEntries();
+  if(!entries.length) return;
+  showDeleteOverlay(
+    () => entries.length === 1 ? fillingDeleteOverlay(entries[0]) : fillingBulkDeleteOverlay(entries),
+    async () => {
+      selectBusy = true;
+      refreshSelectionUI();
+      try {
+        for(const [index, entry] of entries.entries()) {
+          selectCountEl.textContent = `Deleting ${index + 1}/${entries.length}…`;
+          await cancelDownloadEntry(entry, { refreshUI: false });
+        }
+      } finally {
+        selectBusy = false;
+        updateDownloadUI();
+        setSelectMode(false);
+      }
+    }
+  );
+});
+
+selectModeBtn.addEventListener("click", () => {
+  if(selectModeBtn.classList.contains("disabled")) return;
+  setSelectMode(!selectModeActive);
+});
+selectCancelBtn.addEventListener("click", () => setSelectMode(false));
+selectAllBtn.addEventListener("click", () => {
+  const visible = getSelectableEls();
+  const allOn = visible.length > 0 && visible.every(el => selectedMediaIds.has(el.id));
+  visible.forEach(el => setSelected(el.id, !allOn));
+  refreshSelectionUI();
+});
+
+doneDownloadsDiv.querySelector(".movieContainer").addEventListener("click", (e) => {
+  if(!selectModeActive) return;
+  const target = e.target;
+
+  const header = target.closest(".series-group-header");
+  if(header) {
+    if(target.closest(".select-checkbox, .series-group-poster-div")) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleGroupSelected(header.closest(".series-group"));
+    }
+    return;
+  }
+
+  const el = target.closest(".download-media");
+  if(!el) return;
+  e.preventDefault();
+  e.stopPropagation();
+  setSelected(el.id, !selectedMediaIds.has(el.id));
+  refreshSelectionUI();
+}, true);
+
+document.addEventListener("keydown", (e) => {
+  if(!selectModeActive) return;
+  const inField = e.target.matches?.("input, textarea");
+  if(e.key === "Escape") {
+    if(inField || document.querySelector(".overlay.active")) return;
+    setSelectMode(false);
+  } else if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a" && !inField) {
+    e.preventDefault();
+    getSelectableEls().forEach(el => setSelected(el.id, true));
+    refreshSelectionUI();
+  }
+});
 
 setupDoneSearch();
 setupKeyPressesHandler();
