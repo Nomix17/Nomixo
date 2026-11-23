@@ -1,0 +1,19 @@
+:root{
+  --background-gradient-value:0;
+  --background-color:11,11,26;
+  --accent-color:45,48,110,1;
+  --button-surface-color:99,102,241,0.14;
+  --muted-icon-color:129,140,248,0.9;
+  --hover-border-color:129,140,248;
+  --input-background-color:6,6,18,0.55;
+  --dropdown-background-color:22,22,48,1;
+  --icon-muted-color:75,78,128;
+  --icon-bright-color:140,150,255,1;
+  --text-color:238,240,255;
+  --sidebar-icon-active-color:140,150,255,1;
+  --sidebar-icon-inactive-color:75,78,128;
+  --sidebar-button-active-color:99,102,241,0.14;
+  --sidebar-button-inactive-color:0,0,0,0;
+  --sidebar-button-border-color:255,255,255,0.25;
+  --top-bar-icons-color:255,255,255,0.8;
+}
