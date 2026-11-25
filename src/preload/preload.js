@@ -37,7 +37,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   addMediaToLibrary: (mediaEntryPoint) => ipcRenderer.send("add-to-lib",mediaEntryPoint),
   removeMediaFromLibrary: (mediaEntryPoint) => ipcRenderer.send("remove-from-lib",mediaEntryPoint),
-  editMediaFromLibrary: (mediaEntryPoint) => ipcRenderer.send("edit-element-lib",mediaEntryPoint),
+  editLibraryEntries: (entries) => ipcRenderer.send("edit-lib-entries", entries),
   loadMediaLibraryInfo: (targetIdentification) => ipcRenderer.invoke("load-from-lib",targetIdentification),
 
   importLibrary: (merge) => ipcRenderer.invoke("import-library", (merge)),

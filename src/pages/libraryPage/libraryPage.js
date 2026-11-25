@@ -12,14 +12,62 @@ const randomLiveRegionEl = document.getElementById("random-result-live");
 
 const data = new URLSearchParams(window.location.search);
 const typeOfSave = data.get("typeOfSave");
+const apiKeyPromise = window.electronAPI.getTMDBAPIKEY();
 
-async function loadDataFromLibrary(apiKey){
-  const wholeLibraryInformation = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
-  if(wholeLibraryInformation == null || wholeLibraryInformation.length === 0) {
+async function loadDataFromLibrary() {
+  const apiKey = await apiKeyPromise;
+  const libraryInfo = await window.electronAPI.loadMediaLibraryInfo().catch(err=>console.error(err));
+  if(libraryInfo == null || libraryInfo.length === 0) {
     addEmptyLibraryWarning(RightmiddleDiv);
     return;
   }
-  await fetchMediaDataFromLibrary(apiKey, wholeLibraryInformation, SavedMedia, RightmiddleDiv);
+  fetchMediaDataFromLibrary(apiKey, libraryInfo, SavedMedia, RightmiddleDiv);
+  updatePosters(libraryInfo);
+}
+
+async function fetchNewPoster(entry, retries = 0, maxRetries = 3) {
+  const apiKey = await apiKeyPromise;
+  const res = await fetch(`https://api.themoviedb.org/3/${entry.MediaType}/${entry.MediaId}?api_key=${apiKey}`);
+  if (res.status === 429) {
+    if (retries >= maxRetries) {
+      console.warn("TMDB rate limit: giving up on", entry);
+      return null;
+    }
+    const wait = (Number(res.headers.get("Retry-After")) || 1) * 1000;
+    const jitter = Math.random() * 500;
+    await new Promise(r => setTimeout(r, wait * (retries + 1) + jitter));
+    return fetchNewPoster(entry, retries + 1, maxRetries);
+  }
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  const fileName = data.poster_path ?? data.profile_path;
+  if (fileName == null) return null;
+  return {
+    oldUrl: entry.posterUrl,
+    newUrl: `https://image.tmdb.org/t/p/w500${fileName}`
+  };
+}
+
+async function updatePosters(libraryInfo) {
+  const posterUpdateData = await Promise.all(
+    libraryInfo.map(async (entry) => {
+      const newUrlInfo = await fetchNewPoster(entry);
+      if(newUrlInfo == null || newUrlInfo.newUrl == newUrlInfo.oldUrl)
+        return
+      const mediaEl = document.querySelector(`.div-MovieElement[mediaid='${entry.MediaId}'][mediatype='${entry.MediaType}']`)
+      const posterContainer = mediaEl?.querySelector(".img-MoviePosterContainer");
+      const posterEl = mediaEl?.querySelector("img");
+      if(posterContainer == null || posterEl == null) return
+      console.log(`Updating Poster of: (${entry.MediaType}, ${entry.MediaId})`);
+      const id = `${entry.MediaType}/${entry.MediaId}`;
+      return [id, { posterUrl: newUrlInfo.newUrl }];
+    })
+  );
+
+  const updatesSet = new Map(posterUpdateData.filter(Boolean));
+  if(updatesSet.size == 0) return;
+  await window.electronAPI.editLibraryEntries(updatesSet)
 }
 
 const getCategorieFullName = (value) => {
@@ -415,8 +463,6 @@ async function loadCachedMediaData(cachedData){
 }
 
 async function loadMedia() {
-  const apiKey = await window.electronAPI.getTMDBAPIKEY();
-  await loadDataFromLibrary(apiKey);
 }
 
 async function initPage() {
@@ -435,7 +481,7 @@ async function initPage() {
   addDropDownsEventListener();
   setupRandomPicker();
 
-  await loadMedia();
+  await loadDataFromLibrary();
   clearRandomHighlight();
   filterMedia(mediaType, saveType);
   sortMediaELements(SortingCriteria[sortType])

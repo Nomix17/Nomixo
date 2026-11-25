@@ -496,19 +496,18 @@ ipcMain.on("remove-from-lib", async (event, mediaInfo) => {
   await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
 });
 
-ipcMain.on("edit-element-lib", async (event, mediaInfo) => {
+ipcMain.on("edit-lib-entries", async (event, newData) => {
   const LibraryInfo = await loadLibraryStorage();
-  const elementIndex = LibraryInfo.media.findIndex(
-    (e) =>
-      e.MediaId.toString() === mediaInfo.MediaId.toString() &&
-      e.MediaType === mediaInfo.MediaType
-  );
-  if (elementIndex !== -1) {
-    for (const [key, value] of Object.entries(mediaInfo)) {
-      LibraryInfo.media[elementIndex][key] = value;
-    }
-    await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
-  }
+  if(LibraryInfo == null || LibraryInfo?.media == null)
+    return
+
+  LibraryInfo.media = LibraryInfo.media.map(entry => {
+    const target = newData?.get(`${entry.MediaType}/${entry.MediaId}`);
+    if(target != null)
+      entry.posterUrl = target.posterUrl;
+    return entry;
+  });
+  await overwriteStorageFile(Paths.libraryFilePath, LibraryInfo);
 });
 
 ipcMain.handle("load-from-lib", async (event, targetIdentification) => {
