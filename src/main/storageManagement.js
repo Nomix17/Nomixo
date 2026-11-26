@@ -453,23 +453,28 @@ function makePathsRelative(obj, basePath) {
 
 async function lookForNavigators(rootDir) {
   let results = [];
-  const dirContent = await readdir(rootDir);
-  for(const inode of dirContent) {
-    const inodePath = path.join(rootDir, inode);
-    if((await stat(inodePath)).isDirectory()) {
-      const recursive_res = await lookForNavigators(inodePath);
-      results = [...results, ...recursive_res];
+  let dirContent;
+  try {
+    dirContent = await readdir(rootDir);
+  } catch (err) {
+    log.formattedError(`Failed to read directory ${rootDir}:`, err);
+    return results;
+  }
 
-    } else if(inode === Paths.navigatorFileName) {
-      try {
+  for (const inode of dirContent) {
+    const inodePath = path.join(rootDir, inode);
+    try {
+      if ((await stat(inodePath)).isDirectory()) {
+        results.push(...await lookForNavigators(inodePath));
+      } else if (inode === Paths.navigatorFileName) {
         const navigator_content = await loadJsonFile(inodePath);
         if (navigator_content.Status !== "DONE") {
           navigator_content.Status = "PAUSED";
         }
         results.push({ navigator_dir: rootDir, navigator_content });
-      } catch(err) {
-        log.formattedError(`Failed to read navigator file ${inodePath}:`, err);
       }
+    } catch (err) {
+      log.formattedError(`Failed to process ${inodePath}:`, err);
     }
   }
   return results;
