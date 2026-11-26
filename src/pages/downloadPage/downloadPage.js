@@ -2005,11 +2005,21 @@ function createSeriesGroupElement(seriesKey, seriesTitle) {
 
   group.querySelector(".series-group-watch").addEventListener("click", async (e) => {
     e.stopPropagation();
-    const first = [...group.querySelectorAll(".download-media")].sort(compareEpisodes)[0];
-    if(!first) return;
-    const library = await window.electronAPI.loadDownloadLibraryInfo();
-    const info = library?.downloads?.find(entry => entry.torrentId === first.id);
-    if(info) openMediaVideo(info);
+    const firstEp = [...group.querySelectorAll(".download-media")].sort(compareEpisodes)[0];
+    if(!firstEp) return;
+
+    const mediaInfo = await window.electronAPI.loadMediaLibraryInfo();
+    let entry = mediaInfo?.find(m =>
+      m?.IMDB_ID != null && m?.IMDB_ID === firstEp.dataset.seriesKey &&
+      m?.typeOfSave?.includes("Currently Watching")
+    );
+
+    if (!entry) {
+      const downloadInfo = await window.electronAPI.loadDownloadLibraryInfo();
+      entry = downloadInfo?.downloads?.find(d => d.torrentId === firstEp.id);
+    }
+
+    if (entry) openMediaVideo(entry);
   });
 
   return group;
