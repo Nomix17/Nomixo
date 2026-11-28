@@ -419,6 +419,17 @@ ipcMain.handle("get-download-queue-list", () => {
   return appManager.torrentDownloadManager.downloadClient.getQueueTorrentIds();
 });
 
+ipcMain.handle("verify-download-dir-existence", async (_event, entries) => {
+  if (!Array.isArray(entries)) return [];
+  const checks = await Promise.all(
+    entries.map(async (entry) => {
+      if (!entry?.torrentId || !entry?.downloadPath) return null;
+      return (await pathExists(entry.downloadPath)) ? null : entry.torrentId;
+    })
+  );
+  return checks.filter(Boolean);
+});
+
 function sendProgressCallBack({ torrentId, message, done = false, error = false }) {
   appManager.browserWindow.webContents.send("subtitles-download-progress", { torrentId, message, done, error });
 }

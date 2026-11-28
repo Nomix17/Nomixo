@@ -68,6 +68,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   shiftDownloadQueueElement: (torrentId, offset) => ipcRenderer.invoke("shift-download-queue-element", torrentId, offset),
   updateDownloadCategorie:(callback) => ipcRenderer.on("update-download-categorie",(event,data) => callback(data)),
   getDownloadQueueList: () => ipcRenderer.invoke("get-download-queue-list"),
+  verifyDownloadDirExistence: (entires) => ipcRenderer.invoke("verify-download-dir-existence", entires),
 
   getMsgFromMainProcess: (callback)=> ipcRenderer.on("msg-from-main-process",(event,data)=>callback(data)),
   getFetchingTorrentErrors: (callback)=> ipcRenderer.on("torrent-fetching-error",(event,data)=>callback(data)),

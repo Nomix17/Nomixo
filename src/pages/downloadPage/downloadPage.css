@@ -1529,6 +1529,47 @@ body.select-mode .download-categorie-container { padding-bottom: 96px; }
   #download-done-div .series-group-header { transition: none; }
 }
 
+.download-media.is-finished.unavailable .poster-div {
+  cursor: default;
+  flex-shrink: 0;
+  width: 108px;
+  height: 162px;
+}
+.download-media.is-finished.unavailable .poster-img {
+  display: block;
+  width: 108px;
+  height: 162px;
+  object-fit: cover;
+  opacity: 1;
+}
+.download-media.is-finished.unavailable .poster-div:hover .poster-img {
+  transform: none;
+}
+.series-group-watch:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  box-shadow: none;
+}
+.series-group.unavailable .series-group-poster-div {
+  flex-shrink: 0;
+  width: 108px;
+  height: 162px;
+}
+.series-group.unavailable .series-group-poster {
+  display: block;
+  width: 108px;
+  height: 162px;
+  object-fit: cover;
+  opacity: 1;
+}
+.download-media.is-finished.unavailable .total-size {
+  color: #fca5a5;
+}
+.download-media.is-finished.unavailable .play-button,
+.download-media.is-finished.unavailable .context-menu-button {
+  display: none;
+}
+
 .media-info { position: relative; }
 
 .media-poster.has-stack {

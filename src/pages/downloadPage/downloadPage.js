@@ -19,6 +19,7 @@ async function loadDownloadMediaFromLib() {
 
   if(library != null) {
     await insertDownloadData(library.downloads ?? [], defaultSortType);
+    await markUnavailableDownloads(library.downloads ?? []);
   }
 
   if(!monitoringProgress) {
@@ -28,6 +29,39 @@ async function loadDownloadMediaFromLib() {
 
   scrollTo(scrollValue);
   initDownloadUI()
+}
+
+async function markUnavailableDownloads(libraryEntries) {
+  try {
+    const missingIds = await window.electronAPI.verifyDownloadDirExistence(libraryEntries);
+    if(!Array.isArray(missingIds)) return;
+
+    for(const torrentId of missingIds) {
+      const el = document.getElementById(torrentId);
+      if(!el?.classList.contains("download-media") || !el.classList.contains("is-finished"))
+        continue;
+      el.classList.add("unavailable");
+
+      const totalSizeEl = el.querySelector(".total-size");
+      if(totalSizeEl) totalSizeEl.textContent = "Files unavailable";
+
+      const oldPosterDiv = el.querySelector(".poster-div");
+      const posterDiv = oldPosterDiv?.cloneNode(true);
+      if(posterDiv) oldPosterDiv.replaceWith(posterDiv);
+      const posterImg = posterDiv?.querySelector(".poster-img");
+      const entry = libraryEntries.find(e => e.torrentId === torrentId);
+      if(posterDiv && posterImg)
+        loadImageWithAnimation(posterDiv, posterImg, entry?.posterPath, "PosterNotFound");
+    }
+
+    const groups = new Set(missingIds.map(id => document.getElementById(id)?.closest(".series-group")));
+    groups.delete(undefined);
+    groups.delete(null);
+    for(const group of groups)
+      refreshSeriesGroupHeader(group, [...group.querySelectorAll(".download-media")]);
+  } catch (err) {
+    console.error("Failed to verify download directories:", err);
+  }
 }
 
 async function insertDownloadData(entries, sortType) {
@@ -133,6 +167,16 @@ async function createDownloadElement(mediaLibEntryPoint) {
     scheduleDoneLayout();
 }
 
+async function isDownloadDirMissing(entry) {
+  if(entry?.Status !== "DONE") return false;
+  try {
+    const missingIds = await window.electronAPI.verifyDownloadDirExistence([entry]);
+    return Array.isArray(missingIds) && missingIds.includes(entry.torrentId);
+  } catch {
+    return false;
+  }
+}
+
 async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement) {
   if(libraryEntryPoint?.posterPath == null) {
     PosterDiv.classList.add("flashing-Div")
@@ -146,6 +190,7 @@ async function makeSurePosterIsLoaded(libraryEntryPoint,PosterDiv,PosterElement)
     PosterDiv.classList.remove("flashing-Div");
 
   } else {
+    if(await isDownloadDirMissing(libraryEntryPoint)) return;
     PosterDiv.classList.add("flashing-Div");
     let responce = await window.electronAPI.downloadImage(libraryEntryPoint.downloadPath, libraryEntryPoint.posterUrl);
 
@@ -171,6 +216,7 @@ async function makeSureBgImageIsDownloaded(libraryEntryPoint) {
   let bgImageIsDownloaded = await imagePathIsValid(libraryEntryPoint.bgImagePath);
 
   if(!bgImageIsDownloaded){
+    if(await isDownloadDirMissing(libraryEntryPoint)) return;
     let responce = await window.electronAPI.downloadImage(libraryEntryPoint.downloadPath, libraryEntryPoint.bgImageUrl);
 
     if(responce.download_result === "success") {
@@ -2005,7 +2051,7 @@ function createSeriesGroupElement(seriesKey, seriesTitle) {
 
   group.querySelector(".series-group-watch").addEventListener("click", async (e) => {
     e.stopPropagation();
-    const firstEp = [...group.querySelectorAll(".download-media")].sort(compareEpisodes)[0];
+    const firstEp = [...group.querySelectorAll(".download-media:not(.unavailable)")].sort(compareEpisodes)[0];
     if(!firstEp) return;
 
     const mediaInfo = await window.electronAPI.loadMediaLibraryInfo();
@@ -2081,6 +2127,10 @@ function refreshSeriesGroupHeader(group, episodes) {
   group.querySelector(".series-group-meta").textContent =
     `${episodes.length} episodes • ${seasonNumbers.length} season${seasonNumbers.length > 1 ? "s" : ""} • Completed`;
 
+  const allUnavailable = episodes.length > 0 && episodes.every(el => el.classList.contains("unavailable"));
+  group.classList.toggle("unavailable", allUnavailable);
+  group.querySelector(".series-group-watch").disabled = allUnavailable;
+
   const poster = group.querySelector(".series-group-poster");
   const posterDiv = group.querySelector(".series-group-poster-div");
   const source = episodes.map(el => el.querySelector(".poster-img"))
@@ -2089,6 +2139,11 @@ function refreshSeriesGroupHeader(group, episodes) {
     if(poster.src !== source.src) poster.src = source.src;
     poster.classList.add("show");
     posterDiv.classList.remove("flashing-Div");
+  } else if(allUnavailable) {
+    clearTimeout(group._posterRetry);
+    posterDiv.classList.remove("flashing-Div");
+    loadImageWithAnimation(posterDiv, poster, episodes[0].dataset.posterPath, "PosterNotFound");
+    poster.classList.add("show");
   } else {
     posterDiv.classList.add("flashing-Div");
     clearTimeout(group._posterRetry);
