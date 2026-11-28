@@ -547,7 +547,7 @@ function checkIfDivShouldHaveMoveToRightOrLeftButton(MediaDivs) {
 
 let dontGoBack = false;
 function setupKeyPressesHandler() {
-  window.addEventListener("keydown",(event)=>{
+  window.addEventListener("keydown", (event) => {
     const activeEl = document.activeElement;
     const isInputFocused =
       activeEl?.tagName === "INPUT" ||
@@ -555,22 +555,25 @@ function setupKeyPressesHandler() {
       activeEl?.isContentEditable;
     if (isInputFocused) return;
 
+    const isSearchShortcut =
+      ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") ||
+      event.key === "/";
+
     if (event.key === "Escape") {
-      if(dontGoBack) {
+      if (dontGoBack) {
         dontGoBack = false;
       } else {
         window.electronAPI.goBack(document.URL);
       }
-    
-    } else if (event.key === "Tab" || event.metaKey || event.altKey) {// event.ctrlKey
-      event.preventDefault();
-
-    } else if (event.key === "/") {
+    } else if (isSearchShortcut) {
       const searchInput = document.getElementById("input-searchForMovie");
       if (searchInput) {
         searchInput.focus();
         event.preventDefault();
       }
+
+    } else if (event.key === "Tab" || event.metaKey || event.altKey) {
+      event.preventDefault();
     }
   });
 }

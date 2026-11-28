@@ -510,6 +510,7 @@ body, html {
 }
 
 #div-input-container{
+  position:relative;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -523,14 +524,13 @@ body, html {
 #input-searchForMovie{
   font-size:14.72px;
   line-height: 45px;
-  padding:10px 29px;
+  padding:10px 100px 10px 24px;
   min-width:410px;
   height:45px;
   background-color: rgba(var(--input-background-color));
   color: rgb(var(--text-color));
-  border:2px solid rgba(255,255,255,30%);
-  border-radius:100px 0 0 100px;
-  border-right:none;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius:100px;
   cursor:text;
   transition: border-color 0.3s ease;
 }
@@ -539,30 +539,29 @@ input::placeholder {
 }
 
 #input-searchForMovie:focus{
-  border:2px solid rgba(255,255,255,0.8);
-  border-right:none;
+  border:2px solid rgba(255,255,255,0.3);
   outline:none;
 }
 
-#input-searchForMovie:focus + #btn-input-button{
-  border:2px solid rgba(255,255,255,0.8);
-  border-left:none;
-}
-
 #btn-input-button{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
   display:flex;
   justify-content:center;
   align-items:center;
-  width:45px;
-  height:45px;
-  background-color: rgba(var(--input-background-color));
-  border:2px solid rgba(255,255,255,30%);
-  border-radius:0 100px 100px 0;
-  border-left:none;
+  width:36px;
+  height:36px;
+  padding:0;
+  background:transparent;
+  border:none;
+  border-radius:50%;
   cursor:pointer;
 }
 
-#btn-input-button:hover #searchIcon{
+#btn-input-button:hover #searchIcon,
+#input-searchForMovie:focus + #btn-input-button #searchIcon{
   fill:white;
 }
 
@@ -620,10 +619,10 @@ input::placeholder {
 }
 
 #searchIcon{
-  width:50%;
-  height:50%;
-  margin-right:5px;
-  fill: rgba(255,255,255,20%);
+  width:45%;
+  height:45%;
+  fill: rgba(255,255,255,45%);
+  transition: fill 0.2s ease;
 }
 
 input::selection {
@@ -1194,7 +1193,6 @@ i[data-lucide="expand"] {
   width: 99%;
   background-color: rgba(var(--dropdown-background-color));
   border: 1px solid rgba(var(--accent-color));
-  border-top: none;
   border-radius: 11px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
   max-height: 220px;
@@ -1448,4 +1446,35 @@ i[data-lucide="expand"] {
   #btn-settings:focus-visible .icon,
   #btn-settings:active .icon,
   #btn-settings.active .icon { transform: none; }
+}
+
+.kbd-hint {
+  position: absolute;
+  top: 50%;
+  right: 48px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+  pointer-events: none !important;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.kbd-hint kbd {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(var(--text-color), 0.6);
+}
+
+#input-searchForMovie:focus ~ .kbd-hint {
+  opacity: 0;
+}
+
+@media (max-width: 560px) {
+  .kbd-hint { display: none; }
 }
