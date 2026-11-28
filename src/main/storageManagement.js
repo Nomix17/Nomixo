@@ -260,29 +260,29 @@ export async function applyDownloadStatusChanges(changes) {
     const byId = new Map(library.downloads.map(d => [d.torrentId, d]));
     const now = Date.now();
     const updated = [];
-    for (const { torrentId, status } of valid) {
+    for (const { torrentId, status, statusUpdateTime } of valid) {
       const entry = byId.get(torrentId);
       if (!entry) {
         log.warn("applyDownloadStatusChanges: torrent not found:", torrentId);
         continue;
       }
       entry.Status = status;
-      entry.StatusUpdateTime = now;
+      entry.StatusUpdateTime = statusUpdateTime ?? now;
       updated.push(entry);
     }
     if (updated.length)
       await overwriteStorageFile(Paths.downloadLibraryFilePath, library);
-    return updated.map(e => ({ downloadPath: e.downloadPath, status: e.Status, now }));
+    return updated.map(e => ({ downloadPath: e.downloadPath, status: e.Status, time: e.StatusUpdateTime }));
   });
 
-  await Promise.all(touched.map(async ({ downloadPath, status, now }) => {
+  await Promise.all(touched.map(async ({ downloadPath, status, time }) => {
     if (!downloadPath) return;
     const navigatorPath = path.join(downloadPath, Paths.navigatorFileName);
     try {
       await withFileLock(navigatorPath, async () => {
         const navigator = await loadJsonFile(navigatorPath);
         navigator.Status = status;
-        navigator.StatusUpdateTime = now;
+        navigator.StatusUpdateTime = time;
         await overwriteStorageFile(navigatorPath, navigator);
       });
     } catch (err) {
@@ -311,14 +311,34 @@ export async function removeLibraryStorageEntry(torrentId) {
   });
 }
 
-export async function markMediaDownloadsAsPaused() {
-  const wholeDownloadLibrary = await loadDownloadStorage();
-  const torrentsIds = wholeDownloadLibrary.downloads
-    .filter(torrentElement => torrentElement?.Status !== "DONE")
-    .map(torrent => torrent.torrentId);
+export async function markMediaDownloadsAsPaused(queueOrder = []) {
+  const library = await loadDownloadStorage();
+  const unfinished = (library?.downloads ?? []).filter(
+    t => t?.torrentId && t.Status !== "DONE" && t.Status !== "PAUSED"
+  );
+  if (!unfinished.length) return;
 
-  for(const torrentId of torrentsIds)
-    await editDownloadStorageEntry(torrentId,"Status","PAUSED");
+  const byTime = (a, b) => (a.StatusUpdateTime ?? 0) - (b.StatusUpdateTime ?? 0);
+  const queuePosition = new Map(queueOrder.map((id, i) => [id, i]));
+
+  const active = unfinished.filter(t => t.Status !== "QUEUED").sort(byTime);
+  const queued = unfinished.filter(t => t.Status === "QUEUED").sort((a, b) => {
+    const pa = queuePosition.get(a.torrentId);
+    const pb = queuePosition.get(b.torrentId);
+    if (pa != null && pb != null) return pa - pb;
+    if (pa != null) return -1;
+    if (pb != null) return 1;
+    return byTime(a, b);
+  });
+
+  const now = Date.now();
+  const changes = [...active, ...queued].map((t, i) => ({
+    torrentId: t.torrentId,
+    status: "PAUSED",
+    statusUpdateTime: now - i,
+  }));
+
+  await applyDownloadStatusChanges(changes);
 }
 
 export async function readSearchHistory() {

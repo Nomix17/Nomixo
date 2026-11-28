@@ -78,9 +78,10 @@ export class AppManager {
     });
 
     this.app.on("window-all-closed", async () => {
-      if (this.closeWindow) this.app.quit();
+      const queueOrder = (await this.torrentDownloadManager?.getDownloadQueueList?.()) ?? [];
       await session.defaultSession.clearStorageData({ storages: ['localstorage'] });
-      await markMediaDownloadsAsPaused();
+      await markMediaDownloadsAsPaused(queueOrder);
+      if (this.closeWindow) this.app.quit();
     });
   }
 
