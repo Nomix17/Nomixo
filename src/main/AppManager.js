@@ -1,5 +1,6 @@
 import { BrowserWindow, app, session, nativeTheme, protocol, screen } from "electron";
 import Store from 'electron-store';
+import { parseArgs } from 'node:util';
 import TorrentDownloadManager from "./TorrentDownloadManager.js";
 import MpvPlayerManager from "./MpvPlayerManager.js";
 import { markMediaDownloadsAsPaused } from "./storageManagement.js";
@@ -8,6 +9,11 @@ import { Paths } from "./FilesManager.js";
 import { log } from "./debugging.js";
 import path from "path";
 import fs from "fs";
+
+const { values: cliArgs } = parseArgs({
+  options: { "dev-mode": { type: 'boolean', default: false } },
+  strict: false,
+});
 
 export class AppManager {
   closeWindow = true;
@@ -59,6 +65,7 @@ export class AppManager {
       });
 
       this.browserWindow = await this.#createBrowserWindow();
+      this.#disableBrowserShortcuts();
       this.#setupBrowserWindowListeners();
       this.browserWindow.loadFile(entryPointFile);
       this.mpvPlayerManager = new MpvPlayerManager(this.browserWindow, (args) => this.restoreAndFocusWindow(args));
@@ -106,10 +113,28 @@ export class AppManager {
         zoomFactor: this.mainZoomFactor,
         backgroundThrottling: false,
         zoomMode: 'isolated',
+        devTools: cliArgs["dev-mode"] || !app.isPackaged ,
       },
     });
     window.setMenuBarVisibility(false);
     return window;
+  }
+
+  #disableBrowserShortcuts() {
+    if (cliArgs["dev-mode"] || !app.isPackaged) return;
+    const window = this.browserWindow;
+    window.removeMenu();
+    window.webContents.on("before-input-event", (event, input) => {
+      if (input.type !== "keyDown") return;
+      const key = input.key.toLowerCase();
+      const mod = input.control || input.meta;
+      const blocked =
+        key === "f12" || key === "f5" ||
+        (mod && ["r", "w", "p", "f", "u", "s"].includes(key)) ||
+        (mod && input.shift && ["i", "j", "c", "r"].includes(key)) ||
+        (mod && ["+", "-", "=", "0"].includes(key));
+      if (blocked) event.preventDefault();
+    });
   }
 
   async #getZoomFactorFromSettings() {
